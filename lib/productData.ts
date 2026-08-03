@@ -262,7 +262,7 @@ export function makeSlug(str: string): string {
     .replace(/^-|-$/g, '');
 }
 
-export function productHref(prod: Product): string {
+export function productHref(prod: { id: number | string; name: string }): string {
   return `/product/${makeSlug(prod.name)}-${prod.id}`;
 }
 
