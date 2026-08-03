@@ -1,44 +1,67 @@
-# Vangcur Design System
+# Vangcur — Design System
 
-এই ফাইল সব design token-এর single source of truth। Component বানানোর সময় এখান থেকেই value নিতে হবে, অনুমান করা যাবে না।
+## Brand Colors
 
----
+Logo-ভিত্তিক, pixel-sample করা exact color (লাল থেকে নীল — স্থায়ী পরিবর্তন):
 
-## Brand Colors (নীল — pixel-sampled from logo, স্থায়ী সিদ্ধান্ত)
+| Role | Hex | Tailwind token | ব্যবহার |
+|------|-----|-----------------|---------|
+| Background / Base | `#C3DEFC` | `brand-bg` | পুরো সাইটের base page background (আগে `--cream`) |
+| Contrast / Primary | `#0058C7` | `brand-primary` | Button, link, heading emphasis, active state (আগে `--red` / `--hover`) |
+| Secondary Accent | `#005EFC` | `brand-accent` | Badge, hover highlight, selective touch (আগে `--red2` / `--hover2`) |
+| Surface | `#FFFFFF` | `brand-surface` | Card/nav/footer-content সাদা background (আগে `--white`) |
 
-| Role | Hex | ব্যবহার |
-|------|-----|---------|
-| **Main/Background** | `#C3DEFC` | সাইটের base background — cream/white-এর জায়গায় এখন এই sky blue tint |
-| **Contrast/Accent** (wordmark) | `#0058C7` | Button, heading, link, primary CTA — আগে যেখানে `--red` ছিল |
-| **Secondary accent** (gadgets-script) | `#005EFC` | Selective — badge, hover, ছোট highlight touch, বেশি জায়গায় না |
-| Dark (text) | `#1A1A1A` | অপরিবর্তিত — legacy থেকে |
-| Gray (muted text) | `#6B7280` | অপরিবর্তিত |
-| Border | `#E5E7EB` | অপরিবর্তিত |
+## Neutral Colors (অপরিবর্তিত)
 
-**নোট:** Logo gradient/3D effect-এর কারণে এই hex approximation (pixel-sampled, অনুমান না)। Designer থেকে canonical hex পেলে আপডেট হবে।
+| Role | Hex | Tailwind token |
+|------|-----|-----------------|
+| Text (dark) | `#1A1A1A` | `ink` |
+| Muted text | `#6B7280` | `muted` |
+| Light background | `#F3F4F6` | `surface-muted` |
+| Border | `#E5E7EB` | `border-base` |
+| Gold (offer/badge) | `#D4A853` | `gold` |
+| Green (success) | `#10B981` | `success` |
+| Info blue (non-brand) | `#3B82F6` | `info` |
 
----
+## Shadows
 
-## Typography (legacy থেকে অপরিবর্তিত)
+| Token | Value |
+|-------|-------|
+| `shadow-sh1` | `0 1px 4px rgba(0,0,0,.07)` |
+| `shadow-sh2` | `0 4px 18px rgba(0,0,0,.10)` |
+| `shadow-sh3` | `0 8px 36px rgba(0,0,0,.13)` |
 
-- Body: `'DM Sans', sans-serif`
-- বাংলা: `'Hind Siliguri', sans-serif`
-- Display/heading accent: `'Playfair Display', serif`
+## Radius
 
----
+| Token | Value |
+|-------|-------|
+| `rounded-brand` | `12px` (default card/element radius) |
+| Nav pill | `35px` (arbitrary `rounded-[35px]`, nav-only) |
 
-## Spacing & Radius (legacy থেকে exact)
+## Typography
 
-- Border radius (card/button): `12px`
-- Shadow levels:
-  - `sh1`: `0 1px 4px rgba(0,0,0,.07)`
-  - `sh2`: `0 4px 18px rgba(0,0,0,.10)`
-  - `sh3`: `0 8px 36px rgba(0,0,0,.13)`
+- Display / logo: `Playfair Display, serif`
+- Body / UI: `DM Sans, Hind Siliguri, sans-serif`
 
----
+Tailwind tokens: `font-display`, `font-body`.
 
-## ব্যবহারের নিয়ম
+## Breakpoints (legacy-exact)
 
-1. কোনো component-এ hardcoded hex color লেখা যাবে না — Tailwind class (`bg-brand`, `text-dark`, `bg-sky-200`) ব্যবহার করতে হবে
-2. নতুন color দরকার হলে প্রথমে এই ফাইলে যোগ করে তারপর ব্যবহার করা
-3. Legacy CSS-এর spacing/layout বদলানো যাবে না — শুধু color scheme বদলাচ্ছে
+| Token | Width |
+|-------|-------|
+| `xs` | 359px |
+| `sm2` | 411px |
+| `sm` | 480px |
+| `md` | 768px |
+| `lg` | 1024px |
+| `xl` | 1200px |
+| `2xl` | 1440px |
+
+## Transition
+
+`transition-brand` → `all .25s cubic-bezier(.4,0,.2,1)` (legacy `--tr`).
+
+## Notes
+
+- Spacing, component sizing (button padding, icon sizes, gaps) follow the exact px values from the legacy CSS — converted to Tailwind's arbitrary-value syntax (`w-[42px]`, `gap-[14px]` etc.) per component, not a new spacing scale. Layout/spacing itself doesn't change in Phase 2 — শুধু color scheme বদলাচ্ছে।
+- Logo gradient makes `#0058C7`/`#005EFC` a mid-tone approximation. If an exact canonical hex is ever supplied by a designer, update the three brand tokens in `tailwind.config.ts` only — every component reads from those tokens, nothing is hardcoded elsewhere.

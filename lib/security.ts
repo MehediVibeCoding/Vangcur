@@ -1,46 +1,37 @@
-export function sanitizeInput(input: string): string {
-  return input
-    .trim()
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<[^>]+>/g, '')
-    .slice(0, 500);
+const SAFE_HREF_PROTOCOLS = ['http:', 'https:', 'tel:', 'mailto:'];
+
+export function sanitizeInput(value: string): string {
+  return value
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .trim();
 }
 
-export function validatePhone(phone: string): { valid: boolean; message?: string } {
-  const cleaned = phone.replace(/[\s-]/g, '');
-  const regex = /^01[3-9]\d{8}$/;
-  if (!regex.test(cleaned)) {
-    return { valid: false, message: 'সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন (01XXXXXXXXX)' };
+export function sanitizeHref(url: string | null | undefined): string {
+  if (!url || typeof url !== 'string') return '#';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('/') || trimmed.startsWith('#') || trimmed.startsWith('?')) {
+    return trimmed;
   }
-  return { valid: true };
+  try {
+    const parsed = new URL(trimmed, 'https://vangcur.com');
+    return SAFE_HREF_PROTOCOLS.includes(parsed.protocol) ? trimmed : '#';
+  } catch {
+    return '#';
+  }
 }
 
-export function validateName(name: string): { valid: boolean; message?: string } {
+export function validatePhone(phone: string): boolean {
+  const digits = phone.replace(/\D/g, '');
+  return /^01[3-9]\d{8}$/.test(digits);
+}
+
+export function validateName(name: string): boolean {
   const trimmed = name.trim();
-  if (trimmed.length < 2) {
-    return { valid: false, message: 'নাম কমপক্ষে ২ অক্ষরের হতে হবে' };
-  }
-  if (trimmed.length > 100) {
-    return { valid: false, message: 'নাম অনেক বড় — ১০০ অক্ষরের মধ্যে দিন' };
-  }
-  return { valid: true };
+  return trimmed.length >= 2 && trimmed.length <= 60;
 }
 
-export function validateAddress(addr: string): { valid: boolean; message?: string } {
-  const trimmed = addr.trim();
-  if (trimmed.length < 10) {
-    return { valid: false, message: 'সম্পূর্ণ ঠিকানা দিন (কমপক্ষে ১০ অক্ষর)' };
-  }
-  if (trimmed.length > 300) {
-    return { valid: false, message: 'ঠিকানা অনেক বড় — ৩০০ অক্ষরের মধ্যে দিন' };
-  }
-  return { valid: true };
-}
-
-export function validateTxnId(txn: string): { valid: boolean; message?: string } {
-  const cleaned = txn.trim().toUpperCase();
-  if (!/^[A-Z0-9]{8,12}$/.test(cleaned)) {
-    return { valid: false, message: 'সঠিক Transaction ID দিন' };
-  }
-  return { valid: true };
+export function validateAddress(address: string): boolean {
+  const trimmed = address.trim();
+  return trimmed.length >= 10 && trimmed.length <= 300;
 }
