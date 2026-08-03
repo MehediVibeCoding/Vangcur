@@ -166,12 +166,17 @@ export default function CustomerGallery() {
     setTimeout(() => setBeatId((cur) => (cur === review.id ? null : cur)), 400);
 
     if (review.id) {
-      supabase
-        .from('customer_reviews')
-        .update({ like_count: newCount })
-        .eq('id', review.id)
-        .then(({ error }: { error: unknown }) => { if (error) logWarn('Like update failed:', error); })
-        .catch((err: unknown) => logWarn('Like update failed:', err));
+      (async () => {
+        try {
+          const { error } = await supabase
+            .from('customer_reviews')
+            .update({ like_count: newCount })
+            .eq('id', review.id);
+          if (error) logWarn('Like update failed:', error);
+        } catch (err) {
+          logWarn('Like update failed:', err);
+        }
+      })();
     }
   };
 
