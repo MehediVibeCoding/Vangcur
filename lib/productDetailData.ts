@@ -1,0 +1,48 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { logWarn } from './logger';
+
+export interface ProductDetailFields {
+  desc: string;
+  longDesc: string;
+  features: string[];
+  faqs: { q: string; a: string }[];
+  closing: string;
+  specs: Record<string, string>;
+}
+
+function parseJsonish<T>(val: unknown, fallback: T): T {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val !== 'string') return val as T;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export async function fetchProductDetail(
+  supabase: SupabaseClient,
+  id: number | string,
+): Promise<ProductDetailFields | null> {
+  try {
+    const { data, error } = await supabase
+      .from('custom_products')
+      .select('id,desc_text,long_desc,features,faqs,closing,specs')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      desc: data.desc_text || data.long_desc || '',
+      longDesc: data.long_desc || data.desc_text || '',
+      features: Array.isArray(data.features) ? data.features : parseJsonish<string[]>(data.features, []),
+      faqs: Array.isArray(data.faqs) ? data.faqs : parseJsonish<{ q: string; a: string }[]>(data.faqs, []),
+      closing: data.closing || '',
+      specs: parseJsonish<Record<string, string>>(data.specs, data.specs || {}),
+    };
+  } catch (e) {
+    logWarn('[Vangcur] fetchProductDetail failed:', e);
+    return null;
+  }
+}
