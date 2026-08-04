@@ -227,7 +227,7 @@ export default function Categories() {
         {Array.from({ length: pageCount }).map((_, p) => (
           <div
             key={p}
-            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-ink' : 'w-2 bg-[#D1D5DB]'}`}
+            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-brand-primary' : 'w-2 bg-[#D1D5DB]'}`}
             onClick={() => setCatPage(p)}
           />
         ))}

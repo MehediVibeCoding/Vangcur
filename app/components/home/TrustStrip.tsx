@@ -109,34 +109,27 @@ export default function TrustStrip() {
 
   return (
     <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5" ref={wrapRef}>
-      <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md">
-        <div className="h-[3px] w-full bg-gradient-to-r from-brand-bg via-brand-accent to-brand-primary" />
-        <div className="flex flex-wrap items-center justify-around gap-x-3 gap-y-4 px-4 py-4 md:flex-nowrap md:px-7 md:py-5">
-          {TRUST_ITEMS.map((item, i) => (
-            <div key={item.label} className="flex items-center gap-3">
-              <div
-                className={`flex items-center gap-2 rounded-xl px-1 py-1 transition-brand duration-brand ${i >= 3 ? 'hidden md:flex' : ''}`}
-                style={{
-                  opacity: revealed ? 1 : 0,
-                  transform: revealed ? 'translateY(0) scale(1)' : 'translateY(10px) scale(.96)',
-                  transition: 'opacity .35s ease, transform .35s ease',
-                  transitionDelay: revealed ? `${i * 80}ms` : '0ms',
-                }}
-              >
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}>
-                  {item.icon}
-                </div>
-                <div className="min-w-0">
-                  <div className="whitespace-nowrap text-[11.5px] font-bold text-ink md:text-[12.5px]">{item.label}</div>
-                  <div className="truncate text-[10.5px] text-muted md:text-[11px]">{item.sub}</div>
-                </div>
-              </div>
-              {i < TRUST_ITEMS.length - 1 && (
-                <div className="hidden h-9 w-px shrink-0 bg-border-base md:block" />
-              )}
+      <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/60 bg-white/70 px-4 py-3 shadow-sh2 backdrop-blur-md md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
+        {TRUST_ITEMS.map((item, i) => (
+          <div
+            key={item.label}
+            className={`flex items-center gap-2 ${i >= 3 ? 'hidden md:flex' : ''}`}
+            style={{
+              opacity: revealed ? 1 : 0,
+              transform: revealed ? 'translateY(0) scale(1)' : 'translateY(10px) scale(.96)',
+              transition: 'opacity .35s ease, transform .35s ease',
+              transitionDelay: revealed ? `${i * 80}ms` : '0ms',
+            }}
+          >
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}>
+              {item.icon}
             </div>
-          ))}
-        </div>
+            <div className="min-w-0">
+              <div className="truncate text-[11px] font-bold text-ink md:text-[12.5px]">{item.label}</div>
+              <div className="truncate text-[10px] text-muted md:text-[11px]">{item.sub}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
