@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -239,9 +240,12 @@ export default function Navbar({
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-3">
             <Link className="flex shrink-0 items-center no-underline" href="/">
-              <img
+              <Image
                 src="/vangcur-logo.png"
                 alt="Vangcur Gadgets"
+                width={900}
+                height={317}
+                priority
                 className="h-7 w-auto select-none md:h-8"
                 draggable={false}
               />
@@ -275,25 +279,25 @@ export default function Navbar({
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
-                <button className="relative flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <div className="flex items-center gap-1.5">
+                <button className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
-                  <span className={`absolute right-1 top-1 h-[14px] w-[14px] items-center justify-center rounded-full bg-brand-primary text-[8.5px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
+                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-primary text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
                 </button>
 
                 <button
-                  className="relative flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary"
+                  className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title="কার্ট"
                 >
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                     <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
                   </svg>
-                  <span className={`absolute right-1 top-1 h-[14px] w-[14px] items-center justify-center rounded-full bg-brand-primary text-[8.5px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
+                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-primary text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
                 </button>
 
                 {currentUser ? (
@@ -307,15 +311,15 @@ export default function Navbar({
                   <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন করুন</button>
                 )}
 
-                <button className="flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <button className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </button>
 
-                <button className="flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <button className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
                 </button>
