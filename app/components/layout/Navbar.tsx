@@ -237,87 +237,98 @@ export default function Navbar({
     <>
       <nav className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px] overflow-hidden rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md transition-all duration-brand ease-brand">
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
-          <div className="flex w-full items-center justify-between gap-4 md:gap-6">
+          <div className="flex w-full items-center justify-between gap-3">
             <Link className="flex shrink-0 items-center no-underline" href="/">
               <img
                 src="/vangcur-logo.png"
                 alt="Vangcur Gadgets"
-                className="h-8 w-auto select-none md:h-9"
+                className="h-7 w-auto select-none md:h-8"
                 draggable={false}
               />
             </Link>
 
-            <div className="relative hidden max-w-[460px] flex-1 md:block" onClick={(e) => e.stopPropagation()}>
-              <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                type="search"
-                placeholder="প্রোডাক্ট খুঁজুন..."
-                value={searchQuery}
-                onChange={(e) => handleSearchInput(e.target.value)}
-                onKeyDown={handleSearchKey}
-                onFocus={() => searchQuery && setShowDropdown(true)}
-                autoComplete="off"
-                name="product-search"
-                className={`${searchInputClass} cursor-text`}
-              />
-              {showDropdown && (
-                <SearchDropdown
-                  searchQuery={searchQuery}
-                  searchResults={searchResults}
-                  catResults={catResults}
-                  onGoToSrp={goToSrp}
-                  onGoToCat={goToCat}
-                  onPick={() => setShowDropdown(false)}
-                />
-              )}
-            </div>
-
-            <div className="ml-auto flex items-center gap-1.5">
-              <button className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted" onClick={onWishClick} title="Wishlist">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="relative hidden w-[240px] md:block lg:w-[300px]" onClick={(e) => e.stopPropagation()}>
+                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                 </svg>
-                <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-primary text-[9px] font-bold text-white ${wishCount > 0 ? 'flex' : 'hidden'}`}>{wishCount}</span>
-              </button>
+                <input
+                  type="search"
+                  placeholder="প্রোডাক্ট খুঁজুন..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  onKeyDown={handleSearchKey}
+                  onFocus={() => searchQuery && setShowDropdown(true)}
+                  autoComplete="off"
+                  name="product-search"
+                  className="w-full cursor-text rounded-full border border-ink/[0.06] bg-ink/[0.035] py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink shadow-[inset_0_1px_3px_rgba(0,0,0,.05)] transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/40 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none"
+                />
+                {showDropdown && (
+                  <SearchDropdown
+                    searchQuery={searchQuery}
+                    searchResults={searchResults}
+                    catResults={catResults}
+                    onGoToSrp={goToSrp}
+                    onGoToCat={goToCat}
+                    onPick={() => setShowDropdown(false)}
+                  />
+                )}
+              </div>
 
-              <button className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted" ref={cartBtnRef} onClick={onCartClick}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <div className="flex items-center divide-x divide-ink/[0.06] overflow-hidden rounded-full border border-ink/[0.06] bg-ink/[0.03]">
+                <button className="relative flex h-9 w-9 items-center justify-center text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onWishClick} title="Wishlist">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                  </svg>
+                  <span className={`absolute right-1 top-1 h-[14px] w-[14px] items-center justify-center rounded-full bg-brand-primary text-[8.5px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
+                </button>
+
+                <button className="flex h-9 w-9 items-center justify-center text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </button>
+
+                <button className="flex h-9 w-9 items-center justify-center text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:h-10 md:w-10"
+                ref={cartBtnRef}
+                onClick={onCartClick}
+                title="কার্ট"
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 01-8 0" />
                 </svg>
-                <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-primary text-[9px] font-bold text-white ${cartCount > 0 ? 'flex' : 'hidden'}`}>{cartCount}</span>
+                <span className={`absolute -right-1 -top-1 h-[17px] min-w-[17px] items-center justify-center rounded-full border-2 border-white bg-white px-[3px] text-[8.5px] font-bold text-brand-primary ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
               </button>
 
               {currentUser ? (
-                <button className="flex items-center gap-2 rounded-full bg-surface-muted px-3.5 py-1.5 font-body text-[13px] font-semibold transition-brand duration-brand hover:bg-border-base" onClick={onAccountClick}>
+                <button className="flex shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3.5" onClick={onAccountClick}>
                   <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-white">
                     {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                   </div>
-                  {currentUser.name || 'আমার অ্যাকাউন্ট'}
+                  <span className="hidden md:inline">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
                 </button>
               ) : (
-                <button className="rounded-full bg-brand-primary px-[18px] py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-accent" onClick={onLoginClick}>লগইন করুন</button>
+                <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন</button>
               )}
-
-              <button className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </button>
-
-              <button className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
       </nav>
+
+      <div className="pointer-events-none relative z-[890] -mt-[7px] flex justify-center">
+        <div className="h-[3px] w-[180px] rounded-full bg-gradient-to-r from-brand-bg via-brand-accent to-brand-primary opacity-60 blur-[1.5px]" />
+      </div>
 
       {mobileSearchOpen && (
         <div className="border-b border-white/60 bg-white/85 px-4 py-2 backdrop-blur-md md:hidden">
