@@ -71,3 +71,10 @@ Tailwind tokens: `font-display`, `font-body`.
 
 - Spacing, component sizing (button padding, icon sizes, gaps) follow the exact px values from the legacy CSS — converted to Tailwind's arbitrary-value syntax (`w-[42px]`, `gap-[14px]` etc.) per component, not a new spacing scale. Layout/spacing itself doesn't change in Phase 2 — শুধু color scheme বদলাচ্ছে।
 - Logo gradient makes `#0058C7`/`#005EFC` a mid-tone approximation. If an exact canonical hex is ever supplied by a designer, update the three brand tokens in `tailwind.config.ts` only — every component reads from those tokens, nothing is hardcoded elsewhere.
+
+## Icon System (Trust Strip / Categories)
+
+- No emoji anywhere in these two sections — custom hand-drawn line icons only (`viewBox 0 0 24 24`, `stroke="currentColor"`, `stroke-width 1.6–1.7`, no fill except tiny accent dots).
+- **Category icons** (`lib/categoryData.ts` → `DEFAULT_CATEGORIES`): every icon uses `stroke="currentColor"` with **zero embedded colors** — the wrapping bubble (`text-brand-primary`) controls the color, so all ~30 category icons render in one consistent brand hue instead of the old mixed rainbow/gradient SVGs. New categories added by the store owner (via Supabase `vc_categories`) can still bring their own colored SVG/emoji — this rule only governs the shipped defaults.
+- **Trust strip icons** (`app/components/home/TrustStrip.tsx`): each icon sits in a soft tinted circle drawn from the existing token set only — `brand-primary`, `brand-accent`, `gold`, `success`, `info` — never an arbitrary hex. This gives visual variety without breaking brand cohesion.
+- **Surface treatment**: both sections use the frosted-glass family (`bg-white/70–80` + `backdrop-blur` + soft shadow) so the body's sky-blue gradient reads through, matching the navbar/search-dropdown pattern already defined above — rather than a flat opaque white block.

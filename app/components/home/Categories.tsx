@@ -23,7 +23,7 @@ function getCatCols(): number {
 function CatIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
   if (isSvg) {
-    return <span className="[&_svg]:h-[26px] [&_svg]:w-[26px] [&_svg]:shrink-0" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }} />;
+    return <span className="text-brand-primary [&_svg]:h-[22px] [&_svg]:w-[22px] [&_svg]:shrink-0 md:[&_svg]:h-[25px] md:[&_svg]:w-[25px]" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }} />;
   }
   return <span className="text-2xl">{icon || '📦'}</span>;
 }
@@ -170,16 +170,22 @@ export default function Categories() {
 
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5">
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="animate-[vc-section-reveal_.5s_cubic-bezier(.4,0,.2,1)_both] border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
-          ক্যাটাগরি <span className="text-brand-primary">সমূহ</span>
-        </h2>
+      <div className="mb-5 flex items-end justify-between">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="h-[3px] w-6 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent" />
+            <span className="text-[11px] font-bold uppercase tracking-[1.5px] text-brand-primary">Browse</span>
+          </div>
+          <h2 className="animate-[vc-section-reveal_.5s_cubic-bezier(.4,0,.2,1)_both] text-xl font-bold text-ink">
+            ক্যাটাগরি <span className="text-brand-primary">সমূহ</span>
+          </h2>
+        </div>
       </div>
 
       <div className="relative overflow-visible px-[38px] md:px-[44px]">
         <button
           ref={prevBtnRef}
-          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
         >
           &#8249;
@@ -197,14 +203,14 @@ export default function Categories() {
               return (
                 <div
                   key={cat.id}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-ink hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'} ${revealed ? 'opacity-100' : 'opacity-0'}`}
+                  className={`group flex cursor-pointer items-center gap-1.5 rounded-2xl border border-white/70 bg-white/80 p-2 shadow-[0_2px_10px_rgba(0,88,199,.06)] backdrop-blur-sm transition-brand duration-brand hover:-translate-y-0.5 hover:border-brand-primary/30 hover:bg-white hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'} ${revealed ? 'opacity-100' : 'opacity-0'}`}
                   style={{
                     transition: 'opacity .38s cubic-bezier(.4,0,.2,1), transform .38s cubic-bezier(.4,0,.2,1)',
                     transitionDelay: revealed ? `${i * 40}ms` : '0ms',
                   }}
                   onClick={() => handleSelect(cat.id)}
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-brand-bg text-[22px] md:h-[52px] md:w-[52px] md:text-2xl">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg to-white shadow-inner ring-1 ring-brand-primary/10 transition-brand duration-brand group-hover:from-brand-primary/15 group-hover:to-brand-accent/10 md:h-[52px] md:w-[52px]">
                     <CatIcon icon={cat.icon} />
                   </div>
                   <div className="text-xs font-bold leading-tight text-ink md:text-[13px]">{cat.name}</div>
@@ -216,7 +222,7 @@ export default function Categories() {
 
         <button
           ref={nextBtnRef}
-          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
         >
           &#8250;
