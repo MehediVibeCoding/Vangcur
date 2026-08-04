@@ -275,52 +275,51 @@ export default function Navbar({
                 )}
               </div>
 
-              <div className="flex items-center divide-x divide-ink/[0.06] overflow-hidden rounded-full border border-ink/[0.06] bg-ink/[0.03]">
-                <button className="relative flex h-9 w-9 items-center justify-center text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onWishClick} title="Wishlist">
+              <div className="flex items-center gap-2">
+                <button className="relative flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onWishClick} title="Wishlist">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
                   <span className={`absolute right-1 top-1 h-[14px] w-[14px] items-center justify-center rounded-full bg-brand-primary text-[8.5px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
                 </button>
 
-                <button className="flex h-9 w-9 items-center justify-center text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                <button
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10"
+                  ref={cartBtnRef}
+                  onClick={onCartClick}
+                  title="কার্ট"
+                >
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+                  </svg>
+                  <span className={`absolute right-1 top-1 h-[14px] w-[14px] items-center justify-center rounded-full bg-brand-primary text-[8.5px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
+                </button>
+
+                {currentUser ? (
+                  <button className="flex shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3.5" onClick={onAccountClick}>
+                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-white">
+                      {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <span className="hidden md:inline">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
+                  </button>
+                ) : (
+                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন</button>
+                )}
+
+                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </button>
 
-                <button className="flex h-9 w-9 items-center justify-center text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
+                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
                 </button>
               </div>
-
-              <button
-                className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:h-10 md:w-10"
-                ref={cartBtnRef}
-                onClick={onCartClick}
-                title="কার্ট"
-              >
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 01-8 0" />
-                </svg>
-                <span className={`absolute -right-1 -top-1 h-[17px] min-w-[17px] items-center justify-center rounded-full border-2 border-white bg-white px-[3px] text-[8.5px] font-bold text-brand-primary ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
-              </button>
-
-              {currentUser ? (
-                <button className="flex shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3.5" onClick={onAccountClick}>
-                  <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-white">
-                    {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
-                  </div>
-                  <span className="hidden md:inline">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
-                </button>
-              ) : (
-                <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন</button>
-              )}
             </div>
           </div>
         </div>
