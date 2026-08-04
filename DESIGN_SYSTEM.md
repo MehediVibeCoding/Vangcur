@@ -6,7 +6,7 @@ Logo-ভিত্তিক, pixel-sample করা exact color (লাল থে
 
 | Role | Hex | Tailwind token | ব্যবহার |
 |------|-----|-----------------|---------|
-| Background / Base | `#C3DEFC` | `brand-bg` | পুরো সাইটের base page background (আগে `--cream`) |
+| Background / Base | `#C3DEFC` | `brand-bg` | `<body>`-তে top-to-bottom gradient হিসেবে ব্যবহার হয় (`brand-bg` → `#DCEBFD` → `white`), solid fill না — Meta Business Suite-এর মতো হালকা fresh sky-blue-to-white আবহ তৈরি করতে |
 | Contrast / Primary | `#0058C7` | `brand-primary` | Button, link, heading emphasis, active state (আগে `--red` / `--hover`) |
 | Secondary Accent | `#005EFC` | `brand-accent` | Badge, hover highlight, selective touch (আগে `--red2` / `--hover2`) |
 | Surface | `#FFFFFF` | `brand-surface` | Card/nav/footer-content সাদা background (আগে `--white`) |
@@ -60,6 +60,12 @@ Tailwind tokens: `font-display`, `font-body`.
 ## Transition
 
 `transition-brand` → `all .25s cubic-bezier(.4,0,.2,1)` (legacy `--tr`).
+
+## Surface Patterns (body gradient onward)
+
+- **Floating navbar pill**: frosted-glass — `bg-white/70` + `backdrop-blur-md` + `border-white/60` + `shadow-sh2`, instead of solid `brand-surface`, so the body's sky-blue gradient shows through subtly as the page scrolls.
+- **Search dropdown / mobile search bar**: same frosted family at higher opacity (`bg-white/95` and `bg-white/85` respectively) — enough blur for cohesion, enough opacity for text readability.
+- **Footer**: `bg-gradient-to-b from-ink to-[#0f1a2e]` (matches the dark navy used in the About section, instead of flat `bg-ink`), topped with a 3px horizontal accent line — `bg-gradient-to-r from-brand-bg via-brand-accent to-brand-primary` — that visually threads the light body gradient into the dark footer using the brand's own 3-color ramp.
 
 ## Notes
 

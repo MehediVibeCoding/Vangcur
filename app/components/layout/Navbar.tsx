@@ -78,7 +78,7 @@ function SearchDropdown({
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
-    <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border-[1.5px] border-border-base bg-brand-surface shadow-sh3">
+    <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border-[1.5px] border-white/70 bg-white/95 shadow-sh3 backdrop-blur-md">
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
@@ -235,7 +235,7 @@ export default function Navbar({
 
   return (
     <>
-      <nav className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px] overflow-hidden rounded-[35px] border border-border-base bg-brand-surface transition-all duration-brand ease-brand">
+      <nav className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px] overflow-hidden rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md transition-all duration-brand ease-brand">
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between">
             <Link className="flex shrink-0 items-center gap-2 no-underline" href="/">
@@ -318,7 +318,7 @@ export default function Navbar({
       </nav>
 
       {mobileSearchOpen && (
-        <div className="border-b border-border-base bg-brand-surface px-4 py-2 md:hidden">
+        <div className="border-b border-white/60 bg-white/85 px-4 py-2 backdrop-blur-md md:hidden">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />

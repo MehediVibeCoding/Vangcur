@@ -119,7 +119,8 @@ export default function Footer() {
   };
 
   return (
-    <footer className="mt-[52px] bg-ink text-white">
+    <footer className="relative mt-[52px] bg-gradient-to-b from-ink to-[#0f1a2e] text-white">
+      <div className="h-[3px] w-full bg-gradient-to-r from-brand-bg via-brand-accent to-brand-primary" />
       <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 px-5 py-[42px] md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] 2xl:max-w-[1560px]">
         <div>
           <div>
