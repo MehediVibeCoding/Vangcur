@@ -237,12 +237,14 @@ export default function Navbar({
     <>
       <nav className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px] overflow-hidden rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md transition-all duration-brand ease-brand">
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
-          <div className="flex w-full items-center justify-between">
-            <Link className="flex shrink-0 items-center gap-2 no-underline" href="/">
-              <div>
-                <div className="font-display text-2xl leading-none text-ink">Vangcur</div>
-                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[2px] text-brand-primary">ভাঙচুর</div>
-              </div>
+          <div className="flex w-full items-center justify-between gap-4 md:gap-6">
+            <Link className="flex shrink-0 items-center no-underline" href="/">
+              <img
+                src="/vangcur-logo.png"
+                alt="Vangcur Gadgets"
+                className="h-8 w-auto select-none md:h-9"
+                draggable={false}
+              />
             </Link>
 
             <div className="relative hidden max-w-[460px] flex-1 md:block" onClick={(e) => e.stopPropagation()}>
@@ -297,7 +299,7 @@ export default function Navbar({
                   {currentUser.name || 'আমার অ্যাকাউন্ট'}
                 </button>
               ) : (
-                <button className="rounded-full bg-ink px-[18px] py-2 font-body text-[13px] font-semibold text-white transition-brand duration-brand hover:bg-brand-primary" onClick={onLoginClick}>লগইন করুন</button>
+                <button className="rounded-full bg-brand-primary px-[18px] py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-accent" onClick={onLoginClick}>লগইন করুন</button>
               )}
 
               <button className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
