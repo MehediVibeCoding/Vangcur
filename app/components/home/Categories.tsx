@@ -65,10 +65,10 @@ export default function Categories() {
     });
     const btn = btnKey === 'prev' ? prevBtnRef.current : nextBtnRef.current;
     if (btn) {
-      btn.classList.add('scale-95', 'bg-ink', 'text-white', 'border-ink');
+      btn.classList.add('scale-95', 'bg-brand-primary', 'text-white', 'border-brand-primary');
       clearTimeout(btnResetTimerRef.current[btnKey]);
       btnResetTimerRef.current[btnKey] = setTimeout(() => {
-        btn.classList.remove('scale-95', 'bg-ink', 'text-white', 'border-ink');
+        btn.classList.remove('scale-95', 'bg-brand-primary', 'text-white', 'border-brand-primary');
       }, 500);
     }
   };
@@ -170,22 +170,16 @@ export default function Categories() {
 
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5">
-      <div className="mb-5 flex items-end justify-between">
-        <div>
-          <div className="mb-1 flex items-center gap-2">
-            <span className="h-[3px] w-6 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent" />
-            <span className="text-[11px] font-bold uppercase tracking-[1.5px] text-brand-primary">Browse</span>
-          </div>
-          <h2 className="animate-[vc-section-reveal_.5s_cubic-bezier(.4,0,.2,1)_both] text-xl font-bold text-ink">
-            ক্যাটাগরি <span className="text-brand-primary">সমূহ</span>
-          </h2>
-        </div>
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="animate-[vc-section-reveal_.5s_cubic-bezier(.4,0,.2,1)_both] border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
+          ক্যাটাগরি <span className="text-brand-primary">সমূহ</span>
+        </h2>
       </div>
 
       <div className="relative overflow-visible px-[38px] md:px-[44px]">
         <button
           ref={prevBtnRef}
-          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-primary hover:bg-brand-primary hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
         >
           &#8249;
@@ -222,7 +216,7 @@ export default function Categories() {
 
         <button
           ref={nextBtnRef}
-          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-primary hover:bg-brand-primary hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
         >
           &#8250;

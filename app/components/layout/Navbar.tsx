@@ -329,10 +329,6 @@ export default function Navbar({
         </div>
       </nav>
 
-      <div className="pointer-events-none relative z-[890] -mt-[7px] flex justify-center">
-        <div className="h-[3px] w-[180px] rounded-full bg-gradient-to-r from-brand-bg via-brand-accent to-brand-primary opacity-60 blur-[1.5px]" />
-      </div>
-
       {mobileSearchOpen && (
         <div className="border-b border-white/60 bg-white/85 px-4 py-2 backdrop-blur-md md:hidden">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
