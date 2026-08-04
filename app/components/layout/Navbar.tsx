@@ -276,7 +276,7 @@ export default function Navbar({
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="relative flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onWishClick} title="Wishlist">
+                <button className="relative flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
@@ -284,7 +284,7 @@ export default function Navbar({
                 </button>
 
                 <button
-                  className="relative flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10"
+                  className="relative flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title="কার্ট"
@@ -304,17 +304,17 @@ export default function Navbar({
                     <span className="hidden md:inline">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
                   </button>
                 ) : (
-                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন</button>
+                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন করুন</button>
                 )}
 
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:h-10 md:w-10" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                <button className="flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </button>
 
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-ink/[0.03] text-ink transition-brand duration-brand hover:bg-brand-bg/50 hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
+                <button className="flex h-11 w-11 items-center justify-center text-ink transition-brand duration-brand hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
