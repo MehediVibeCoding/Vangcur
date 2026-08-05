@@ -254,10 +254,8 @@ export default function Navbar({
   return (
     <>
       <nav
-        className={`sticky z-[900] overflow-hidden border shadow-sh2 backdrop-blur-md transition-all duration-300 ease-brand ${
-          scrolled
-            ? 'top-0 mx-0 mb-0 mt-0 rounded-none border-x-0 border-t-0 border-white/60 bg-white/90'
-            : 'top-[14px] mx-3 mb-1.5 mt-[14px] rounded-[35px] border-white/60 bg-white/70'
+        className={`sticky z-[900] mx-3 mb-1.5 overflow-hidden rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md transition-[top,margin-top] duration-500 ease-out ${
+          scrolled ? 'top-0 mt-0' : 'top-[14px] mt-[14px]'
         }`}
       >
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
