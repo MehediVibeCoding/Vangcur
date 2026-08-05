@@ -11,6 +11,7 @@ import About from './components/home/About';
 import CustomerGallery from './components/home/CustomerGallery';
 import Footer from './components/layout/Footer';
 import LoginModal from './components/auth/LoginModal';
+import AccountPage from './components/auth/AccountPage';
 import { getCart, cartCount, CART_EVENT } from '@/lib/cartData';
 import { getWishlist, WISHLIST_EVENT } from '@/lib/productData';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
@@ -22,6 +23,7 @@ export default function ClientHome() {
   const [wishQty, setWishQty] = useState(0);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
     setCartQty(cartCount(getCart()));
@@ -47,6 +49,7 @@ export default function ClientHome() {
   useEffect(() => {
     const onOpenAccount = () => {
       if (!getCurrentUser()) setLoginOpen(true);
+      else setAccountOpen(true);
     };
     window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
     return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
@@ -73,6 +76,12 @@ export default function ClientHome() {
       <CustomerGallery />
       <Footer />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      <AccountPage
+        isOpen={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        currentUser={currentUser}
+        onAddAccount={() => setLoginOpen(true)}
+      />
     </>
   );
 }

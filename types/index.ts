@@ -67,6 +67,78 @@ export interface LinkedAccount {
   refresh_token: string;
 }
 
+export interface OrderItem {
+  name: string;
+  price: number;
+  qty: number;
+  imgs?: string[];
+}
+
+export interface OrderCustomer {
+  name?: string;
+  district?: string;
+  address?: string;
+  email?: string;
+}
+
+export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'rejected';
+
+export interface Order {
+  id: string | number;
+  orderNum: string | number;
+  date: string;
+  customer: OrderCustomer;
+  items: OrderItem[];
+  status: OrderStatus;
+  total: number;
+  userId?: string;
+  custEmail?: string;
+}
+
+export interface OrderStats {
+  total: number;
+  running: number;
+  completed: number;
+}
+
+export interface DraftOrder {
+  id: string;
+  _sbId?: number;
+  name: string;
+  phone: string;
+  dist: string;
+  addr: string;
+  email: string;
+  items: OrderItem[];
+  ship?: string;
+  createdAt: number;
+}
+
+export interface StockNotification {
+  key: string;
+  prodId: number | string;
+  prodName?: string;
+  ts?: number;
+}
+
+export interface MembershipTier {
+  min: number;
+  max: number;
+  key: string;
+  bn: string;
+  en: string;
+  crown: string;
+}
+
+export interface CelestialState {
+  state: string;
+  posX: number;
+  posY: number;
+  celestial: 'sun' | 'moon' | 'none';
+  birdsVisible: boolean;
+  sceneryHtml: string;
+}
+
 export interface FooterLogo {
   mode: 'text' | 'image';
   main?: string;
