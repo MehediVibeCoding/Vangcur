@@ -136,20 +136,20 @@ export default function ResetPasswordClient() {
 
     setLoading(true);
     const { error } = await updatePassword(supabase, pass);
-    setLoading(false);
-    if (error) { setGenErr('পাসওয়ার্ড পরিবর্তন করা যায়নি, লিংকের মেয়াদ শেষ হয়ে থাকতে পারে'); return; }
-
-    const { data } = await supabase.auth.getUser();
-    if (data?.user) {
-      saveCurrentUser({
-        id: data.user.id,
-        email: data.user.email,
-        name: data.user.user_metadata?.name || 'Customer',
-        phone: data.user.user_metadata?.phone || '',
-      });
+    if (error) {
+      setLoading(false);
+      setGenErr('পাসওয়ার্ড পরিবর্তন করা যায়নি, লিংকের মেয়াদ শেষ হয়ে থাকতে পারে');
+      return;
     }
+
+    // পাসওয়ার্ড সফলভাবে বদলানোর সাথে সাথেই এই recovery session সাইন-আউট করে দেওয়া হচ্ছে,
+    // যাতে একই রিসেট-লিংক আবার খুলে (session মেয়াদ শেষ না হওয়া পর্যন্ত) দ্বিতীয়বার
+    // পাসওয়ার্ড পরিবর্তন করা না যায়। ইউজারকে নতুন পাসওয়ার্ড দিয়ে আবার লগইন করতে হবে।
+    await supabase.auth.signOut();
+    saveCurrentUser(null);
+    setLoading(false);
     setStatus('done');
-    showToast('✅ পাসওয়ার্ড পরিবর্তন হয়েছে!');
+    showToast('✅ পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন');
     setTimeout(() => router.push('/'), 1500);
   };
 
@@ -244,7 +244,7 @@ export default function ResetPasswordClient() {
                 <IconCheck />
               </div>
               <p className="font-body text-[14px] font-bold leading-relaxed text-ink">
-                পাসওয়ার্ড পরিবর্তন হয়েছে! হোমপেজে নিয়ে যাওয়া হচ্ছে...
+                পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করতে হোমপেজে নিয়ে যাওয়া হচ্ছে...
               </p>
             </div>
           )}
