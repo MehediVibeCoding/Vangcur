@@ -13,6 +13,8 @@ import {
 } from '@/lib/authData';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import { sanitizeInput, validateEmail, validatePhone } from '@/lib/security';
+import { verifyTurnstileToken } from '@/lib/turnstile';
+import TurnstileWidget, { type TurnstileHandle } from './TurnstileWidget';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
 
@@ -191,6 +193,8 @@ export default function LoginModal({
   isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
 }: LoginModalProps) {
   const supabase = useRef(createClient()).current;
+  const turnstileRef = useRef<TurnstileHandle>(null);
+  const turnstileEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const [mode, setMode] = useState<Mode>('login');
   const [lEmail, setLEmail] = useState('');
@@ -204,6 +208,7 @@ export default function LoginModal({
   const [rPhone, setRPhone] = useState('');
   const [rEmail, setREmail] = useState('');
   const [rPass, setRPass] = useState('');
+  const [rHoneypot, setRHoneypot] = useState(''); // বট-ফাঁদ — মানুষ কখনো ভরে না, বট auto-fill করে ফেলে
   const [showRPass, setShowRPass] = useState(false);
   const [rErr, setRErr] = useState('');
   const [rEmailErr, setREmailErr] = useState('');
@@ -233,6 +238,7 @@ export default function LoginModal({
       setForgotEmailErr('');
       setForgotSubmitted(false);
       setForgotEmail('');
+      setRHoneypot('');
     }
   }, [isOpen, initialMode]);
 
@@ -300,6 +306,16 @@ export default function LoginModal({
     if (orderMode && onAuthSuccess) onAuthSuccess(safeUser);
   };
 
+  /** Invisible Turnstile ভেরিফাই — site key সেট না থাকলে (turnstileEnabled=false) সবসময় pass। */
+  const runTurnstileCheck = async (): Promise<boolean> => {
+    if (!turnstileEnabled) return true;
+    const token = turnstileRef.current?.getToken() || '';
+    if (!token) return false;
+    const ok = await verifyTurnstileToken(token);
+    turnstileRef.current?.reset();
+    return ok;
+  };
+
   const doLogin = async () => {
     const em = sanitizeInput(lEmail.trim());
     const pw = lPass;
@@ -311,6 +327,12 @@ export default function LoginModal({
     else if (!validateEmail(em)) { setLEmailErr('সঠিক ইমেইল ঠিকানা দিন'); blocked = true; }
     if (!pw) { setLPassErr('পাসওয়ার্ড দিন'); blocked = true; }
     if (blocked) return;
+
+    const verified = await runTurnstileCheck();
+    if (!verified) {
+      setLEmailErr('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন');
+      return;
+    }
 
     const { data, error } = await signInWithPassword(supabase, em, pw);
     if (error) {
@@ -345,6 +367,9 @@ export default function LoginModal({
   };
 
   const doRegister = async () => {
+    // Honeypot — মানুষ এই ফিল্ড দেখতেই পায় না, শুধু বট auto-fill করে ফেলে
+    if (rHoneypot) return;
+
     const nm = sanitizeInput(rName.trim());
     const ph = rPhone.trim();
     const em = sanitizeInput(rEmail.trim());
@@ -359,6 +384,9 @@ export default function LoginModal({
     if (!em || !validateEmail(em)) { setREmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     const strength = await checkPasswordStrength(pw);
     if (!strength.minLenOk || !strength.ok) { setRPassErr(true); return; }
+
+    const verified = await runTurnstileCheck();
+    if (!verified) { setRErr('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন'); return; }
 
     const { data, error } = await signUp(supabase, { name: nm, phone: ph, email: em, password: pw });
     if (error) {
@@ -449,6 +477,7 @@ export default function LoginModal({
         </div>
 
         <div className="px-7 pb-8 pt-2">
+          <TurnstileWidget ref={turnstileRef} active={isOpen} />
           {mode === 'login' ? (
             <div className="flex flex-col gap-3.5">
               <div>
@@ -519,6 +548,14 @@ export default function LoginModal({
             </div>
           ) : mode === 'register' ? (
             <div className="flex flex-col gap-3.5">
+              {/* Honeypot — বাস্তব ইউজার এটা দেখতেই পারবে না; শুধু বট ফর্ম auto-fill করলে ধরা পড়ে */}
+              <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
+                <label htmlFor="rg-website">Website</label>
+                <input
+                  id="rg-website" name="website" type="text" tabIndex={-1} autoComplete="off"
+                  value={rHoneypot} onChange={(e) => setRHoneypot(e.target.value)}
+                />
+              </div>
               <div>
                 <label className={fieldLabelClass}>পূর্ণ নাম</label>
                 <div className="relative">
