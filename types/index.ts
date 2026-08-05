@@ -76,9 +76,15 @@ export interface OrderItem {
 
 export interface OrderCustomer {
   name?: string;
+  phone?: string;
   district?: string;
   address?: string;
   email?: string;
+}
+
+export interface OrderPayment {
+  txnId: string;
+  last4: string;
 }
 
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'rejected';
@@ -91,6 +97,11 @@ export interface Order {
   items: OrderItem[];
   status: OrderStatus;
   total: number;
+  subtotal?: number;
+  shippingCost?: number;
+  shipping?: string;
+  advancePaid?: number;
+  payment?: OrderPayment;
   userId?: string;
   custEmail?: string;
 }
