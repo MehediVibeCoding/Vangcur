@@ -34,3 +34,16 @@
   50% { transform: translateX(210px) translateY(-8px); }
   to { transform: translateX(440px) translateY(0); }
 }
+
+/* Chrome/Edge autofill (saved email/password) দিয়ে ভরা field-এর ব্যাকগ্রাউন্ড
+   ব্রাউজার নিজে থেকে হালকা ছাই/নীলচে রঙ বসিয়ে দেয় — এখানে সেটাকে ফোর্স করে
+   আমাদের normal সাদা field background-এর মতোই রাখা হচ্ছে। */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #1A1A1A;
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset;
+  box-shadow: 0 0 0 1000px #FFFFFF inset;
+  transition: background-color 9999s ease-in-out 0s;
+}

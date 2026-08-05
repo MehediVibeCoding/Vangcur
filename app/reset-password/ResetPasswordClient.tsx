@@ -156,9 +156,11 @@ export default function ResetPasswordClient() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-4">
       <div className="relative w-full max-w-[400px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3">
-        <div className="relative overflow-hidden px-7 pb-5 pt-8 text-center">
+        <div className={`relative overflow-hidden px-7 text-center ${status === 'done' ? 'pb-2 pt-6' : 'pb-5 pt-8'}`}>
           <HeaderDecor />
-          <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">নতুন পাসওয়ার্ড সেট করুন</h2>
+          {status !== 'done' && (
+            <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">নতুন পাসওয়ার্ড সেট করুন</h2>
+          )}
           {status === 'ready' && (
             <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">
               আপনার অ্যাকাউন্টের জন্য একটি নতুন, শক্তিশালী পাসওয়ার্ড দিন
@@ -237,11 +239,11 @@ export default function ResetPasswordClient() {
           )}
 
           {status === 'done' && (
-            <div className="py-2 text-center">
-              <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
                 <IconCheck />
               </div>
-              <p className="font-body text-[13.5px] font-bold text-ink">
+              <p className="font-body text-[14px] font-bold leading-relaxed text-ink">
                 পাসওয়ার্ড পরিবর্তন হয়েছে! হোমপেজে নিয়ে যাওয়া হচ্ছে...
               </p>
             </div>

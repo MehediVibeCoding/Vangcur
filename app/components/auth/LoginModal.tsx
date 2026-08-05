@@ -183,9 +183,9 @@ const backBtnClass =
   'mt-2.5 w-full rounded-full border-[1.5px] border-border-base bg-transparent py-[11px] font-body text-[13px] font-semibold text-muted transition-brand duration-brand hover:border-brand-primary/30 hover:bg-brand-primary/5 hover:text-brand-primary';
 
 const linkChipClass =
-  'bg-transparent p-0 border-0 font-bold text-brand-bg transition-brand duration-brand hover:opacity-75';
+  'bg-transparent p-0 border-0 font-bold text-brand-primary transition-brand duration-brand hover:opacity-75';
 
-const rememberLabelClass = 'flex items-center gap-1.5 text-brand-bg';
+const rememberLabelClass = 'flex items-center gap-1.5 text-ink';
 
 export default function LoginModal({
   isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
@@ -435,7 +435,7 @@ export default function LoginModal({
       <div
         className={`relative max-h-[92vh] w-full max-w-[400px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
       >
-        <div className="relative overflow-hidden px-7 pb-5 pt-8 text-center">
+        <div className={`relative overflow-hidden px-7 pt-8 text-center ${mode === 'forgot' && forgotSubmitted ? 'pb-3' : 'pb-5'}`}>
           <HeaderDecor />
           <button
             onClick={onClose}
@@ -583,8 +583,8 @@ export default function LoginModal({
           ) : (
             <div className="flex flex-col gap-3.5">
               {forgotSubmitted ? (
-                <div className="py-3 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+                <div className="pt-1 pb-3 text-center">
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
                     <IconMailCheck />
                   </div>
                   <p className="font-body text-[14px] leading-relaxed text-ink">
