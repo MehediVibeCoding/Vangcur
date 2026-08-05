@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import GlobalOverlays from './components/GlobalOverlays';
 
 export const metadata: Metadata = {
   title: 'Vangcur',
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="bn">
       <body className="min-h-screen bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white bg-fixed font-body text-ink antialiased">
         {children}
+        <GlobalOverlays />
       </body>
     </html>
   );

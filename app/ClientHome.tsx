@@ -10,19 +10,18 @@ import FAQ from './components/home/FAQ';
 import About from './components/home/About';
 import CustomerGallery from './components/home/CustomerGallery';
 import Footer from './components/layout/Footer';
+import LoginModal from './components/auth/LoginModal';
 import { getCart, cartCount, CART_EVENT } from '@/lib/cartData';
 import { getWishlist, WISHLIST_EVENT } from '@/lib/productData';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
-
-// এখনো convert হয়নি এমন section/overlay এখানে বাদ রাখা হয়েছে (পরে যোগ হবে):
-// CatBar (অদৃশ্য, must না), CartSidebar/WishlistDrawer, LoginModal/AccountPage,
-// WaitingPage/BgConfirmPopup/PostOrderInfo, BackToTop/FloatButtons, InfoOverlay,
-// OrderTracking — Phase B-এর পরের ধাপগুলোতে তৈরি হওয়ার সাথে সাথে এখানে import
-// যোগ হবে, ঠিক legacy ClientHome.js যেভাবে ধাপে ধাপে বড় হয়েছিল।
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
+import type { CurrentUser } from '@/types';
 
 export default function ClientHome() {
   const [cartQty, setCartQty] = useState(0);
   const [wishQty, setWishQty] = useState(0);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     setCartQty(cartCount(getCart()));
@@ -38,14 +37,32 @@ export default function ClientHome() {
     return () => window.removeEventListener(WISHLIST_EVENT, onWishChange);
   }, []);
 
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+    const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());
+    window.addEventListener(AUTH_EVENT, onAuthChange);
+    return () => window.removeEventListener(AUTH_EVENT, onAuthChange);
+  }, []);
+
+  useEffect(() => {
+    const onOpenAccount = () => {
+      if (!getCurrentUser()) setLoginOpen(true);
+    };
+    window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
+    return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
+  }, []);
+
   return (
     <>
       <Navbar
         cartCount={cartQty}
         wishCount={wishQty}
+        currentUser={currentUser}
         onCartClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
         onWishClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
         onTrackClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
+        onLoginClick={() => setLoginOpen(true)}
+        onAccountClick={() => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT))}
       />
       <HeroSlider />
       <TrustStrip />
@@ -55,6 +72,7 @@ export default function ClientHome() {
       <About />
       <CustomerGallery />
       <Footer />
+      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );
 }

@@ -50,8 +50,21 @@ export interface WishlistItem {
 }
 
 export interface CurrentUser {
+  id?: string;
   name?: string;
   email?: string;
+  phone?: string;
+  avatar?: string;
+  provider?: string;
+  createdAt?: string;
+}
+
+export interface LinkedAccount {
+  email: string;
+  name: string;
+  initials: string;
+  access_token: string;
+  refresh_token: string;
 }
 
 export interface FooterLogo {
