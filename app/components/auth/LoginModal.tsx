@@ -12,8 +12,11 @@ import {
   requestPasswordReset, getCurrentUser,
 } from '@/lib/authData';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
+import { sanitizeInput, validateEmail, validatePhone } from '@/lib/security';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
+
+const MAX_NAME_LEN = 30;
 
 type Mode = 'login' | 'register' | 'forgot';
 
@@ -137,7 +140,7 @@ const fieldInputClass =
   'w-full rounded-full border border-white/70 bg-white/70 backdrop-blur-sm pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70 focus:border-brand-primary/50 focus:bg-white/95 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
 
 const fieldIconWrapClass =
-  'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted';
+  'pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-muted';
 
 const fieldLabelClass = 'mb-1.5 block font-body text-[12.5px] font-bold text-ink';
 
@@ -146,6 +149,9 @@ const primaryBtnClass =
 
 const backBtnClass =
   'mt-2.5 w-full rounded-full border-[1.5px] border-border-base bg-transparent py-[11px] font-body text-[13px] font-semibold text-muted transition-brand duration-brand hover:border-brand-primary/30 hover:bg-brand-primary/5 hover:text-brand-primary';
+
+const linkChipClass =
+  'rounded-full bg-brand-bg/60 px-2.5 py-[3px] font-bold text-brand-primary transition-brand duration-brand hover:bg-brand-bg';
 
 export default function LoginModal({
   isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
@@ -234,8 +240,8 @@ export default function LoginModal({
   const switchToForgot = () => { setMode('forgot'); setForgotSubmitted(false); setForgotEmail(lEmail); };
 
   const handleForgotSubmit = async () => {
-    const em = forgotEmail.trim();
-    if (!em) return;
+    const em = sanitizeInput(forgotEmail.trim());
+    if (!em || !validateEmail(em)) { return; }
     setForgotLoading(true);
     await requestPasswordReset(supabase, em);
     setForgotLoading(false);
@@ -252,10 +258,11 @@ export default function LoginModal({
   };
 
   const doLogin = async () => {
-    const em = lEmail.trim();
+    const em = sanitizeInput(lEmail.trim());
     const pw = lPass;
     if (!em && !pw) { setLErr('ইমেইল ও পাসওয়ার্ড দিন'); return; }
     if (!em) { setLErr('ইমেইল দিন'); return; }
+    if (!validateEmail(em)) { setLErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     if (!pw) { setLErr('পাসওয়ার্ড দিন'); return; }
     setLErr('');
 
@@ -263,7 +270,7 @@ export default function LoginModal({
     if (error) {
       const msg = (error.message || '').toLowerCase();
       if (msg.includes('invalid login')) {
-        setLErr(!em.includes('@') || !em.includes('.') ? 'ইমেইল ঠিকানা ভুল' : 'ইমেইল বা পাসওয়ার্ড ভুল');
+        setLErr('ইমেইল বা পাসওয়ার্ড ভুল');
       } else if (msg.includes('email')) {
         setLErr('ইমেইল ঠিকানা ভুল');
       } else {
@@ -284,13 +291,14 @@ export default function LoginModal({
   };
 
   const doRegister = async () => {
-    const nm = rName.trim();
+    const nm = sanitizeInput(rName.trim());
     const ph = rPhone.trim();
-    const em = rEmail.trim();
+    const em = sanitizeInput(rEmail.trim());
     const pw = rPass;
     if (!nm) { setRErr('নাম দিন'); return; }
-    if (!ph || !/^01[3-9]\d{8}$/.test(ph)) { setRErr('সঠিক মোবাইল নম্বর দিন'); return; }
-    if (!em) { setRErr('ইমেইল দিন'); return; }
+    if (nm.length > MAX_NAME_LEN) { setRErr(`নাম সর্বোচ্চ ${MAX_NAME_LEN} ক্যারেক্টার হতে পারবে`); return; }
+    if (!ph || !validatePhone(ph)) { setRErr('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)'); return; }
+    if (!em || !validateEmail(em)) { setRErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     const strength = await checkPasswordStrength(pw);
     if (!strength.minLenOk) { setRErr('পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে'); return; }
     if (!strength.ok) { setRErr('আরও শক্তিশালী পাসওয়ার্ড দিন (নিচের মিটার দেখুন)'); return; }
@@ -333,14 +341,14 @@ export default function LoginModal({
     if (onBackFromOrder) onBackFromOrder();
   };
 
-  const showLoginTitle = 'লগইন করুন';
-  const showLoginSub = 'চালিয়ে যেতে আপনার অ্যাকাউন্টে প্রবেশ করুন';
+  const showLoginTitle = 'স্বাগতম!';
+  const showLoginSub = 'Vangcur-এ আপনার অ্যাকাউন্টে প্রবেশ করুন';
   const title = mode === 'login' ? showLoginTitle : mode === 'register' ? 'অ্যাকাউন্ট তৈরি করুন' : 'পাসওয়ার্ড রিসেট করুন';
-  const sub = mode === 'login' ? showLoginSub : mode === 'register' ? 'শুরু করতে প্রয়োজনীয় তথ্য দিন' : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
+  const sub = mode === 'login' ? showLoginSub : mode === 'register' ? 'মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন' : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex items-center justify-center bg-ink/55 p-4 backdrop-blur-[3px] transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+      className={`fixed inset-0 z-[1200] flex items-center justify-center bg-ink/55 p-4 backdrop-blur-[3px] transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
       onClick={handleBackdropClick}
     >
       <div
@@ -394,10 +402,10 @@ export default function LoginModal({
               </div>
               <div className="flex items-center justify-between font-body text-[12.5px]">
                 <label className="flex items-center gap-1.5 text-muted">
-                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-3.5 w-3.5 accent-brand-primary" />
+                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 cursor-pointer rounded border-[1.5px] border-border-base accent-brand-primary transition-brand duration-brand hover:border-brand-primary/50" />
                   মনে রাখুন
                 </label>
-                <button onClick={switchToForgot} className="font-semibold text-brand-primary hover:underline">পাসওয়ার্ড ভুলে গেছেন?</button>
+                <button onClick={switchToForgot} className={linkChipClass}>পাসওয়ার্ড ভুলে গেছেন?</button>
               </div>
               {lErr && <ErrMsg text={lErr} />}
               <button className={primaryBtnClass} onClick={doLogin}>লগইন করুন</button>
@@ -406,7 +414,7 @@ export default function LoginModal({
                 <>
                   <div className="relative my-1 text-center font-body text-[12px] text-muted before:absolute before:left-0 before:top-1/2 before:h-px before:w-[42%] before:bg-border-base after:absolute after:right-0 after:top-1/2 after:h-px after:w-[42%] after:bg-border-base">অথবা</div>
                   <button
-                    className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-white/70 bg-white/75 py-3 font-body text-[13.5px] font-bold text-ink backdrop-blur-sm transition-brand duration-brand hover:border-brand-primary/25 hover:bg-white/95 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+                    className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-brand-bg bg-brand-bg/70 py-3 font-body text-[13.5px] font-bold text-ink backdrop-blur-sm transition-brand duration-brand hover:border-brand-primary/25 hover:bg-brand-bg disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
                     onClick={loginWithGoogle} disabled={googleLoading}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24">
@@ -418,7 +426,7 @@ export default function LoginModal({
                     Google দিয়ে লগইন করুন
                   </button>
                   <div className="mt-1 text-center font-body text-[12.5px] text-muted">
-                    অ্যাকাউন্ট নেই? <button onClick={switchToRegister} className="font-bold text-brand-primary hover:underline">রেজিস্ট্রেশন করুন</button>
+                    অ্যাকাউন্ট নেই? <button onClick={switchToRegister} className={linkChipClass}>রেজিস্ট্রেশন করুন</button>
                   </div>
                 </>
               )}
@@ -433,7 +441,10 @@ export default function LoginModal({
                 <label className={fieldLabelClass}>পূর্ণ নাম</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconUser /></span>
-                  <input placeholder="আপনার পূর্ণ নাম লিখুন" value={rName} onChange={(e) => setRName(e.target.value)} className={fieldInputClass} />
+                  <input placeholder="আপনার পূর্ণ নাম লিখুন" maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(e.target.value.slice(0, MAX_NAME_LEN))} className={fieldInputClass} />
+                </div>
+                <div className={`mt-1 text-right font-body text-[10.5px] ${rName.length >= MAX_NAME_LEN ? 'font-semibold text-[#DC2626]' : 'text-muted'}`}>
+                  {rName.length}/{MAX_NAME_LEN}
                 </div>
               </div>
               <div>
@@ -442,7 +453,7 @@ export default function LoginModal({
                   <span className={fieldIconWrapClass}><IconPhone /></span>
                   <input
                     type="tel" placeholder="01XXXXXXXXX" maxLength={11}
-                    value={rPhone} onChange={(e) => setRPhone(e.target.value.replace(/\D/g, ''))}
+                    value={rPhone} onChange={(e) => setRPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
                     className={fieldInputClass}
                   />
                 </div>
@@ -473,11 +484,11 @@ export default function LoginModal({
                 <PasswordStrengthMeter password={rPass} />
               </div>
               {rErr && <ErrMsg text={rErr} />}
-              <button className={primaryBtnClass} onClick={doRegister}>অ্যাকাউন্ট তৈরি করুন</button>
+              <button className={`${primaryBtnClass} mt-1`} onClick={doRegister}>অ্যাকাউন্ট তৈরি করুন</button>
 
               {!orderMode && (
                 <div className="mt-1 text-center font-body text-[12.5px] text-muted">
-                  ইতিমধ্যে অ্যাকাউন্ট আছে? <button onClick={switchToLogin} className="font-bold text-brand-primary hover:underline">লগইন করুন</button>
+                  ইতিমধ্যে অ্যাকাউন্ট আছে? <button onClick={switchToLogin} className={linkChipClass}>লগইন করুন</button>
                 </div>
               )}
               {orderMode && (
@@ -514,7 +525,7 @@ export default function LoginModal({
                     রিসেট লিংক পাঠান
                   </button>
                   <div className="mt-1 text-center font-body text-[12.5px] text-muted">
-                    মনে পড়েছে? <button onClick={switchToLogin} className="font-bold text-brand-primary hover:underline">লগইন করুন</button>
+                    মনে পড়েছে? <button onClick={switchToLogin} className={linkChipClass}>লগইন করুন</button>
                   </div>
                 </>
 

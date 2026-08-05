@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client';
 import {
   DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
-import { sanitizeSvgHtml } from '@/lib/sanitize';
 import type { Category } from '@/types';
 
 function getCatPerPage(): number {
@@ -23,7 +22,7 @@ function getCatCols(): number {
 function CatIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
   if (isSvg) {
-    return <span className="text-brand-primary [&_svg]:h-[22px] [&_svg]:w-[22px] [&_svg]:shrink-0 md:[&_svg]:h-[25px] md:[&_svg]:w-[25px]" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }} />;
+    return <span className="[&_svg]:h-[26px] [&_svg]:w-[26px] [&_svg]:shrink-0" dangerouslySetInnerHTML={{ __html: icon }} />;
   }
   return <span className="text-2xl">{icon || '📦'}</span>;
 }
@@ -65,10 +64,10 @@ export default function Categories() {
     });
     const btn = btnKey === 'prev' ? prevBtnRef.current : nextBtnRef.current;
     if (btn) {
-      btn.classList.add('scale-95', 'bg-brand-primary', 'text-white', 'border-brand-primary');
+      btn.classList.add('scale-95', 'bg-ink', 'text-white', 'border-ink');
       clearTimeout(btnResetTimerRef.current[btnKey]);
       btnResetTimerRef.current[btnKey] = setTimeout(() => {
-        btn.classList.remove('scale-95', 'bg-brand-primary', 'text-white', 'border-brand-primary');
+        btn.classList.remove('scale-95', 'bg-ink', 'text-white', 'border-ink');
       }, 500);
     }
   };
@@ -179,7 +178,7 @@ export default function Categories() {
       <div className="relative overflow-visible px-[38px] md:px-[44px]">
         <button
           ref={prevBtnRef}
-          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-primary hover:bg-brand-primary hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
         >
           &#8249;
@@ -197,14 +196,14 @@ export default function Categories() {
               return (
                 <div
                   key={cat.id}
-                  className={`group flex cursor-pointer items-center gap-1.5 rounded-2xl border border-white/70 bg-white/80 p-2 shadow-[0_2px_10px_rgba(0,88,199,.06)] backdrop-blur-sm transition-brand duration-brand hover:-translate-y-0.5 hover:border-brand-primary/30 hover:bg-white hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'} ${revealed ? 'opacity-100' : 'opacity-0'}`}
+                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-ink hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'} ${revealed ? 'opacity-100' : 'opacity-0'}`}
                   style={{
                     transition: 'opacity .38s cubic-bezier(.4,0,.2,1), transform .38s cubic-bezier(.4,0,.2,1)',
                     transitionDelay: revealed ? `${i * 40}ms` : '0ms',
                   }}
                   onClick={() => handleSelect(cat.id)}
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg to-white shadow-inner ring-1 ring-brand-primary/10 transition-brand duration-brand group-hover:from-brand-primary/15 group-hover:to-brand-accent/10 md:h-[52px] md:w-[52px]">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-brand-bg text-[22px] md:h-[52px] md:w-[52px] md:text-2xl">
                     <CatIcon icon={cat.icon} />
                   </div>
                   <div className="text-xs font-bold leading-tight text-ink md:text-[13px]">{cat.name}</div>
@@ -216,7 +215,7 @@ export default function Categories() {
 
         <button
           ref={nextBtnRef}
-          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/70 bg-white/80 backdrop-blur-sm text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-primary hover:bg-brand-primary hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-ink hover:bg-ink hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
         >
           &#8250;
@@ -227,7 +226,7 @@ export default function Categories() {
         {Array.from({ length: pageCount }).map((_, p) => (
           <div
             key={p}
-            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-brand-primary' : 'w-2 bg-[#D1D5DB]'}`}
+            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-ink' : 'w-2 bg-[#D1D5DB]'}`}
             onClick={() => setCatPage(p)}
           />
         ))}

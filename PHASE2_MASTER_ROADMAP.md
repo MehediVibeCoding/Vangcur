@@ -244,7 +244,7 @@ app/(policies)/refund-policy/page.tsx
 - Vercel-এ প্রথম build test — ✅ successful
 
 | B | Component TS+Tailwind conversion | 🟡 আংশিক — নিচে বিস্তারিত |
-### Phase B বিস্তারিত status (২০২৬-০৮-০৫ পর্যন্ত)
+### Phase B বিস্তারিত status (২০২৬-০৮-০৩ পর্যন্ত)
 
 **ক্রম অনুযায়ী অগ্রগতি:**
 
@@ -253,69 +253,31 @@ app/(policies)/refund-policy/page.tsx
 - `app/components/layout/Footer.tsx`
 - সাপোর্টিং lib ফাইল: `lib/searchData.ts`, `lib/categoryData.ts`, `lib/uiEvents.ts`, `lib/logger.ts`, `lib/cartData.ts`, `lib/toast.ts`, `lib/productData.ts`, `lib/footerData.ts`
 
-**🟡 এই session-এ বানানো, কিন্তু এখনো GitHub-এ upload হয়নি (মালিকের কাছে ZIP আকারে আছে, build test বাকি):**
+**✅ এই session-এ নতুন করে বানানো (build test মালিকের Vercel-এ করতে হবে, sandbox-এ পুরো repo না থাকায় এখানে npm build চালানো যায়নি):**
 - `app/components/home/HeroSlider.tsx` — [NEW FILE]
 - `app/components/home/Categories.tsx` — [NEW FILE]
 - `app/components/home/ProductGrid.tsx` — [NEW FILE]
 - `app/components/home/ProductCard.tsx` — [NEW FILE]
 - `app/components/home/FAQ.tsx` — [NEW FILE]
 - `app/components/home/About.tsx` — [NEW FILE]
-- `app/components/home/CustomerGallery.tsx` — [NEW FILE] — build error (`.then().catch()` টাইপ এরর) ফিক্স করা ভার্সন
-- `app/components/home/TrustStrip.tsx` — [NEW FILE] — নতুন, এই session-এ বানানো
-- `app/ClientHome.tsx` — [NEW FILE] — Navbar + সব home section + Footer একসাথে জোড়া লাগানো হয়েছে (cart/wishlist count tracking সহ); CatBar (অদৃশ্য উপাদান), CartSidebar/WishlistDrawer, LoginModal/AccountPage, checkout/order overlays এখনো এখানে যোগ হয়নি (পরের ধাপে component তৈরি হলে যোগ হবে)
-- `app/page.tsx` — [REPLACE] — placeholder-এর জায়গায় `<ClientHome/>` render করছে
+- `app/components/home/CustomerGallery.tsx` — [NEW FILE]
 - `lib/faqData.ts` — [NEW FILE]
-- `lib/sanitize.ts` — [NEW FILE] — Categories.tsx/HeroSlider.tsx-এর SVG sanitize করার জন্য
-- `tailwind.config.ts` — [REPLACE] — নতুন keyframes/animation (`section-reveal`, `badge-hot-glow`, `heartbeat`, `ripple`)
+- `tailwind.config.ts` — [REPLACE] — নতুন keyframes/animation যোগ করা হয়েছে: `section-reveal`, `badge-hot-glow` (রং red থেকে blue `rgba(0,88,199,...)`-এ পরিবর্তিত), `heartbeat`, `ripple` — এগুলো Categories/ProductGrid/ProductCard/CustomerGallery-এর `animate-*` ক্লাসের জন্য দরকার, তাই আগের `tailwind.config.ts` replace করে দিতে হবে
 
-**⚠️ মালিকের কাজ (upload-এর আগে):** `package.json`-এ `isomorphic-dompurify` dependency যোগ করা (আলাদা ফাইল দেওয়া হয়েছে)।
-
-**✅ Home sections + homepage assembly — GitHub upload ও Vercel build-test দুটোই সফল (owner স্ক্রিনশট দিয়ে কনফার্ম করেছে, ২০২৬-০৮-০৩)।** Live URL-এ Navbar+Hero+Categories+Products+FAQ+About+Gallery+Footer নীল থিমে ঠিকঠাক দেখাচ্ছে।
-
-**🟡 এই session-এ বানানো — Product Detail Page (মালিকের কাছে ZIP আকারে আছে, GitHub upload ও build-test বাকি):**
-- `app/product/[slug]/page.tsx` — [NEW FILE] — generateMetadata (SEO/OG/Twitter) + client component mount
-- `app/product/[slug]/ProductDetailClient.tsx` — [NEW FILE] — gallery (zoom/swipe/thumbs), quick specs, qty stepper, wishlist, WhatsApp/Messenger/order/cart actions, tabs (বিবরণ/ফিচারস/স্পেসিফিকেশন/FAQ/রিভিউ), related products (ProductCard পুনর্ব্যবহার), sticky bottom order bar
-- `app/components/modals/WarrantyModal.tsx` — [NEW FILE]
-- `lib/productDetailData.ts` — [NEW FILE]
-- `lib/floatButtonsData.ts` — [NEW FILE]
-- `lib/visitorTracking.ts` — [NEW FILE]
-- `lib/warrantyData.ts` — [NEW FILE]
-- `lib/bodyScrollLock.ts` — [NEW FILE]
-- `lib/supabase/server.ts` — Phase A-তেই আগে থেকে আছে (`export async function createClient()`), তাই নতুন করে বানানো হয়নি — `page.tsx` সেই existing ফাংশনই `import { createClient } from '@/lib/supabase/server'` দিয়ে ব্যবহার করছে।
-
-**🟡 এই session-এ বানানো — Cart/Wishlist drawer (মালিকের কাছে ZIP আকারে আছে, GitHub upload ও build-test বাকি):**
-- `app/components/cart/CartSidebar.tsx` — [NEW FILE]
-- `app/components/cart/WishlistDrawer.tsx` — [NEW FILE]
-- `app/components/cart/FloatCartBadge.tsx` — [NEW FILE] — জিগল অ্যানিমেশন (`animate-cart-jiggle`, tailwind.config-এ আগে থেকেই আছে)
-- `app/components/cart/FloatWishBadge.tsx` — [NEW FILE] — ৩ সেকেন্ড auto-dismiss
-- `app/components/GlobalOverlays.tsx` — [NEW FILE] — `#toast` div + Cart/Wishlist drawer-এর open state + float badge দুটো, root layout-এ একবার মাউন্ট হওয়ার জন্য। **⚠️ আপাতত শুধু Cart/Wishlist/Toast আছে — Auth/Checkout/Offer/Membership/Invoice/StockNotify/QuickOrder modal গুলো পরের পর্যায়ে convert হওয়ার সাথে সাথে এই ফাইলে যোগ হবে (পুরনো repo-র `GlobalOverlays.js` পুরোপুরি একসাথে না করে, ধাপে ধাপে)।**
-- `lib/cartData.ts` — মালিক আগে থেকেই পাঠিয়েছে, হুবহু মিলে যাওয়ায় নতুন করে ছোঁয়া হয়নি।
-
-**⚠️ মালিকের কাজ (upload-এর আগে, ২টা জিনিস verify করা):**
-1. **`app/layout.tsx`-এ `<GlobalOverlays />` মাউন্ট করা আছে কিনা** — root layout-এ একবার বসাতে হবে (পুরনো repo-র `app/layout.js`-এ যেমন ছিল), নইলে toast/cart/wishlist কোনো route-এ কাজ করবে না।
-2. **বর্তমান `Navbar.tsx`-এর কার্ট/উইশলিস্ট আইকন `OPEN_CART_EVENT`/`OPEN_WISHLIST_EVENT` dispatch করছে কিনা** (lib/uiEvents.ts থেকে) — যদি Navbar নিজে isOpen state ধরে রাখে (পুরনো প্যাটার্নে), সেটা বদলে GlobalOverlays-কেই state owner বানাতে হবে, Navbar শুধু event dispatch করবে।
-
-**✅ Auth (LoginModal + AccountPage) — সম্পূর্ণ, build test সফল (২০২৬-০৮-০৫):**
-
-দুই session-এ শেষ হয়েছে। উপরের ২টা verification পয়েন্ট চেক করে দেখা গেছে `<GlobalOverlays />` layout.tsx-এ মাউন্ট করা ছিল না — এই ধাপে ঠিক করা হয়েছে (verification পয়েন্ট ২, Navbar-এর event dispatch, আগে থেকেই ঠিক ছিল)।
-
-- `lib/authData.ts` — login/register/Google OAuth/password reset/linked accounts/wishlist sync/guest-order merge
-- `lib/passwordStrength.ts` — zxcvbn (dynamic import) ভিত্তিক checker
-- `lib/accountData.ts` — celestial weather-card গণিত, Open-Meteo বৃষ্টি চেক (৪০+ জেলা coordinate lookup), অর্ডার fetch/stats, প্রোফাইল নাম আপডেট, স্টক-নোটিফাই, abandoned draft
-- `lib/membershipData.ts` — ৫টা tier (Regular→Legendary), crown/tier SVG
-- `app/components/auth/PasswordStrengthMeter.tsx`
-- `app/components/auth/LoginModal.tsx` — login/register/forgot-password, Google button
-- `app/components/auth/AccountPage.tsx` — day/night/rain gradient profile card (sun/moon arc, cloud/rain/lightning/firefly/bird animation), নাম এডিট, multi-account switcher, order history, membership badge, stock-notify list, abandoned-draft card, লগআউট confirm
-- `app/reset-password/page.tsx` + `ResetPasswordClient.tsx` — forgot-password লিংক যেখানে ল্যান্ড করে
-- `types/index.ts` — [REPLACE] `CurrentUser` expand + `LinkedAccount`/`Order`/`OrderStats`/`DraftOrder`/`StockNotification`/`MembershipTier`/`CelestialState` যোগ
-- `app/ClientHome.tsx` — [REPLACE] auth state track, `OPEN_ACCOUNT_EVENT`-এ currentUser থাকলে AccountPage নাহলে LoginModal খোলে
-- `app/layout.tsx` — [REPLACE] `<GlobalOverlays />` মাউন্ট
-- `app/globals.css` — [REPLACE] celestial card-এর ৬টা `@keyframes` (twinkling, cloudDrift, rainDropFall, fireflyGlow, lightningFlash, birdFly) — per-element random timing দরকার বলে raw CSS + inline `style`, বাকি সব Tailwind
-- `package.json` — [REPLACE] `zxcvbn` + `@types/zxcvbn` যোগ
+**Home sections — সম্পূর্ণ ✅ (Phase B-এর ২য় ধাপ শেষ)**
 
 **⏳ এরপর — পরবর্তী ধাপ:**
+- Product detail page
+- Cart/Wishlist drawers
+- Auth (LoginModal, AccountPage)
 - Checkout flow (OrderForm/checkout page, WaitingPage, ইত্যাদি)
-- বাকি সব modal (OfferPopup, MembershipModal, InvoiceModal, StockNotifyModal, QuickOrderModal, RecoveryToast, BackInStockToast, OfferPageOverlay — এগুলো `GlobalOverlays.tsx`-এ পরে যোগ হবে, নিচের নোট দেখো)
+- বাকি সব modal
+
+**পরবর্তী session-এ Claude যা করবে প্রথমে:**
+1. এই roadmap পড়ে বর্তমান status বুঝে নেওয়া (Navbar/Footer/Home sections সব done ✅)
+2. মালিকের কাছ থেকে নতুন repo-র বর্তমান lib ফাইল ও এই session-এ বানানো সব component (ZIP আকারে) reference হিসেবে নেওয়া, প্লাস পুরনো repo (vangcur-next)-এর Product detail page, Cart/Wishlist drawer, LoginModal/AccountPage ফাইল
+3. একটা একটা করে TS+Tailwind conversion করা, প্রতিটার পর মালিক Vercel-এ build test করবে
+4. প্রতিটা component শেষে এই ফাইলের Progress Tracker আপডেট করা
 
 | C | Zustand state migration | ⏳ বাকি |
 | D | Server Actions & Security | ⏳ বাকি |

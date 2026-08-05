@@ -36,7 +36,7 @@ export default function PasswordStrengthMeter({ password }: PasswordStrengthMete
         />
       </div>
       <div className="mt-[3px] font-body text-[11px] font-semibold" style={{ color: strength.color }}>
-        {strength.label}
+        {strength.hint}
       </div>
     </div>
   );

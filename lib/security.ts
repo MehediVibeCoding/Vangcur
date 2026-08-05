@@ -26,6 +26,12 @@ export function validatePhone(phone: string): boolean {
   return /^01[3-9]\d{8}$/.test(digits);
 }
 
+export function validateEmail(email: string): boolean {
+  const trimmed = email.trim();
+  if (!trimmed || trimmed.length > 254) return false;
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(trimmed);
+}
+
 export function validateName(name: string): boolean {
   const trimmed = name.trim();
   return trimmed.length >= 2 && trimmed.length <= 60;
