@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -135,7 +134,7 @@ function ErrMsg({ text }: { text: string }) {
 }
 
 const fieldInputClass =
-  'w-full rounded-full border border-border-base bg-surface-muted pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70 focus:border-brand-primary/50 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+  'w-full rounded-full border border-white/70 bg-white/70 backdrop-blur-sm pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70 focus:border-brand-primary/50 focus:bg-white/95 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
 
 const fieldIconWrapClass =
   'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted';
@@ -334,10 +333,10 @@ export default function LoginModal({
     if (onBackFromOrder) onBackFromOrder();
   };
 
-  const showLoginTitle = orderMode ? 'লগইন করুন' : 'স্বাগতম';
-  const showLoginSub = 'আপনার অ্যাকাউন্টে প্রবেশ করুন';
+  const showLoginTitle = 'লগইন করুন';
+  const showLoginSub = 'চালিয়ে যেতে আপনার অ্যাকাউন্টে প্রবেশ করুন';
   const title = mode === 'login' ? showLoginTitle : mode === 'register' ? 'অ্যাকাউন্ট তৈরি করুন' : 'পাসওয়ার্ড রিসেট করুন';
-  const sub = mode === 'login' ? showLoginSub : mode === 'register' ? 'নতুন অ্যাকাউন্ট খুলুন' : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
+  const sub = mode === 'login' ? showLoginSub : mode === 'register' ? 'শুরু করতে প্রয়োজনীয় তথ্য দিন' : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
 
   return (
     <div
@@ -345,9 +344,9 @@ export default function LoginModal({
       onClick={handleBackdropClick}
     >
       <div
-        className={`relative max-h-[92vh] w-full max-w-[400px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
+        className={`relative max-h-[92vh] w-full max-w-[400px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
       >
-        <div className="relative overflow-hidden bg-gradient-to-br from-brand-bg via-[#DCEBFD] to-white px-7 pb-6 pt-7 text-center">
+        <div className="relative overflow-hidden px-7 pb-5 pt-8 text-center">
           <HeaderDecor />
           <button
             onClick={onClose}
@@ -356,21 +355,11 @@ export default function LoginModal({
           >
             <IconClose />
           </button>
-          <div className="relative z-[1] mb-3.5 flex justify-center">
-            <Image
-              src="/vangcur-logo.png"
-              alt="Vangcur Gadgets"
-              width={900}
-              height={317}
-              className="h-9 w-auto select-none"
-              draggable={false}
-            />
-          </div>
-          <h2 className="relative z-[1] font-display text-[19px] font-bold text-ink">{title}</h2>
-          <p className="relative z-[1] mt-1 font-body text-[13px] text-muted">{sub}</p>
+          <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{title}</h2>
+          <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">{sub}</p>
         </div>
 
-        <div className="px-7 pb-8 pt-6">
+        <div className="px-7 pb-8 pt-2">
           {mode === 'login' ? (
             <div className="flex flex-col gap-3.5">
               <div>
@@ -417,7 +406,7 @@ export default function LoginModal({
                 <>
                   <div className="relative my-1 text-center font-body text-[12px] text-muted before:absolute before:left-0 before:top-1/2 before:h-px before:w-[42%] before:bg-border-base after:absolute after:right-0 after:top-1/2 after:h-px after:w-[42%] after:bg-border-base">অথবা</div>
                   <button
-                    className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-border-base bg-white py-3 font-body text-[13.5px] font-bold text-ink transition-brand duration-brand hover:border-brand-primary/25 hover:bg-surface-muted disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+                    className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-white/70 bg-white/75 py-3 font-body text-[13.5px] font-bold text-ink backdrop-blur-sm transition-brand duration-brand hover:border-brand-primary/25 hover:bg-white/95 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
                     onClick={loginWithGoogle} disabled={googleLoading}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24">
