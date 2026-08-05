@@ -159,10 +159,13 @@ function FieldError({ text }: { text?: string }) {
 }
 
 function fieldClass(hasErr: boolean, extra = '') {
+  // bg-white (opaque) — semi-transparent (bg-white/NN) সবসময় এড়ানো উচিত এখানে, কারণ
+  // parent-এর multi-stop gradient background-এর সাথে মিশে প্রতিটা field-এর vertical
+  // position অনুযায়ী আলাদা আলাদা shade দেখায়, যদিও class একই।
   const base =
-    'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand backdrop-blur-sm placeholder:text-muted/70';
+    'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70';
   const normal =
-    'border-white/70 bg-white/70 focus:border-brand-primary/50 focus:bg-white/95 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+    'border-border-base bg-white focus:border-brand-primary/50 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
   const error =
     'border-[#FCA5A5] bg-[#FEF2F2] focus:border-[#DC2626] focus:bg-[#FEF2F2] focus:shadow-[0_0_0_3px_rgba(220,38,38,.12)]';
   return `${base} ${hasErr ? error : normal} ${extra}`;
@@ -368,6 +371,15 @@ export default function LoginModal({
     }
     if (!data.user) { setRErr('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে'); return; }
 
+    // Supabase কোনো error না দিয়েই একটা phantom user ফেরত দেয় (identities খালি array)
+    // যখন ইমেইলটা ইতিমধ্যে নিবন্ধিত থাকে — email enumeration ঠেকানোর জন্যই এই আচরণ।
+    // এটা ধরা না হলে ডুপ্লিকেট ইমেইল দিয়ে register করলে কোনো error ছাড়াই মোডাল
+    // বন্ধ হয়ে যায় এবং কিছুই হয়নি এমন মনে হয়।
+    if (data.user.identities && data.user.identities.length === 0) {
+      setREmailErr('এই ইমেইল ইতিমধ্যে নিবন্ধিত, লগইন করুন');
+      return;
+    }
+
     if (!data.session) {
       onClose();
       showToast('ইমেইল ভেরিফাই করুন — একটি লিংক পাঠানো হয়েছে');
@@ -400,8 +412,20 @@ export default function LoginModal({
 
   const showLoginTitle = 'স্বাগতম!';
   const showLoginSub = 'আপনার একাউন্টে প্রবেশ করুন।';
-  const title = mode === 'login' ? showLoginTitle : mode === 'register' ? 'অ্যাকাউন্ট তৈরি করুন' : 'পাসওয়ার্ড রিসেট করুন';
-  const sub = mode === 'login' ? showLoginSub : mode === 'register' ? 'মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন' : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
+  const title = mode === 'login'
+    ? showLoginTitle
+    : mode === 'register'
+    ? 'অ্যাকাউন্ট তৈরি করুন'
+    : forgotSubmitted
+    ? 'ইমেইল চেক করুন'
+    : 'পাসওয়ার্ড রিসেট করুন';
+  const sub = mode === 'login'
+    ? showLoginSub
+    : mode === 'register'
+    ? 'মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন'
+    : forgotSubmitted
+    ? 'রিসেট লিংক পাঠানো হয়েছে'
+    : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
 
   return (
     <div
@@ -420,12 +444,8 @@ export default function LoginModal({
           >
             <IconClose />
           </button>
-          {!(mode === 'forgot' && forgotSubmitted) && (
-            <>
-              <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{title}</h2>
-              <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">{sub}</p>
-            </>
-          )}
+          <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{title}</h2>
+          <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">{sub}</p>
         </div>
 
         <div className="px-7 pb-8 pt-2">
@@ -563,14 +583,14 @@ export default function LoginModal({
           ) : (
             <div className="flex flex-col gap-3.5">
               {forgotSubmitted ? (
-                <div className="py-2 text-center">
-                  <div className="mx-auto mb-3.5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+                <div className="py-3 text-center">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
                     <IconMailCheck />
                   </div>
-                  <p className="font-body text-[13.5px] leading-relaxed text-ink">
-                    Supabase Auth থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে, অনুগ্রহ করে আপনার ইমেইল চেক করুন।
+                  <p className="font-body text-[14px] leading-relaxed text-ink">
+                    Supabase Auth থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। অনুগ্রহ করে ইমেইল চেক করুন।
                   </p>
-                  <button className={`${primaryBtnClass} mt-4`} onClick={switchToLogin}>লগইনে ফিরে যান</button>
+                  <button className={`${primaryBtnClass} mt-5`} onClick={switchToLogin}>লগইনে ফিরে যান</button>
                 </div>
               ) : (
                 <>

@@ -29,7 +29,7 @@ export function validatePhone(phone: string): boolean {
 export function validateEmail(email: string): boolean {
   const trimmed = email.trim();
   if (!trimmed || trimmed.length > 254) return false;
-  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(trimmed);
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/.test(trimmed);
 }
 
 export function validateName(name: string): boolean {

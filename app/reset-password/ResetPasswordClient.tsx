@@ -85,9 +85,9 @@ function FieldError({ text }: { text?: string }) {
 
 function fieldClass(hasErr: boolean, extra = '') {
   const base =
-    'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand backdrop-blur-sm placeholder:text-muted/70';
+    'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70';
   const normal =
-    'border-white/70 bg-white/70 focus:border-brand-primary/50 focus:bg-white/95 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+    'border-border-base bg-white focus:border-brand-primary/50 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
   const error =
     'border-[#FCA5A5] bg-[#FEF2F2] focus:border-[#DC2626] focus:bg-[#FEF2F2] focus:shadow-[0_0_0_3px_rgba(220,38,38,.12)]';
   return `${base} ${hasErr ? error : normal} ${extra}`;
@@ -159,9 +159,11 @@ export default function ResetPasswordClient() {
         <div className="relative overflow-hidden px-7 pb-5 pt-8 text-center">
           <HeaderDecor />
           <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">নতুন পাসওয়ার্ড সেট করুন</h2>
-          <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">
-            {status === 'ready' ? 'আপনার অ্যাকাউন্টের জন্য একটি নতুন, শক্তিশালী পাসওয়ার্ড দিন' : ' '}
-          </p>
+          {status === 'ready' && (
+            <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">
+              আপনার অ্যাকাউন্টের জন্য একটি নতুন, শক্তিশালী পাসওয়ার্ড দিন
+            </p>
+          )}
         </div>
 
         <div className="px-7 pb-8 pt-2">
