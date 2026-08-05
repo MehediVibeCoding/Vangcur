@@ -142,6 +142,7 @@ export default function Navbar({
 }: NavbarProps) {
   const supabase = useMemo(() => createClient(), []);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [catResults, setCatResults] = useState<Category[]>([]);
@@ -169,6 +170,22 @@ export default function Navbar({
     fetchCategories(supabase).then((list) => { if (!cancelled) catsRef.current = list; });
     return () => { cancelled = true; };
   }, [supabase]);
+
+  useEffect(() => {
+    let ticking = false;
+    const SCROLL_THRESHOLD = 8;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > SCROLL_THRESHOLD);
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (mobileSearchOpen) mobileSearchInputRef.current?.focus();
@@ -236,7 +253,13 @@ export default function Navbar({
 
   return (
     <>
-      <nav className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px] overflow-hidden rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md transition-all duration-brand ease-brand">
+      <nav
+        className={`sticky z-[900] overflow-hidden border shadow-sh2 backdrop-blur-md transition-all duration-300 ease-brand ${
+          scrolled
+            ? 'top-0 mx-0 mb-0 mt-0 rounded-none border-x-0 border-t-0 border-white/60 bg-white/90'
+            : 'top-[14px] mx-3 mb-1.5 mt-[14px] rounded-[35px] border-white/60 bg-white/70'
+        }`}
+      >
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-3">
             <Link className="flex shrink-0 items-center no-underline" href="/">
