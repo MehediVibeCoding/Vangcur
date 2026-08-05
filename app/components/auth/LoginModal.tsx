@@ -18,6 +18,22 @@ import type { CurrentUser } from '@/types';
 
 const MAX_NAME_LEN = 30;
 const MAX_PASS_LEN = 30;
+const MAX_EMAIL_LEN = 254;
+
+/** প্রতিটা পজিশন অনুযায়ী শুধু বৈধ characters typing-এই আটকে দেয়:
+ *  position 0 -> শুধু '0', position 1 -> শুধু '1', position 2 -> শুধু 3-9, এরপর যেকোনো অঙ্ক, সর্বোচ্চ ১১ অঙ্ক */
+function filterPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  let out = '';
+  for (const ch of digits) {
+    if (out.length >= 11) break;
+    if (out.length === 0) { if (ch === '0') out += ch; }
+    else if (out.length === 1) { if (ch === '1') out += ch; }
+    else if (out.length === 2) { if (ch >= '3' && ch <= '9') out += ch; }
+    else { out += ch; }
+  }
+  return out;
+}
 
 type Mode = 'login' | 'register' | 'forgot';
 
@@ -404,8 +420,12 @@ export default function LoginModal({
           >
             <IconClose />
           </button>
-          <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{title}</h2>
-          <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">{sub}</p>
+          {!(mode === 'forgot' && forgotSubmitted) && (
+            <>
+              <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{title}</h2>
+              <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">{sub}</p>
+            </>
+          )}
         </div>
 
         <div className="px-7 pb-8 pt-2">
@@ -416,7 +436,7 @@ export default function LoginModal({
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
-                    type="email" placeholder="name@example.com" autoComplete="email"
+                    type="email" placeholder="name@example.com" autoComplete="email" maxLength={MAX_EMAIL_LEN}
                     value={lEmail} onChange={(e) => { setLEmail(e.target.value); if (lEmailErr) setLEmailErr(''); }}
                     className={fieldClass(!!lEmailErr)}
                   />
@@ -491,8 +511,8 @@ export default function LoginModal({
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconPhone /></span>
                   <input
-                    type="tel" placeholder="01XXXXXXXXX" maxLength={11}
-                    value={rPhone} onChange={(e) => setRPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    type="tel" placeholder="01XXXXXXXXX" maxLength={11} inputMode="numeric"
+                    value={rPhone} onChange={(e) => setRPhone(filterPhoneInput(e.target.value))}
                     className={fieldClass(false)}
                   />
                 </div>
@@ -502,7 +522,7 @@ export default function LoginModal({
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
-                    type="email" placeholder="name@example.com" value={rEmail}
+                    type="email" placeholder="name@example.com" value={rEmail} maxLength={MAX_EMAIL_LEN}
                     onChange={(e) => { setREmail(e.target.value); if (rEmailErr) setREmailErr(''); }}
                     className={fieldClass(!!rEmailErr)}
                   />
@@ -548,7 +568,7 @@ export default function LoginModal({
                     <IconMailCheck />
                   </div>
                   <p className="font-body text-[13.5px] leading-relaxed text-ink">
-                    যদি <strong>{forgotEmail.trim()}</strong> দিয়ে কোনো অ্যাকাউন্ট থাকে, একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। ইমেইল চেক করুন।
+                    Supabase Auth থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে, অনুগ্রহ করে আপনার ইমেইল চেক করুন।
                   </p>
                   <button className={`${primaryBtnClass} mt-4`} onClick={switchToLogin}>লগইনে ফিরে যান</button>
                 </div>
@@ -559,7 +579,7 @@ export default function LoginModal({
                     <div className="relative">
                       <span className={fieldIconWrapClass}><IconMail /></span>
                       <input
-                        type="email" placeholder="name@example.com" autoComplete="email"
+                        type="email" placeholder="name@example.com" autoComplete="email" maxLength={MAX_EMAIL_LEN}
                         value={forgotEmail} onChange={(e) => { setForgotEmail(e.target.value); if (forgotEmailErr) setForgotEmailErr(''); }}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleForgotSubmit(); }}
                         className={fieldClass(!!forgotEmailErr)}
