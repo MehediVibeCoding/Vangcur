@@ -17,6 +17,7 @@ import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
 
 const MAX_NAME_LEN = 30;
+const MAX_PASS_LEN = 30;
 
 type Mode = 'login' | 'register' | 'forgot';
 
@@ -136,8 +137,20 @@ function ErrMsg({ text }: { text: string }) {
   );
 }
 
-const fieldInputClass =
-  'w-full rounded-full border border-white/70 bg-white/70 backdrop-blur-sm pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70 focus:border-brand-primary/50 focus:bg-white/95 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+function FieldError({ text }: { text?: string }) {
+  if (!text) return null;
+  return <p className="mt-1 pl-1 font-body text-[11.5px] font-semibold text-[#DC2626]">{text}</p>;
+}
+
+function fieldClass(hasErr: boolean, extra = '') {
+  const base =
+    'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand backdrop-blur-sm placeholder:text-muted/70';
+  const normal =
+    'border-white/70 bg-white/70 focus:border-brand-primary/50 focus:bg-white/95 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+  const error =
+    'border-[#FCA5A5] bg-[#FEF2F2] focus:border-[#DC2626] focus:bg-[#FEF2F2] focus:shadow-[0_0_0_3px_rgba(220,38,38,.12)]';
+  return `${base} ${hasErr ? error : normal} ${extra}`;
+}
 
 const fieldIconWrapClass =
   'pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-muted';
@@ -151,7 +164,9 @@ const backBtnClass =
   'mt-2.5 w-full rounded-full border-[1.5px] border-border-base bg-transparent py-[11px] font-body text-[13px] font-semibold text-muted transition-brand duration-brand hover:border-brand-primary/30 hover:bg-brand-primary/5 hover:text-brand-primary';
 
 const linkChipClass =
-  'rounded-full bg-brand-bg/60 px-2.5 py-[3px] font-bold text-brand-primary transition-brand duration-brand hover:bg-brand-bg';
+  'bg-transparent p-0 border-0 font-bold text-brand-bg transition-brand duration-brand hover:opacity-75';
+
+const rememberLabelClass = 'flex items-center gap-1.5 text-brand-bg';
 
 export default function LoginModal({
   isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
@@ -163,7 +178,8 @@ export default function LoginModal({
   const [lPass, setLPass] = useState('');
   const [showLPass, setShowLPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [lErr, setLErr] = useState('');
+  const [lEmailErr, setLEmailErr] = useState('');
+  const [lPassErr, setLPassErr] = useState('');
 
   const [rName, setRName] = useState('');
   const [rPhone, setRPhone] = useState('');
@@ -171,11 +187,14 @@ export default function LoginModal({
   const [rPass, setRPass] = useState('');
   const [showRPass, setShowRPass] = useState(false);
   const [rErr, setRErr] = useState('');
+  const [rEmailErr, setREmailErr] = useState('');
+  const [rPassErr, setRPassErr] = useState(false);
 
   const [googleLoading, setGoogleLoading] = useState(false);
   const oauthCheckedRef = useRef(false);
 
   const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmailErr, setForgotEmailErr] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
 
@@ -187,8 +206,12 @@ export default function LoginModal({
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode || 'login');
-      setLErr('');
+      setLEmailErr('');
+      setLPassErr('');
       setRErr('');
+      setREmailErr('');
+      setRPassErr(false);
+      setForgotEmailErr('');
       setForgotSubmitted(false);
       setForgotEmail('');
     }
@@ -235,13 +258,14 @@ export default function LoginModal({
     }
   }
 
-  const switchToRegister = () => { setMode('register'); setRErr(''); };
-  const switchToLogin = () => { setMode('login'); setLErr(''); };
-  const switchToForgot = () => { setMode('forgot'); setForgotSubmitted(false); setForgotEmail(lEmail); };
+  const switchToRegister = () => { setMode('register'); setRErr(''); setREmailErr(''); setRPassErr(false); };
+  const switchToLogin = () => { setMode('login'); setLEmailErr(''); setLPassErr(''); };
+  const switchToForgot = () => { setMode('forgot'); setForgotSubmitted(false); setForgotEmailErr(''); setForgotEmail(lEmail); };
 
   const handleForgotSubmit = async () => {
     const em = sanitizeInput(forgotEmail.trim());
-    if (!em || !validateEmail(em)) { return; }
+    if (!em || !validateEmail(em)) { setForgotEmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
+    setForgotEmailErr('');
     setForgotLoading(true);
     await requestPasswordReset(supabase, em);
     setForgotLoading(false);
@@ -260,25 +284,36 @@ export default function LoginModal({
   const doLogin = async () => {
     const em = sanitizeInput(lEmail.trim());
     const pw = lPass;
-    if (!em && !pw) { setLErr('ইমেইল ও পাসওয়ার্ড দিন'); return; }
-    if (!em) { setLErr('ইমেইল দিন'); return; }
-    if (!validateEmail(em)) { setLErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
-    if (!pw) { setLErr('পাসওয়ার্ড দিন'); return; }
-    setLErr('');
+    setLEmailErr('');
+    setLPassErr('');
+
+    let blocked = false;
+    if (!em) { setLEmailErr('ইমেইল দিন'); blocked = true; }
+    else if (!validateEmail(em)) { setLEmailErr('সঠিক ইমেইল ঠিকানা দিন'); blocked = true; }
+    if (!pw) { setLPassErr('পাসওয়ার্ড দিন'); blocked = true; }
+    if (blocked) return;
 
     const { data, error } = await signInWithPassword(supabase, em, pw);
     if (error) {
       const msg = (error.message || '').toLowerCase();
       if (msg.includes('invalid login')) {
-        setLErr('ইমেইল বা পাসওয়ার্ড ভুল');
+        // Supabase দেখায় না ইমেইল না পাসওয়ার্ড ভুল — একসাথে দেখানো হলে অ্যাকাউন্ট
+        // enumeration ঠেকানো যায় (কেউ ইমেইল খাতায় আছে কিনা বুঝতে পারবে না)
+        setLEmailErr('ইমেইল বা পাসওয়ার্ড ভুল');
+        setLPassErr('ইমেইল বা পাসওয়ার্ড ভুল');
       } else if (msg.includes('email')) {
-        setLErr('ইমেইল ঠিকানা ভুল');
+        setLEmailErr('ইমেইল ঠিকানা ভুল');
       } else {
-        setLErr('ইমেইল বা পাসওয়ার্ড ভুল');
+        setLEmailErr('ইমেইল বা পাসওয়ার্ড ভুল');
+        setLPassErr('ইমেইল বা পাসওয়ার্ড ভুল');
       }
       return;
     }
-    if (!data.user) { setLErr('ইমেইল বা পাসওয়ার্ড ভুল'); return; }
+    if (!data.user) {
+      setLEmailErr('ইমেইল বা পাসওয়ার্ড ভুল');
+      setLPassErr('ইমেইল বা পাসওয়ার্ড ভুল');
+      return;
+    }
 
     const safeUser: CurrentUser = {
       id: data.user.id,
@@ -295,18 +330,24 @@ export default function LoginModal({
     const ph = rPhone.trim();
     const em = sanitizeInput(rEmail.trim());
     const pw = rPass;
+    setRErr('');
+    setREmailErr('');
+    setRPassErr(false);
+
     if (!nm) { setRErr('নাম দিন'); return; }
     if (nm.length > MAX_NAME_LEN) { setRErr(`নাম সর্বোচ্চ ${MAX_NAME_LEN} ক্যারেক্টার হতে পারবে`); return; }
     if (!ph || !validatePhone(ph)) { setRErr('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)'); return; }
-    if (!em || !validateEmail(em)) { setRErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
+    if (!em || !validateEmail(em)) { setREmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     const strength = await checkPasswordStrength(pw);
-    if (!strength.minLenOk) { setRErr('পাসওয়ার্ড কমপক্ষে ৮ অক্ষর হতে হবে'); return; }
-    if (!strength.ok) { setRErr('আরও শক্তিশালী পাসওয়ার্ড দিন (নিচের মিটার দেখুন)'); return; }
-    setRErr('');
+    if (!strength.minLenOk || !strength.ok) { setRPassErr(true); return; }
 
     const { data, error } = await signUp(supabase, { name: nm, phone: ph, email: em, password: pw });
     if (error) {
-      setRErr(error.message?.includes('already registered') ? 'এই ইমেইল ইতিমধ্যে নিবন্ধিত' : 'অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে');
+      if (error.message?.includes('already registered')) {
+        setREmailErr('এই ইমেইল ইতিমধ্যে নিবন্ধিত');
+      } else {
+        setRErr('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে');
+      }
       return;
     }
     if (!data.user) { setRErr('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে'); return; }
@@ -342,7 +383,7 @@ export default function LoginModal({
   };
 
   const showLoginTitle = 'স্বাগতম!';
-  const showLoginSub = 'Vangcur-এ আপনার অ্যাকাউন্টে প্রবেশ করুন';
+  const showLoginSub = 'আপনার একাউন্টে প্রবেশ করুন।';
   const title = mode === 'login' ? showLoginTitle : mode === 'register' ? 'অ্যাকাউন্ট তৈরি করুন' : 'পাসওয়ার্ড রিসেট করুন';
   const sub = mode === 'login' ? showLoginSub : mode === 'register' ? 'মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন' : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
 
@@ -376,10 +417,11 @@ export default function LoginModal({
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
                     type="email" placeholder="name@example.com" autoComplete="email"
-                    value={lEmail} onChange={(e) => setLEmail(e.target.value)}
-                    className={fieldInputClass}
+                    value={lEmail} onChange={(e) => { setLEmail(e.target.value); if (lEmailErr) setLEmailErr(''); }}
+                    className={fieldClass(!!lEmailErr)}
                   />
                 </div>
+                <FieldError text={lEmailErr} />
               </div>
               <div>
                 <label className={fieldLabelClass}>পাসওয়ার্ড</label>
@@ -387,10 +429,10 @@ export default function LoginModal({
                   <span className={fieldIconWrapClass}><IconLock /></span>
                   <input
                     type={showLPass ? 'text' : 'password'} placeholder="আপনার পাসওয়ার্ড দিন"
-                    autoComplete="current-password" value={lPass}
-                    onChange={(e) => setLPass(e.target.value)}
+                    autoComplete="current-password" value={lPass} maxLength={MAX_PASS_LEN}
+                    onChange={(e) => { setLPass(e.target.value); if (lPassErr) setLPassErr(''); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') doLogin(); }}
-                    className={`${fieldInputClass} pr-11`}
+                    className={`${fieldClass(!!lPassErr)} pr-11`}
                   />
                   <button
                     type="button" title={showLPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowLPass((v) => !v)}
@@ -399,15 +441,15 @@ export default function LoginModal({
                     <IconEye off={showLPass} />
                   </button>
                 </div>
+                <FieldError text={lPassErr} />
               </div>
               <div className="flex items-center justify-between font-body text-[12.5px]">
-                <label className="flex items-center gap-1.5 text-muted">
+                <label className={rememberLabelClass}>
                   <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 cursor-pointer rounded border-[1.5px] border-border-base accent-brand-primary transition-brand duration-brand hover:border-brand-primary/50" />
                   মনে রাখুন
                 </label>
                 <button onClick={switchToForgot} className={linkChipClass}>পাসওয়ার্ড ভুলে গেছেন?</button>
               </div>
-              {lErr && <ErrMsg text={lErr} />}
               <button className={primaryBtnClass} onClick={doLogin}>লগইন করুন</button>
 
               {!orderMode && (
@@ -441,10 +483,7 @@ export default function LoginModal({
                 <label className={fieldLabelClass}>পূর্ণ নাম</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconUser /></span>
-                  <input placeholder="আপনার পূর্ণ নাম লিখুন" maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(e.target.value.slice(0, MAX_NAME_LEN))} className={fieldInputClass} />
-                </div>
-                <div className={`mt-1 text-right font-body text-[10.5px] ${rName.length >= MAX_NAME_LEN ? 'font-semibold text-[#DC2626]' : 'text-muted'}`}>
-                  {rName.length}/{MAX_NAME_LEN}
+                  <input placeholder="আপনার পূর্ণ নাম লিখুন" maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(e.target.value.slice(0, MAX_NAME_LEN))} className={fieldClass(false)} />
                 </div>
               </div>
               <div>
@@ -454,7 +493,7 @@ export default function LoginModal({
                   <input
                     type="tel" placeholder="01XXXXXXXXX" maxLength={11}
                     value={rPhone} onChange={(e) => setRPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    className={fieldInputClass}
+                    className={fieldClass(false)}
                   />
                 </div>
               </div>
@@ -462,8 +501,13 @@ export default function LoginModal({
                 <label className={fieldLabelClass}>ইমেইল</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconMail /></span>
-                  <input type="email" placeholder="name@example.com" value={rEmail} onChange={(e) => setREmail(e.target.value)} className={fieldInputClass} />
+                  <input
+                    type="email" placeholder="name@example.com" value={rEmail}
+                    onChange={(e) => { setREmail(e.target.value); if (rEmailErr) setREmailErr(''); }}
+                    className={fieldClass(!!rEmailErr)}
+                  />
                 </div>
+                <FieldError text={rEmailErr} />
               </div>
               <div>
                 <label className={fieldLabelClass}>পাসওয়ার্ড</label>
@@ -471,8 +515,9 @@ export default function LoginModal({
                   <span className={fieldIconWrapClass}><IconLock /></span>
                   <input
                     type={showRPass ? 'text' : 'password'} placeholder="কমপক্ষে ৮ অক্ষর, শক্তিশালী পাসওয়ার্ড"
-                    value={rPass} onChange={(e) => setRPass(e.target.value)}
-                    className={`${fieldInputClass} pr-11`}
+                    value={rPass} maxLength={MAX_PASS_LEN}
+                    onChange={(e) => { setRPass(e.target.value); if (rPassErr) setRPassErr(false); }}
+                    className={`${fieldClass(rPassErr)} pr-11`}
                   />
                   <button
                     type="button" title={showRPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowRPass((v) => !v)}
@@ -515,11 +560,12 @@ export default function LoginModal({
                       <span className={fieldIconWrapClass}><IconMail /></span>
                       <input
                         type="email" placeholder="name@example.com" autoComplete="email"
-                        value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                        value={forgotEmail} onChange={(e) => { setForgotEmail(e.target.value); if (forgotEmailErr) setForgotEmailErr(''); }}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleForgotSubmit(); }}
-                        className={fieldInputClass}
+                        className={fieldClass(!!forgotEmailErr)}
                       />
                     </div>
+                    <FieldError text={forgotEmailErr} />
                   </div>
                   <button className={primaryBtnClass} onClick={handleForgotSubmit} disabled={forgotLoading}>
                     রিসেট লিংক পাঠান
