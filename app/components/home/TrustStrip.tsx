@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-
 interface TrustItem {
   label: string;
   sub: string;
@@ -83,43 +81,13 @@ const TRUST_ITEMS: TrustItem[] = [
 ];
 
 export default function TrustStrip() {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    const prefersReduced = typeof window !== 'undefined'
-      && window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (!prefersReduced && typeof window !== 'undefined' && window.IntersectionObserver) {
-      const obs = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            setRevealed(true);
-            obs.disconnect();
-          }
-        },
-        { threshold: 0.2 },
-      );
-      if (wrapRef.current) obs.observe(wrapRef.current);
-      return () => obs.disconnect();
-    }
-    setRevealed(true);
-  }, []);
-
   return (
-    <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5" ref={wrapRef}>
+    <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
       <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/60 bg-white/70 px-4 py-3 shadow-sh2 backdrop-blur-md md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
         {TRUST_ITEMS.map((item, i) => (
           <div
             key={item.label}
             className={`flex items-center gap-2 ${i >= 3 ? 'hidden md:flex' : ''}`}
-            style={{
-              opacity: revealed ? 1 : 0,
-              transform: revealed ? 'translateY(0) scale(1)' : 'translateY(10px) scale(.96)',
-              transition: 'opacity .35s ease, transform .35s ease',
-              transitionDelay: revealed ? `${i * 80}ms` : '0ms',
-            }}
           >
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}>
               {item.icon}
