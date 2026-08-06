@@ -19,28 +19,27 @@ import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
 import type { CurrentUser } from '@/types';
 
 export default function ClientHome() {
-  const [cartQty, setCartQty] = useState(0);
-  const [wishQty, setWishQty] = useState(0);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [cartQty, setCartQty] = useState(() => (typeof window !== 'undefined' ? cartCount(getCart()) : 0));
+  const [wishQty, setWishQty] = useState(() => (typeof window !== 'undefined' ? getWishlist().length : 0));
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
+    typeof window !== 'undefined' ? getCurrentUser() : null
+  ));
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
-    setCartQty(cartCount(getCart()));
     const onCartChange = () => setCartQty(cartCount(getCart()));
     window.addEventListener(CART_EVENT, onCartChange);
     return () => window.removeEventListener(CART_EVENT, onCartChange);
   }, []);
 
   useEffect(() => {
-    setWishQty(getWishlist().length);
     const onWishChange = () => setWishQty(getWishlist().length);
     window.addEventListener(WISHLIST_EVENT, onWishChange);
     return () => window.removeEventListener(WISHLIST_EVENT, onWishChange);
   }, []);
 
   useEffect(() => {
-    setCurrentUser(getCurrentUser());
     const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());
     window.addEventListener(AUTH_EVENT, onAuthChange);
     return () => window.removeEventListener(AUTH_EVENT, onAuthChange);
