@@ -1,26 +1,30 @@
-let bodyScrollY = 0;
+// আগে এখানে body-কে position:fixed + negative top offset দিয়ে লক করা হতো
+// (iOS Safari rubber-band scroll ঠেকানোর জন্য সাধারণ একটা পুরনো কৌশল)। কিন্তু
+// এই কৌশলটাই Navbar-এর sticky positioning ভেঙে দিচ্ছিল — body position:fixed
+// হওয়ার সাথে সাথে sticky element-এর reference frame গণ্ডগোল হয়ে যেত, ফলে
+// modal বন্ধ করার পর Navbar আর সঠিকভাবে viewport-এর উপরে আটকে থাকত না, বরং
+// যেখানে scroll ছিল সেখানেই "আটকে" যেত (স্ক্রিনশটে যেটা ফুটারে দেখা গিয়েছিল)।
+//
+// এখন শুধু overflow:hidden + overscroll-behavior:contain ব্যবহার করা হচ্ছে —
+// Android Chrome-এ এটা যথেষ্ট, আর sticky element-এর কোনো ক্ষতি করে না।
+// একাধিক modal একসাথে খোলা থাকলে (যেমন checkout-এর ভিতরে login) একটা বন্ধ
+// হলে অন্যটা যেন lock না হারায়, তাই reference-count রাখা হচ্ছে।
+let lockCount = 0;
 
 export function lockBody(): void {
   if (typeof document === 'undefined') return;
-  if (document.body.dataset.locked) return;
-  bodyScrollY = window.scrollY;
+  lockCount += 1;
+  if (lockCount > 1) return;
+  document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${bodyScrollY}px`;
-  document.body.style.width = '100%';
-  document.body.dataset.locked = '1';
+  document.body.style.overscrollBehavior = 'contain';
 }
 
 export function unlockBody(): void {
   if (typeof document === 'undefined') return;
-  if (!document.body.dataset.locked) return;
-  const scrollY = bodyScrollY || parseInt(document.body.style.top || '0', 10) * -1;
+  lockCount = Math.max(0, lockCount - 1);
+  if (lockCount > 0) return;
+  document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.width = '';
-  delete document.body.dataset.locked;
-  document.documentElement.style.scrollBehavior = 'auto';
-  window.scrollTo(0, scrollY);
-  requestAnimationFrame(() => { document.documentElement.style.scrollBehavior = ''; });
+  document.body.style.overscrollBehavior = '';
 }
