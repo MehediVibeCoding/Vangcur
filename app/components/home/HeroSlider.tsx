@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { parseSupabaseVal } from '@/lib/categoryData';
+import { sanitizeSvgHtml } from '@/lib/sanitize';
 
 interface HeroCard {
   label: string;
@@ -72,10 +73,25 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
   const touchRef = useRef({ startX: 0, startY: 0 });
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Keeps duoIdxRef.current inside [DUO_TOTAL, DUO_TOTAL*2) no matter how far it has
+  // drifted. Normally onTransitionEnd corrects drift one DUO_TOTAL at a time, but that
+  // relies on the 'transitionend' event actually firing — which browsers skip for
+  // hidden/background tabs. Autoplay's setInterval keeps ticking (throttled, not
+  // stopped) while a tab is backgrounded, so duoIdxRef can drift by many multiples of
+  // DUO_TOTAL during a long background period. Modulo (not a single ± DUO_TOTAL step)
+  // is what makes this recovery work regardless of how large that drift got.
+  const normalizeIdx = () => {
+    const span = DUO_TOTAL;
+    const idx = duoIdxRef.current;
+    if (idx >= span && idx < span * 2) return;
+    duoIdxRef.current = ((idx - span) % span + span) % span + span;
+  };
+
   const setPosition = useCallback((animate: boolean) => {
     const track = trackRef.current;
     const wrap = wrapRef.current;
     if (!track || !wrap) return;
+    normalizeIdx();
     const allCards = track.querySelectorAll<HTMLElement>('[data-cath-card]');
     const perPage = getDuoPerPage();
     let wrapWidth = wrap.getBoundingClientRect().width;
@@ -177,6 +193,25 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
         requestAnimationFrame(() => requestAnimationFrame(() => setPosition(false)));
       }, 200);
     };
+    // Legacy bug fix (2026-08-05): while this tab is hidden, 'transitionend' never
+    // fires (browsers don't run CSS transitions on hidden tabs), so onTransitionEnd's
+    // wrap-around correction never runs — but the setInterval below keeps ticking
+    // (throttled) regardless, so duoIdxRef can drift into the thousands during a long
+    // background period. Left alone, the next paint jumps the track translateX() far
+    // outside the viewport — the whole slider goes blank until a hard refresh resets
+    // duoIdxRef via a fresh component instance. Pausing here (not just relying on
+    // normalizeIdx() as a safety net) also avoids wasting the interval/CPU while hidden.
+    const onDocVisibility = () => {
+      if (document.hidden) {
+        pausedRef.current = true;
+        if (autoTimerRef.current) { clearInterval(autoTimerRef.current); autoTimerRef.current = null; }
+      } else {
+        setPosition(false); // instant resnap first — normalizeIdx() runs inside this
+        pausedRef.current = false;
+        startAuto();
+      }
+    };
+    document.addEventListener('visibilitychange', onDocVisibility);
 
     wrap.addEventListener('touchstart', onTouchStart, { passive: true });
     wrap.addEventListener('touchend', onTouchEnd, { passive: true });
@@ -202,6 +237,7 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
       wrap.removeEventListener('mouseleave', onMouseLeaveDrag);
       track.removeEventListener('transitionend', onTransitionEnd);
       window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onDocVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -289,7 +325,7 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
                 ) : isSvgEmoji ? (
                   <div
                     className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.08] [&_svg]:h-20 [&_svg]:w-20"
-                    dangerouslySetInnerHTML={{ __html: card.emoji }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(card.emoji) }}
                   />
                 ) : card.emoji ? (
                   <div className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.08]">

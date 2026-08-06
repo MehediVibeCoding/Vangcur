@@ -8,7 +8,7 @@ import { showToast } from '@/lib/toast';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { productHref, WISHLIST_EVENT } from '@/lib/productData';
 import { saveCurrentUser, logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
-import { OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
+import { OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
   fetchMyOrders, orderStats, updateProfileName,
@@ -216,57 +216,15 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
 
   return (
     <div
-      className={`fixed inset-0 z-[950] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`fixed inset-0 z-[75] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <div className="relative flex items-center justify-between gap-2 bg-white/80 px-4 py-3 backdrop-blur-md">
+      <div className="sticky top-0 z-10 flex items-center bg-white/80 px-4 py-3 backdrop-blur-md">
         <button
-          onClick={onClose} aria-label="হোমে ফিরুন" title="হোম"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-ink transition-brand duration-brand hover:bg-border-base"
+          onClick={onClose} aria-label="ফিরে যান"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-xl text-ink hover:bg-border-base"
         >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <path d="M3 11l9-8 9 8" />
-            <path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10" />
-          </svg>
+          ‹
         </button>
-
-        <div className="flex items-center gap-1.5 md:gap-2">
-          <button onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))} title="কার্ট" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-            </svg>
-            <span className="hidden md:inline">কার্ট</span>
-          </button>
-
-          <button onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))} title="উইশলিস্ট" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-            </svg>
-            <span className="hidden md:inline">উইশলিস্ট</span>
-          </button>
-
-          <button onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))} title="অর্ডার ট্র্যাক" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-            </svg>
-            <span className="hidden md:inline">ট্র্যাক</span>
-          </button>
-
-          <button onClick={openMembership} title="মেম্বারশিপ" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z" />
-            </svg>
-            <span className="hidden md:inline">মেম্বারশিপ</span>
-          </button>
-
-          <button
-            onClick={onClose}
-            className="hidden shrink-0 rounded-full bg-brand-primary px-[18px] py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:inline-block"
-          >
-            ব্যাক টু হোম
-          </button>
-        </div>
       </div>
 
       <div className="mx-auto max-w-[1100px] px-4 pb-16 pt-2 md:px-6">
@@ -282,7 +240,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             <div
               ref={cardRef}
               className={`relative overflow-hidden rounded-brand p-4 shadow-sh2 ${STATE_BG[celestial.state] || STATE_BG.noon}`}
-              style={{ minHeight: 190 }}
+              style={{ minHeight: 236 }}
             >
               <svg className="pointer-events-none absolute inset-0 h-16 w-full opacity-80" viewBox="0 0 400 65" preserveAspectRatio="none">
                 {['10%', '20%', '35%', '50%', '65%', '80%', '92%', '15%', '45%', '75%'].map((left, i) => (
@@ -364,46 +322,48 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                 <path d="M0,66 Q120,38 240,56 T400,52 L400,96 L0,96 Z" fill="rgba(0,0,0,0.28)" />
               </svg>
 
-              <div className="relative z-10">
-                <div className="flex items-center gap-2.5">
-                  <div className="relative">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">{initials}</div>
+              <div className="relative z-10 flex h-full min-h-[204px] flex-col justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
                     {currentTier.crown && (
                       <span
-                        className="absolute -right-1.5 -top-2.5 h-6 w-6"
+                        className="pointer-events-none absolute -top-4 left-1/2 h-8 w-8 -translate-x-1/2 [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.35))]"
                         dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(crownSVG(currentTier.crown)) }}
                       />
                     )}
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/25 bg-white/15 text-sm font-bold text-white backdrop-blur-sm">{initials}</div>
                   </div>
-                  <div className="min-w-0 flex-1 text-white">
+                  <div className="min-w-0 flex-1 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.65)' }}>
                     <div className="truncate font-body text-sm font-bold">{currentUser.name || '-'}</div>
                     <div className="truncate font-body text-[11.5px] text-white/75">{currentUser.email || '-'}</div>
                     {createdStr && <div className="mt-0.5 font-body text-[10.5px] text-white/60">📅 অ্যাকাউন্ট তৈরি: {createdStr}</div>}
                   </div>
                 </div>
 
-                <div className="mt-3 flex gap-1.5">
-                  <button onClick={openNameEdit} className="rounded-full bg-white/15 px-2.5 py-1 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/25">✏️ এডিট</button>
-                  <button onClick={toggleSwitchPanel} className="rounded-full bg-white/15 px-2.5 py-1 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/25">🔄 সুইচ</button>
-                  <button onClick={() => setShowLogoutConfirm(true)} className="rounded-full bg-white/15 px-2.5 py-1 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/25">↩ লগআউট</button>
-                </div>
-
-                {nameEditOpen && (
-                  <div className="mt-3 rounded-[12px] bg-white/10 p-3 backdrop-blur-sm">
-                    <div className="mb-1.5 font-body text-[11px] font-semibold text-white/70">নতুন নাম লিখুন</div>
-                    <div className="flex gap-1.5">
-                      <input
-                        type="text" placeholder="আপনার নাম" value={nameEditValue}
-                        onChange={(e) => setNameEditValue(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
-                        className="flex-1 rounded-[8px] border border-white/15 bg-white/10 px-3 py-2 font-body text-[13.5px] text-white outline-none placeholder:text-white/50"
-                      />
-                      <button onClick={saveNameEdit} className="rounded-[8px] bg-gold px-3.5 font-body text-xs font-bold text-ink">সেভ</button>
-                      <button onClick={closeNameEdit} className="rounded-[8px] bg-white/15 px-2.5 font-body text-xs text-white">✕</button>
-                    </div>
-                    {nameEditErr && <div className="mt-1.5 font-body text-[11px] text-[#FCA5A5]">{nameEditErr}</div>}
+                <div>
+                  <div className="flex gap-2 border-t border-white/[0.12] pt-3">
+                    <button onClick={openNameEdit} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">✏️ এডিট</button>
+                    <button onClick={toggleSwitchPanel} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">🔄 সুইচ</button>
+                    <button onClick={() => setShowLogoutConfirm(true)} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">↩ লগআউট</button>
                   </div>
-                )}
+
+                  {nameEditOpen && (
+                    <div className="mt-3 rounded-[12px] bg-white/10 p-3 backdrop-blur-sm">
+                      <div className="mb-1.5 font-body text-[11px] font-semibold text-white/70">নতুন নাম লিখুন</div>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text" placeholder="আপনার নাম" value={nameEditValue}
+                          onChange={(e) => setNameEditValue(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
+                          className="flex-1 rounded-[8px] border border-white/15 bg-white/10 px-3 py-2 font-body text-[13.5px] text-white outline-none placeholder:text-white/50"
+                        />
+                        <button onClick={saveNameEdit} className="rounded-[8px] bg-gold px-3.5 font-body text-xs font-bold text-ink">সেভ</button>
+                        <button onClick={closeNameEdit} className="rounded-[8px] bg-white/15 px-2.5 font-body text-xs text-white">✕</button>
+                      </div>
+                      {nameEditErr && <div className="mt-1.5 font-body text-[11px] text-[#FCA5A5]">{nameEditErr}</div>}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -443,17 +403,17 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             )}
 
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-[12px] border border-brand-bg bg-white py-2.5 text-center shadow-sh1">
+              <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">
                 <div className="font-body text-base font-extrabold text-ink">{stats.total}টি</div>
                 <div className="font-body text-[10px] text-muted">মোট অর্ডার</div>
               </div>
-              <div className="rounded-[12px] border border-brand-bg bg-white py-2.5 text-center shadow-sh1">
+              <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">
                 <div className="font-body text-base font-extrabold text-ink">{stats.running}টি</div>
                 <div className="font-body text-[10px] text-muted">রানিং অর্ডার</div>
               </div>
               <div
                 onClick={openMembership}
-                className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[12px] border border-brand-bg bg-white py-2 shadow-sh1"
+                className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[12px] border border-border-base bg-white py-2 shadow-sh1"
               >
                 <div className="h-7 w-7" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(tierIconSVG(currentTier.key)) }} />
                 <div className="font-body text-[10px] font-extrabold" style={{ color: currentTier.key === 'silver' ? '#475569' : currentTier.key === 'gold' ? '#92400E' : currentTier.key === 'diamond' ? '#1E40AF' : '#78350F' }}>
@@ -464,9 +424,9 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             </div>
 
             {drafts.length > 0 && (
-              <div className="rounded-brand border border-brand-primary/25 bg-brand-bg/20 p-3.5 shadow-sh1">
+              <div className="rounded-brand border border-border-base bg-white p-3.5 shadow-sh1">
                 <div className="mb-2.5 flex items-center justify-between">
-                  <div className="font-body text-[13px] font-bold text-brand-primary">🛒 অর্ডার করতে চেয়েছিলেন</div>
+                  <div className="font-body text-[13px] font-bold text-ink">🛒 অর্ডার করতে চেয়েছিলেন</div>
                   <button onClick={handleClearAllDrafts} className="font-body text-[11px] text-muted hover:text-ink">🗑️ সব মুছুন</button>
                 </div>
                 <div className="flex flex-col gap-2.5">
@@ -479,7 +439,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                     const prodName = firstItem ? firstItem.name : 'প্রোডাক্ট';
                     const tot = items.reduce((s, i) => s + i.price * i.qty, 0);
                     return (
-                      <div key={draft.id} className="rounded-[10px] border border-brand-bg bg-white p-2.5">
+                      <div key={draft.id} className="rounded-[10px] border border-border-base p-2.5">
                         <div className="font-body text-[10.5px] text-muted">📅 {dateStr} · ⏰ {timeStr} · {items.length} আইটেম</div>
                         <div className="mt-1.5 flex items-center gap-2">
                           {firstItem ? <ItemThumb imgVal={(firstItem.imgs || ['📦'])[0]} /> : <ItemThumb />}
@@ -532,7 +492,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             <div className="mb-4 font-body text-[15px] font-bold text-ink">📦 আমার অর্ডার সমূহ</div>
             <div className="flex flex-col gap-3.5">
               {orders.length === 0 ? (
-                <div className="rounded-brand border border-dashed border-brand-bg py-9 text-center">
+                <div className="rounded-brand border border-dashed border-border-base py-9 text-center">
                   <div className="mb-2.5 text-[38px]">📦</div>
                   <div className="mb-1 font-body text-sm font-bold text-ink">এখনো কোনো অর্ডার নেই</div>
                   <div className="font-body text-xs text-muted">অর্ডার করলে এখানে দেখাবে</div>
@@ -541,8 +501,8 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                 orders.map((o) => {
                   const dateStr = new Date(o.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
                   return (
-                    <div key={o.id} className="rounded-brand border border-brand-bg bg-white shadow-sh1">
-                      <div className="flex items-center justify-between border-b border-brand-bg px-4 py-2.5">
+                    <div key={o.id} className="rounded-brand border border-border-base bg-white shadow-sh1">
+                      <div className="flex items-center justify-between border-b border-border-base px-4 py-2.5">
                         <span className="font-body text-[13px] font-bold text-ink">{o.orderNum}</span>
                         <span className={`rounded-full px-2.5 py-1 font-body text-[11px] font-bold ${STATUS_CLASS[o.status] || STATUS_CLASS.pending}`}>{STATUS_LABEL[o.status] || STATUS_LABEL.pending}</span>
                       </div>
@@ -557,9 +517,9 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                             </div>
                           ))}
                         </div>
-                        <div className="mt-3 flex items-center justify-between border-t border-brand-bg pt-3">
+                        <div className="mt-3 flex items-center justify-between border-t border-border-base pt-3">
                           <div className="font-body text-[13px] font-bold text-ink">মোট: ৳{(o.total || 0).toLocaleString()} (শিপিং সহ)</div>
-                          <button onClick={() => openInvoice(o.id)} className="rounded-full border border-brand-primary/30 px-3 py-1.5 font-body text-[11px] font-bold text-brand-primary hover:bg-brand-bg/25">📄 ইনভয়েস</button>
+                          <button onClick={() => openInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 ইনভয়েস</button>
                         </div>
                       </div>
                     </div>

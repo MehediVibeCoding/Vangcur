@@ -3,22 +3,27 @@
 import { useEffect, useState } from 'react';
 import CartSidebar from './cart/CartSidebar';
 import WishlistDrawer from './cart/WishlistDrawer';
+import TrackOrderModal from './cart/TrackOrderModal';
 import FloatCartBadge from './cart/FloatCartBadge';
 import FloatWishBadge from './cart/FloatWishBadge';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 
 export default function GlobalOverlays() {
   const [cartOpen, setCartOpen] = useState(false);
   const [wishOpen, setWishOpen] = useState(false);
+  const [trackOpen, setTrackOpen] = useState(false);
 
   useEffect(() => {
     const onOpenCart = () => setCartOpen(true);
     const onOpenWish = () => setWishOpen(true);
+    const onOpenTrack = () => setTrackOpen(true);
     window.addEventListener(OPEN_CART_EVENT, onOpenCart);
     window.addEventListener(OPEN_WISHLIST_EVENT, onOpenWish);
+    window.addEventListener(OPEN_TRACK_ORDER_EVENT, onOpenTrack);
     return () => {
       window.removeEventListener(OPEN_CART_EVENT, onOpenCart);
       window.removeEventListener(OPEN_WISHLIST_EVENT, onOpenWish);
+      window.removeEventListener(OPEN_TRACK_ORDER_EVENT, onOpenTrack);
     };
   }, []);
 
@@ -27,6 +32,7 @@ export default function GlobalOverlays() {
       <div className="pointer-events-none fixed left-1/2 top-6 z-[80] -translate-x-1/2 rounded-full bg-ink px-4 py-2.5 text-[13px] font-semibold text-white opacity-0 transition-all duration-300 [&.show]:pointer-events-auto [&.show]:opacity-100" id="toast" />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <WishlistDrawer isOpen={wishOpen} onClose={() => setWishOpen(false)} />
+      <TrackOrderModal isOpen={trackOpen} onClose={() => setTrackOpen(false)} />
       <FloatCartBadge />
       <FloatWishBadge />
     </>
