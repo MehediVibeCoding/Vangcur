@@ -32,9 +32,23 @@ export function validateEmail(email: string): boolean {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/.test(trimmed);
 }
 
+const PLAIN_NAME_REGEX = /^[\p{L}\p{M}\s]*$/u;
+export const MAX_NAME_LEN = 30;
+
+export function sanitizePlainName(value: string): string {
+  const lettersOnly = Array.from(value)
+    .filter((ch) => /[\p{L}\p{M}\s]/u.test(ch))
+    .join('');
+  return lettersOnly.replace(/\s{2,}/g, ' ').replace(/^\s+/, '').slice(0, MAX_NAME_LEN);
+}
+
 export function validateName(name: string): boolean {
   const trimmed = name.trim();
-  return trimmed.length >= 2 && trimmed.length <= 60;
+  return trimmed.length >= 2 && trimmed.length <= MAX_NAME_LEN && PLAIN_NAME_REGEX.test(trimmed);
+}
+
+export function sanitizeEmailInput(value: string): string {
+  return value.replace(/[^\x21-\x7E]/g, '').slice(0, 254);
 }
 
 export function validateAddress(address: string): boolean {
