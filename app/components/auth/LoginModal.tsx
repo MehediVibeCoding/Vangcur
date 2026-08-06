@@ -12,8 +12,11 @@ import {
   requestPasswordReset, getCurrentUser,
 } from '@/lib/authData';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
-import { sanitizeInput, validateEmail, validatePhone } from '@/lib/security';
+import {
+  sanitizeInput, validateEmail, validatePhone, validateName, sanitizePlainName, sanitizeEmailInput,
+} from '@/lib/security';
 import { verifyTurnstileToken } from '@/lib/turnstile';
+import { checkPasswordResetLimit } from '@/lib/rateLimit';
 import TurnstileWidget, { type TurnstileHandle } from './TurnstileWidget';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
@@ -292,6 +295,12 @@ export default function LoginModal({
     if (!em || !validateEmail(em)) { setForgotEmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     setForgotEmailErr('');
     setForgotLoading(true);
+    const limit = await checkPasswordResetLimit(supabase, em);
+    if (!limit.allowed) {
+      setForgotLoading(false);
+      setForgotEmailErr('আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।');
+      return;
+    }
     await requestPasswordReset(supabase, em);
     setForgotLoading(false);
     setForgotSubmitted(true);
@@ -378,8 +387,7 @@ export default function LoginModal({
     setREmailErr('');
     setRPassErr(false);
 
-    if (!nm) { setRErr('নাম দিন'); return; }
-    if (nm.length > MAX_NAME_LEN) { setRErr(`নাম সর্বোচ্চ ${MAX_NAME_LEN} ক্যারেক্টার হতে পারবে`); return; }
+    if (!validateName(nm)) { setRErr(`২-${MAX_NAME_LEN} অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)`); return; }
     if (!ph || !validatePhone(ph)) { setRErr('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)'); return; }
     if (!em || !validateEmail(em)) { setREmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     const strength = await checkPasswordStrength(pw);
@@ -486,7 +494,7 @@ export default function LoginModal({
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
                     type="email" placeholder="name@example.com" autoComplete="email" maxLength={MAX_EMAIL_LEN}
-                    value={lEmail} onChange={(e) => { setLEmail(e.target.value); if (lEmailErr) setLEmailErr(''); }}
+                    value={lEmail} onChange={(e) => { setLEmail(sanitizeEmailInput(e.target.value)); if (lEmailErr) setLEmailErr(''); }}
                     className={fieldClass(!!lEmailErr)}
                   />
                 </div>
@@ -560,7 +568,7 @@ export default function LoginModal({
                 <label className={fieldLabelClass}>পূর্ণ নাম</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconUser /></span>
-                  <input placeholder="আপনার পূর্ণ নাম লিখুন" maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(e.target.value.slice(0, MAX_NAME_LEN))} className={fieldClass(false)} />
+                  <input placeholder="আপনার পূর্ণ নাম লিখুন" maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(sanitizePlainName(e.target.value))} className={fieldClass(false)} />
                 </div>
               </div>
               <div>
@@ -580,7 +588,7 @@ export default function LoginModal({
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
                     type="email" placeholder="name@example.com" value={rEmail} maxLength={MAX_EMAIL_LEN}
-                    onChange={(e) => { setREmail(e.target.value); if (rEmailErr) setREmailErr(''); }}
+                    onChange={(e) => { setREmail(sanitizeEmailInput(e.target.value)); if (rEmailErr) setREmailErr(''); }}
                     className={fieldClass(!!rEmailErr)}
                   />
                 </div>
@@ -637,7 +645,7 @@ export default function LoginModal({
                       <span className={fieldIconWrapClass}><IconMail /></span>
                       <input
                         type="email" placeholder="name@example.com" autoComplete="email" maxLength={MAX_EMAIL_LEN}
-                        value={forgotEmail} onChange={(e) => { setForgotEmail(e.target.value); if (forgotEmailErr) setForgotEmailErr(''); }}
+                        value={forgotEmail} onChange={(e) => { setForgotEmail(sanitizeEmailInput(e.target.value)); if (forgotEmailErr) setForgotEmailErr(''); }}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleForgotSubmit(); }}
                         className={fieldClass(!!forgotEmailErr)}
                       />
