@@ -20,9 +20,7 @@ export default function ProductGrid() {
   const [renderedCount, setRenderedCount] = useState(0);
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
-  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
 
-  const gridRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const batchCountRef = useRef(0);
   const loadMorePausedRef = useRef(false);
@@ -68,7 +66,6 @@ export default function ProductGrid() {
     setShowLoadMoreBtn(false);
     setShowSpinner(false);
     setRenderedCount(0);
-    setRevealedIds(new Set());
     const t = setTimeout(() => appendNextBatch(), 0);
     return () => clearTimeout(t);
   }, [list, appendNextBatch]);
@@ -91,35 +88,6 @@ export default function ProductGrid() {
     loadMorePausedRef.current = false;
     appendNextBatch();
   };
-
-  useEffect(() => {
-    const prefersReduced = typeof window !== 'undefined' && !!window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced || typeof window === 'undefined' || !window.IntersectionObserver) return undefined;
-
-    const revealObs = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const id = (entry.target as HTMLElement).dataset.pid;
-          if (id !== undefined) setRevealedIds((prev) => new Set(prev).add(id));
-          revealObs.unobserve(entry.target);
-        }
-      });
-    }, { rootMargin: '0px 0px -40px 0px', threshold: 0.08 });
-
-    const gridObs = new MutationObserver((mutations) => {
-      mutations.forEach((m) => {
-        m.addedNodes.forEach((node) => {
-          if (node.nodeType !== 1) return;
-          const el = node as HTMLElement;
-          if (el.dataset && el.dataset.pid !== undefined) revealObs.observe(el);
-        });
-      });
-    });
-
-    if (gridRef.current) gridObs.observe(gridRef.current, { childList: true });
-    return () => { gridObs.disconnect(); revealObs.disconnect(); };
-  }, []);
 
   useEffect(() => {
     const onFilter = (e: Event) => {
@@ -170,7 +138,7 @@ export default function ProductGrid() {
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5" id="prodSec">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="animate-section-reveal border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
+        <h2 className="border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
           সকল <span className="text-brand-primary">প্রোডাক্ট</span>
         </h2>
         <span className="text-[13px] text-muted">{list.length}টি প্রোডাক্ট</span>
@@ -188,18 +156,9 @@ export default function ProductGrid() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6" ref={gridRef}>
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {visibleItems.map((p, i) => (
-            <div
-              key={p.id}
-              data-pid={p.id}
-              className="transition-[opacity,transform] duration-[450ms] ease-brand"
-              style={revealedIds.has(String(p.id))
-                ? { opacity: 1, transform: 'none' }
-                : { opacity: 0, transform: 'translateY(28px)' }}
-            >
-              <ProductCard prod={p} isFirst={i === 0} />
-            </div>
+            <ProductCard key={p.id} prod={p} isFirst={i === 0} />
           ))}
           {showCategoryEndBtn && (
             <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">
