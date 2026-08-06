@@ -36,12 +36,12 @@ function SearchThumb({ imgVal }: { imgVal?: string }) {
 }
 
 function CategoryIcon({ icon }: { icon?: string }) {
-  const isSvg = typeof icon === 'string' && icon.startsWith('<svg');
+  const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
   if (isSvg) {
     return (
       <div
-        className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[9px] bg-brand-bg text-brand-primary [&_svg]:h-[22px] [&_svg]:w-[22px]"
-        dangerouslySetInnerHTML={{ __html: icon.replace(/width="\d+"/, 'width="22"').replace(/height="\d+"/, 'height="22"') }}
+        className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[9px] bg-brand-bg text-brand-primary [&_svg]:!h-[22px] [&_svg]:!w-[22px]"
+        dangerouslySetInnerHTML={{ __html: icon }}
       />
     );
   }
@@ -65,10 +65,10 @@ function highlightMatch(text: string, q: string) {
   );
 }
 
-const searchInputClass = 'w-full rounded-full border-[1.5px] border-border-base bg-surface-muted py-[9px] pl-10 pr-3.5 font-body text-base transition-brand duration-brand placeholder:text-muted focus:border-ink focus:bg-white focus:outline-none';
+const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
 
 function SearchDropdown({
-  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick,
+  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide,
 }: {
   searchQuery: string;
   searchResults: Product[];
@@ -76,10 +76,11 @@ function SearchDropdown({
   onGoToSrp: () => void;
   onGoToCat: (id: string) => void;
   onPick: () => void;
+  wide?: boolean;
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
-    <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border-[1.5px] border-white/70 bg-white/95 shadow-sh3 backdrop-blur-md">
+    <div className={`absolute top-[calc(100%+8px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/70 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}>
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
@@ -303,7 +304,7 @@ export default function Navbar({
                 </button>
 
                 {currentUser ? (
-                  <button className="flex max-w-[130px] shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:px-3.5" onClick={onAccountClick}>
+                  <button className="flex max-w-[130px] shrink-0 items-center gap-2 rounded-full bg-brand-bg px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-brand-bg/70 md:max-w-none md:px-3.5" onClick={onAccountClick}>
                     <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
@@ -332,9 +333,9 @@ export default function Navbar({
       </nav>
 
       {mobileSearchOpen && (
-        <div className="-mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/85 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md md:hidden">
+        <div className="-mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md md:hidden">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
             </svg>
             <input
@@ -349,7 +350,7 @@ export default function Navbar({
             />
             {searchQuery && (
               <button
-                className="absolute right-3 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-white transition-brand duration-brand hover:bg-ink"
+                className="absolute right-3 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
                 onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                 title="মুছুন"
               >✕</button>
@@ -362,6 +363,7 @@ export default function Navbar({
                 onGoToSrp={goToSrp}
                 onGoToCat={goToCat}
                 onPick={() => { setShowDropdown(false); setMobileSearchOpen(false); }}
+                wide
               />
             )}
           </div>
