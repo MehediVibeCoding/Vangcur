@@ -20,7 +20,7 @@ export default function ProductGrid() {
   const [renderedCount, setRenderedCount] = useState(0);
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
-  const [revealedIds, setRevealedIds] = useState<Set<number | string>>(new Set());
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
 
   const gridRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -194,7 +194,7 @@ export default function ProductGrid() {
               key={p.id}
               data-pid={p.id}
               className="transition-[opacity,transform] duration-[450ms] ease-brand"
-              style={revealedIds.has(p.id)
+              style={revealedIds.has(String(p.id))
                 ? { opacity: 1, transform: 'none' }
                 : { opacity: 0, transform: 'translateY(28px)' }}
             >
