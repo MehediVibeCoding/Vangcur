@@ -244,43 +244,46 @@ app/(policies)/refund-policy/page.tsx
 - Vercel-এ প্রথম build test — ✅ successful
 
 | B | Component TS+Tailwind conversion | 🟡 আংশিক — নিচে বিস্তারিত |
-### Phase B বিস্তারিত status (২০২৬-০৮-০৩ পর্যন্ত)
+### Phase B বিস্তারিত status (২০২৬-০৮-০৬ পর্যন্ত — GitHub repo সরাসরি audit করে যাচাই করা)
 
 **ক্রম অনুযায়ী অগ্রগতি:**
 
-**✅ Layout — সম্পূর্ণ (GitHub-এ upload হয়ে গেছে, build successful):**
-- `app/components/layout/Navbar.tsx`
-- `app/components/layout/Footer.tsx`
-- সাপোর্টিং lib ফাইল: `lib/searchData.ts`, `lib/categoryData.ts`, `lib/uiEvents.ts`, `lib/logger.ts`, `lib/cartData.ts`, `lib/toast.ts`, `lib/productData.ts`, `lib/footerData.ts`
+**✅ Layout — সম্পূর্ণ:**
+- `app/components/layout/Navbar.tsx`, `app/components/layout/Footer.tsx`
 
-**✅ এই session-এ নতুন করে বানানো (build test মালিকের Vercel-এ করতে হবে, sandbox-এ পুরো repo না থাকায় এখানে npm build চালানো যায়নি):**
-- `app/components/home/HeroSlider.tsx` — [NEW FILE]
-- `app/components/home/Categories.tsx` — [NEW FILE]
-- `app/components/home/ProductGrid.tsx` — [NEW FILE]
-- `app/components/home/ProductCard.tsx` — [NEW FILE]
-- `app/components/home/FAQ.tsx` — [NEW FILE]
-- `app/components/home/About.tsx` — [NEW FILE]
-- `app/components/home/CustomerGallery.tsx` — [NEW FILE]
-- `lib/faqData.ts` — [NEW FILE]
-- `tailwind.config.ts` — [REPLACE] — নতুন keyframes/animation যোগ করা হয়েছে: `section-reveal`, `badge-hot-glow` (রং red থেকে blue `rgba(0,88,199,...)`-এ পরিবর্তিত), `heartbeat`, `ripple` — এগুলো Categories/ProductGrid/ProductCard/CustomerGallery-এর `animate-*` ক্লাসের জন্য দরকার, তাই আগের `tailwind.config.ts` replace করে দিতে হবে
+**✅ Home sections — সম্পূর্ণ:**
+- `HeroSlider.tsx`, `Categories.tsx`, `ProductGrid.tsx`, `ProductCard.tsx`, `FAQ.tsx`, `About.tsx`, `CustomerGallery.tsx`, `TrustStrip.tsx`
+- সাপোর্টিং lib: `searchData.ts`, `categoryData.ts`, `uiEvents.ts`, `logger.ts`, `cartData.ts`, `toast.ts`, `productData.ts`, `footerData.ts`, `faqData.ts`
 
-**Home sections — সম্পূর্ণ ✅ (Phase B-এর ২য় ধাপ শেষ)**
+**✅ Product detail page — সম্পূর্ণ:**
+- `app/product/[slug]/page.tsx`, `app/product/[slug]/ProductDetailClient.tsx`, `lib/productDetailData.ts`
+
+**✅ Cart/Wishlist drawers — সম্পূর্ণ:**
+- `CartSidebar.tsx`, `WishlistDrawer.tsx`, `FloatCartBadge.tsx`, `FloatWishBadge.tsx`, `TrackOrderModal.tsx`
+- `app/components/GlobalOverlays.tsx`-এ সব মাউন্ট করা আছে, `layout.tsx`-এ `<GlobalOverlays />` মাউন্ট করা আছে (আগের একটা bug ছিল, ঠিক হয়ে গেছে)
+
+**✅ Auth — সম্পূর্ণ (roadmap-এর তালিকার চেয়ে বেশি করা হয়ে গেছে):**
+- `LoginModal.tsx`, `AccountPage.tsx`, `PasswordStrengthMeter.tsx`, `app/reset-password/` (page + client)
+- Phase D-এর কিছু কাজ auth-এর সাথেই আগেভাগে হয়ে গেছে: `TurnstileWidget.tsx`, `lib/turnstile.ts`, `app/api/verify-turnstile/route.ts`, `lib/rateLimit.ts`, `lib/sanitize.ts`, `lib/security.ts` (validation/sanitization + password-reset rate limit + Cloudflare Turnstile ইতিমধ্যে LoginModal-এ ব্যবহার হচ্ছে)
+
+**✅ Checkout flow — এই session-এ সম্পূর্ণ করা হলো, build-tested:**
+- `app/checkout/page.tsx` — **[NEW FILE]** — ৩-ধাপ ফর্ম (তথ্য → bKash পেমেন্ট → নিশ্চিত), guest pre-confirm login flow, Google OAuth return-trip resume, rate-limit + authoritative price re-verification সহ order insert
+- `app/components/checkout/PreConfirmLoginModal.tsx` — **[NEW FILE]**
+- `app/components/checkout/PolicyModal.tsx` — **[NEW FILE]** — সম্পূর্ণ নীতিমালা/শর্তাবলী কপি সহ
+- `lib/checkoutData.ts` — **[NEW FILE]** — জেলা লিস্ট, শিপিং লজিক, ভ্যালিডেশন, bKash/শিপিং কনফিগ fetch
+- `lib/orderMapping.ts`, `lib/orderStatus.ts` — **[NEW FILE]** — Supabase row mapping, status poll + realtime subscription
+- `lib/draftRecovery.ts`, `lib/leadCapture.ts` — **[NEW FILE]** — abandoned-checkout draft (recovery toast এর জন্য) + Leads sheet capture
+- `types/index.ts` — **[REPLACE]** — `Order` টাইপে `subtotal`/`shippingCost`/`shipping`/`advancePaid`/`payment` যোগ হয়েছে
+- ⚠️ **এখনো বাকি (checkout-এরই অংশ, roadmap আইটেমে "ইত্যাদি" হিসেবে গণ্য):** `WaitingPage.js` (অর্ডারের পর realtime approve/reject waiting screen), `OrderTracking.js`, `QuickOrderModal.js`, `BgConfirmPopup.js`, `PostOrderInfo.js`, `QuickOrderBridge.js` — এখন `submitOrderNow()` সফল হলে সরাসরি হোমপেজে redirect করে, কোনো waiting/tracking overlay নেই এখনো
 
 **⏳ এরপর — পরবর্তী ধাপ:**
-- Product detail page
-- Cart/Wishlist drawers
-- Auth (LoginModal, AccountPage)
-- Checkout flow (OrderForm/checkout page, WaitingPage, ইত্যাদি)
-- বাকি সব modal
+1. **WaitingPage + OrderTracking + QuickOrderModal** (checkout flow-এর বাকি অংশ) — সবচেয়ে জরুরি, কারণ checkout এখন "sabmit করলে কী হয়" অংশটা অসম্পূর্ণ রেখে দিচ্ছে
+2. বাকি সব modal — OfferPopup, MembershipModal, InvoiceModal, StockNotifyModal, RecoveryToast, BackInStockToast (এগুলোর কোনোটাই এখনো `GlobalOverlays.tsx`-এ মাউন্ট নেই)
 
-**পরবর্তী session-এ Claude যা করবে প্রথমে:**
-1. এই roadmap পড়ে বর্তমান status বুঝে নেওয়া (Navbar/Footer/Home sections সব done ✅)
-2. মালিকের কাছ থেকে নতুন repo-র বর্তমান lib ফাইল ও এই session-এ বানানো সব component (ZIP আকারে) reference হিসেবে নেওয়া, প্লাস পুরনো repo (vangcur-next)-এর Product detail page, Cart/Wishlist drawer, LoginModal/AccountPage ফাইল
-3. একটা একটা করে TS+Tailwind conversion করা, প্রতিটার পর মালিক Vercel-এ build test করবে
-4. প্রতিটা component শেষে এই ফাইলের Progress Tracker আপডেট করা
+**🧹 ছোট cleanup নোট:** repo root-এ (app/components/home/-এর বাইরে) একটা stray `CustomerGallery.tsx` কপি আছে — এটা সম্ভবত ভুল জায়গায় upload হয়ে গেছে, আসল ফাইলটা `app/components/home/CustomerGallery.tsx`-এ ঠিকই আছে। মুছে দেওয়া নিরাপদ (build এটাকে ব্যবহার করছে না)।
 
 | C | Zustand state migration | ⏳ বাকি |
-| D | Server Actions & Security | ⏳ বাকি |
+| D | Server Actions & Security | 🟡 আংশিক — Turnstile, rate limiting, input sanitization ইতিমধ্যে হয়ে গেছে (auth-এর সাথে); বাকি: Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ |
 | E | RSC conversion | ⏳ বাকি |
 | F | Routing restructure (real policy routes + Cart Guard) | ⏳ বাকি |
 | G | i18n & Dark mode | ⏳ বাকি |
