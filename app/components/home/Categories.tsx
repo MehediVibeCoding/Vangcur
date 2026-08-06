@@ -38,9 +38,7 @@ export default function Categories() {
   const nextBtnRef = useRef<HTMLButtonElement>(null);
   const btnResetTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const touchRef = useRef({ x: 0, y: 0 });
-  const revealedRef = useRef(false);
   const [gridCols, setGridCols] = useState(4);
-  const [revealed, setRevealed] = useState(false);
 
   const maxPage = Math.max(0, Math.ceil(cats.length / getCatPerPage()) - 1);
   const clampPage = useCallback((p: number) => Math.max(0, Math.min(p, maxPage)), [maxPage]);
@@ -124,33 +122,6 @@ export default function Categories() {
 
   useEffect(() => {
     setCatPage(0);
-    revealedRef.current = false;
-    setRevealed(false);
-  }, [cats]);
-
-  useEffect(() => {
-    const prefersReduced = typeof window !== 'undefined'
-      && window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (revealedRef.current) return;
-
-    if (!prefersReduced && typeof window !== 'undefined' && window.IntersectionObserver) {
-      const obs = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            setRevealed(true);
-            revealedRef.current = true;
-            obs.disconnect();
-          }
-        },
-        { threshold: 0.1 },
-      );
-      if (viewportRef.current) obs.observe(viewportRef.current);
-      return () => obs.disconnect();
-    }
-    setRevealed(true);
-    revealedRef.current = true;
   }, [cats]);
 
   const handleSelect = (catId: string) => {
@@ -170,7 +141,7 @@ export default function Categories() {
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="animate-[vc-section-reveal_.5s_cubic-bezier(.4,0,.2,1)_both] border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
+        <h2 className="border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
           ক্যাটাগরি <span className="text-brand-primary">সমূহ</span>
         </h2>
       </div>
@@ -196,11 +167,7 @@ export default function Categories() {
               return (
                 <div
                   key={cat.id}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-ink hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'} ${revealed ? 'opacity-100' : 'opacity-0'}`}
-                  style={{
-                    transition: 'opacity .38s cubic-bezier(.4,0,.2,1), transform .38s cubic-bezier(.4,0,.2,1)',
-                    transitionDelay: revealed ? `${i * 40}ms` : '0ms',
-                  }}
+                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-ink hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'}`}
                   onClick={() => handleSelect(cat.id)}
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-brand-bg text-[22px] md:h-[52px] md:w-[52px] md:text-2xl">
