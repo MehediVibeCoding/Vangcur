@@ -106,11 +106,11 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-[60] bg-black/50 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+        className={`fixed inset-0 z-[960] bg-black/50 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={onClose}
       />
       <div
-        className={`fixed inset-y-0 right-0 z-[65] flex w-full max-w-[380px] flex-col bg-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 z-[965] flex w-full max-w-[380px] flex-col bg-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
           <h3 className="font-display text-base font-bold text-ink">🛒 আপনার কার্ট</h3>

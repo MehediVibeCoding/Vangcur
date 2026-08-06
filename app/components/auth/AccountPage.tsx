@@ -8,7 +8,7 @@ import { showToast } from '@/lib/toast';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { productHref, WISHLIST_EVENT } from '@/lib/productData';
 import { saveCurrentUser, logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
-import { OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
+import { OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
   fetchMyOrders, orderStats, updateProfileName,
@@ -216,15 +216,57 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
 
   return (
     <div
-      className={`fixed inset-0 z-[75] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`fixed inset-0 z-[950] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <div className="sticky top-0 z-10 flex items-center bg-white/80 px-4 py-3 backdrop-blur-md">
+      <div className="relative flex items-center justify-between gap-2 bg-white/80 px-4 py-3 backdrop-blur-md">
         <button
-          onClick={onClose} aria-label="ফিরে যান"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-xl text-ink hover:bg-border-base"
+          onClick={onClose} aria-label="হোমে ফিরুন" title="হোম"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-ink transition-brand duration-brand hover:bg-border-base"
         >
-          ‹
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M3 11l9-8 9 8" />
+            <path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10" />
+          </svg>
         </button>
+
+        <div className="flex items-center gap-1.5 md:gap-2">
+          <button onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))} title="কার্ট" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+            </svg>
+            <span className="hidden md:inline">কার্ট</span>
+          </button>
+
+          <button onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))} title="উইশলিস্ট" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </svg>
+            <span className="hidden md:inline">উইশলিস্ট</span>
+          </button>
+
+          <button onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))} title="অর্ডার ট্র্যাক" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            <span className="hidden md:inline">ট্র্যাক</span>
+          </button>
+
+          <button onClick={openMembership} title="মেম্বারশিপ" className="flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-2 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:px-3">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z" />
+            </svg>
+            <span className="hidden md:inline">মেম্বারশিপ</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="hidden shrink-0 rounded-full bg-brand-primary px-[18px] py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:inline-block"
+          >
+            ব্যাক টু হোম
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto max-w-[1100px] px-4 pb-16 pt-2 md:px-6">
@@ -401,17 +443,17 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             )}
 
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">
+              <div className="rounded-[12px] border border-brand-bg bg-white py-2.5 text-center shadow-sh1">
                 <div className="font-body text-base font-extrabold text-ink">{stats.total}টি</div>
                 <div className="font-body text-[10px] text-muted">মোট অর্ডার</div>
               </div>
-              <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">
+              <div className="rounded-[12px] border border-brand-bg bg-white py-2.5 text-center shadow-sh1">
                 <div className="font-body text-base font-extrabold text-ink">{stats.running}টি</div>
                 <div className="font-body text-[10px] text-muted">রানিং অর্ডার</div>
               </div>
               <div
                 onClick={openMembership}
-                className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[12px] border border-border-base bg-white py-2 shadow-sh1"
+                className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[12px] border border-brand-bg bg-white py-2 shadow-sh1"
               >
                 <div className="h-7 w-7" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(tierIconSVG(currentTier.key)) }} />
                 <div className="font-body text-[10px] font-extrabold" style={{ color: currentTier.key === 'silver' ? '#475569' : currentTier.key === 'gold' ? '#92400E' : currentTier.key === 'diamond' ? '#1E40AF' : '#78350F' }}>
@@ -422,9 +464,9 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             </div>
 
             {drafts.length > 0 && (
-              <div className="rounded-brand border border-border-base bg-white p-3.5 shadow-sh1">
+              <div className="rounded-brand border border-brand-primary/25 bg-brand-bg/20 p-3.5 shadow-sh1">
                 <div className="mb-2.5 flex items-center justify-between">
-                  <div className="font-body text-[13px] font-bold text-ink">🛒 অর্ডার করতে চেয়েছিলেন</div>
+                  <div className="font-body text-[13px] font-bold text-brand-primary">🛒 অর্ডার করতে চেয়েছিলেন</div>
                   <button onClick={handleClearAllDrafts} className="font-body text-[11px] text-muted hover:text-ink">🗑️ সব মুছুন</button>
                 </div>
                 <div className="flex flex-col gap-2.5">
@@ -437,7 +479,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                     const prodName = firstItem ? firstItem.name : 'প্রোডাক্ট';
                     const tot = items.reduce((s, i) => s + i.price * i.qty, 0);
                     return (
-                      <div key={draft.id} className="rounded-[10px] border border-border-base p-2.5">
+                      <div key={draft.id} className="rounded-[10px] border border-brand-bg bg-white p-2.5">
                         <div className="font-body text-[10.5px] text-muted">📅 {dateStr} · ⏰ {timeStr} · {items.length} আইটেম</div>
                         <div className="mt-1.5 flex items-center gap-2">
                           {firstItem ? <ItemThumb imgVal={(firstItem.imgs || ['📦'])[0]} /> : <ItemThumb />}
@@ -490,7 +532,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             <div className="mb-4 font-body text-[15px] font-bold text-ink">📦 আমার অর্ডার সমূহ</div>
             <div className="flex flex-col gap-3.5">
               {orders.length === 0 ? (
-                <div className="rounded-brand border border-dashed border-border-base py-9 text-center">
+                <div className="rounded-brand border border-dashed border-brand-bg py-9 text-center">
                   <div className="mb-2.5 text-[38px]">📦</div>
                   <div className="mb-1 font-body text-sm font-bold text-ink">এখনো কোনো অর্ডার নেই</div>
                   <div className="font-body text-xs text-muted">অর্ডার করলে এখানে দেখাবে</div>
@@ -499,8 +541,8 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                 orders.map((o) => {
                   const dateStr = new Date(o.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
                   return (
-                    <div key={o.id} className="rounded-brand border border-border-base bg-white shadow-sh1">
-                      <div className="flex items-center justify-between border-b border-border-base px-4 py-2.5">
+                    <div key={o.id} className="rounded-brand border border-brand-bg bg-white shadow-sh1">
+                      <div className="flex items-center justify-between border-b border-brand-bg px-4 py-2.5">
                         <span className="font-body text-[13px] font-bold text-ink">{o.orderNum}</span>
                         <span className={`rounded-full px-2.5 py-1 font-body text-[11px] font-bold ${STATUS_CLASS[o.status] || STATUS_CLASS.pending}`}>{STATUS_LABEL[o.status] || STATUS_LABEL.pending}</span>
                       </div>
@@ -515,9 +557,9 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                             </div>
                           ))}
                         </div>
-                        <div className="mt-3 flex items-center justify-between border-t border-border-base pt-3">
+                        <div className="mt-3 flex items-center justify-between border-t border-brand-bg pt-3">
                           <div className="font-body text-[13px] font-bold text-ink">মোট: ৳{(o.total || 0).toLocaleString()} (শিপিং সহ)</div>
-                          <button onClick={() => openInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 ইনভয়েস</button>
+                          <button onClick={() => openInvoice(o.id)} className="rounded-full border border-brand-primary/30 px-3 py-1.5 font-body text-[11px] font-bold text-brand-primary hover:bg-brand-bg/25">📄 ইনভয়েস</button>
                         </div>
                       </div>
                     </div>

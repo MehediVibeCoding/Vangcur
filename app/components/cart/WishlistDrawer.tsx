@@ -75,7 +75,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
 
   return (
     <div
-      className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/50 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+      className={`fixed inset-0 z-[960] flex items-center justify-center bg-black/50 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
     >
       <div
         className={`flex max-h-[85vh] w-full max-w-[420px] flex-col rounded-brand bg-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
