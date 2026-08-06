@@ -6,9 +6,13 @@ import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { sanitizePlainName, validateName, MAX_NAME_LEN } from '@/lib/security';
+import { checkNameChangeLimit } from '@/lib/rateLimit';
 import { productHref, WISHLIST_EVENT } from '@/lib/productData';
 import { saveCurrentUser, logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
-import { OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
+import {
+  OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
+} from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
   fetchMyOrders, orderStats, updateProfileName,
@@ -132,11 +136,15 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
     ? new Date(currentUser.createdAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })
     : '';
 
-  const openNameEdit = () => { setNameEditValue(currentUser.name || ''); setNameEditErr(''); setNameEditOpen(true); };
+  const openNameEdit = () => { setNameEditValue(sanitizePlainName(currentUser.name || '')); setNameEditErr(''); setNameEditOpen(true); };
   const closeNameEdit = () => { setNameEditOpen(false); setNameEditErr(''); };
   const saveNameEdit = async () => {
     const nm = nameEditValue.trim();
-    if (!nm || nm.length < 2) { setNameEditErr('অন্তত ২ অক্ষরের নাম দিন'); return; }
+    if (!validateName(nm)) { setNameEditErr('অন্তত ২ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'); return; }
+    if (currentUser.id) {
+      const limit = await checkNameChangeLimit(supabase, currentUser.id);
+      if (!limit.allowed) { setNameEditErr('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'); return; }
+    }
     await updateProfileName(supabase, currentUser, nm);
     saveCurrentUser({ ...currentUser, name: nm });
     closeNameEdit();
@@ -218,13 +226,66 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
     <div
       className={`fixed inset-0 z-[950] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <div className="sticky top-[14px] z-10 mx-3 mb-1.5 mt-[14px] flex items-center gap-2 overflow-hidden rounded-[35px] border border-white/60 bg-white/70 px-4 py-3 shadow-sh2 backdrop-blur-md">
+      <div className="sticky top-[14px] z-10 mx-3 mb-1.5 mt-[14px] flex items-center gap-1.5 overflow-hidden rounded-[35px] border border-white/60 bg-white/70 px-3 py-2 shadow-sh2 backdrop-blur-md md:gap-2 md:px-4">
         <button
-          onClick={onClose} aria-label="ফিরে যান"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-xl text-ink hover:bg-border-base"
+          onClick={() => { onClose(); router.push('/'); }} aria-label="হোম" title="হোম"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink transition-brand duration-brand hover:bg-surface-muted"
         >
-          ‹
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <path d="M3 9.5 12 3l9 6.5" /><path d="M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5" />
+          </svg>
         </button>
+
+        <div className="flex flex-1 items-center justify-end gap-0.5 overflow-x-auto md:gap-1.5">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))} title="কার্ট"
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+            </svg>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">কার্ট</span>
+          </button>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))} title="উইশলিস্ট"
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </svg>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">উইশলিস্ট</span>
+          </button>
+
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))} title="ট্র্যাক"
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">ট্র্যাক</span>
+          </button>
+
+          <button
+            onClick={openMembership} title="মেম্বারশিপ"
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M4 22V4a1 1 0 011-1h11.38a1 1 0 01.8 1.6l-2.9 3.87a1 1 0 000 1.2l2.9 3.86a1 1 0 01-.8 1.6H5" />
+            </svg>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">মেম্বারশিপ</span>
+          </button>
+
+          <button
+            onClick={() => { onClose(); router.push('/'); }}
+            className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-brand-primary px-3 py-2 font-body text-[12.5px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-accent md:px-4"
+          >
+            ব্যাক টু হোম
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto max-w-[1100px] px-4 pb-16 pt-2 md:px-6">
@@ -352,8 +413,8 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                       <div className="mb-1.5 font-body text-[11px] font-semibold text-white/70">নতুন নাম লিখুন</div>
                       <div className="flex gap-1.5">
                         <input
-                          type="text" placeholder="আপনার নাম" value={nameEditValue}
-                          onChange={(e) => setNameEditValue(e.target.value)}
+                          type="text" placeholder="আপনার নাম" value={nameEditValue} maxLength={MAX_NAME_LEN}
+                          onChange={(e) => setNameEditValue(sanitizePlainName(e.target.value))}
                           onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
                           className="flex-1 rounded-[8px] border border-white/15 bg-white/10 px-3 py-2 font-body text-[13.5px] text-white outline-none placeholder:text-white/50"
                         />
