@@ -216,9 +216,9 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
 
   return (
     <div
-      className={`fixed inset-0 z-[75] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`fixed inset-0 z-[950] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <div className="sticky top-0 z-10 flex items-center bg-white/80 px-4 py-3 backdrop-blur-md">
+      <div className="sticky top-[14px] z-10 mx-3 mb-1.5 mt-[14px] flex items-center gap-2 overflow-hidden rounded-[35px] border border-white/60 bg-white/70 px-4 py-3 shadow-sh2 backdrop-blur-md">
         <button
           onClick={onClose} aria-label="ফিরে যান"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-muted text-xl text-ink hover:bg-border-base"
