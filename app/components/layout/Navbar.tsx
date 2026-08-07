@@ -156,13 +156,18 @@ export default function Navbar({
   const [showDropdown, setShowDropdown] = useState(false);
   const [desktopSearchHovered, setDesktopSearchHovered] = useState(false);
   const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
+  const [desktopSearchGeo, setDesktopSearchGeo] = useState<{ left: number; width: number } | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopNavRowRef = useRef<HTMLDivElement>(null);
+  const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
+  const desktopSearchBoxRef = useRef<HTMLDivElement>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
+  const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused;
 
   useEffect(() => {
     let cancelled = false;
@@ -217,6 +222,59 @@ export default function Navbar({
     };
     window.addEventListener(CART_ADD_EVENT, onCartAdd);
     return () => window.removeEventListener(CART_ADD_EVENT, onCartAdd);
+  }, []);
+
+  // ডেক্সটপ সার্চ বক্সের এক্সপ্যান্ডেড (hover/focus) অবস্থার জন্য left/width হিসাব করা হয়
+  // এখানে, একবারই (মাউন্ট + রিসাইজে) — hover state-এর উপর নির্ভর করে না। বক্সটা সবসময়
+  // position: absolute থাকে (কখনো relative <-> absolute টগল হয় না), শুধু এই left/width
+  // ভ্যালু দুটো animate হয় — এতে করে আগে যে "ছোট হয়ে গিয়ে আবার বড় হওয়া" গ্লিচ হতো
+  // (position টাইপ পরিবর্তনের কারণে) সেটা আর হবে না।
+  useEffect(() => {
+    let raf = 0;
+    function measure() {
+      const wrap = desktopSearchWrapRef.current;
+      const row = desktopNavRowRef.current;
+      if (!wrap || !row) return;
+      const wrapRect = wrap.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      if (wrapRect.width === 0 || rowRect.width === 0) return;
+      const expandedWidth = Math.min(560, rowRect.width - 260);
+      const expandedLeftAbs = rowRect.left + (rowRect.width - expandedWidth) / 2;
+      setDesktopSearchGeo({ left: expandedLeftAbs - wrapRect.left, width: expandedWidth });
+    }
+    measure();
+    raf = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // হোভার স্টেট এখন বক্সের নিজের onMouseEnter/onMouseLeave দিয়ে না, বরং আসল মাউস
+  // মুভমেন্টের সাথে বক্সের বর্তমান (লাইভ) bounding rect মিলিয়ে ঠিক হয়। এর মানে —
+  // মাউস পয়েন্টার যদি বক্সের ভিতরে ১০০% না থাকে (এক চুলও বাইরে থাকলে) তাহলে এক্সপ্যান্ড
+  // হবে না। আর যেহেতু এটা শুধু আসল মাউস-মুভমেন্টে রিক্যালকুলেট হয় (বক্স নিজে অ্যানিমেট
+  // হওয়ার কারণে না), তাই মাঝ-বরাবর পজিশনে বারবার বড়-ছোট হওয়ার (jumping) সমস্যাটাও হবে না।
+  useEffect(() => {
+    let raf = 0;
+    const onMove = (e: MouseEvent) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const box = desktopSearchBoxRef.current;
+        if (!box) return;
+        const r = box.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) return;
+        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        setDesktopSearchHovered((prev) => (prev === inside ? prev : inside));
+      });
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   const handleSearchInput = useCallback((value: string) => {
@@ -287,7 +345,7 @@ export default function Navbar({
       <nav
         className={`relative z-[900] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
-        <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
+        <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
             <Link className="flex shrink-0 items-center no-underline" href="/">
               <Image
@@ -303,40 +361,44 @@ export default function Navbar({
 
             <div className="flex items-center gap-1.5 max-[400px]:gap-1 md:gap-3">
               <div
-                className={`z-10 hidden md:block ${
-                  desktopSearchHovered || desktopSearchFocused
-                    ? 'md:absolute md:inset-x-0 md:mx-auto md:w-[min(560px,calc(100%-260px))]'
-                    : 'md:relative md:w-[240px] lg:w-[300px]'
-                } transition-[width] duration-300 ease-out`}
-                onMouseEnter={() => setDesktopSearchHovered(true)}
-                onMouseLeave={() => setDesktopSearchHovered(false)}
-                onClick={(e) => e.stopPropagation()}
+                ref={desktopSearchWrapRef}
+                className="relative z-10 hidden md:block md:w-[240px] lg:w-[300px]"
               >
-                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-                </svg>
-                <input
-                  type="search"
-                  placeholder="প্রোডাক্ট খুঁজুন..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearchInput(e.target.value)}
-                  onKeyDown={handleSearchKey}
-                  onFocus={() => { setDesktopSearchFocused(true); if (searchQuery) setShowDropdown(true); }}
-                  onBlur={() => setDesktopSearchFocused(false)}
-                  autoComplete="off"
-                  name="product-search"
-                  className={desktopSearchInputClass}
-                />
-                {showDropdown && (
-                  <SearchDropdown
-                    searchQuery={searchQuery}
-                    searchResults={searchResults}
-                    catResults={catResults}
-                    onGoToSrp={goToSrp}
-                    onGoToCat={goToCat}
-                    onPick={() => setShowDropdown(false)}
+                {/* বক্সটা সবসময় position: absolute — কখনো relative-এ টগল হয় না, শুধু
+                    left/width অ্যানিমেট হয়, তাই collapse হওয়ার সময় "ছোট হয়ে গিয়ে আবার
+                    বড় হওয়া" গ্লিচটা আর হয় না। */}
+                <div
+                  ref={desktopSearchBoxRef}
+                  style={desktopSearchExpanded && desktopSearchGeo ? { left: desktopSearchGeo.left, width: desktopSearchGeo.width } : undefined}
+                  className={`absolute inset-y-0 left-0 w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                  </svg>
+                  <input
+                    type="search"
+                    placeholder="প্রোডাক্ট খুঁজুন..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchInput(e.target.value)}
+                    onKeyDown={handleSearchKey}
+                    onFocus={() => { setDesktopSearchFocused(true); if (searchQuery) setShowDropdown(true); }}
+                    onBlur={() => setDesktopSearchFocused(false)}
+                    autoComplete="off"
+                    name="product-search"
+                    className={desktopSearchInputClass}
                   />
-                )}
+                  {showDropdown && (
+                    <SearchDropdown
+                      searchQuery={searchQuery}
+                      searchResults={searchResults}
+                      catResults={catResults}
+                      onGoToSrp={goToSrp}
+                      onGoToCat={goToCat}
+                      onPick={() => setShowDropdown(false)}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-1 max-[400px]:gap-0.5 md:gap-1.5">
@@ -369,8 +431,7 @@ export default function Navbar({
                   </button>
                 ) : (
                   <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
-                    <span className="max-[400px]:hidden">লগইন করুন</span>
-                    <span className="hidden max-[400px]:inline">লগইন</span>
+                    লগইন করুন
                   </button>
                 )}
 
