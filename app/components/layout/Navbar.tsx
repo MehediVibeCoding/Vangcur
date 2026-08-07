@@ -157,6 +157,7 @@ export default function Navbar({
   const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
   const router = useRouter();
+  const hasResults = searchResults.length > 0 || catResults.length > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -179,18 +180,20 @@ export default function Navbar({
     if (mobileSearchOpen) mobileSearchInputRef.current?.focus();
   }, [mobileSearchOpen]);
 
-  // মোবাইল সার্চ খোলা কিন্তু কোনো ড্রপডাউন রেজাল্ট নেই — ৭ সেকেন্ড নিষ্ক্রিয় থাকলে
-  // অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে (রেজাল্ট থাকুক বা না থাকুক) সাথে সাথে বন্ধ হবে।
+  // মোবাইল সার্চ খোলা কিন্তু হয় কোনো ড্রপডাউনই আসেনি, অথবা এসেছে কিন্তু কোনো
+  // পণ্য পাওয়া যায়নি (দুটো ক্ষেত্রেই পিছনের পেজ আনলকড/স্ক্রলযোগ্য) — এই অবস্থায়
+  // ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে সাথে সাথে বন্ধ হবে।
   useEffect(() => {
     if (!mobileSearchOpen) return undefined;
-    const idleTimer = showDropdown ? null : setTimeout(() => setMobileSearchOpen(false), 7000);
-    const onScroll = () => setMobileSearchOpen(false);
+    const idle = !showDropdown || !hasResults;
+    const idleTimer = idle ? setTimeout(() => { setMobileSearchOpen(false); setShowDropdown(false); }, 7000) : null;
+    const onScroll = () => { if (idle) { setMobileSearchOpen(false); setShowDropdown(false); } };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       if (idleTimer) clearTimeout(idleTimer);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [mobileSearchOpen, showDropdown]);
+  }, [mobileSearchOpen, showDropdown, hasResults]);
 
   useEffect(() => {
     const onCartAdd = () => {
@@ -252,15 +255,14 @@ export default function Navbar({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // মোবাইল সার্চ প্যানেল শুধু খোলা থাকলে (এখনো কোনো রেজাল্ট দেখানো হয়নি) স্ক্রল/ক্লিক
-  // স্বাভাবিক থাকা উচিত — শুধুমাত্র রেজাল্ট ড্রপডাউন (showDropdown) দেখানো অবস্থাতেই
-  // পিছনের স্ক্রল ও ক্লিক আটকাতে হবে, তাই লক এখন mobileSearchOpen নয়, showDropdown-এর
-  // উপর নির্ভর করছে।
+  // পিছনের স্ক্রল/ক্লিক শুধু তখনই লক হবে যখন ড্রপডাউনে সত্যিকারের রেজাল্ট (প্রোডাক্ট বা
+  // ক্যাটাগরি) দেখানো হচ্ছে। কোনো পণ্য না পাওয়া গেলে (empty state) লক থাকবে না —
+  // ইউজার তখন পিছনের পেজ স্বাভাবিকভাবে স্ক্রল করতে পারবে।
   useEffect(() => {
-    if (!showDropdown) return;
+    if (!showDropdown || !hasResults) return;
     lockBody();
     return () => unlockBody();
-  }, [showDropdown]);
+  }, [showDropdown, hasResults]);
 
   return (
     <div className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px]">
