@@ -359,18 +359,21 @@ export default function Navbar({
               />
             </Link>
 
-            <div className="flex items-center gap-1.5 max-[400px]:gap-1 md:gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <div
                 ref={desktopSearchWrapRef}
-                className="relative z-10 hidden md:block md:w-[240px] lg:w-[300px]"
+                className="relative z-10 hidden md:block md:h-10 md:w-[240px] lg:w-[300px]"
               >
                 {/* বক্সটা সবসময় position: absolute — কখনো relative-এ টগল হয় না, শুধু
                     left/width অ্যানিমেট হয়, তাই collapse হওয়ার সময় "ছোট হয়ে গিয়ে আবার
-                    বড় হওয়া" গ্লিচটা আর হয় না। */}
+                    বড় হওয়া" গ্লিচটা আর হয় না। wrapper-এ এখন এক্সপ্লিসিট height (h-10)
+                    দেওয়া হয়েছে — box টা absolute হওয়ায় flow-তে না থাকায় আগে wrapper-এর
+                    height 0 হয়ে যাচ্ছিল, ফলে box-এরও height 0 হয়ে যেত (হোভার ডিটেকশন
+                    কাজ করত না, আর বক্সটা ভুল জায়গায় দেখাচ্ছিল) — এটাই আসল বাগ ছিল। */}
                 <div
                   ref={desktopSearchBoxRef}
                   style={desktopSearchExpanded && desktopSearchGeo ? { left: desktopSearchGeo.left, width: desktopSearchGeo.width } : undefined}
-                  className={`absolute inset-y-0 left-0 w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
+                  className={`absolute left-0 top-0 h-full w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -386,7 +389,7 @@ export default function Navbar({
                     onBlur={() => setDesktopSearchFocused(false)}
                     autoComplete="off"
                     name="product-search"
-                    className={desktopSearchInputClass}
+                    className={`${desktopSearchInputClass} h-full`}
                   />
                   {showDropdown && (
                     <SearchDropdown
@@ -401,7 +404,7 @@ export default function Navbar({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 max-[400px]:gap-0.5 md:gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <button className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
@@ -423,11 +426,11 @@ export default function Navbar({
                 </button>
 
                 {currentUser ? (
-                  <button className="flex max-w-[90px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base max-[400px]:gap-1 max-[400px]:px-1.5 md:max-w-none md:gap-2 md:px-3.5" onClick={onAccountClick}>
+                  <button className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5" onClick={onAccountClick}>
                     <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
-                    <span className="truncate max-[400px]:hidden md:inline">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
+                    <span className="truncate">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
                   </button>
                 ) : (
                   <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
