@@ -69,7 +69,7 @@ function highlightMatch(text: string, q: string) {
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
 
 function SearchDropdown({
-  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true,
+  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true, tall = false,
 }: {
   searchQuery: string;
   searchResults: Product[];
@@ -79,11 +79,12 @@ function SearchDropdown({
   onPick: () => void;
   wide?: boolean;
   positioned?: boolean;
+  tall?: boolean;
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
+      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[calc(100vh-170px)]' : 'max-h-[420px]'} overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
       style={positioned ? { top: 'calc(100% + 20px)' } : undefined}
     >
       {searchResults.length === 0 ? (
@@ -408,7 +409,7 @@ export default function Navbar({
         </div>
 
         {mobileSearchOpen && showDropdown && (
-          <div className="absolute left-0 right-0 top-full z-[900] px-5" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute left-0 right-0 top-full z-[900] mt-3" onClick={(e) => e.stopPropagation()}>
             <SearchDropdown
               searchQuery={searchQuery}
               searchResults={searchResults}
@@ -417,10 +418,11 @@ export default function Navbar({
               onGoToCat={goToCat}
               onPick={() => { setShowDropdown(false); setMobileSearchOpen(false); }}
               positioned={false}
+              tall
             />
           </div>
         )}
       </div>
     </div>
   );
-}
+                        }
