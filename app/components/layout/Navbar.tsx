@@ -161,6 +161,7 @@ export default function Navbar({
   const desktopNavRowRef = useRef<HTMLDivElement>(null);
   const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
   const desktopSearchBoxRef = useRef<HTMLDivElement>(null);
+  const mobileSearchAreaRef = useRef<HTMLDivElement>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
@@ -277,6 +278,22 @@ export default function Navbar({
     };
   }, []);
 
+  // ডেক্সটপ সার্চ বক্স ছোট (collapsed — hover/focus কোনোটাই না) অবস্থায় যদি ভিতরে
+  // এখনো আগের কোনো টেক্সট থেকে যায় (ইউজার নিজে ক্লিয়ার করেনি, বাইরে ক্লিক করে
+  // ড্রপডাউন শুধু বন্ধ হয়েছিল), তাহলে ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক ক্লিয়ার
+  // হয়ে বক্সটা তার ডিফল্ট ("প্রোডাক্ট খুঁজুন" আইকন) অবস্থায় ফিরে যাবে। আবার বক্সে
+  // hover/focus করলে টাইমার বাতিল হয়ে যায় (dependency-তে desktopSearchExpanded আছে)।
+  useEffect(() => {
+    if (desktopSearchExpanded || !searchQuery) return undefined;
+    const t = setTimeout(() => {
+      setSearchQuery('');
+      setSearchResults([]);
+      setCatResults([]);
+      setShowDropdown(false);
+    }, 7000);
+    return () => clearTimeout(t);
+  }, [desktopSearchExpanded, searchQuery]);
+
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
     if (!value.trim()) {
@@ -319,8 +336,17 @@ export default function Navbar({
     if (e.key === 'Enter' && searchQuery.trim()) goToSrp();
   };
 
+  // stopPropagation()-নির্ভর পুরনো পদ্ধতির বদলে এখন সরাসরি DOM containment চেক
+  // করা হচ্ছে — সার্চ বক্স/ড্রপডাউনের ভিতরে ক্লিক হলে (এমনকি আগে থেকেই টেক্সট
+  // থাকা অবস্থায় বক্সে আবার ক্লিক করলেও) ড্রপডাউন বন্ধ হবে না, শুধু সত্যিকারের
+  // বাইরের ক্লিকেই বন্ধ হবে।
   useEffect(() => {
-    const handleClickOutside = () => setShowDropdown(false);
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const insideDesktop = !!desktopSearchWrapRef.current?.contains(target);
+      const insideMobile = !!mobileSearchAreaRef.current?.contains(target);
+      if (!insideDesktop && !insideMobile) setShowDropdown(false);
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
@@ -389,8 +415,19 @@ export default function Navbar({
                     onBlur={() => setDesktopSearchFocused(false)}
                     autoComplete="off"
                     name="product-search"
-                    className={`${desktopSearchInputClass} h-full`}
+                    className={`${desktopSearchInputClass} h-full ${searchQuery ? 'pr-9' : ''}`}
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
+                      title="মুছুন"
+                      aria-label="মুছুন"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                    </button>
+                  )}
                   {showDropdown && (
                     <SearchDropdown
                       searchQuery={searchQuery}
@@ -459,7 +496,7 @@ export default function Navbar({
       {/* এই wrapper-এর নিজের কোনো overflow-hidden নেই — শুধু ভিতরের input-bar box-টার
           height animate করার জন্য overflow-hidden ব্যবহার হয়েছে, dropdown সেই box-এর
           বাইরে আলাদা sibling হিসেবে বসানো, তাই clip হয়ে অদৃশ্য হয়ে যায় না। */}
-      <div className="relative md:hidden">
+      <div className="relative md:hidden" ref={mobileSearchAreaRef}>
         <div
           className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${mobileSearchOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'}`}
         >
@@ -476,14 +513,17 @@ export default function Navbar({
                 onKeyDown={handleSearchKey}
                 ref={mobileSearchInputRef}
                 autoComplete="off"
-                className={searchInputClass}
+                className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
               />
               {searchQuery && (
                 <button
-                  className="absolute right-3 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
+                  className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
                   onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                   title="মুছুন"
-                >✕</button>
+                  aria-label="মুছুন"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
               )}
             </div>
           </div>
