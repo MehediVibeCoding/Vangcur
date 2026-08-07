@@ -67,6 +67,7 @@ function highlightMatch(text: string, q: string) {
 }
 
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
+const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
 
 function SearchDropdown({
   searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true, tall = false,
@@ -153,6 +154,8 @@ export default function Navbar({
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [catResults, setCatResults] = useState<Category[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [desktopSearchHovered, setDesktopSearchHovered] = useState(false);
+  const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
@@ -274,7 +277,7 @@ export default function Navbar({
   }, [showDropdown, hasResults]);
 
   return (
-    <div className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px]">
+    <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
       {showDropdown && (
         <div
           className="fixed inset-0 z-[850]"
@@ -284,8 +287,8 @@ export default function Navbar({
       <nav
         className={`relative z-[900] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
-        <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
-          <div className="flex w-full items-center justify-between gap-3">
+        <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
+          <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
             <Link className="flex shrink-0 items-center no-underline" href="/">
               <Image
                 src="/vangcur-logo.png"
@@ -293,14 +296,23 @@ export default function Navbar({
                 width={900}
                 height={317}
                 priority
-                className="h-7 w-auto select-none md:h-8"
+                className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
                 draggable={false}
               />
             </Link>
 
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="relative hidden w-[240px] md:block lg:w-[300px]" onClick={(e) => e.stopPropagation()}>
-                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-muted" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <div className="flex items-center gap-1.5 max-[400px]:gap-1 md:gap-3">
+              <div
+                className={`z-10 hidden md:block ${
+                  desktopSearchHovered || desktopSearchFocused
+                    ? 'md:absolute md:inset-x-0 md:mx-auto md:w-[min(560px,calc(100%-260px))]'
+                    : 'md:relative md:w-[240px] lg:w-[300px]'
+                } transition-[width] duration-300 ease-out`}
+                onMouseEnter={() => setDesktopSearchHovered(true)}
+                onMouseLeave={() => setDesktopSearchHovered(false)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                 </svg>
                 <input
@@ -309,10 +321,11 @@ export default function Navbar({
                   value={searchQuery}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   onKeyDown={handleSearchKey}
-                  onFocus={() => searchQuery && setShowDropdown(true)}
+                  onFocus={() => { setDesktopSearchFocused(true); if (searchQuery) setShowDropdown(true); }}
+                  onBlur={() => setDesktopSearchFocused(false)}
                   autoComplete="off"
                   name="product-search"
-                  className="w-full cursor-text rounded-full border border-ink/[0.06] bg-ink/[0.035] py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink shadow-[inset_0_1px_3px_rgba(0,0,0,.05)] transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/40 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none"
+                  className={desktopSearchInputClass}
                 />
                 {showDropdown && (
                   <SearchDropdown
@@ -326,8 +339,8 @@ export default function Navbar({
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <button className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
+              <div className="flex items-center gap-1 max-[400px]:gap-0.5 md:gap-1.5">
+                <button className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
@@ -335,7 +348,7 @@ export default function Navbar({
                 </button>
 
                 <button
-                  className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary"
+                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title="কার্ট"
@@ -348,24 +361,27 @@ export default function Navbar({
                 </button>
 
                 {currentUser ? (
-                  <button className="flex max-w-[130px] shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:px-3.5" onClick={onAccountClick}>
+                  <button className="flex max-w-[90px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base max-[400px]:gap-1 max-[400px]:px-1.5 md:max-w-none md:gap-2 md:px-3.5" onClick={onAccountClick}>
                     <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
-                    <span className="truncate">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
+                    <span className="truncate max-[400px]:hidden md:inline">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
                   </button>
                 ) : (
-                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 md:px-[18px]" onClick={onLoginClick}>লগইন করুন</button>
+                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
+                    <span className="max-[400px]:hidden">লগইন করুন</span>
+                    <span className="hidden max-[400px]:inline">লগইন</span>
+                  </button>
                 )}
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </button>
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
+                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
