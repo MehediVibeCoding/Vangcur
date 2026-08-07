@@ -69,7 +69,7 @@ function highlightMatch(text: string, q: string) {
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
 
 function SearchDropdown({
-  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide,
+  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true,
 }: {
   searchQuery: string;
   searchResults: Product[];
@@ -78,12 +78,13 @@ function SearchDropdown({
   onGoToCat: (id: string) => void;
   onPick: () => void;
   wide?: boolean;
+  positioned?: boolean;
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`absolute z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}
-      style={{ top: 'calc(100% + 20px)' }}
+      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
+      style={positioned ? { top: 'calc(100% + 20px)' } : undefined}
     >
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
@@ -183,11 +184,6 @@ export default function Navbar({
   // মোবাইল সার্চ খোলা কিন্তু হয় কোনো ড্রপডাউনই আসেনি, অথবা এসেছে কিন্তু কোনো
   // পণ্য পাওয়া যায়নি (দুটো ক্ষেত্রেই পিছনের পেজ আনলকড/স্ক্রলযোগ্য) — এই অবস্থায়
   // ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে সাথে সাথে বন্ধ হবে।
-  //
-  // আগের ভার্সনে scroll event একদম সামান্য movement (keyboard খোলার সময় বা
-  // layout-shift-এর কারণে ব্রাউজার নিজে থেকেই যেই মাইক্রো-scroll fire করে) হলেও
-  // সাথে সাথে বন্ধ করে দিচ্ছিল — ফলে dropdown আসার সাথে সাথেই বন্ধ হয়ে "উধাও" হয়ে
-  // যাচ্ছিল। এখন শুধু প্রকৃত ইউজার-স্ক্রল (কমপক্ষে ১৫px নড়াচড়া) হলেই বন্ধ হবে।
   useEffect(() => {
     if (!mobileSearchOpen) return undefined;
     const idle = !showDropdown || !hasResults;
@@ -277,10 +273,6 @@ export default function Navbar({
 
   return (
     <div className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px]">
-      {/* ড্রপডাউন খোলা অবস্থায় পিছনের ক্যাটাগরি কার্ড/বাটনে ক্লিক করলে dropdown বন্ধ
-          হওয়ার পাশাপাশি সেই ক্লিক পিছনের এলিমেন্টেও চলে যাচ্ছিল, ফলে ন্যাভিগেট হয়ে
-          যাওয়ার পর body scroll লক থেকে যেত এবং পুরো সাইট আটকে যেত। এই ব্যাকড্রপ
-          ক্লিকটাকে নিজের মধ্যেই আটকে রাখে, পিছনে যেতে দেয় না। */}
       {showDropdown && (
         <div
           className="fixed inset-0 z-[850]"
@@ -382,44 +374,52 @@ export default function Navbar({
         </div>
       </nav>
 
-      <div
-        className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out md:hidden ${mobileSearchOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'}`}
-      >
-        <div className="relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              type="search"
-              placeholder="প্রোডাক্ট খুঁজুন..."
-              value={searchQuery}
-              onChange={(e) => handleSearchInput(e.target.value)}
-              onKeyDown={handleSearchKey}
-              ref={mobileSearchInputRef}
-              autoComplete="off"
-              className={searchInputClass}
-            />
-            {searchQuery && (
-              <button
-                className="absolute right-3 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
-                onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                title="মুছুন"
-              >✕</button>
-            )}
-            {showDropdown && (
-              <SearchDropdown
-                searchQuery={searchQuery}
-                searchResults={searchResults}
-                catResults={catResults}
-                onGoToSrp={goToSrp}
-                onGoToCat={goToCat}
-                onPick={() => { setShowDropdown(false); setMobileSearchOpen(false); }}
-                wide
+      {/* এই wrapper-এর নিজের কোনো overflow-hidden নেই — শুধু ভিতরের input-bar box-টার
+          height animate করার জন্য overflow-hidden ব্যবহার হয়েছে, dropdown সেই box-এর
+          বাইরে আলাদা sibling হিসেবে বসানো, তাই clip হয়ে অদৃশ্য হয়ে যায় না। */}
+      <div className="relative md:hidden">
+        <div
+          className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${mobileSearchOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'}`}
+        >
+          <div className="relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="search"
+                placeholder="প্রোডাক্ট খুঁজুন..."
+                value={searchQuery}
+                onChange={(e) => handleSearchInput(e.target.value)}
+                onKeyDown={handleSearchKey}
+                ref={mobileSearchInputRef}
+                autoComplete="off"
+                className={searchInputClass}
               />
-            )}
+              {searchQuery && (
+                <button
+                  className="absolute right-3 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
+                  onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                  title="মুছুন"
+                >✕</button>
+              )}
+            </div>
           </div>
         </div>
+
+        {mobileSearchOpen && showDropdown && (
+          <div className="absolute left-0 right-0 top-full z-[900] px-5" onClick={(e) => e.stopPropagation()}>
+            <SearchDropdown
+              searchQuery={searchQuery}
+              searchResults={searchResults}
+              catResults={catResults}
+              onGoToSrp={goToSrp}
+              onGoToCat={goToCat}
+              onPick={() => { setShowDropdown(false); setMobileSearchOpen(false); }}
+              positioned={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
