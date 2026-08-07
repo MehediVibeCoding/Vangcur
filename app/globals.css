@@ -47,3 +47,20 @@ input:-webkit-autofill:active {
   box-shadow: 0 0 0 1000px #FFFFFF inset;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+/* Chrome/Android-এ input[type="search"]-এর নিজস্ব native cancel-button/decoration
+   box থাকে যেটা আমাদের custom rounded-full corner মানে না — গোল কোণার বাইরে ছোট্ট
+   একটা square patch (ভুল রঙের) দেখা যায়। আমরা নিজেরাই SVG আইকন আর ✕ বাটন বসিয়েছি,
+   তাই native decoration সম্পূর্ণ বন্ধ করে দেওয়া হলো। */
+input[type='search'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
