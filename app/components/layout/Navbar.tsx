@@ -81,7 +81,7 @@ function SearchDropdown({
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
-    <div className={`absolute top-[calc(100%+8px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-border-base bg-white shadow-sh3 ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}>
+    <div className={`absolute top-full z-[1100] mt-3 max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/90 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}>
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
@@ -315,7 +315,7 @@ export default function Navbar({
 
                 {currentUser ? (
                   <button className="flex max-w-[130px] shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:px-3.5" onClick={onAccountClick}>
-                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-white">
+                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <span className="truncate">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
