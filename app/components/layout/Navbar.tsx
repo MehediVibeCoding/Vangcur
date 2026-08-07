@@ -81,7 +81,10 @@ function SearchDropdown({
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
-    <div className={`absolute top-full z-[1100] mt-3 max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/90 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}>
+    <div
+      className={`absolute z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/96 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}
+      style={{ top: 'calc(100% + 14px)' }}
+    >
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
@@ -236,19 +239,30 @@ export default function Navbar({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // মোবাইল সার্চ প্যানেল খোলা অবস্থায় পিছনের পেজ স্ক্রল করা যাচ্ছিল, যার কারণে
-  // পিছনের প্রোডাক্ট লিস্ট নড়াচড়া করে ড্রপডাউনের সাথে মিশে "একটার উপর আরেকটা"
-  // এমন দেখাচ্ছিল। এখন প্যানেল খোলা থাকা অবস্থায় body scroll লক করা হচ্ছে।
+  // মোবাইল সার্চ প্যানেল শুধু খোলা থাকলে (এখনো কোনো রেজাল্ট দেখানো হয়নি) স্ক্রল/ক্লিক
+  // স্বাভাবিক থাকা উচিত — শুধুমাত্র রেজাল্ট ড্রপডাউন (showDropdown) দেখানো অবস্থাতেই
+  // পিছনের স্ক্রল ও ক্লিক আটকাতে হবে, তাই লক এখন mobileSearchOpen নয়, showDropdown-এর
+  // উপর নির্ভর করছে।
   useEffect(() => {
-    if (!mobileSearchOpen) return;
+    if (!showDropdown) return;
     lockBody();
     return () => unlockBody();
-  }, [mobileSearchOpen]);
+  }, [showDropdown]);
 
   return (
     <div className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px]">
+      {/* ড্রপডাউন খোলা অবস্থায় পিছনের ক্যাটাগরি কার্ড/বাটনে ক্লিক করলে dropdown বন্ধ
+          হওয়ার পাশাপাশি সেই ক্লিক পিছনের এলিমেন্টেও চলে যাচ্ছিল, ফলে ন্যাভিগেট হয়ে
+          যাওয়ার পর body scroll লক থেকে যেত এবং পুরো সাইট আটকে যেত। এই ব্যাকড্রপ
+          ক্লিকটাকে নিজের মধ্যেই আটকে রাখে, পিছনে যেতে দেয় না। */}
+      {showDropdown && (
+        <div
+          className="fixed inset-0 z-[850]"
+          onClick={() => setShowDropdown(false)}
+        />
+      )}
       <nav
-        className={`border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
+        className={`relative z-[900] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-3">
@@ -343,7 +357,7 @@ export default function Navbar({
       </nav>
 
       {mobileSearchOpen && (
-        <div className="-mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md md:hidden">
+        <div className="relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md md:hidden">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
