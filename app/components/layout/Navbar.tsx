@@ -12,6 +12,7 @@ import {
 } from '@/lib/productData';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
+import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import type { Product, Category, CurrentUser } from '@/types';
 
 interface NavbarProps {
@@ -69,8 +70,76 @@ function highlightMatch(text: string, q: string) {
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
 const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
 
+// সার্চ বক্সে ক্লিক/ফোকাস করার সাথে সাথেই (কিছু না লিখেও) এই প্যানেলটা দেখানো
+// হয় — আগে খালি বক্সে ক্লিক করলে কিছুই দেখাত না। সাম্প্রতিক অনুসন্ধান আর
+// জনপ্রিয় কয়েকটা ক্যাটাগরি একসাথে দেখিয়ে ইউজারকে দ্রুত শুরু করার সুযোগ দেয়।
+function SearchDefaultPanel({
+  recentSearches, popularCategories, onPickRecent, onRemoveRecent, onClearRecent, onGoToCat,
+}: {
+  recentSearches: string[];
+  popularCategories: Category[];
+  onPickRecent: (term: string) => void;
+  onRemoveRecent: (term: string) => void;
+  onClearRecent: () => void;
+  onGoToCat: (id: string) => void;
+}) {
+  return (
+    <div className="py-1.5">
+      {recentSearches.length > 0 && (
+        <>
+          <div className="flex items-center justify-between px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
+            <span>সাম্প্রতিক অনুসন্ধান</span>
+            <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={(e) => { e.stopPropagation(); onClearRecent(); }}>সব মুছুন</a>
+          </div>
+          <div className="flex flex-wrap gap-2 px-3.5 pb-2.5">
+            {recentSearches.map((term) => (
+              <span
+                key={term}
+                className="flex items-center gap-1.5 rounded-full bg-surface-muted py-1.5 pl-3.5 pr-2 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
+              >
+                <button type="button" className="cursor-pointer" onClick={() => onPickRecent(term)}>{term}</button>
+                <button
+                  type="button"
+                  className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-primary"
+                  onClick={(e) => { e.stopPropagation(); onRemoveRecent(term); }}
+                  aria-label="মুছুন"
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="mx-3.5 mb-1.5 h-px bg-border-base" />
+        </>
+      )}
+      {popularCategories.length > 0 && (
+        <>
+          <div className="flex items-center justify-between px-3.5 pb-2 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
+            <span>জনপ্রিয় ক্যাটাগরি</span>
+            <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={() => onGoToCat('all')}>সব দেখুন →</a>
+          </div>
+          <div className="grid grid-cols-4 gap-2 px-3.5 pb-3">
+            {popularCategories.map((c) => (
+              <button
+                type="button"
+                key={c.id}
+                className="flex flex-col items-center gap-1.5 rounded-[12px] p-1.5 text-center transition-brand duration-brand hover:bg-surface-muted"
+                onClick={() => onGoToCat(c.id)}
+              >
+                <CategoryIcon icon={c.icon} />
+                <span className="line-clamp-1 text-[11px] font-semibold text-ink">{c.name}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function SearchDropdown({
   searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true, tall = false,
+  isDefaultView = false, recentSearches = [], popularCategories = [], onPickRecent, onRemoveRecent, onClearRecent,
 }: {
   searchQuery: string;
   searchResults: Product[];
@@ -81,14 +150,29 @@ function SearchDropdown({
   wide?: boolean;
   positioned?: boolean;
   tall?: boolean;
+  isDefaultView?: boolean;
+  recentSearches?: string[];
+  popularCategories?: Category[];
+  onPickRecent?: (term: string) => void;
+  onRemoveRecent?: (term: string) => void;
+  onClearRecent?: () => void;
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
       className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
-      style={positioned ? { top: 'calc(100% + 8px)' } : undefined}
+      style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
-      {searchResults.length === 0 ? (
+      {isDefaultView ? (
+        <SearchDefaultPanel
+          recentSearches={recentSearches}
+          popularCategories={popularCategories}
+          onPickRecent={(term) => onPickRecent?.(term)}
+          onRemoveRecent={(term) => onRemoveRecent?.(term)}
+          onClearRecent={() => onClearRecent?.()}
+          onGoToCat={onGoToCat}
+        />
+      ) : searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
         </div>
@@ -154,6 +238,7 @@ export default function Navbar({
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [catResults, setCatResults] = useState<Category[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [desktopSearchHovered, setDesktopSearchHovered] = useState(false);
   const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
   const [desktopSearchGeo, setDesktopSearchGeo] = useState<{ left: number; width: number } | null>(null);
@@ -169,6 +254,16 @@ export default function Navbar({
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused;
+  // খালি বক্সে ফোকাস হলে (কিছু না লিখেই) সাম্প্রতিক অনুসন্ধান + জনপ্রিয়
+  // ক্যাটাগরির ডিফল্ট প্যানেল দেখানো হয়, সাধারণ ফলাফল/no-result state নয়।
+  const isDefaultView = showDropdown && !searchQuery.trim();
+  // catsRef.current পরিবর্তন হলে re-render trigger হয় না (এটা state না, ref),
+  // তাই stale ডেটা এড়াতে এখানে সরাসরি DEFAULT_CATEGORIES থেকে প্রথম কয়েকটা
+  // (curated "জনপ্রিয়") ক্যাটাগরি নেওয়া হচ্ছে — এগুলো নিয়মিত পরিবর্তন হয় না।
+  const popularCategories = useMemo(
+    () => DEFAULT_CATEGORIES.filter((c) => c.id !== 'all').slice(0, 4),
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -188,25 +283,46 @@ export default function Navbar({
   }, [supabase]);
 
   useEffect(() => {
-    if (mobileSearchOpen) mobileSearchInputRef.current?.focus();
+    setRecentSearches(getRecentSearches());
+  }, []);
+
+  useEffect(() => {
+    // সার্চ বক্স খোলার সাথে সাথেই (কিছু না লিখেও) ডিফল্ট প্যানেল (সাম্প্রতিক
+    // অনুসন্ধান + জনপ্রিয় ক্যাটাগরি) দেখানো হয় — আগে খালি বক্সে কিছুই আসত না।
+    if (mobileSearchOpen) {
+      mobileSearchInputRef.current?.focus();
+      setShowDropdown(true);
+    }
   }, [mobileSearchOpen]);
 
   // মোবাইল সার্চ খোলা কিন্তু হয় কোনো ড্রপডাউনই আসেনি, অথবা এসেছে কিন্তু কোনো
   // পণ্য পাওয়া যায়নি (দুটো ক্ষেত্রেই পিছনের পেজ আনলকড/স্ক্রলযোগ্য) — এই অবস্থায়
   // ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে সাথে সাথে বন্ধ হবে।
+  //
+  // mobile keyboard খোলার সময় ব্রাউজার নিজে থেকেই ফোকাসড ইনপুটটাকে কিবোর্ডের
+  // উপরে দেখানোর জন্য পেজ auto-scroll করে (বিশেষ করে ফুটারের মতো নিচের দিকে
+  // স্ক্রল করা অবস্থায় সার্চ আইকনে ট্যাপ করলে এই auto-scroll-এর পরিমাণ বেশি
+  // হয়)। আগে এই ব্রাউজার-চালিত auto-scroll-কেই ভুল করে "ইউজার নিজে স্ক্রল
+  // করেছে" ধরে নিয়ে সাথে সাথে সার্চ বক্স/ড্রপডাউন বন্ধ করে দেওয়া হতো — এতেই
+  // মনে হতো টাইপ করার সাথে সাথে সবকিছু "গায়েব" হয়ে যাচ্ছে। এখন প্রথম ৫০০ms
+  // "arm" হওয়ার আগ পর্যন্ত স্ক্রল-ক্লোজ উপেক্ষা করা হচ্ছে, যাতে কিবোর্ড খোলার
+  // সময়কার এই স্বয়ংক্রিয় অ্যাডজাস্টমেন্ট শেষ হওয়ার সুযোগ পায়।
   useEffect(() => {
     if (!mobileSearchOpen) return undefined;
     const idle = !showDropdown || !hasResults;
     const startY = window.scrollY;
+    let armed = false;
+    const armTimer = setTimeout(() => { armed = true; }, 500);
     const idleTimer = idle ? setTimeout(() => { setMobileSearchOpen(false); setShowDropdown(false); }, 7000) : null;
     const onScroll = () => {
-      if (idle && Math.abs(window.scrollY - startY) > 15) {
+      if (armed && idle && Math.abs(window.scrollY - startY) > 15) {
         setMobileSearchOpen(false);
         setShowDropdown(false);
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
+      clearTimeout(armTimer);
       if (idleTimer) clearTimeout(idleTimer);
       window.removeEventListener('scroll', onScroll);
     };
@@ -300,7 +416,10 @@ export default function Navbar({
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
       setSearchResults([]);
       setCatResults([]);
-      setShowDropdown(false);
+      // টেক্সট মুছে খালি করে দিলেও (যেমন ব্যাকস্পেস দিয়ে) বক্সটা তখনো ফোকাসড
+      // থাকে, তাই ড্রপডাউন পুরো বন্ধ না করে ডিফল্ট প্যানেল (সাম্প্রতিক অনুসন্ধান
+      // + জনপ্রিয় ক্যাটাগরি) দেখানো হয়।
+      setShowDropdown(true);
       return;
     }
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -324,6 +443,7 @@ export default function Navbar({
   const goToSrp = () => {
     const q = searchQuery.trim();
     if (!q) return;
+    setRecentSearches(addRecentSearch(q));
     setShowDropdown(false);
     setMobileSearchOpen(false);
     setSearchQuery('');
@@ -334,6 +454,19 @@ export default function Navbar({
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) goToSrp();
+  };
+
+  const pickRecentSearch = (term: string) => {
+    handleSearchInput(term);
+  };
+
+  const removeRecentSearchTerm = (term: string) => {
+    setRecentSearches(removeRecentSearch(term));
+  };
+
+  const clearAllRecentSearches = () => {
+    clearRecentSearches();
+    setRecentSearches([]);
   };
 
   // stopPropagation()-নির্ভর পুরনো পদ্ধতির বদলে এখন সরাসরি DOM containment চেক
@@ -369,7 +502,7 @@ export default function Navbar({
         />
       )}
       <nav
-        className={`relative z-[900] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
+        className={`navbar-glass relative z-[900] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
@@ -411,7 +544,7 @@ export default function Navbar({
                     value={searchQuery}
                     onChange={(e) => handleSearchInput(e.target.value)}
                     onKeyDown={handleSearchKey}
-                    onFocus={() => { setDesktopSearchFocused(true); if (searchQuery) setShowDropdown(true); }}
+                    onFocus={() => { setDesktopSearchFocused(true); setShowDropdown(true); }}
                     onBlur={() => setDesktopSearchFocused(false)}
                     autoComplete="off"
                     name="product-search"
@@ -436,6 +569,12 @@ export default function Navbar({
                       onGoToSrp={goToSrp}
                       onGoToCat={goToCat}
                       onPick={() => setShowDropdown(false)}
+                      isDefaultView={isDefaultView}
+                      recentSearches={recentSearches}
+                      popularCategories={popularCategories}
+                      onPickRecent={pickRecentSearch}
+                      onRemoveRecent={removeRecentSearchTerm}
+                      onClearRecent={clearAllRecentSearches}
                     />
                   )}
                 </div>
@@ -500,7 +639,7 @@ export default function Navbar({
         <div
           className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${mobileSearchOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'}`}
         >
-          <div className="relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
+          <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -511,6 +650,7 @@ export default function Navbar({
                 value={searchQuery}
                 onChange={(e) => handleSearchInput(e.target.value)}
                 onKeyDown={handleSearchKey}
+                onFocus={() => setShowDropdown(true)}
                 ref={mobileSearchInputRef}
                 autoComplete="off"
                 className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
@@ -540,6 +680,12 @@ export default function Navbar({
               onPick={() => { setShowDropdown(false); setMobileSearchOpen(false); }}
               positioned={false}
               tall
+              isDefaultView={isDefaultView}
+              recentSearches={recentSearches}
+              popularCategories={popularCategories}
+              onPickRecent={pickRecentSearch}
+              onRemoveRecent={removeRecentSearchTerm}
+              onClearRecent={clearAllRecentSearches}
             />
           </div>
         )}

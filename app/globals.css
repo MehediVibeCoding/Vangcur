@@ -75,3 +75,16 @@ input[type='search']::-webkit-search-results-decoration {
   appearance: none;
   display: none;
 }
+
+/* Navbar-এ bg-white/70 + backdrop-blur মিলিয়ে একটা ফ্রস্টেড-গ্লাস লুক তৈরি হয়।
+   কিন্তু পুরনো ব্রাউজারে (যেমন iPhone 7-এর পুরনো iOS Safari) backdrop-filter
+   সাপোর্টই করে না — ফলে ব্লার ছাড়া শুধু ৭০% অপাসিটি সাদা রঙ দেখা যায়, যার
+   পিছনে থাকা কনটেন্ট স্পষ্ট দেখা যায় এবং Navbar-টা বাকি ডিভাইসের (Android/
+   ডেক্সটপ, যেখানে ব্লার কাজ করে) তুলনায় অনেক বেশি স্বচ্ছ মনে হয়। ব্লার সাপোর্ট
+   না থাকলে অপাসিটি বাড়িয়ে দিয়ে সব ডিভাইসেই কাছাকাছি একটা সলিড লুক ধরে রাখা
+   হচ্ছে। */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar-glass {
+    background-color: rgba(255, 255, 255, 0.94) !important;
+  }
+}
