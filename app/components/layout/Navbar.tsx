@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { CART_ADD_EVENT } from '@/lib/cartData';
+import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
   DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, productHref,
 } from '@/lib/productData';
@@ -80,7 +81,7 @@ function SearchDropdown({
 }) {
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
-    <div className={`absolute top-[calc(100%+8px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/70 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}>
+    <div className={`absolute top-[calc(100%+8px)] z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-border-base bg-white shadow-sh3 ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}>
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
@@ -235,6 +236,15 @@ export default function Navbar({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // মোবাইল সার্চ প্যানেল খোলা অবস্থায় পিছনের পেজ স্ক্রল করা যাচ্ছিল, যার কারণে
+  // পিছনের প্রোডাক্ট লিস্ট নড়াচড়া করে ড্রপডাউনের সাথে মিশে "একটার উপর আরেকটা"
+  // এমন দেখাচ্ছিল। এখন প্যানেল খোলা থাকা অবস্থায় body scroll লক করা হচ্ছে।
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    lockBody();
+    return () => unlockBody();
+  }, [mobileSearchOpen]);
+
   return (
     <div className="sticky top-[14px] z-[900] mx-3 mb-1.5 mt-[14px]">
       <nav
@@ -304,8 +314,8 @@ export default function Navbar({
                 </button>
 
                 {currentUser ? (
-                  <button className="flex max-w-[130px] shrink-0 items-center gap-2 rounded-full bg-brand-bg px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-brand-bg/70 md:max-w-none md:px-3.5" onClick={onAccountClick}>
-                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
+                  <button className="flex max-w-[130px] shrink-0 items-center gap-2 rounded-full bg-surface-muted px-3 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:px-3.5" onClick={onAccountClick}>
+                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <span className="truncate">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
