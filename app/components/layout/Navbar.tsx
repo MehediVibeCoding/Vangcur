@@ -183,11 +183,22 @@ export default function Navbar({
   // মোবাইল সার্চ খোলা কিন্তু হয় কোনো ড্রপডাউনই আসেনি, অথবা এসেছে কিন্তু কোনো
   // পণ্য পাওয়া যায়নি (দুটো ক্ষেত্রেই পিছনের পেজ আনলকড/স্ক্রলযোগ্য) — এই অবস্থায়
   // ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে সাথে সাথে বন্ধ হবে।
+  //
+  // আগের ভার্সনে scroll event একদম সামান্য movement (keyboard খোলার সময় বা
+  // layout-shift-এর কারণে ব্রাউজার নিজে থেকেই যেই মাইক্রো-scroll fire করে) হলেও
+  // সাথে সাথে বন্ধ করে দিচ্ছিল — ফলে dropdown আসার সাথে সাথেই বন্ধ হয়ে "উধাও" হয়ে
+  // যাচ্ছিল। এখন শুধু প্রকৃত ইউজার-স্ক্রল (কমপক্ষে ১৫px নড়াচড়া) হলেই বন্ধ হবে।
   useEffect(() => {
     if (!mobileSearchOpen) return undefined;
     const idle = !showDropdown || !hasResults;
+    const startY = window.scrollY;
     const idleTimer = idle ? setTimeout(() => { setMobileSearchOpen(false); setShowDropdown(false); }, 7000) : null;
-    const onScroll = () => { if (idle) { setMobileSearchOpen(false); setShowDropdown(false); } };
+    const onScroll = () => {
+      if (idle && Math.abs(window.scrollY - startY) > 15) {
+        setMobileSearchOpen(false);
+        setShowDropdown(false);
+      }
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       if (idleTimer) clearTimeout(idleTimer);
