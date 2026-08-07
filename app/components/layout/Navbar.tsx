@@ -82,8 +82,8 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`absolute z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/96 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}
-      style={{ top: 'calc(100% + 14px)' }}
+      className={`absolute z-[1100] max-h-[420px] overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md ${wide ? '-left-5 -right-5' : 'left-0 right-0'}`}
+      style={{ top: 'calc(100% + 20px)' }}
     >
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
@@ -178,6 +178,19 @@ export default function Navbar({
   useEffect(() => {
     if (mobileSearchOpen) mobileSearchInputRef.current?.focus();
   }, [mobileSearchOpen]);
+
+  // মোবাইল সার্চ খোলা কিন্তু কোনো ড্রপডাউন রেজাল্ট নেই — ৭ সেকেন্ড নিষ্ক্রিয় থাকলে
+  // অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে (রেজাল্ট থাকুক বা না থাকুক) সাথে সাথে বন্ধ হবে।
+  useEffect(() => {
+    if (!mobileSearchOpen) return undefined;
+    const idleTimer = showDropdown ? null : setTimeout(() => setMobileSearchOpen(false), 7000);
+    const onScroll = () => setMobileSearchOpen(false);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [mobileSearchOpen, showDropdown]);
 
   useEffect(() => {
     const onCartAdd = () => {
@@ -356,8 +369,10 @@ export default function Navbar({
         </div>
       </nav>
 
-      {mobileSearchOpen && (
-        <div className="relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md md:hidden">
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out md:hidden ${mobileSearchOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'}`}
+      >
+        <div className="relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
             <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -392,7 +407,7 @@ export default function Navbar({
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
