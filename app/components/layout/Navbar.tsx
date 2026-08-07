@@ -84,8 +84,8 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[calc(100vh-170px)]' : 'max-h-[420px]'} overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
-      style={positioned ? { top: 'calc(100% + 20px)' } : undefined}
+      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
+      style={positioned ? { top: 'calc(100% + 8px)' } : undefined}
     >
       {searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
@@ -219,6 +219,7 @@ export default function Navbar({
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
     if (!value.trim()) {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
       setSearchResults([]);
       setCatResults([]);
       setShowDropdown(false);
@@ -409,7 +410,7 @@ export default function Navbar({
         </div>
 
         {mobileSearchOpen && showDropdown && (
-          <div className="absolute left-0 right-0 top-full z-[900] mt-3" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute left-0 right-0 top-full z-[900] mt-1.5" onClick={(e) => e.stopPropagation()}>
             <SearchDropdown
               searchQuery={searchQuery}
               searchResults={searchResults}
