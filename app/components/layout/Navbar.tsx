@@ -254,6 +254,14 @@ export default function Navbar({
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused;
+  // সার্চ বক্স আর তার নিচের dropdown আলাদা দুইটা animation (বক্সের left/width
+  // CSS transition বনাম dropdown-এর mount/unmount) — সাথে সাথে দুটো একসাথে
+  // ঘটলে dropdown বক্স তখনো ছোট থাকা অবস্থায়ই চূড়ান্ত (বড়) সাইজ ধরে পপ-আপ
+  // হয়ে যেত, sync থাকত না। তাই dropdown কখনোই বক্স পুরোপুরি expand হওয়ার
+  // আগে (৩০০ms, বক্সের transition duration-এর সমান) দেখানো হয় না, আর বক্স
+  // ছোট হওয়া শুরুর সাথে সাথেই (hover/focus হারানো মাত্র) dropdown সঙ্গে সঙ্গে
+  // বন্ধ হয়ে যায় — ফলে বক্স ছোট হওয়া শুরু হওয়ার আগেই dropdown বন্ধ হয়ে থাকে।
+  const [desktopBoxReady, setDesktopBoxReady] = useState(false);
   // খালি বক্সে ফোকাস হলে (কিছু না লিখেই) সাম্প্রতিক অনুসন্ধান + জনপ্রিয়
   // ক্যাটাগরির ডিফল্ট প্যানেল দেখানো হয়, সাধারণ ফলাফল/no-result state নয়।
   const isDefaultView = showDropdown && !searchQuery.trim();
@@ -295,27 +303,23 @@ export default function Navbar({
     }
   }, [mobileSearchOpen]);
 
-  // মোবাইল সার্চ খোলা কিন্তু হয় কোনো ড্রপডাউনই আসেনি, অথবা এসেছে কিন্তু কোনো
-  // পণ্য পাওয়া যায়নি (দুটো ক্ষেত্রেই পিছনের পেজ আনলকড/স্ক্রলযোগ্য) — এই অবস্থায়
-  // ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক বন্ধ হয়ে যাবে। স্ক্রল করলে সাথে সাথে বন্ধ হবে।
+  // মোবাইলে সার্চ বক্স/ড্রপডাউন কোনো টাইম-বেসড টাইমারে অটোমেটিক বন্ধ হবে না —
+  // ইউজার ইচ্ছাকৃতভাবে কিছু না করা পর্যন্ত (চিন্তা করছে, দেখছে) খোলা থাকতে পারে,
+  // যতক্ষণ ইচ্ছা। শুধু দুইভাবে বন্ধ হবে: (১) বাইরে ক্লিক করলে (আলাদা
+  // handleClickOutside effect-এ আছে), (২) পিছনের পেজ স্ক্রল করলে — কারণ স্ক্রল
+  // করা মানে ইউজার এখন ওয়েবসাইট দেখতে চাইছে।
   //
   // mobile keyboard খোলার সময় ব্রাউজার নিজে থেকেই ফোকাসড ইনপুটটাকে কিবোর্ডের
-  // উপরে দেখানোর জন্য পেজ auto-scroll করে (বিশেষ করে ফুটারের মতো নিচের দিকে
-  // স্ক্রল করা অবস্থায় সার্চ আইকনে ট্যাপ করলে এই auto-scroll-এর পরিমাণ বেশি
-  // হয়)। আগে এই ব্রাউজার-চালিত auto-scroll-কেই ভুল করে "ইউজার নিজে স্ক্রল
-  // করেছে" ধরে নিয়ে সাথে সাথে সার্চ বক্স/ড্রপডাউন বন্ধ করে দেওয়া হতো — এতেই
-  // মনে হতো টাইপ করার সাথে সাথে সবকিছু "গায়েব" হয়ে যাচ্ছে। এখন প্রথম ৫০০ms
-  // "arm" হওয়ার আগ পর্যন্ত স্ক্রল-ক্লোজ উপেক্ষা করা হচ্ছে, যাতে কিবোর্ড খোলার
-  // সময়কার এই স্বয়ংক্রিয় অ্যাডজাস্টমেন্ট শেষ হওয়ার সুযোগ পায়।
+  // উপরে দেখানোর জন্য পেজ auto-scroll করে। আগে এই ব্রাউজার-চালিত auto-scroll-কেই
+  // ভুল করে "ইউজার নিজে স্ক্রল করেছে" ধরে নিয়ে সাথে সাথে বন্ধ করে দেওয়া হতো। তাই
+  // প্রথম ৫০০ms "arm" হওয়ার আগ পর্যন্ত স্ক্রল-ক্লোজ উপেক্ষা করা হচ্ছে।
   useEffect(() => {
     if (!mobileSearchOpen) return undefined;
-    const idle = !showDropdown || !hasResults;
     const startY = window.scrollY;
     let armed = false;
     const armTimer = setTimeout(() => { armed = true; }, 500);
-    const idleTimer = idle ? setTimeout(() => { setMobileSearchOpen(false); setShowDropdown(false); }, 7000) : null;
     const onScroll = () => {
-      if (armed && idle && Math.abs(window.scrollY - startY) > 15) {
+      if (armed && Math.abs(window.scrollY - startY) > 15) {
         setMobileSearchOpen(false);
         setShowDropdown(false);
       }
@@ -323,10 +327,9 @@ export default function Navbar({
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       clearTimeout(armTimer);
-      if (idleTimer) clearTimeout(idleTimer);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [mobileSearchOpen, showDropdown, hasResults]);
+  }, [mobileSearchOpen]);
 
   useEffect(() => {
     const onCartAdd = () => {
@@ -394,12 +397,31 @@ export default function Navbar({
     };
   }, []);
 
+  // বক্স expand হওয়া শুরু হলে ৩০০ms (বক্সের CSS transition duration) পর
+  // "ready" হয় — dropdown তখনই দেখানো শুরু হয়। বক্স collapse হওয়া শুরু হলে
+  // (hover/focus হারালে) সাথে সাথেই "not ready" হয়ে যায়, dropdown তখনই
+  // বন্ধ হয়ে যায় — বক্স ছোট হওয়া শুরুর আগেই।
+  useEffect(() => {
+    if (desktopSearchExpanded) {
+      const t = setTimeout(() => setDesktopBoxReady(true), 300);
+      return () => clearTimeout(t);
+    }
+    setDesktopBoxReady(false);
+    return undefined;
+  }, [desktopSearchExpanded]);
+
   // ডেক্সটপ সার্চ বক্স ছোট (collapsed — hover/focus কোনোটাই না) অবস্থায় যদি ভিতরে
   // এখনো আগের কোনো টেক্সট থেকে যায় (ইউজার নিজে ক্লিয়ার করেনি, বাইরে ক্লিক করে
   // ড্রপডাউন শুধু বন্ধ হয়েছিল), তাহলে ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক ক্লিয়ার
   // হয়ে বক্সটা তার ডিফল্ট ("প্রোডাক্ট খুঁজুন" আইকন) অবস্থায় ফিরে যাবে। আবার বক্সে
   // hover/focus করলে টাইমার বাতিল হয়ে যায় (dependency-তে desktopSearchExpanded আছে)।
+  // এই টাইমারটা শুধুই ডেস্কটপ hover/focus সার্চ বক্সের জন্য — মোবাইল সার্চ
+  // (আলাদা UI, উপরের effect-এ হ্যান্ডল হয়) খোলা থাকলে এটা একেবারেই স্কিপ করা
+  // হয়, নাহলে আগে এই একই টাইমার ভুলে মোবাইলেও fire করে দুটো বন্ধ-হওয়ার
+  // effect একটার পর একটা চেইন-রিয়্যাকশন ঘটাচ্ছিল (আগে টাইপ করা রেজাল্ট,
+  // তারপর টেক্সটবক্স — দুটোই কয়েক সেকেন্ড পর পর অটোমেটিক বন্ধ হয়ে যেত)।
   useEffect(() => {
+    if (mobileSearchOpen) return undefined;
     if (desktopSearchExpanded || !searchQuery) return undefined;
     const t = setTimeout(() => {
       setSearchQuery('');
@@ -408,7 +430,7 @@ export default function Navbar({
       setShowDropdown(false);
     }, 7000);
     return () => clearTimeout(t);
-  }, [desktopSearchExpanded, searchQuery]);
+  }, [desktopSearchExpanded, searchQuery, mobileSearchOpen]);
 
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
@@ -561,7 +583,7 @@ export default function Navbar({
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                     </button>
                   )}
-                  {showDropdown && (
+                  {showDropdown && desktopBoxReady && (
                     <SearchDropdown
                       searchQuery={searchQuery}
                       searchResults={searchResults}
