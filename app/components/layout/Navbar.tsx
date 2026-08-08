@@ -114,7 +114,19 @@ function SearchDefaultPanel({
                 key={term}
                 className="flex items-center gap-1.5 rounded-full bg-surface-muted py-1.5 pl-3.5 pr-2 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
               >
-                <button type="button" className="cursor-pointer" onClick={() => onPickRecent(term)}>{term}</button>
+                <button
+                  type="button"
+                  className="cursor-pointer"
+                  // mousedown-এ preventDefault না করলে ক্লিকের আগে সার্চ ইনপুট
+                  // blur হয়ে যায় — সেই blur-এর কারণে বক্সের expanded state
+                  // সাময়িকভাবে collapse হওয়ার race তৈরি হতো, তাই ক্লিক সম্পন্ন
+                  // হওয়ার আগেই বক্স ছোট হয়ে যাচ্ছিল। এটা দিলে input focus
+                  // থেকেই যায়, কোনো race হয় না।
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => onPickRecent(term)}
+                >
+                  {term}
+                </button>
                 <button
                   type="button"
                   className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-primary"
@@ -142,6 +154,9 @@ function SearchDefaultPanel({
                 key={term}
                 type="button"
                 className="cursor-pointer rounded-full bg-surface-muted py-1.5 px-3.5 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
+                // একই কারণে (উপরে দেখুন) — blur-race আটকাতে mousedown-এ
+                // preventDefault।
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onPickRecent(term)}
               >
                 {term}
