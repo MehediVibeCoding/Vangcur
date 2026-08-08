@@ -13,6 +13,7 @@ import {
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
+import { sanitizeSvgHtml } from '@/lib/sanitize';
 import type { Product, Category, CurrentUser } from '@/types';
 
 interface NavbarProps {
@@ -51,7 +52,7 @@ function CategoryIcon({ icon }: { icon?: string }) {
     return (
       <div
         className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[9px] bg-brand-bg text-brand-primary [&_svg]:!h-[22px] [&_svg]:!w-[22px]"
-        dangerouslySetInnerHTML={{ __html: icon }}
+        dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
       />
     );
   }
