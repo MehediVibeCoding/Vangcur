@@ -589,11 +589,18 @@ export default function Navbar({
   };
 
   const pickRecentSearch = (term: string) => {
-    // পরের searchQuery-effect রানে debounce স্কিপ করে সাথে সাথে রেজাল্ট
-    // বসানোর জন্য ফ্ল্যাগ সেট করা হচ্ছে।
+    // ক্লিক করার সাথে সাথেই রেজাল্ট সরাসরি এখানেই বসানো হচ্ছে, শুধু পরের
+    // searchQuery-effect-এর উপর নির্ভর না করে। আগের skipDebounceRef-only
+    // পদ্ধতিতে টেক্সট বক্সে বসত কিন্তু ড্রপডাউনে মাঝে মাঝে ফলাফল আসত না —
+    // কারণ effect-টা রান হওয়ার সময়/batching-এর উপর নির্ভরশীল ছিল। এখন
+    // টাইপ করার মতোই নিশ্চিতভাবে সরাসরি রেজাল্ট সেট হয়। effect-টাও পরে একই
+    // ডেটা আবার সেট করবে (skipDebounceRef এখনো true থাকায়) — সেটা নিরাপদ,
+    // একই ফলাফল, কোনো ফ্লিকার বা পার্থক্য হয় না।
     skipDebounceRef.current = true;
     setSearchQuery(term);
     setShowDropdown(true);
+    setSearchResults(searchProducts(prodsRef.current, term).slice(0, 6));
+    setCatResults(matchCategoryList(catsRef.current, term));
   };
 
   const removeRecentSearchTerm = (term: string) => {
