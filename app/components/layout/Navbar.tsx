@@ -306,7 +306,6 @@ export default function Navbar({
   const [desktopSearchHovered, setDesktopSearchHovered] = useState(false);
   const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
   const [desktopSearchGeo, setDesktopSearchGeo] = useState<{ left: number; width: number } | null>(null);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const desktopNavRowRef = useRef<HTMLDivElement>(null);
   const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
   const desktopSearchBoxRef = useRef<HTMLDivElement>(null);
@@ -522,37 +521,46 @@ export default function Navbar({
     return () => clearTimeout(t);
   }, [desktopSearchExpanded, searchQuery, mobileSearchOpen]);
 
-  const handleSearchInput = useCallback((value: string, immediate = false) => {
-    setSearchQuery(value);
-    if (!value.trim()) {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+  // আগে "immediate" ফ্ল্যাগ দিয়ে ক্লিক হ্যান্ডলারের ভিতরেই সরাসরি রেজাল্ট
+  // কম্পিউট করা হতো — কিন্তু চিপ ক্লিকে (mousedown-preventDefault + click একই
+  // ইভেন্ট চক্রে) কখনো কখনো সেই সিঙ্ক্রোনাস কলটা কার্যকর হচ্ছিল না, ফলে
+  // showDropdown(true) পর্যন্ত পৌঁছাচ্ছিল না — বক্সে টেক্সট বসত কিন্তু ড্রপডাউন
+  // কিছুই দেখাত না। এখন রেজাল্ট কম্পিউট করা হয় একটা আলাদা useEffect দিয়ে, যেটা
+  // searchQuery বদলালেই নিজে থেকে রান হয় — টাইপিং বা ক্লিক, উৎস যাই হোক না কেন,
+  // React-এর normal render cycle-এর মধ্য দিয়েই নিশ্চিতভাবে চলে, তাই কোনো
+  // ইভেন্ট-হ্যান্ডলার-নির্ভর race থাকে না। skipDebounceRef true থাকলে (চিপ থেকে
+  // পিক করা হলে) সাথে সাথেই রেজাল্ট বসে, নাহলে (টাইপ করলে) আগের মতো ২৮০ms
+  // debounce হয়।
+  const skipDebounceRef = useRef(false);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
       setSearchResults([]);
       setCatResults([]);
-      // টেক্সট মুছে খালি করে দিলেও (যেমন ব্যাকস্পেস দিয়ে) বক্সটা তখনো ফোকাসড
-      // থাকে, তাই ড্রপডাউন পুরো বন্ধ না করে ডিফল্ট প্যানেল (সাম্প্রতিক অনুসন্ধান
-      // + জনপ্রিয় ক্যাটাগরি) দেখানো হয়।
-      setShowDropdown(true);
-      return;
+      return undefined;
     }
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    // চিপ/রিসেন্ট সার্চ থেকে ক্লিক করলে (immediate) debounce না দিয়ে সাথে সাথে
-    // রেজাল্ট বসানো হয় — নাহলে মাঝের ২৮০ms এ dropdown খালি "কোনো পণ্য পাওয়া
-    // যায়নি" state দেখিয়ে, তারপর রেজাল্ট এলে বড় হয়ে যায় (বক্স ছোট-বড় হওয়ার
-    // গ্লিচ — টাইপ করার সময় এই সমস্যা হয় না, কারণ প্রতি keystroke-এ যেভাবেই
-    // হোক debounce রিসেট হয় এবং ইউজার সরাসরি ফলাফল লেখার অপেক্ষা করেই থাকে)।
-    if (immediate) {
-      const results = searchProducts(prodsRef.current, value).slice(0, 6);
+    if (skipDebounceRef.current) {
+      skipDebounceRef.current = false;
+      const results = searchProducts(prodsRef.current, searchQuery).slice(0, 6);
       setSearchResults(results);
-      setCatResults(matchCategoryList(catsRef.current, value));
-      setShowDropdown(true);
-      return;
+      setCatResults(matchCategoryList(catsRef.current, searchQuery));
+      return undefined;
     }
-    searchTimeoutRef.current = setTimeout(() => {
-      const results = searchProducts(prodsRef.current, value).slice(0, 6);
+    const t = setTimeout(() => {
+      const results = searchProducts(prodsRef.current, searchQuery).slice(0, 6);
       setSearchResults(results);
-      setCatResults(matchCategoryList(catsRef.current, value));
-      setShowDropdown(true);
+      setCatResults(matchCategoryList(catsRef.current, searchQuery));
     }, 280);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const handleSearchInput = useCallback((value: string) => {
+    setSearchQuery(value);
+    // টেক্সট মুছে খালি করে দিলেও (যেমন ব্যাকস্পেস দিয়ে) বক্সটা তখনো ফোকাসড
+    // থাকে, তাই ড্রপডাউন পুরো বন্ধ না করে ডিফল্ট প্যানেল (সাম্প্রতিক অনুসন্ধান
+    // + জনপ্রিয় ক্যাটাগরি) দেখানো হয় — রেজাল্ট ক্লিয়ার করার কাজটা উপরের
+    // effect-ই করে দেয়।
+    setShowDropdown(true);
   }, []);
 
   const goToCat = (catId: string) => {
@@ -581,9 +589,11 @@ export default function Navbar({
   };
 
   const pickRecentSearch = (term: string) => {
-    // immediate=true — চিপে ক্লিক করলে সাথে সাথে রেজাল্ট দেখাতে হবে, ২৮০ms
-    // debounce এর কারণে বক্স ছোট-বড় হওয়ার গ্লিচ যাতে না হয়।
-    handleSearchInput(term, true);
+    // পরের searchQuery-effect রানে debounce স্কিপ করে সাথে সাথে রেজাল্ট
+    // বসানোর জন্য ফ্ল্যাগ সেট করা হচ্ছে।
+    skipDebounceRef.current = true;
+    setSearchQuery(term);
+    setShowDropdown(true);
   };
 
   const removeRecentSearchTerm = (term: string) => {
