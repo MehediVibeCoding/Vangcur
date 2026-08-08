@@ -493,49 +493,52 @@ export default function Navbar({
     return () => clearTimeout(t);
   }, [desktopSearchExpanded, searchQuery, mobileSearchOpen]);
 
-  // আগে "immediate" ফ্ল্যাগ দিয়ে ক্লিক হ্যান্ডলারের ভিতরেই সরাসরি রেজাল্ট
-  // কম্পিউট করা হতো — কিন্তু চিপ ক্লিকে (mousedown-preventDefault + click একই
-  // ইভেন্ট চক্রে) কখনো কখনো সেই সিঙ্ক্রোনাস কলটা কার্যকর হচ্ছিল না, ফলে
-  // showDropdown(true) পর্যন্ত পৌঁছাচ্ছিল না — বক্সে টেক্সট বসত কিন্তু ড্রপডাউন
-  // কিছুই দেখাত না। এখন রেজাল্ট কম্পিউট করা হয় একটা আলাদা useEffect দিয়ে, যেটা
-  // searchQuery বদলালেই নিজে থেকে রান হয় — টাইপিং বা ক্লিক, উৎস যাই হোক না কেন,
-  // React-এর normal render cycle-এর মধ্য দিয়েই নিশ্চিতভাবে চলে, তাই কোনো
-  // ইভেন্ট-হ্যান্ডলার-নির্ভর race থাকে না। skipDebounceRef true থাকলে (চিপ থেকে
-  // পিক করা হলে) সাথে সাথেই রেজাল্ট বসে, নাহলে (টাইপ করলে) আগের মতো ২৮০ms
-  // debounce হয়।
-  const skipDebounceRef = useRef(false);
+  // আগে এখানে একটা useEffect([searchQuery]) দিয়ে রেজাল্ট কম্পিউট করা হতো —
+  // টাইপ করলে debounce (280ms) দিয়ে, আর রিসেন্ট/পপুলার চিপে ক্লিক করলে
+  // skipDebounceRef নামের একটা ref-flag দিয়ে সেই একই effect-কে বলা হতো
+  // "এবার সাথে সাথেই বসাও"। আসল বাগ ছিল এখানেই: চিপে ক্লিক করলে দুটো আলাদা
+  // রেন্ডার-চক্র জড়িয়ে যেত — প্রথমে ক্লিক-হ্যান্ডলারের নিজের setState
+  // (searchQuery/showDropdown/searchResults), তারপর সেই রেন্ডার কমিট হওয়ার
+  // পর effect আবার আলাদাভাবে searchResults/catResults সেট করত। এই দুই ধাপের
+  // মাঝখানে (রিয়েল ব্রাউজারে, টাইপ করার তুলনায় ক্লিকে state-update বেশি হওয়ায়)
+  // ফলাফল ড্রপডাউন মাঝেমধ্যে দেখাচ্ছিল না — টাইপ করলে সমস্যা হতো না কারণ
+  // সেটা সবসময় শুধু debounce (setTimeout) পাথ দিয়েই যেত, কোনো ডাবল-রাইট ছিল
+  // না।
+  //
+  // এখন পুরো effect+ref কম্বিনেশনটাই সরিয়ে ফেলা হয়েছে। রেজাল্ট বসানোর জন্য
+  // এখন মাত্র একটা ফাংশন (runSearch) আছে — টাইপিং আর চিপে ক্লিক, দুটোই এই
+  // একই ফাংশনকে সরাসরি কল করে (টাইপিং একটা প্লেইন setTimeout দিয়ে ডিলে করে,
+  // ক্লিক তাৎক্ষণিকভাবে, কোনো ডিলে ছাড়াই)। কোনো effect-নির্ভরতা না থাকায়
+  // দুই রেন্ডার-চক্রের মধ্যে race হওয়ার সুযোগও আর নেই — যা-ই ঘটুক, একটাই
+  // setState-ব্যাচে সব বসে।
+  const runSearch = useCallback((q: string) => {
+    setSearchResults(searchProducts(prodsRef.current, q).slice(0, 6));
+    setCatResults(matchCategoryList(catsRef.current, q));
+  }, []);
 
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setCatResults([]);
-      return undefined;
-    }
-    if (skipDebounceRef.current) {
-      skipDebounceRef.current = false;
-      const results = searchProducts(prodsRef.current, searchQuery).slice(0, 6);
-      setSearchResults(results);
-      setCatResults(matchCategoryList(catsRef.current, searchQuery));
-      return undefined;
-    }
-    const t = setTimeout(() => {
-      const results = searchProducts(prodsRef.current, searchQuery).slice(0, 6);
-      setSearchResults(results);
-      setCatResults(matchCategoryList(catsRef.current, searchQuery));
-    }, 280);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+  }, []);
 
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
     // টেক্সট মুছে খালি করে দিলেও (যেমন ব্যাকস্পেস দিয়ে) বক্সটা তখনো ফোকাসড
     // থাকে, তাই ড্রপডাউন পুরো বন্ধ না করে ডিফল্ট প্যানেল (সাম্প্রতিক অনুসন্ধান
-    // + জনপ্রিয় ক্যাটাগরি) দেখানো হয় — রেজাল্ট ক্লিয়ার করার কাজটা উপরের
-    // effect-ই করে দেয়।
+    // + জনপ্রিয় ক্যাটাগরি) দেখানো হয়।
     setShowDropdown(true);
-  }, []);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (!value.trim()) {
+      setSearchResults([]);
+      setCatResults([]);
+      return;
+    }
+    debounceTimerRef.current = setTimeout(() => runSearch(value), 280);
+  }, [runSearch]);
 
   const goToCat = (catId: string) => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setShowDropdown(false);
     setMobileSearchOpen(false);
     setSearchQuery('');
@@ -547,6 +550,7 @@ export default function Navbar({
   const goToSrp = () => {
     const q = searchQuery.trim();
     if (!q) return;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setRecentSearches(addRecentSearch(q));
     setShowDropdown(false);
     setMobileSearchOpen(false);
@@ -561,18 +565,16 @@ export default function Navbar({
   };
 
   const pickRecentSearch = (term: string) => {
-    // ক্লিক করার সাথে সাথেই রেজাল্ট সরাসরি এখানেই বসানো হচ্ছে, শুধু পরের
-    // searchQuery-effect-এর উপর নির্ভর না করে। আগের skipDebounceRef-only
-    // পদ্ধতিতে টেক্সট বক্সে বসত কিন্তু ড্রপডাউনে মাঝে মাঝে ফলাফল আসত না —
-    // কারণ effect-টা রান হওয়ার সময়/batching-এর উপর নির্ভরশীল ছিল। এখন
-    // টাইপ করার মতোই নিশ্চিতভাবে সরাসরি রেজাল্ট সেট হয়। effect-টাও পরে একই
-    // ডেটা আবার সেট করবে (skipDebounceRef এখনো true থাকায়) — সেটা নিরাপদ,
-    // একই ফলাফল, কোনো ফ্লিকার বা পার্থক্য হয় না।
-    skipDebounceRef.current = true;
+    // টাইপ করার সময় যে ফাংশনটা রেজাল্ট বসায় (runSearch), চিপে ক্লিক করলেও
+    // ঠিক সেই একই ফাংশন এখানে সরাসরি (কোনো ডিলে ছাড়া) কল হচ্ছে — এটাই
+    // একমাত্র জায়গা যেখানে searchResults/catResults সেট হয়, তাই আর কোনো
+    // effect পরে এসে দ্বিতীয়বার (এবং সম্ভাব্য ভিন্ন টাইমিং-এ) একই ডেটা
+    // আবার বসানোর চেষ্টা করে না — দুটো পাথ (টাইপ/ক্লিক) আর কখনো একে অপরের
+    // সাথে রেসে পড়তে পারে না।
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setSearchQuery(term);
     setShowDropdown(true);
-    setSearchResults(searchProducts(prodsRef.current, term).slice(0, 6));
-    setCatResults(matchCategoryList(catsRef.current, term));
+    runSearch(term);
   };
 
   const removeRecentSearchTerm = (term: string) => {
@@ -674,7 +676,7 @@ export default function Navbar({
                   {searchQuery && (
                     <button
                       type="button"
-                      onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                      onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                       className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
                       title="মুছুন"
                       aria-label="মুছুন"
@@ -796,7 +798,7 @@ export default function Navbar({
                 {searchQuery && (
                   <button
                     className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
-                    onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                    onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                     title="মুছুন"
                     aria-label="মুছুন"
                   >
