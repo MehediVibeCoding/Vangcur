@@ -215,7 +215,7 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
+      className={`search-dropdown-reveal ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
@@ -318,21 +318,6 @@ export default function Navbar({
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused || showDropdown;
-  // সার্চ বক্স আর তার নিচের dropdown আলাদা দুইটা animation (বক্সের left/width
-  // CSS transition বনাম dropdown-এর mount/unmount) — সাথে সাথে দুটো একসাথে
-  // ঘটলে dropdown বক্স তখনো ছোট থাকা অবস্থায়ই চূড়ান্ত (বড়) সাইজ ধরে পপ-আপ
-  // হয়ে যেত, sync থাকত না। তাই dropdown কখনোই বক্স পুরোপুরি expand হওয়ার
-  // আগে (৩০০ms, বক্সের transition duration-এর সমান) দেখানো হয় না, আর বক্স
-  // ছোট হওয়া শুরুর সাথে সাথেই (hover/focus হারানো মাত্র) dropdown সঙ্গে সঙ্গে
-  // বন্ধ হয়ে যায় — ফলে বক্স ছোট হওয়া শুরু হওয়ার আগেই dropdown বন্ধ হয়ে থাকে।
-  const [desktopBoxReady, setDesktopBoxReady] = useState(false);
-  // মোবাইল সার্চ বক্স (নিচের collapsible প্যানেল) grid-template-rows দিয়ে
-  // animate হয় (0fr -> 1fr) — এটা max-height-এর মতো আন্দাজের সংখ্যা লাগে না,
-  // আসল কন্টেন্ট height অনুযায়ী নিজে থেকেই মসৃণভাবে animate করে। dropdown-টা
-  // বক্সের এই animation (২০০ms) শেষ হওয়ার আগে দেখানো হয় না — নাহলে বক্স ছোট
-  // থাকা অবস্থাতেই dropdown নিচে popup করে ফেলত, তখন পুরো ব্যাপারটা আটকে আটকে
-  // মনে হতো।
-  const [mobileBoxReady, setMobileBoxReady] = useState(false);
   // খালি বক্সে ফোকাস হলে (কিছু না লিখেই) সাম্প্রতিক অনুসন্ধান + জনপ্রিয়
   // ক্যাটাগরির ডিফল্ট প্যানেল দেখানো হয়, সাধারণ ফলাফল/no-result state নয়।
   const isDefaultView = showDropdown && !searchQuery.trim();
@@ -374,19 +359,6 @@ export default function Navbar({
     if (mobileSearchOpen) {
       mobileSearchInputRef.current?.focus();
     }
-  }, [mobileSearchOpen]);
-
-  // মোবাইল সার্চ বক্স খোলার collapsible-প্যানেল animation (grid-rows 0fr -> 1fr)
-  // ২০০ms এর মধ্যে শেষ হয় — সেই সময়টা পার হওয়ার পরই dropdown দেখানো শুরু হয়
-  // (নিচের JSX-এ mobileBoxReady চেক করা হচ্ছে)। বক্স বন্ধ হলে সাথে সাথেই আবার
-  // false করে দেওয়া হয়, যাতে পরের বার খোলার সময় আবার এক-এক করে animate হয়।
-  useEffect(() => {
-    if (mobileSearchOpen) {
-      const t = setTimeout(() => setMobileBoxReady(true), 200);
-      return () => clearTimeout(t);
-    }
-    setMobileBoxReady(false);
-    return undefined;
   }, [mobileSearchOpen]);
 
   // মোবাইলে সার্চ বক্স/ড্রপডাউন কোনো টাইম-বেসড টাইমারে অটোমেটিক বন্ধ হবে না —
@@ -483,21 +455,21 @@ export default function Navbar({
     };
   }, []);
 
-  // বক্স expand হওয়া শুরু হলে ৩০০ms (বক্সের CSS transition duration) পর
-  // "ready" হয় — dropdown তখনই দেখানো শুরু হয়। এটা ইচ্ছাকৃতভাবে desktopSearchExpanded
-  // (hover/focus-নির্ভর, মাউস সামান্য নড়লেই flicker করতে পারে) নয় বরং showDropdown
-  // (শুধু ইচ্ছাকৃত অ্যাকশনে বদলায়: ফোকাস/বাইরে-ক্লিক/সিলেকশন) এর উপর নির্ভর করে —
-  // আগে expanded-এর উপর নির্ভর করানোয় মাউস dropdown-এর ভিতরে (বক্সের নিজের ছোট
-  // hover-rect-এর বাইরে) নড়লেই ready মুহূর্তেই false হয়ে dropdown আড়াল হয়ে যেত,
-  // তারপর আবার true হয়ে re-mount হতো — এটাই "ছোট হয়ে বড় হয়ে দেখানোর" আসল কারণ।
-  useEffect(() => {
-    if (showDropdown) {
-      const t = setTimeout(() => setDesktopBoxReady(true), 300);
-      return () => clearTimeout(t);
-    }
-    setDesktopBoxReady(false);
-    return undefined;
-  }, [showDropdown]);
+  // আগে এখানে একটা আলাদা desktopBoxReady state দিয়ে dropdown-কে showDropdown
+  // ছাড়াও আরও একটা ৩০০ms জাভাস্ক্রিপ্ট-টাইমার-নির্ভর "ready" শর্তে গেট করা হতো
+  // (বক্সের CSS width-transition শেষ হওয়ার আগে dropdown পপ-আপ যেন না হয়, সেই
+  // কসমেটিক পলিশের জন্য)। সমস্যা হলো — showDropdown সামান্যতম কোনো কারণে (রিয়েল
+  // ব্রাউজারে focus/blur/click ইভেন্টের timing-নির্ভর কোনো সূক্ষ্ম রেসে, যেটা
+  // এই স্যান্ডবক্সে রিপ্রোডিউস করা যায়নি) এক মুহূর্তের জন্যও false হয়ে গেলে এই
+  // ready-state সাথে সাথেই false হয়ে যেত, আর আবার true হতে নতুন করে ৩০০ms
+  // অপেক্ষা করতে হতো — সেই নতুন টাইমারটা যদি কোনোভাবে শিডিউল না হয় (বা বাতিল
+  // হয়ে যায়), dropdown চিরতরের জন্য অদৃশ্য থেকে যেত, যদিও searchQuery/
+  // searchResults সব ঠিকই ছিল (ইউজার যা রিপোর্ট করেছে — বক্সে টেক্সট আছে,
+  // কিন্তু রেজাল্ট দেখাচ্ছে না — ঠিক এটাই)। এখন dropdown সরাসরি showDropdown-এর
+  // উপরেই নির্ভর করে (কোনো বাড়তি টাইমার-গেট নেই), আর visual polish (বক্স
+  // চূড়ান্ত সাইজ হওয়ার আগে পপ না করা) দেওয়া হচ্ছে বিশুদ্ধ CSS fade-animation
+  // দিয়ে (নিচে দেখুন .search-dropdown-reveal ক্লাস, globals.css-এ ডিফাইন করা) —
+  // CSS animation কখনো "আটকে" থাকতে পারে না, নিজে থেকেই শেষ হয়ে যায়।
 
   // ডেক্সটপ সার্চ বক্স ছোট (collapsed — hover/focus কোনোটাই না) অবস্থায় যদি ভিতরে
   // এখনো আগের কোনো টেক্সট থেকে যায় (ইউজার নিজে ক্লিয়ার করেনি, বাইরে ক্লিক করে
@@ -710,7 +682,7 @@ export default function Navbar({
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                     </button>
                   )}
-                  {showDropdown && desktopBoxReady && (
+                  {showDropdown && (
                     <SearchDropdown
                       searchQuery={searchQuery}
                       searchResults={searchResults}
@@ -836,10 +808,7 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* mobileBoxReady চেক করা হচ্ছে — টেক্সটবক্সের open-animation (২০০ms)
-            শেষ হওয়ার আগে dropdown মাউন্ট হবে না, তাই আগে বক্স আসবে, তারপর
-            dropdown নিচে আসবে (দুটো একসাথে "পপ" করবে না)। */}
-        {mobileSearchOpen && showDropdown && mobileBoxReady && (
+        {mobileSearchOpen && showDropdown && (
           <div className="absolute left-0 right-0 top-full z-[900] mt-1.5" onClick={(e) => e.stopPropagation()}>
             <SearchDropdown
               searchQuery={searchQuery}

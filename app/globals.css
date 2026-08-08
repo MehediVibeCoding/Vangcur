@@ -88,3 +88,18 @@ input[type='search']::-webkit-search-results-decoration {
     background-color: rgba(255, 255, 255, 0.94) !important;
   }
 }
+
+/* সার্চ ড্রপডাউন (রেজাল্ট/ডিফল্ট প্যানেল) খোলার সময় হালকা fade-in — আগে এটা
+   JS setTimeout-ভিত্তিক একটা "ready" state দিয়ে করা হতো (বক্সের width-transition
+   শেষ হওয়ার আগে dropdown পপ না করার জন্য), কিন্তু সেই টাইমার-গেট রিয়েল
+   ব্রাউজারে কোনো এক সূক্ষ্ম focus/blur/click রেসে "স্টাক" হয়ে যাচ্ছিল — showDropdown
+   ঠিকই true থাকত, ডেটাও ঠিক থাকত, কিন্তু dropdown-টা আর কখনো দেখা যেত না।
+   এখন সেই একই polish বিশুদ্ধ CSS animation দিয়ে করা হচ্ছে, যেটা কখনো "আটকে"
+   থাকতে পারে না — মাউন্ট হওয়ার সাথে সাথেই শুরু হয়ে নিজে থেকেই শেষ হয়ে যায়। */
+@keyframes searchDropdownReveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.search-dropdown-reveal {
+  animation: searchDropdownReveal .16s ease-out both;
+}
