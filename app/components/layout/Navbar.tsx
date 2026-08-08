@@ -312,6 +312,13 @@ export default function Navbar({
   // ছোট হওয়া শুরুর সাথে সাথেই (hover/focus হারানো মাত্র) dropdown সঙ্গে সঙ্গে
   // বন্ধ হয়ে যায় — ফলে বক্স ছোট হওয়া শুরু হওয়ার আগেই dropdown বন্ধ হয়ে থাকে।
   const [desktopBoxReady, setDesktopBoxReady] = useState(false);
+  // মোবাইল সার্চ বক্স (নিচের collapsible প্যানেল) grid-template-rows দিয়ে
+  // animate হয় (0fr -> 1fr) — এটা max-height-এর মতো আন্দাজের সংখ্যা লাগে না,
+  // আসল কন্টেন্ট height অনুযায়ী নিজে থেকেই মসৃণভাবে animate করে। dropdown-টা
+  // বক্সের এই animation (২০০ms) শেষ হওয়ার আগে দেখানো হয় না — নাহলে বক্স ছোট
+  // থাকা অবস্থাতেই dropdown নিচে popup করে ফেলত, তখন পুরো ব্যাপারটা আটকে আটকে
+  // মনে হতো।
+  const [mobileBoxReady, setMobileBoxReady] = useState(false);
   // খালি বক্সে ফোকাস হলে (কিছু না লিখেই) সাম্প্রতিক অনুসন্ধান + জনপ্রিয়
   // ক্যাটাগরির ডিফল্ট প্যানেল দেখানো হয়, সাধারণ ফলাফল/no-result state নয়।
   const isDefaultView = showDropdown && !searchQuery.trim();
@@ -353,6 +360,19 @@ export default function Navbar({
     if (mobileSearchOpen) {
       mobileSearchInputRef.current?.focus();
     }
+  }, [mobileSearchOpen]);
+
+  // মোবাইল সার্চ বক্স খোলার collapsible-প্যানেল animation (grid-rows 0fr -> 1fr)
+  // ২০০ms এর মধ্যে শেষ হয় — সেই সময়টা পার হওয়ার পরই dropdown দেখানো শুরু হয়
+  // (নিচের JSX-এ mobileBoxReady চেক করা হচ্ছে)। বক্স বন্ধ হলে সাথে সাথেই আবার
+  // false করে দেওয়া হয়, যাতে পরের বার খোলার সময় আবার এক-এক করে animate হয়।
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      const t = setTimeout(() => setMobileBoxReady(true), 200);
+      return () => clearTimeout(t);
+    }
+    setMobileBoxReady(false);
+    return undefined;
   }, [mobileSearchOpen]);
 
   // মোবাইলে সার্চ বক্স/ড্রপডাউন কোনো টাইম-বেসড টাইমারে অটোমেটিক বন্ধ হবে না —
@@ -487,7 +507,7 @@ export default function Navbar({
     return () => clearTimeout(t);
   }, [desktopSearchExpanded, searchQuery, mobileSearchOpen]);
 
-  const handleSearchInput = useCallback((value: string) => {
+  const handleSearchInput = useCallback((value: string, immediate = false) => {
     setSearchQuery(value);
     if (!value.trim()) {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -500,6 +520,18 @@ export default function Navbar({
       return;
     }
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    // চিপ/রিসেন্ট সার্চ থেকে ক্লিক করলে (immediate) debounce না দিয়ে সাথে সাথে
+    // রেজাল্ট বসানো হয় — নাহলে মাঝের ২৮০ms এ dropdown খালি "কোনো পণ্য পাওয়া
+    // যায়নি" state দেখিয়ে, তারপর রেজাল্ট এলে বড় হয়ে যায় (বক্স ছোট-বড় হওয়ার
+    // গ্লিচ — টাইপ করার সময় এই সমস্যা হয় না, কারণ প্রতি keystroke-এ যেভাবেই
+    // হোক debounce রিসেট হয় এবং ইউজার সরাসরি ফলাফল লেখার অপেক্ষা করেই থাকে)।
+    if (immediate) {
+      const results = searchProducts(prodsRef.current, value).slice(0, 6);
+      setSearchResults(results);
+      setCatResults(matchCategoryList(catsRef.current, value));
+      setShowDropdown(true);
+      return;
+    }
     searchTimeoutRef.current = setTimeout(() => {
       const results = searchProducts(prodsRef.current, value).slice(0, 6);
       setSearchResults(results);
@@ -534,7 +566,9 @@ export default function Navbar({
   };
 
   const pickRecentSearch = (term: string) => {
-    handleSearchInput(term);
+    // immediate=true — চিপে ক্লিক করলে সাথে সাথে রেজাল্ট দেখাতে হবে, ২৮০ms
+    // debounce এর কারণে বক্স ছোট-বড় হওয়ার গ্লিচ যাতে না হয়।
+    handleSearchInput(term, true);
   };
 
   const removeRecentSearchTerm = (term: string) => {
@@ -730,40 +764,50 @@ export default function Navbar({
           height animate করার জন্য overflow-hidden ব্যবহার হয়েছে, dropdown সেই box-এর
           বাইরে আলাদা sibling হিসেবে বসানো, তাই clip হয়ে অদৃশ্য হয়ে যায় না। */}
       <div className="relative md:hidden" ref={mobileSearchAreaRef}>
+        {/* grid-template-rows (0fr -> 1fr) দিয়ে height animate করা হচ্ছে —
+            max-height-এর মতো কোনো আন্দাজের সংখ্যা (যেমন আগে max-h-[480px]) লাগে
+            না, তাই ঝাঁকুনি/আটকানো ভাব ছাড়াই আসল কন্টেন্ট height অনুযায়ী মসৃণভাবে
+            খোলে-বন্ধ হয়। duration ৩০০ থেকে কমিয়ে ২০০ms করা হয়েছে যাতে দ্রুত,
+            snappy মনে হয়। */}
         <div
-          className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${mobileSearchOpen ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'}`}
+          className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-200 ease-out ${mobileSearchOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
         >
-          <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                type="search"
-                placeholder="প্রোডাক্ট খুঁজুন..."
-                value={searchQuery}
-                onChange={(e) => handleSearchInput(e.target.value)}
-                onKeyDown={handleSearchKey}
-                onFocus={() => setShowDropdown(true)}
-                ref={mobileSearchInputRef}
-                autoComplete="off"
-                className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
-              />
-              {searchQuery && (
-                <button
-                  className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
-                  onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                  title="মুছুন"
-                  aria-label="মুছুন"
-                >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                </button>
-              )}
+          <div className="min-h-0 overflow-hidden">
+            <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="প্রোডাক্ট খুঁজুন..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchInput(e.target.value)}
+                  onKeyDown={handleSearchKey}
+                  onFocus={() => setShowDropdown(true)}
+                  ref={mobileSearchInputRef}
+                  autoComplete="off"
+                  className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
+                />
+                {searchQuery && (
+                  <button
+                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
+                    onClick={() => { setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                    title="মুছুন"
+                    aria-label="মুছুন"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {mobileSearchOpen && showDropdown && (
+        {/* mobileBoxReady চেক করা হচ্ছে — টেক্সটবক্সের open-animation (২০০ms)
+            শেষ হওয়ার আগে dropdown মাউন্ট হবে না, তাই আগে বক্স আসবে, তারপর
+            dropdown নিচে আসবে (দুটো একসাথে "পপ" করবে না)। */}
+        {mobileSearchOpen && showDropdown && mobileBoxReady && (
           <div className="absolute left-0 right-0 top-full z-[900] mt-1.5" onClick={(e) => e.stopPropagation()}>
             <SearchDropdown
               searchQuery={searchQuery}
