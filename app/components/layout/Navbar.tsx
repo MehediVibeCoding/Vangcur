@@ -70,13 +70,21 @@ function highlightMatch(text: string, q: string) {
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
 const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
 
+// যাদের সার্চ হিস্ট্রি একেবারে খালি (নতুন ইউজার বা সব মুছে ফেলেছে), তাদের জন্য
+// ডিফল্ট জনপ্রিয় সার্চ-টার্ম — আপাতত হার্ডকোড, পরে অ্যাডমিন প্যানেল থেকে
+// এডিটযোগ্য করা হবে (তখন এটা কোনো settings/API কল দিয়ে replace হবে)।
+const DEFAULT_POPULAR_SEARCHES = [
+  'Neon Light', 'Smart Watch', 'Power Bank', 'TWS Earbuds', 'Headphone', 'Humidifier',
+];
+
 // সার্চ বক্সে ক্লিক/ফোকাস করার সাথে সাথেই (কিছু না লিখেও) এই প্যানেলটা দেখানো
 // হয় — আগে খালি বক্সে ক্লিক করলে কিছুই দেখাত না। সাম্প্রতিক অনুসন্ধান আর
 // জনপ্রিয় কয়েকটা ক্যাটাগরি একসাথে দেখিয়ে ইউজারকে দ্রুত শুরু করার সুযোগ দেয়।
 function SearchDefaultPanel({
-  recentSearches, popularCategories, onPickRecent, onRemoveRecent, onClearRecent, onGoToCat,
+  recentSearches, popularSearches, popularCategories, onPickRecent, onRemoveRecent, onClearRecent, onGoToCat,
 }: {
   recentSearches: string[];
+  popularSearches: string[];
   popularCategories: Category[];
   onPickRecent: (term: string) => void;
   onRemoveRecent: (term: string) => void;
@@ -85,7 +93,7 @@ function SearchDefaultPanel({
 }) {
   return (
     <div className="py-1.5">
-      {recentSearches.length > 0 && (
+      {recentSearches.length > 0 ? (
         <>
           <div className="flex items-center justify-between px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
             <span>সাম্প্রতিক অনুসন্ধান</span>
@@ -107,6 +115,28 @@ function SearchDefaultPanel({
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                 </button>
               </span>
+            ))}
+          </div>
+          <div className="mx-3.5 mb-1.5 h-px bg-border-base" />
+        </>
+      ) : popularSearches.length > 0 && (
+        // সার্চ হিস্ট্রি একেবারে খালি (নতুন ইউজার, অথবা সব মুছে ফেলা হয়েছে) —
+        // এই ক্ষেত্রে খালি জায়গা না রেখে ডিফল্ট জনপ্রিয় সার্চ-টার্ম দেখানো হয়।
+        // এখন এগুলো হার্ডকোড করা, পরে অ্যাডমিন প্যানেল থেকে এডিটযোগ্য করা হবে।
+        <>
+          <div className="px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
+            জনপ্রিয় সার্চ
+          </div>
+          <div className="flex flex-wrap gap-2 px-3.5 pb-2.5">
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                className="cursor-pointer rounded-full bg-surface-muted py-1.5 px-3.5 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
+                onClick={() => onPickRecent(term)}
+              >
+                {term}
+              </button>
             ))}
           </div>
           <div className="mx-3.5 mb-1.5 h-px bg-border-base" />
@@ -139,7 +169,7 @@ function SearchDefaultPanel({
 
 function SearchDropdown({
   searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true, tall = false,
-  isDefaultView = false, recentSearches = [], popularCategories = [], onPickRecent, onRemoveRecent, onClearRecent,
+  isDefaultView = false, recentSearches = [], popularSearches = [], popularCategories = [], onPickRecent, onRemoveRecent, onClearRecent,
 }: {
   searchQuery: string;
   searchResults: Product[];
@@ -152,6 +182,7 @@ function SearchDropdown({
   tall?: boolean;
   isDefaultView?: boolean;
   recentSearches?: string[];
+  popularSearches?: string[];
   popularCategories?: Category[];
   onPickRecent?: (term: string) => void;
   onRemoveRecent?: (term: string) => void;
@@ -160,68 +191,75 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} overflow-y-auto overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
+      className={`${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
-        <SearchDefaultPanel
-          recentSearches={recentSearches}
-          popularCategories={popularCategories}
-          onPickRecent={(term) => onPickRecent?.(term)}
-          onRemoveRecent={(term) => onRemoveRecent?.(term)}
-          onClearRecent={() => onClearRecent?.()}
-          onGoToCat={onGoToCat}
-        />
+        <div className="overflow-y-auto">
+          <SearchDefaultPanel
+            recentSearches={recentSearches}
+            popularSearches={popularSearches}
+            popularCategories={popularCategories}
+            onPickRecent={(term) => onPickRecent?.(term)}
+            onRemoveRecent={(term) => onRemoveRecent?.(term)}
+            onClearRecent={() => onClearRecent?.()}
+            onGoToCat={onGoToCat}
+          />
+        </div>
       ) : searchResults.length === 0 ? (
         <div className="px-3.5 py-5 text-center text-[13px] text-muted">
           🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between border-b border-border-base px-3.5 pb-1.5 pt-2 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
-            <span>{searchResults.length}টি পণ্য পাওয়া গেছে</span>
-            <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={onGoToSrp}>সব দেখুন →</a>
-          </div>
-          <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">পণ্য</div>
-          {searchResults.map((p) => (
-            <Link
-              key={p.id}
-              href={productHref(p)}
-              className="flex items-center gap-3 px-3.5 py-2.5 text-inherit no-underline transition-colors hover:bg-surface-muted"
-              onClick={onPick}
-            >
-              <SearchThumb imgVal={(p.imgs || [])[0]} />
-              <div className="min-w-0 flex-1">
-                <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold">{highlightMatch(p.name, searchQuery)}</div>
-                <div className="mt-0.5 text-[11px] text-muted">
-                  {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-primary">স্টক শেষ</span></>}
-                </div>
-              </div>
-              <div className="shrink-0 text-[13px] font-bold">৳{Number(p.price).toLocaleString()}</div>
-            </Link>
-          ))}
-          {catResults.length > 0 && (
-            <>
-              <div className="mx-3.5 my-1 h-px bg-border-base" />
-              <div className="px-3.5 pb-1 pt-2 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">ক্যাটাগরি</div>
-              {catResults.map((c) => (
-                <div key={c.id} className="flex cursor-pointer items-center gap-3 px-3.5 py-[9px] transition-colors hover:bg-surface-muted" onClick={() => onGoToCat(c.id)}>
-                  <CategoryIcon icon={c.icon} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-semibold">{c.name}</div>
-                    <div className="mt-0.5 text-[11px] text-muted">ক্যাটাগরি দেখুন →</div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-          <div className="border-t border-border-base px-3.5 py-2.5 text-center">
+          {/* "সব ফলাফল দেখুন" বাটনটা এখানে top-এ fix থাকে (sticky না, শুধু একটা
+              আলাদা non-scrolling flex-item), অনেকগুলো রেজাল্ট থাকলেও স্ক্রল করে
+              নিচে যাওয়া লাগে না — নিচের অংশটাই শুধু আলাদাভাবে স্ক্রল হয়। */}
+          <div className="shrink-0 border-b border-border-base bg-white/95 px-3.5 py-2.5">
+            <div className="mb-1.5 flex items-center justify-between text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
+              <span>{searchResults.length}টি পণ্য পাওয়া গেছে</span>
+            </div>
             <button
               className="w-full rounded-lg bg-brand-primary py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-accent"
               onClick={onGoToSrp}
             >
               🔍 &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
             </button>
+          </div>
+          <div className="overflow-y-auto">
+            <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">পণ্য</div>
+            {searchResults.map((p) => (
+              <Link
+                key={p.id}
+                href={productHref(p)}
+                className="flex items-center gap-3 px-3.5 py-2.5 text-inherit no-underline transition-colors hover:bg-surface-muted"
+                onClick={onPick}
+              >
+                <SearchThumb imgVal={(p.imgs || [])[0]} />
+                <div className="min-w-0 flex-1">
+                  <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold">{highlightMatch(p.name, searchQuery)}</div>
+                  <div className="mt-0.5 text-[11px] text-muted">
+                    {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-primary">স্টক শেষ</span></>}
+                  </div>
+                </div>
+                <div className="shrink-0 text-[13px] font-bold">৳{Number(p.price).toLocaleString()}</div>
+              </Link>
+            ))}
+            {catResults.length > 0 && (
+              <>
+                <div className="mx-3.5 my-1 h-px bg-border-base" />
+                <div className="px-3.5 pb-1 pt-2 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">ক্যাটাগরি</div>
+                {catResults.map((c) => (
+                  <div key={c.id} className="flex cursor-pointer items-center gap-3 px-3.5 py-[9px] transition-colors hover:bg-surface-muted" onClick={() => onGoToCat(c.id)}>
+                    <CategoryIcon icon={c.icon} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-semibold">{c.name}</div>
+                      <div className="mt-0.5 text-[11px] text-muted">ক্যাটাগরি দেখুন →</div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         </>
       )}
@@ -272,6 +310,7 @@ export default function Navbar({
     () => DEFAULT_CATEGORIES.filter((c) => c.id !== 'all').slice(0, 4),
     [],
   );
+  const popularSearches = DEFAULT_POPULAR_SEARCHES;
 
   useEffect(() => {
     let cancelled = false;
@@ -593,6 +632,7 @@ export default function Navbar({
                       onPick={() => setShowDropdown(false)}
                       isDefaultView={isDefaultView}
                       recentSearches={recentSearches}
+                      popularSearches={popularSearches}
                       popularCategories={popularCategories}
                       onPickRecent={pickRecentSearch}
                       onRemoveRecent={removeRecentSearchTerm}
@@ -643,7 +683,7 @@ export default function Navbar({
                   </svg>
                 </button>
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={() => setMobileSearchOpen((v) => !v)} title="Search">
+                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={(e) => { e.stopPropagation(); setMobileSearchOpen((v) => !v); }} title="Search">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
@@ -704,6 +744,7 @@ export default function Navbar({
               tall
               isDefaultView={isDefaultView}
               recentSearches={recentSearches}
+              popularSearches={popularSearches}
               popularCategories={popularCategories}
               onPickRecent={pickRecentSearch}
               onRemoveRecent={removeRecentSearchTerm}
