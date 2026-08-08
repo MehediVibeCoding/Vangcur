@@ -4,43 +4,43 @@ import { logWarn, logError } from './logger';
 import { showToast } from './toast';
 
 export const DEFAULT_PRODS: Product[] = [
-  { id: 1, cat: 'rgb', cats: ['rgb'], name: 'GearUP NRGB50 5M RGB Neon Light with App & Remote Control',
+  { id: 1, cat: 'rgb', cats: ['rgb'], name: 'GearUP NRGB50 5M RGB Neon Light with App & Remote Control', nameBn: 'নিয়ন লাইট',
     imgs: ['💡', '🌟', '✨'], price: 1490, old: 1800,
     specs: { 'দৈর্ঘ্য': '৫ মিটার', 'ধরন': 'Neon Flex', 'নিয়ন্ত্রণ': 'App + Remote', 'ভোল্টেজ': 'DC 12V / 220V', 'রং': '16 Million Color' },
     warranty: '৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 20, rating: 4.5, discountColor: '',
     desc: 'GearUP NRGB50 প্রিমিয়াম মানের ৫ মিটার RGB নিয়ন লাইট। অ্যাপ ও রিমোট উভয়ে নিয়ন্ত্রণযোগ্য। ঘরের সাজসজ্জায় অসাধারণ আলোর পরিবেশ তৈরি করে।',
     _detailLoaded: false },
-  { id: 4, cat: 'smartwatch', cats: ['smartwatch'], name: 'GearUP GT4 Pro Smartwatch AMOLED Display',
+  { id: 4, cat: 'smartwatch', cats: ['smartwatch'], name: 'GearUP GT4 Pro Smartwatch AMOLED Display', nameBn: 'স্মার্টওয়াচ',
     imgs: ['⌚', '📱'], price: 2490, old: 3200,
     specs: { 'ডিসপ্লে': '1.96" AMOLED', 'ব্যাটারি': '300mAh', 'কল': 'হ্যাঁ', 'স্বাস্থ্য': 'HR + SpO2 + BP', 'ওয়াটার': 'IP68' },
     warranty: '৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 18, rating: 4.5, discountColor: '',
     desc: 'প্রিমিয়াম AMOLED ডিসপ্লে সহ স্মার্টওয়াচ। হার্ট রেট, অক্সিজেন, ব্লাড প্রেশার মনিটরিং।',
     _detailLoaded: false },
-  { id: 14, cat: 'powerbank', cats: ['powerbank'], name: 'GearUP PB20K 20000mAh Fast Charge Power Bank',
+  { id: 14, cat: 'powerbank', cats: ['powerbank'], name: 'GearUP PB20K 20000mAh Fast Charge Power Bank', nameBn: 'পাওয়ার ব্যাংক',
     imgs: ['🔋'], price: 1690, old: 2200,
     specs: { 'ক্যাপাসিটি': '20000mAh', 'আউটপুট': '22.5W PD', 'পোর্ট': 'USB-A + USB-C', 'ডিসপ্লে': 'LED Indicator', 'ওজন': '450g' },
     warranty: '৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 20, rating: 4.5, discountColor: '',
     desc: 'বড় ক্যাপাসিটির ফাস্ট চার্জ পাওয়ার ব্যাংক। স্মার্টফোন ৪-৫ বার চার্জ।',
     _detailLoaded: false },
-  { id: 24, cat: 'tws', cats: ['tws'], name: 'GearUP TWS ANC Pro Noise Cancelling Earbuds',
+  { id: 24, cat: 'tws', cats: ['tws'], name: 'GearUP TWS ANC Pro Noise Cancelling Earbuds', nameBn: 'ওয়্যারলেস ইয়ারবাড',
     imgs: ['🎧'], price: 1890, old: 2500,
     specs: { 'ড্রাইভার': '13mm Dynamic', 'ANC': 'Active Noise Cancelling', 'ব্যাটারি': '6+30h', 'সংযোগ': 'Bluetooth 5.3', 'পানি': 'IPX5' },
     warranty: '৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 20, rating: 4.5, discountColor: '',
     desc: 'ANC ফিচার সহ প্রিমিয়াম TWS ইয়ারবাড। বাইরের শব্দ বন্ধ করে মিউজিক উপভোগ।',
     _detailLoaded: false },
-  { id: 34, cat: 'headphone', cats: ['headphone'], name: 'GearUP HP80 Over-Ear ANC Headphone',
+  { id: 34, cat: 'headphone', cats: ['headphone'], name: 'GearUP HP80 Over-Ear ANC Headphone', nameBn: 'হেডফোন',
     imgs: ['🎵'], price: 2990, old: 3800,
     specs: { 'ড্রাইভার': '40mm', 'ANC': 'Hybrid ANC', 'ব্যাটারি': '30h', 'সংযোগ': 'BT5.3 + 3.5mm', 'ভাঁজ': 'Foldable' },
     warranty: '৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 15, rating: 4.5, discountColor: '',
     desc: 'Hybrid ANC হেডফোন। ৩০ ঘণ্টার ব্যাটারি ব্যাকআপ।',
     _detailLoaded: false },
-  { id: 44, cat: 'acrylic', cats: ['acrylic'], name: 'GearUP AL-Love Heart Acrylic LED Lamp',
+  { id: 44, cat: 'acrylic', cats: ['acrylic'], name: 'GearUP AL-Love Heart Acrylic LED Lamp', nameBn: 'অ্যাক্রিলিক ল্যাম্প',
     imgs: ['🪔', '❤️'], price: 790, old: 1100,
     specs: { 'ডিজাইন': 'Heart Shape', 'আলো': 'RGB 16 Colors', 'নিয়ন্ত্রণ': 'Touch + Remote', 'পাওয়ার': 'USB', 'সাইজ': '15cm' },
     warranty: '১ সপ্তাহ রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 30, rating: 4.5, discountColor: '',
     desc: 'হার্ট শেপের রোমান্টিক অ্যাক্রিলিক ল্যাম্প। উপহার হিসেবে আদর্শ।',
     _detailLoaded: false },
-  { id: 54, cat: 'fan', cats: ['fan'], name: 'GearUP RF12 12-Inch Rechargeable Table Fan',
+  { id: 54, cat: 'fan', cats: ['fan'], name: 'GearUP RF12 12-Inch Rechargeable Table Fan', nameBn: 'রিচার্জেবল ফ্যান',
     imgs: ['💨'], price: 1990, old: 2600,
     specs: { 'সাইজ': '12 Inch', 'ব্যাটারি': '8000mAh', 'রানটাইম': '8–12 ঘণ্টা', 'স্পিড': '৩ স্তর', 'চার্জ': 'USB-C' },
     warranty: '৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি', badge: 'HOT', stock: 0, rating: 4.5, discountColor: '',
@@ -90,6 +90,7 @@ interface RawCustomProduct {
   cat?: string;
   cats?: string[];
   name?: string;
+  name_bn?: string;
   price?: number | string;
   old?: number | string;
   stock?: number | string;
@@ -116,6 +117,7 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
     cat: p.cat || 'rgb',
     cats: p.cats || [p.cat || 'rgb'],
     name: p.name || '',
+    nameBn: p.name_bn || '',
     price: Number(p.price) || 0,
     old: Number(p.old) || Number(p.price) || 0,
     stock: p.stock !== undefined && p.stock !== null ? Number(p.stock) : 0,
@@ -134,7 +136,7 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
   };
 }
 
-const GRID_COLS = 'id,cat,cats,name,price,old,stock,badge,warranty,rating,imgs,specs';
+const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
 
 export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Product[]> {
   let attempt = 0;
