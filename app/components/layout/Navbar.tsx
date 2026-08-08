@@ -212,21 +212,11 @@ function SearchDropdown({
         </div>
       ) : (
         <>
-          {/* "সব ফলাফল দেখুন" বাটনটা এখানে top-এ fix থাকে (sticky না, শুধু একটা
-              আলাদা non-scrolling flex-item), অনেকগুলো রেজাল্ট থাকলেও স্ক্রল করে
-              নিচে যাওয়া লাগে না — নিচের অংশটাই শুধু আলাদাভাবে স্ক্রল হয়। */}
-          <div className="shrink-0 border-b border-border-base bg-white/95 px-3.5 py-2.5">
-            <div className="mb-1.5 flex items-center justify-between text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border-base px-3.5 pb-1.5 pt-2 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
               <span>{searchResults.length}টি পণ্য পাওয়া গেছে</span>
+              <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={onGoToSrp}>সব দেখুন →</a>
             </div>
-            <button
-              className="w-full rounded-lg bg-brand-primary py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-accent"
-              onClick={onGoToSrp}
-            >
-              🔍 &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
-            </button>
-          </div>
-          <div className="overflow-y-auto">
             <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">পণ্য</div>
             {searchResults.map((p) => (
               <Link
@@ -260,6 +250,16 @@ function SearchDropdown({
                 ))}
               </>
             )}
+          </div>
+          {/* বাটনটা নিচেই থাকে (আগের জায়গায়), কিন্তু এখন এই flex-item-টা fixed —
+              উপরের কনটেন্ট যত লম্বাই হোক, এটা সবসময় নিচে দৃশ্যমান থাকবে। */}
+          <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
+            <button
+              className="w-full rounded-lg bg-brand-primary py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-accent"
+              onClick={onGoToSrp}
+            >
+              🔍 &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
+            </button>
           </div>
         </>
       )}
