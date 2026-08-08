@@ -26,6 +26,14 @@ interface NavbarProps {
   onAccountClick?: () => void;
 }
 
+function SearchIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
+      <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+    </svg>
+  );
+}
+
 function SearchThumb({ imgVal }: { imgVal?: string }) {
   const isUrl = typeof imgVal === 'string' && (imgVal.startsWith('http://') || imgVal.startsWith('https://'));
   return (
@@ -207,8 +215,9 @@ function SearchDropdown({
           />
         </div>
       ) : searchResults.length === 0 ? (
-        <div className="px-3.5 py-5 text-center text-[13px] text-muted">
-          🔍 &quot;<strong>{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি
+        <div className="flex flex-col items-center gap-2 px-3.5 py-5 text-center text-[13px] text-muted">
+          <SearchIcon className="text-muted/60" />
+          <span>&quot;<strong className="text-ink">{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</span>
         </div>
       ) : (
         <>
@@ -255,10 +264,11 @@ function SearchDropdown({
               উপরের কনটেন্ট যত লম্বাই হোক, এটা সবসময় নিচে দৃশ্যমান থাকবে। */}
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
-              className="w-full rounded-lg bg-brand-primary py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-accent"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-accent"
               onClick={onGoToSrp}
             >
-              🔍 &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
+              <SearchIcon />
+              &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
             </button>
           </div>
         </>
@@ -291,7 +301,7 @@ export default function Navbar({
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
-  const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused;
+  const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused || showDropdown;
   // সার্চ বক্স আর তার নিচের dropdown আলাদা দুইটা animation (বক্সের left/width
   // CSS transition বনাম dropdown-এর mount/unmount) — সাথে সাথে দুটো একসাথে
   // ঘটলে dropdown বক্স তখনো ছোট থাকা অবস্থায়ই চূড়ান্ত (বড়) সাইজ ধরে পপ-আপ
@@ -334,11 +344,12 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
-    // সার্চ বক্স খোলার সাথে সাথেই (কিছু না লিখেও) ডিফল্ট প্যানেল (সাম্প্রতিক
-    // অনুসন্ধান + জনপ্রিয় ক্যাটাগরি) দেখানো হয় — আগে খালি বক্সে কিছুই আসত না।
+    // সার্চ বক্স খোলার সাথে সাথেই showDropdown সেট করা হয় toggle বাটনের
+    // onClick-এ synchronously (নিচে দেখুন) — এখানে শুধু ইনপুটে ফোকাস দেওয়া হয়,
+    // এতে effect-এর এক-রেন্ডার-দেরির কারণে ডিফল্ট প্যানেল (জনপ্রিয় সার্চ/
+    // ক্যাটাগরি) না-খোলার race আর হয় না।
     if (mobileSearchOpen) {
       mobileSearchInputRef.current?.focus();
-      setShowDropdown(true);
     }
   }, [mobileSearchOpen]);
 
@@ -545,14 +556,19 @@ export default function Navbar({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // পিছনের স্ক্রল/ক্লিক শুধু তখনই লক হবে যখন ড্রপডাউনে সত্যিকারের রেজাল্ট (প্রোডাক্ট বা
-  // ক্যাটাগরি) দেখানো হচ্ছে। কোনো পণ্য না পাওয়া গেলে (empty state) লক থাকবে না —
-  // ইউজার তখন পিছনের পেজ স্বাভাবিকভাবে স্ক্রল করতে পারবে।
+  // পিছনের স্ক্রল/ক্লিক লক হবে যখন ড্রপডাউনে দেখানোর মতো আসল কিছু থাকে —
+  // হয় সত্যিকারের রেজাল্ট (প্রোডাক্ট/ক্যাটাগরি), অথবা ডিফল্ট প্যানেল (সাম্প্রতিক/
+  // জনপ্রিয় সার্চ)। আগে শুধু hasResults-এ লক হতো, ডিফল্ট প্যানেলে হতো না —
+  // তাই "সব মুছুন" চাপার পর তালিকা re-render হওয়ার সময় সামান্য reflow-scroll
+  // হয়ে গেলেই সেটা "ইউজার স্ক্রল করেছে" ধরে নিয়ে পুরো ড্রপডাউন বন্ধ করে দিত।
+  // শুধু "কোনো পণ্য পাওয়া যায়নি" খালি স্টেটে লক না করাই ঠিক আছে (দেখানোর
+  // মতো তেমন কিছু নেই, স্ক্রল ব্লক করার দরকার নেই)।
   useEffect(() => {
-    if (!showDropdown || !hasResults) return;
+    if (!showDropdown) return;
+    if (searchQuery.trim() && !hasResults) return;
     lockBody();
     return () => unlockBody();
-  }, [showDropdown, hasResults]);
+  }, [showDropdown, hasResults, searchQuery]);
 
   return (
     <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
@@ -683,7 +699,7 @@ export default function Navbar({
                   </svg>
                 </button>
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={(e) => { e.stopPropagation(); setMobileSearchOpen((v) => !v); }} title="Search">
+                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={(e) => { e.stopPropagation(); setMobileSearchOpen((v) => { const next = !v; setShowDropdown(next); return next; }); }} title="Search">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
