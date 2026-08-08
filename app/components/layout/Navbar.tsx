@@ -586,10 +586,35 @@ export default function Navbar({
     setRecentSearches([]);
   };
 
-  // stopPropagation()-নির্ভর পুরনো পদ্ধতির বদলে এখন সরাসরি DOM containment চেক
-  // করা হচ্ছে — সার্চ বক্স/ড্রপডাউনের ভিতরে ক্লিক হলে (এমনকি আগে থেকেই টেক্সট
-  // থাকা অবস্থায় বক্সে আবার ক্লিক করলেও) ড্রপডাউন বন্ধ হবে না, শুধু সত্যিকারের
-  // বাইরের ক্লিকেই বন্ধ হবে।
+  // ================================================================
+  // আসল বাগের গোড়া (এতদিন যেটা ধরা পড়েনি): এই লিসেনারটা bubble phase-এ
+  // ('click', capture flag ছাড়া) attach করা ছিল। ধাপে ধাপে যা ঘটত —
+  //
+  //  ১) "নিয়ন লাইট" চিপে ক্লিক → এটা DOM-এর গভীরে, তাই React-এর নিজস্ব
+  //     bubble-phase onClick (pickRecentSearch) সবার আগে চলে (React-এর
+  //     delegated listener document-এর চেয়ে গাছের নিচের দিকে বসানো)।
+  //  ২) pickRecentSearch সাথে সাথে setSearchQuery/runSearch চালায় → React
+  //     re-render করে "ডিফল্ট প্যানেল" (চিপ/ক্যাটাগরি বাটনগুলো) সরিয়ে
+  //     "রেজাল্ট ভিউ" বসিয়ে দেয় — মানে যে চিপ-বাটনে ক্লিক হয়েছিল সেটা DOM
+  //     থেকে সম্পূর্ণ সরে (unmount) যায়, এই একই ইভেন্ট এখনো bubble করছে
+  //     অবস্থাতেই।
+  //  ৩) native ইভেন্টটা এরপর bubble করে document পর্যন্ত পৌঁছায়, তখন এই
+  //     handler-এ e.target সেই আগের (এখন DOM থেকে বিচ্ছিন্ন/detached) চিপ
+  //     এলিমেন্টটাই থেকে যায়। কোনো এলিমেন্ট ডকুমেন্ট থেকে detached হয়ে
+  //     গেলে ব্রাউজারের .contains() চেক তাকে আর কোনো ancestor-এর ভিতরে
+  //     "আছে" বলে ধরে না — even তার আগের আসল প্যারেন্টের জন্যও না।
+  //  ৪) ফলে insideDesktop/insideMobile ভুলভাবে false আসে → মনে হয় ক্লিকটা
+  //     "বাইরে" হয়েছে → সাথে সাথে setShowDropdown(false) → একদম নতুন খোলা
+  //     রেজাল্ট ড্রপডাউনটাই বন্ধ হয়ে যায়। টাইপ করলে সমস্যা হতো না কারণ
+  //     সেটা 'click' ইভেন্টই না (keyboard event), এই লিসেনার তখন চলেই না।
+  //
+  // সমাধান: capture phase (তৃতীয় আর্গুমেন্ট true) ব্যবহার করা — capture
+  // ইভেন্টের সবচেয়ে প্রথম ধাপ, document-এ react-এর কোনো bubble-phase
+  // onClick চলারও আগে ঘটে। তাই e.target তখনো আসল, এখনো-DOM-এ-থাকা এলিমেন্ট,
+  // .contains() চেক সঠিক ফলাফল দেয় — তারপরেই React-এর pickRecentSearch/
+  // goToCat ইত্যাদি normal bubble-phase-এ চলে, DOM পাল্টায়, কিন্তু ততক্ষণে
+  // আমাদের "ভিতরে না বাইরে" সিদ্ধান্তটা ইতিমধ্যে সঠিকভাবে নেওয়া হয়ে গেছে।
+  // ================================================================
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -598,8 +623,8 @@ export default function Navbar({
       const insideToggle = !!mobileSearchToggleRef.current?.contains(target);
       if (!insideDesktop && !insideMobile && !insideToggle) setShowDropdown(false);
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('click', handleClickOutside, true);
+    return () => document.removeEventListener('click', handleClickOutside, true);
   }, []);
 
   // পিছনের স্ক্রল/ক্লিক লক হবে যখন ড্রপডাউনে দেখানোর মতো আসল কিছু থাকে —
