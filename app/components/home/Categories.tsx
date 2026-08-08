@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
+import { sanitizeSvgHtml } from '@/lib/sanitize';
 import type { Category } from '@/types';
 
 function getCatPerPage(): number {
@@ -22,7 +23,7 @@ function getCatCols(): number {
 function CatIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
   if (isSvg) {
-    return <span className="[&_svg]:h-[26px] [&_svg]:w-[26px] [&_svg]:shrink-0" dangerouslySetInnerHTML={{ __html: icon }} />;
+    return <span className="[&_svg]:h-[26px] [&_svg]:w-[26px] [&_svg]:shrink-0" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }} />;
   }
   return <span className="text-2xl">{icon || '📦'}</span>;
 }
