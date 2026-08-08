@@ -296,6 +296,7 @@ export default function Navbar({
   const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
   const desktopSearchBoxRef = useRef<HTMLDivElement>(null);
   const mobileSearchAreaRef = useRef<HTMLDivElement>(null);
+  const mobileSearchToggleRef = useRef<HTMLButtonElement>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
@@ -449,17 +450,20 @@ export default function Navbar({
   }, []);
 
   // বক্স expand হওয়া শুরু হলে ৩০০ms (বক্সের CSS transition duration) পর
-  // "ready" হয় — dropdown তখনই দেখানো শুরু হয়। বক্স collapse হওয়া শুরু হলে
-  // (hover/focus হারালে) সাথে সাথেই "not ready" হয়ে যায়, dropdown তখনই
-  // বন্ধ হয়ে যায় — বক্স ছোট হওয়া শুরুর আগেই।
+  // "ready" হয় — dropdown তখনই দেখানো শুরু হয়। এটা ইচ্ছাকৃতভাবে desktopSearchExpanded
+  // (hover/focus-নির্ভর, মাউস সামান্য নড়লেই flicker করতে পারে) নয় বরং showDropdown
+  // (শুধু ইচ্ছাকৃত অ্যাকশনে বদলায়: ফোকাস/বাইরে-ক্লিক/সিলেকশন) এর উপর নির্ভর করে —
+  // আগে expanded-এর উপর নির্ভর করানোয় মাউস dropdown-এর ভিতরে (বক্সের নিজের ছোট
+  // hover-rect-এর বাইরে) নড়লেই ready মুহূর্তেই false হয়ে dropdown আড়াল হয়ে যেত,
+  // তারপর আবার true হয়ে re-mount হতো — এটাই "ছোট হয়ে বড় হয়ে দেখানোর" আসল কারণ।
   useEffect(() => {
-    if (desktopSearchExpanded) {
+    if (showDropdown) {
       const t = setTimeout(() => setDesktopBoxReady(true), 300);
       return () => clearTimeout(t);
     }
     setDesktopBoxReady(false);
     return undefined;
-  }, [desktopSearchExpanded]);
+  }, [showDropdown]);
 
   // ডেক্সটপ সার্চ বক্স ছোট (collapsed — hover/focus কোনোটাই না) অবস্থায় যদি ভিতরে
   // এখনো আগের কোনো টেক্সট থেকে যায় (ইউজার নিজে ক্লিয়ার করেনি, বাইরে ক্লিক করে
@@ -551,7 +555,8 @@ export default function Navbar({
       const target = e.target as Node;
       const insideDesktop = !!desktopSearchWrapRef.current?.contains(target);
       const insideMobile = !!mobileSearchAreaRef.current?.contains(target);
-      if (!insideDesktop && !insideMobile) setShowDropdown(false);
+      const insideToggle = !!mobileSearchToggleRef.current?.contains(target);
+      if (!insideDesktop && !insideMobile && !insideToggle) setShowDropdown(false);
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -700,7 +705,17 @@ export default function Navbar({
                   </svg>
                 </button>
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden" onClick={(e) => { e.stopPropagation(); setMobileSearchOpen((v) => { const next = !v; setShowDropdown(next); return next; }); }} title="Search">
+                <button
+                  ref={mobileSearchToggleRef}
+                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const next = !mobileSearchOpen;
+                    setMobileSearchOpen(next);
+                    setShowDropdown(next);
+                  }}
+                  title="Search"
+                >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
@@ -772,4 +787,4 @@ export default function Navbar({
       </div>
     </div>
   );
-                        }
+}
