@@ -6,6 +6,10 @@ import WishlistDrawer from './cart/WishlistDrawer';
 import TrackOrderModal from './cart/TrackOrderModal';
 import FloatCartBadge from './cart/FloatCartBadge';
 import FloatWishBadge from './cart/FloatWishBadge';
+import QuickOrderBridge from './checkout/QuickOrderBridge';
+import WaitingOverlay from './checkout/WaitingOverlay';
+import BgConfirmPopup from './checkout/BgConfirmPopup';
+import PostOrderInfoModal from './checkout/PostOrderInfoModal';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 
 export default function GlobalOverlays() {
@@ -35,6 +39,10 @@ export default function GlobalOverlays() {
       <TrackOrderModal isOpen={trackOpen} onClose={() => setTrackOpen(false)} />
       <FloatCartBadge />
       <FloatWishBadge />
+      <QuickOrderBridge />
+      <WaitingOverlay />
+      <BgConfirmPopup />
+      <PostOrderInfoModal />
     </>
   );
 }
