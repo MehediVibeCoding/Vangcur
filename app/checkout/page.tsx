@@ -579,8 +579,8 @@ export default function CheckoutPage() {
   return (
     <>
       <div className="min-h-dvh bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white bg-fixed">
-        <div className="mx-auto w-full max-w-[640px]">
-          <div className="w-full">
+        <div className="mx-auto w-full max-w-[640px] px-2.5 py-4 sm:px-6 sm:py-10">
+          <div className="w-full overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-sh3 sm:rounded-[20px]">
             <div className="flex items-center justify-between gap-3 border-b border-border-base px-6 py-4">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-bg/70 text-brand-primary">
