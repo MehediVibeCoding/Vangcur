@@ -55,7 +55,7 @@ const fieldInputClass = (hasError?: boolean) =>
   }`;
 const fieldErrClass = 'mt-[5px] flex items-center gap-1 font-body text-[11px] font-medium text-red-600';
 const btnBackClass =
-  'rounded-[10px] bg-surface-muted px-5 py-3 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base';
+  'rounded-[10px] border border-white/60 bg-white/45 px-5 py-3 font-body text-[13px] font-semibold text-ink backdrop-blur-sm transition-brand duration-brand hover:bg-white/70';
 const btnNextClass =
   'flex-1 rounded-[10px] bg-brand-primary px-6 py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-[#00459e] disabled:opacity-60';
 
@@ -579,11 +579,10 @@ export default function CheckoutPage() {
   return (
     <>
       <div className="min-h-dvh bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white bg-fixed">
-        <div className="mx-auto w-full max-w-[640px] px-2.5 py-4 sm:px-6 sm:py-10">
-          <div className="w-full overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-sh3 sm:rounded-[20px]">
-            <div className="flex items-center justify-between gap-3 border-b border-border-base px-6 py-4">
+        <div className="mx-auto w-full max-w-[640px] bg-white/60 backdrop-blur-2xl sm:my-6 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-white/70">
+            <div className="flex items-center justify-between gap-3 border-b border-white/50 px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-bg/70 text-brand-primary">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/70 text-brand-primary ring-1 ring-white/80">
                   <IconLock />
                 </span>
                 <h2 className="font-body text-[17px] font-bold text-ink">নিরাপদ চেকআউট</h2>
@@ -593,7 +592,7 @@ export default function CheckoutPage() {
                   onClick={closeCheckout}
                   aria-label="বন্ধ করুন"
                   title="বন্ধ করুন"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-surface-muted text-muted transition-brand duration-brand hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/50 text-muted transition-brand duration-brand hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                 >
                   <IconClose />
                 </button>
@@ -601,7 +600,7 @@ export default function CheckoutPage() {
             </div>
 
             {step === 1 && cartItems.length === 1 && (
-              <div className="border-b border-border-base bg-surface-muted/40 px-6 py-2.5">
+              <div className="border-b border-white/50 bg-white/25 px-6 py-2.5">
                 <div className="mb-[7px] font-body text-[11px] font-bold uppercase tracking-wide text-muted">
                   YOUR ORDER
                 </div>
@@ -741,8 +740,8 @@ export default function CheckoutPage() {
 
           {step === 2 && (
             <div className="px-6 py-5">
-              <div className="mb-4 rounded-[16px] border-[1.5px] border-border-base bg-white p-5">
-                <div className="mb-3.5 inline-flex items-center gap-[7px] rounded-lg bg-surface-muted px-[13px] py-[7px] font-body text-[13px] font-bold text-ink">
+              <div className="mb-4 rounded-[16px] border border-white/60 bg-white/45 p-5 backdrop-blur-md">
+                <div className="mb-3.5 inline-flex items-center gap-[7px] rounded-lg bg-white/60 px-[13px] py-[7px] font-body text-[13px] font-bold text-ink">
                   <IconCard />
                   এডভান্স পেমেন্ট <span className="font-body text-base font-extrabold text-brand-primary">৳২০০</span>
                 </div>
@@ -778,7 +777,7 @@ export default function CheckoutPage() {
                     <IconChevronDown open={qrOpen} />
                   </button>
                   <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-2.5 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex items-start gap-3.5 rounded-[10px] border border-[#E5E7EB] bg-white p-3.5">
+                    <div className="flex items-start gap-3.5 rounded-[10px] border border-white/70 bg-white/85 p-3.5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-payment-qr_zmr6dz.jpg" alt="bKash QR" className="h-[140px] w-[140px] flex-shrink-0 rounded-md object-cover" />
                       <div className="pt-0.5">
@@ -819,7 +818,7 @@ export default function CheckoutPage() {
 
           {step === 3 && (
             <div className="px-6 py-5">
-              <div className="relative mb-5 rounded-[16px] border-[1.5px] border-border-base bg-surface-muted p-[18px]">
+              <div className="relative mb-5 rounded-[16px] border border-white/60 bg-white/50 p-[18px] backdrop-blur-sm">
                 <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">অর্ডার মেমো (Invoice)</span>
                 <div>
                   {cartItems.map((i) => (
@@ -851,7 +850,7 @@ export default function CheckoutPage() {
               </div>
 
               <div
-                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] bg-surface-muted px-3.5 py-3 transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-red-500' : 'border-border-base'}`}
+                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border bg-white/45 px-3.5 py-3 backdrop-blur-sm transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-red-500' : 'border-white/60'}`}
                 onClick={toggleTerms}
               >
                 <div className={`mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded border-2 transition-brand duration-brand ${termsChecked ? 'border-brand-primary bg-brand-primary' : 'border-border-base bg-white'}`}>
@@ -882,7 +881,6 @@ export default function CheckoutPage() {
               </div>
             </div>
           )}
-          </div>
         </div>
       </div>
 
