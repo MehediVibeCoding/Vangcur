@@ -55,3 +55,12 @@ export function validateAddress(address: string): boolean {
   const trimmed = address.trim();
   return trimmed.length >= 10 && trimmed.length <= 300;
 }
+
+export const MAX_ADDR_LEN = 300;
+
+export function sanitizeAddressInput(value: string): string {
+  return value
+    .replace(/[<>`]/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .slice(0, MAX_ADDR_LEN);
+}
