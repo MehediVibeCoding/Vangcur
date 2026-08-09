@@ -48,10 +48,10 @@ const MAX_EMAIL_LEN = 254;
 const fieldLabelClass = 'mb-[5px] block font-body text-[12.5px] font-semibold text-ink';
 const optionalTagClass = 'font-body text-[11px] font-normal text-muted';
 const fieldInputClass = (hasError?: boolean) =>
-  `w-full rounded-[9px] border-[1.5px] bg-white px-[13px] py-2.5 font-body text-base text-ink transition-brand duration-brand outline-none ${
+  `w-full rounded-[9px] border-[1.5px] bg-white/70 backdrop-blur-md px-[13px] py-2.5 font-body text-base text-ink transition-brand duration-brand outline-none ${
     hasError
       ? 'border-red-400 bg-red-50/50 focus:border-red-500'
-      : 'border-border-base focus:border-brand-primary'
+      : 'border-border-base focus:border-brand-light'
   }`;
 const fieldErrClass = 'mt-[5px] flex items-center gap-1 font-body text-[11px] font-medium text-red-600';
 const btnBackClass =
@@ -579,15 +579,15 @@ export default function CheckoutPage() {
   return (
     <>
       <div className="min-h-dvh bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white bg-fixed">
-        <div className="mx-auto w-full max-w-[640px] bg-white/60 backdrop-blur-2xl sm:my-6 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-white/70">
-            <div className="flex items-center justify-between gap-3 border-b border-white/50 px-6 py-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/70 text-brand-primary ring-1 ring-white/80">
-                  <IconLock />
-                </span>
-                <h2 className="font-body text-[17px] font-bold text-ink">নিরাপদ চেকআউট</h2>
-              </div>
-              {step === 1 && (
+        <div className="mx-auto w-full max-w-[640px] sm:my-6 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-white/70">
+            {step === 1 && (
+              <div className="flex items-center justify-between gap-3 border-b border-white/50 px-6 py-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/70 text-brand-primary ring-1 ring-white/80">
+                    <IconLock />
+                  </span>
+                  <h2 className="font-body text-[17px] font-bold text-ink">নিরাপদ চেকআউট</h2>
+                </div>
                 <button
                   onClick={closeCheckout}
                   aria-label="বন্ধ করুন"
@@ -596,11 +596,11 @@ export default function CheckoutPage() {
                 >
                   <IconClose />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {step === 1 && cartItems.length === 1 && (
-              <div className="border-b border-white/50 bg-white/25 px-6 py-2.5">
+              <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/60 bg-white/70 px-4 py-3 shadow-sh1 backdrop-blur-md">
                 <div className="mb-[7px] font-body text-[11px] font-bold uppercase tracking-wide text-muted">
                   YOUR ORDER
                 </div>
@@ -619,10 +619,10 @@ export default function CheckoutPage() {
               {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => (
                 <div
                   key={s.n}
-                  className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${step === s.n ? 'text-ink' : 'text-muted'} ${step > s.n ? 'after:bg-success' : 'after:bg-border-base'}`}
+                  className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${step === s.n ? 'text-ink' : 'text-muted'} ${step > s.n ? 'after:bg-brand-light' : 'after:bg-white/70'}`}
                 >
                   <div
-                    className={`relative z-10 mx-auto mb-[3px] flex h-5 w-5 items-center justify-center rounded-full font-body text-[10px] font-bold ${step > s.n ? 'bg-success text-white' : step === s.n ? 'bg-brand-primary text-white' : 'bg-border-base text-muted'}`}
+                    className={`relative z-10 mx-auto mb-[3px] flex h-5 w-5 items-center justify-center rounded-full border font-body text-[10px] font-bold ${step >= s.n ? 'border-brand-light bg-brand-light text-ink' : 'border-white/70 bg-white/70 text-muted'}`}
                   >
                     {s.n}
                   </div>
@@ -631,13 +631,13 @@ export default function CheckoutPage() {
               ))}
             </div>
             <div className="px-6 pb-1.5 pt-1.5">
-              <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-border-base">
+              <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-white/70">
                 <div
-                  className="h-full rounded-full bg-success transition-[width] duration-300"
+                  className="h-full rounded-full bg-brand-light transition-[width] duration-300"
                   style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
                 />
               </div>
-              <div className="text-right font-body text-[11px] font-semibold text-success">
+              <div className="text-right font-body text-[11px] font-semibold text-brand-primary">
                 {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
             </div>
           </div>
@@ -654,7 +654,7 @@ export default function CheckoutPage() {
                 </div>
               )}
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>পূর্ণ নাম *</label>
+                <label className={fieldLabelClass}>পূর্ণ নাম</label>
                 <input
                   className={fieldInputClass(!!errors.eN)}
                   value={name}
@@ -665,7 +665,7 @@ export default function CheckoutPage() {
                 {errors.eN && <div className={fieldErrClass}><IconWarning />{errors.eN}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>ফোন নম্বর * <span className={optionalTagClass}>(বাংলাদেশি নম্বর)</span></label>
+                <label className={fieldLabelClass}>ফোন নম্বর <span className={optionalTagClass}>(বাংলাদেশি নম্বর)</span></label>
                 <input
                   className={fieldInputClass(!!errors.eP)}
                   value={phone}
@@ -676,7 +676,7 @@ export default function CheckoutPage() {
                 {errors.eP && <div className={fieldErrClass}><IconWarning />{errors.eP}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>জেলা *</label>
+                <label className={fieldLabelClass}>জেলা</label>
                 <select className={fieldInputClass(!!errors.eD)} value={dist} onChange={(e) => setDist(e.target.value)}>
                   <option value="">জেলা সিলেক্ট করুন</option>
                   {DISTRICTS.map((d) => (
@@ -686,7 +686,7 @@ export default function CheckoutPage() {
                 {errors.eD && <div className={fieldErrClass}><IconWarning />{errors.eD}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>সম্পূর্ণ ডেলিভারি ঠিকানা *</label>
+                <label className={fieldLabelClass}>সম্পূর্ণ ডেলিভারি ঠিকানা</label>
                 <textarea
                   className={fieldInputClass(!!errors.eA)}
                   rows={3}
@@ -695,7 +695,6 @@ export default function CheckoutPage() {
                   onChange={(e) => setAddr(sanitizeAddressInput(e.target.value))}
                   placeholder="গ্রাম/মহল্লা, রোড, বাসা নম্বর সহ বিস্তারিত লিখুন"
                 />
-                <div className="mt-[3px] text-right font-body text-[10.5px] text-muted">{addr.length}/{MAX_ADDR_LEN}</div>
                 {errors.eA && <div className={`${fieldErrClass} -mt-1`}><IconWarning />{errors.eA}</div>}
               </div>
               <div className="mb-[15px]">
@@ -712,7 +711,7 @@ export default function CheckoutPage() {
               </div>
               {shipOptions.length > 0 && (
                 <div className="mb-[15px]">
-                  <label className={fieldLabelClass}>শিপিং *</label>
+                  <label className={fieldLabelClass}>শিপিং</label>
                   <div className="flex flex-col gap-[9px]">
                     {shipOptions.map((opt) => (
                       <label
@@ -740,8 +739,8 @@ export default function CheckoutPage() {
 
           {step === 2 && (
             <div className="px-6 py-5">
-              <div className="mb-4 rounded-[16px] border border-white/60 bg-white/45 p-5 backdrop-blur-md">
-                <div className="mb-3.5 inline-flex items-center gap-[7px] rounded-lg bg-white/60 px-[13px] py-[7px] font-body text-[13px] font-bold text-ink">
+              <div className="mb-4 rounded-[16px] border border-white/60 bg-white/70 p-5 shadow-sh2 backdrop-blur-md">
+                <div className="mb-3.5 inline-flex items-center gap-[7px] rounded-lg bg-white/80 px-[13px] py-[7px] font-body text-[13px] font-bold text-ink">
                   <IconCard />
                   এডভান্স পেমেন্ট <span className="font-body text-base font-extrabold text-brand-primary">৳২০০</span>
                 </div>
@@ -818,33 +817,33 @@ export default function CheckoutPage() {
 
           {step === 3 && (
             <div className="px-6 py-5">
-              <div className="relative mb-5 rounded-[16px] border border-white/60 bg-white/50 p-[18px] backdrop-blur-sm">
+              <div className="relative mb-5 rounded-[16px] border border-white/60 bg-white/70 p-[18px] shadow-sh1 backdrop-blur-md">
                 <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">অর্ডার মেমো (Invoice)</span>
                 <div>
                   {cartItems.map((i) => (
-                    <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-[#374151]">
+                    <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/80">
                       <span>{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
                       <span>৳{(i.price * i.qty).toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-[#374151]"><span>Subtotal</span><span>৳{sub.toLocaleString()}</span></div>
-                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-[#374151]"><span>ডেলিভারি চার্জ (Shipping)</span><span>৳{sc}</span></div>
-                <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
+                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>Subtotal</span><span>৳{sub.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>ডেলিভারি চার্জ (Shipping)</span><span>৳{sc}</span></div>
+                <div className="my-3 h-px border-t-2 border-dashed border-white/70" />
                 <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>সর্বমোট বিল (Total)</span><span>৳{total.toLocaleString()}</span></div>
-                <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-success">
-                  <span className="flex items-center gap-1.5"><IconCheck /> Paid (bKash Advance)</span>
+                <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-ink">
+                  <span className="flex items-center gap-1.5 text-brand-primary"><IconCheck /> Paid (bKash Advance)</span>
                   <span>- ৳২০০</span>
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-brand-primary"><span>বাকি বিল (Cash on Delivery)</span><span>৳{balance.toLocaleString()}</span></div>
-              </div>
+                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>বাকি বিল (Cash on Delivery)</span><span className="text-brand-primary">৳{balance.toLocaleString()}</span></div>
 
-              <div className="relative mb-5 rounded-[16px] border-[1.5px] border-dashed border-[#F59E0B] bg-[#FFFBEB] p-4">
-                <span className="mb-2.5 block font-body text-[10px] font-bold uppercase tracking-wide text-[#B45309]">ডেলিভারি লেবেল (Shipping Label)</span>
-                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="flex w-5 flex-shrink-0 justify-center"><IconUser /></div><div>{name}</div></div>
-                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="flex w-5 flex-shrink-0 justify-center"><IconPhone /></div><div>{phone}</div></div>
-                <div className="flex items-start gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]">
-                  <div className="flex w-5 flex-shrink-0 justify-center pt-1"><IconPin /></div>
+                <div className="my-4 h-px bg-white/70" />
+
+                <span className="mb-2.5 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">ডেলিভারি লেবেল (Shipping Label)</span>
+                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 flex-shrink-0 justify-center text-brand-primary"><IconUser /></div><div>{name}</div></div>
+                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 flex-shrink-0 justify-center text-brand-primary"><IconPhone /></div><div>{phone}</div></div>
+                <div className="flex items-start gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80">
+                  <div className="flex w-5 flex-shrink-0 justify-center pt-1 text-brand-primary"><IconPin /></div>
                   <div className="min-w-0 break-words">{dist && dist !== 'ঢাকা' ? `${dist}, ${addr}` : addr}</div>
                 </div>
               </div>
