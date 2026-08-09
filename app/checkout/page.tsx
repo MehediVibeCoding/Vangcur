@@ -578,9 +578,9 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
-        <div className="mx-auto w-full max-w-[640px] md:py-10">
-          <div className="w-full overflow-hidden bg-white md:rounded-[20px] md:border md:border-white/60 md:shadow-sh3">
+      <div className="min-h-dvh bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white bg-fixed">
+        <div className="mx-auto w-full max-w-[640px]">
+          <div className="w-full">
             <div className="flex items-center justify-between gap-3 border-b border-border-base px-6 py-4">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-bg/70 text-brand-primary">
@@ -631,7 +631,7 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
-            <div className="bg-white px-6 pb-1.5 pt-1.5">
+            <div className="px-6 pb-1.5 pt-1.5">
               <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-border-base">
                 <div
                   className="h-full rounded-full bg-success transition-[width] duration-300"
@@ -846,7 +846,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="flex w-5 flex-shrink-0 justify-center"><IconPhone /></div><div>{phone}</div></div>
                 <div className="flex items-start gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]">
                   <div className="flex w-5 flex-shrink-0 justify-center pt-1"><IconPin /></div>
-                  <div>{dist && dist !== 'ঢাকা' ? `${dist}, ${addr}` : addr}</div>
+                  <div className="min-w-0 break-words">{dist && dist !== 'ঢাকা' ? `${dist}, ${addr}` : addr}</div>
                 </div>
               </div>
 
