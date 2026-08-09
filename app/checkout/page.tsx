@@ -55,7 +55,6 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isQuickOrder, setIsQuickOrder] = useState(false);
   const [cartWarnVisible, setCartWarnVisible] = useState(false);
 
   const [name, setName] = useState('');
@@ -92,12 +91,10 @@ export default function CheckoutPage() {
       if (Array.isArray(quickOrder) && quickOrder.length) {
         sessionStorage.removeItem('vc_quick_order_items');
         setCartItems(quickOrder);
-        setIsQuickOrder(true);
         setCartWarnVisible(false);
       } else {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
         setCartItems(Array.isArray(cart) ? cart : []);
-        setIsQuickOrder(false);
         setCartWarnVisible(!Array.isArray(cart) || cart.length === 0);
       }
     } catch {
@@ -479,7 +476,7 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {step !== 3 && isQuickOrder && cartItems.length > 0 && (
+          {step === 1 && cartItems.length === 1 && (
             <div className="border-b border-border-base bg-white px-6 py-2.5">
               <div className="mb-[7px] font-body text-[11px] font-bold uppercase tracking-wide text-muted">
                 YOUR ORDER
@@ -492,18 +489,17 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-[7px] flex justify-between border-t border-border-base pt-[7px] font-body text-[13px] font-bold text-ink">
-                <span>Subtotal</span>
-                <span>৳{sub.toLocaleString()}</span>
-              </div>
             </div>
           )}
 
           <div className="flex px-6 pb-2.5 pt-[13px]">
             {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => (
-              <div key={s.n} className={`flex-1 text-center font-body text-[11px] font-semibold ${step === s.n ? 'text-ink' : step > s.n ? 'text-ink' : 'text-muted'}`}>
+              <div
+                key={s.n}
+                className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${step === s.n ? 'text-ink' : 'text-muted'} ${step > s.n ? 'after:bg-success' : 'after:bg-border-base'}`}
+              >
                 <div
-                  className={`mx-auto mb-[3px] flex h-5 w-5 items-center justify-center rounded-full font-body text-[10px] font-bold ${step > s.n ? 'bg-success text-white' : step === s.n ? 'bg-ink text-white' : 'bg-border-base text-muted'}`}
+                  className={`relative z-10 mx-auto mb-[3px] flex h-5 w-5 items-center justify-center rounded-full font-body text-[10px] font-bold ${step > s.n ? 'bg-success text-white' : step === s.n ? 'bg-ink text-white' : 'bg-border-base text-muted'}`}
                 >
                   {s.n}
                 </div>
