@@ -24,6 +24,10 @@ import {
   fetchShipConfig,
   type ShipConfig,
 } from '@/lib/checkoutData';
+import {
+  sanitizePlainName, validateName, MAX_NAME_LEN,
+  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN,
+} from '@/lib/security';
 import { saveDraft, clearDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
 import type { CartItem, CurrentUser } from '@/types';
@@ -39,15 +43,116 @@ interface CheckoutErrors {
   eL4?: string;
 }
 
+const MAX_EMAIL_LEN = 254;
+
 const fieldLabelClass = 'mb-[5px] block font-body text-[12.5px] font-semibold text-ink';
 const optionalTagClass = 'font-body text-[11px] font-normal text-muted';
-const fieldInputClass =
-  'w-full rounded-[9px] border-[1.5px] border-border-base bg-white px-[13px] py-2.5 font-body text-base text-ink transition-brand duration-brand outline-none focus:border-ink';
-const fieldErrClass = 'mt-[3px] font-body text-[11px] text-brand-primary';
+const fieldInputClass = (hasError?: boolean) =>
+  `w-full rounded-[9px] border-[1.5px] bg-white px-[13px] py-2.5 font-body text-base text-ink transition-brand duration-brand outline-none ${
+    hasError
+      ? 'border-red-400 bg-red-50/50 focus:border-red-500'
+      : 'border-border-base focus:border-brand-primary'
+  }`;
+const fieldErrClass = 'mt-[5px] flex items-center gap-1 font-body text-[11px] font-medium text-red-600';
 const btnBackClass =
   'rounded-[10px] bg-surface-muted px-5 py-3 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base';
 const btnNextClass =
-  'flex-1 rounded-[10px] bg-ink px-6 py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-brand-primary disabled:opacity-60';
+  'flex-1 rounded-[10px] bg-brand-primary px-6 py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-[#00459e] disabled:opacity-60';
+
+function IconLock() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 018 0v4" />
+    </svg>
+  );
+}
+function IconClose() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+function IconWarning() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+      <path d="M12 3.5 21.5 20h-19L12 3.5Z" />
+      <path d="M12 10v4M12 17h.01" />
+    </svg>
+  );
+}
+function IconCheck() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12.5l5 5L20 6" />
+    </svg>
+  );
+}
+function IconChevronDown({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"
+      className="transition-transform duration-300"
+      style={open ? { transform: 'rotate(180deg)' } : undefined}
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+function IconSpinner() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" className="animate-spin">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconUser() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
+    </svg>
+  );
+}
+function IconPhone() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6.5 3.5c.4 1.6.9 3 1.6 4.3.3.6.2 1.3-.3 1.8L6.4 11c1 2.6 3 4.6 5.6 5.6l1.4-1.4c.5-.5 1.2-.6 1.8-.3 1.3.7 2.7 1.2 4.3 1.6.9.2 1.5 1 1.4 1.9l-.3 2c-.1.9-.9 1.5-1.8 1.4C10.9 20.9 3.1 13.1 2.2 4.2c-.1-.9.5-1.7 1.4-1.8l2-.3c.9-.1 1.7.5 1.9 1.4Z" />
+    </svg>
+  );
+}
+function IconPin() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21s7-6.1 7-11.5A7 7 0 005 9.5C5 14.9 12 21 12 21Z" />
+      <circle cx="12" cy="9.5" r="2.3" />
+    </svg>
+  );
+}
+function IconCard() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.2" />
+      <path d="M2.5 9.5h19" />
+    </svg>
+  );
+}
+function IconArrowRight() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+function IconArrowLeft() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 12H5M11 6l-6 6 6 6" />
+    </svg>
+  );
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -154,7 +259,7 @@ export default function CheckoutPage() {
         if (pending.ship) setSelectedShip(pending.ship as string);
       }
 
-      showToast('✅ লগইন সফল — অর্ডার সম্পন্ন হচ্ছে...');
+      showToast('লগইন সফল — অর্ডার সম্পন্ন হচ্ছে...');
       setTimeout(() => submitOrderNowRef.current && submitOrderNowRef.current(), 350);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -201,6 +306,17 @@ export default function CheckoutPage() {
   const shipOptions = getShipOptions(dist);
 
   useEffect(() => {
+    if (shipOptions.length === 1) {
+      if (selectedShip !== shipOptions[0].key) {
+        setSelectedShip(shipOptions[0].key);
+        try {
+          sessionStorage.setItem('vc_ship', shipOptions[0].key);
+        } catch {
+          // ignore
+        }
+      }
+      return;
+    }
     if (selectedShip && !shipOptions.some((opt) => opt.key === selectedShip)) {
       setSelectedShip('');
       try {
@@ -285,7 +401,7 @@ export default function CheckoutPage() {
     } catch {
       // clipboard may be unavailable
     }
-    setCopyLabel('✅ কপি হয়েছে!');
+    setCopyLabel('কপি হয়েছে!');
     setTimeout(() => setCopyLabel('Copy'), 2000);
   };
 
@@ -319,7 +435,7 @@ export default function CheckoutPage() {
         if (rl.data === false) {
           setSubmitting(false);
           confirmLockRef.current = false;
-          showToast('⏳ একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন');
+          showToast('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন');
           return;
         }
       } catch {
@@ -327,7 +443,7 @@ export default function CheckoutPage() {
         if (Date.now() - lastOrderTime < 30000) {
           setSubmitting(false);
           confirmLockRef.current = false;
-          showToast('⏳ একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন');
+          showToast('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন');
           return;
         }
       }
@@ -383,7 +499,7 @@ export default function CheckoutPage() {
       if (insErr) {
         setSubmitting(false);
         confirmLockRef.current = false;
-        showToast('❌ দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।');
+        showToast('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।');
         return;
       }
 
@@ -414,7 +530,7 @@ export default function CheckoutPage() {
     } catch {
       setSubmitting(false);
       confirmLockRef.current = false;
-      showToast('❌ নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      showToast('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, cartItems, sc, name, dist, addr, email, selectedShip, txn, last4]);
@@ -448,7 +564,7 @@ export default function CheckoutPage() {
     setShowPreConfirm(false);
     const { error } = await signInWithGoogle(supabase, '/checkout');
     if (error) {
-      showToast('❌ Google লগইন ব্যর্থ হয়েছে');
+      showToast('Google লগইন ব্যর্থ হয়েছে');
       try {
         localStorage.removeItem('vc_pending_order_data');
         localStorage.removeItem('vc_post_login_action');
@@ -462,135 +578,163 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-white">
-        <div className="mx-auto min-h-screen w-full max-w-[640px] bg-white">
-          <div className="flex items-center justify-between border-b border-border-base px-6 pt-5">
-            <h2 className="font-body text-[17px] font-bold text-ink">অর্ডার করুন</h2>
-            {step === 1 && (
-              <button
-                onClick={closeCheckout}
-                className="rounded-lg border-[1.5px] border-border-base bg-surface-muted px-[13px] py-1.5 font-body text-[12.5px] font-semibold text-ink"
-              >
-                ✕ বন্ধ করুন
-              </button>
-            )}
-          </div>
-
-          {step === 1 && cartItems.length === 1 && (
-            <div className="border-b border-border-base bg-white px-6 py-2.5">
-              <div className="mb-[7px] font-body text-[11px] font-bold uppercase tracking-wide text-muted">
-                YOUR ORDER
+      <div className="min-h-screen bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
+        <div className="mx-auto w-full max-w-[640px] md:py-10">
+          <div className="w-full overflow-hidden bg-white md:rounded-[20px] md:border md:border-white/60 md:shadow-sh3">
+            <div className="flex items-center justify-between gap-3 border-b border-border-base px-6 py-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-bg/70 text-brand-primary">
+                  <IconLock />
+                </span>
+                <h2 className="font-body text-[17px] font-bold text-ink">নিরাপদ চেকআউট</h2>
               </div>
-              <div className="flex flex-col gap-[5px] text-ink">
-                {cartItems.map((i) => (
-                  <div key={i.id} className="flex justify-between font-body text-[13px]">
-                    <span>{i.emoji || '📦'} {i.name} × {i.qty}</span>
-                    <span>৳{(i.price * i.qty).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex px-6 pb-2.5 pt-[13px]">
-            {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => (
-              <div
-                key={s.n}
-                className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${step === s.n ? 'text-ink' : 'text-muted'} ${step > s.n ? 'after:bg-success' : 'after:bg-border-base'}`}
-              >
-                <div
-                  className={`relative z-10 mx-auto mb-[3px] flex h-5 w-5 items-center justify-center rounded-full font-body text-[10px] font-bold ${step > s.n ? 'bg-success text-white' : step === s.n ? 'bg-ink text-white' : 'bg-border-base text-muted'}`}
+              {step === 1 && (
+                <button
+                  onClick={closeCheckout}
+                  aria-label="বন্ধ করুন"
+                  title="বন্ধ করুন"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-surface-muted text-muted transition-brand duration-brand hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                 >
-                  {s.n}
-                </div>
-                <div>{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white px-6 pb-1.5 pt-1.5">
-            <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-border-base">
-              <div
-                className="h-full rounded-full bg-success transition-[width] duration-300"
-                style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
-              />
+                  <IconClose />
+                </button>
+              )}
             </div>
-            <div className="text-right font-body text-[11px] font-semibold text-success">
-              {step === 3 ? '✅ প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
+
+            {step === 1 && cartItems.length === 1 && (
+              <div className="border-b border-border-base bg-surface-muted/40 px-6 py-2.5">
+                <div className="mb-[7px] font-body text-[11px] font-bold uppercase tracking-wide text-muted">
+                  YOUR ORDER
+                </div>
+                <div className="flex flex-col gap-[5px] text-ink">
+                  {cartItems.map((i) => (
+                    <div key={i.id} className="flex justify-between font-body text-[13px]">
+                      <span>{i.name} × {i.qty}</span>
+                      <span>৳{(i.price * i.qty).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex px-6 pb-2.5 pt-[13px]">
+              {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => (
+                <div
+                  key={s.n}
+                  className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${step === s.n ? 'text-ink' : 'text-muted'} ${step > s.n ? 'after:bg-success' : 'after:bg-border-base'}`}
+                >
+                  <div
+                    className={`relative z-10 mx-auto mb-[3px] flex h-5 w-5 items-center justify-center rounded-full font-body text-[10px] font-bold ${step > s.n ? 'bg-success text-white' : step === s.n ? 'bg-brand-primary text-white' : 'bg-border-base text-muted'}`}
+                  >
+                    {s.n}
+                  </div>
+                  <div>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white px-6 pb-1.5 pt-1.5">
+              <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-border-base">
+                <div
+                  className="h-full rounded-full bg-success transition-[width] duration-300"
+                  style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
+                />
+              </div>
+              <div className="text-right font-body text-[11px] font-semibold text-success">
+                {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
             </div>
           </div>
 
           {step === 1 && (
             <div className="px-6 py-5">
               {cartWarnVisible && (
-                <div className="mb-3.5 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] p-3.5 font-body text-[13px] font-semibold leading-[1.55] text-[#991B1B]">
-                  ⚠️ আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন অথবা প্রোডাক্টের পেজ থেকে
-                  &quot;এখনই অর্ডার করুন&quot; বাটনে ক্লিক করুন।
+                <div className="mb-3.5 flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3.5 font-body text-[13px] font-semibold leading-[1.55] text-red-800">
+                  <IconWarning />
+                  <span>
+                    আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন অথবা প্রোডাক্টের পেজ থেকে
+                    &quot;এখনই অর্ডার করুন&quot; বাটনে ক্লিক করুন।
+                  </span>
                 </div>
               )}
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>পূর্ণ নাম *</label>
-                <input className={fieldInputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="আপনার পূর্ণ নাম" />
-                {errors.eN && <div className={fieldErrClass}>{errors.eN}</div>}
+                <input
+                  className={fieldInputClass(!!errors.eN)}
+                  value={name}
+                  maxLength={MAX_NAME_LEN}
+                  onChange={(e) => setName(sanitizePlainName(e.target.value))}
+                  placeholder="আপনার পূর্ণ নাম"
+                />
+                {errors.eN && <div className={fieldErrClass}><IconWarning />{errors.eN}</div>}
               </div>
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>ফোন নম্বর * <span className={optionalTagClass}>(বাংলাদেশি নম্বর)</span></label>
                 <input
-                  className={fieldInputClass}
+                  className={fieldInputClass(!!errors.eP)}
                   value={phone}
                   maxLength={11}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   placeholder="01XXXXXXXXX"
                 />
-                {errors.eP && <div className={fieldErrClass}>{errors.eP}</div>}
+                {errors.eP && <div className={fieldErrClass}><IconWarning />{errors.eP}</div>}
               </div>
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>জেলা *</label>
-                <select className={fieldInputClass} value={dist} onChange={(e) => setDist(e.target.value)}>
+                <select className={fieldInputClass(!!errors.eD)} value={dist} onChange={(e) => setDist(e.target.value)}>
                   <option value="">জেলা সিলেক্ট করুন</option>
                   {DISTRICTS.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
-                {errors.eD && <div className={fieldErrClass}>{errors.eD}</div>}
+                {errors.eD && <div className={fieldErrClass}><IconWarning />{errors.eD}</div>}
               </div>
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>সম্পূর্ণ ডেলিভারি ঠিকানা *</label>
                 <textarea
-                  className={fieldInputClass}
+                  className={fieldInputClass(!!errors.eA)}
                   rows={3}
                   value={addr}
-                  onChange={(e) => setAddr(e.target.value)}
+                  maxLength={MAX_ADDR_LEN}
+                  onChange={(e) => setAddr(sanitizeAddressInput(e.target.value))}
                   placeholder="গ্রাম/মহল্লা, রোড, বাসা নম্বর সহ বিস্তারিত লিখুন"
                 />
-                {errors.eA && <div className={fieldErrClass}>{errors.eA}</div>}
+                <div className="mt-[3px] text-right font-body text-[10.5px] text-muted">{addr.length}/{MAX_ADDR_LEN}</div>
+                {errors.eA && <div className={`${fieldErrClass} -mt-1`}><IconWarning />{errors.eA}</div>}
               </div>
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>ইমেইল <span className={optionalTagClass}>(ঐচ্ছিক — ইনভয়েস পাঠানো হবে)</span></label>
-                <input className={fieldInputClass} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="yourname@gmail.com" />
-                {errors.eEmail && <div className={fieldErrClass}>{errors.eEmail}</div>}
+                <input
+                  className={fieldInputClass(!!errors.eEmail)}
+                  type="email"
+                  value={email}
+                  maxLength={MAX_EMAIL_LEN}
+                  onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
+                  placeholder="yourname@gmail.com"
+                />
+                {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
-              <div className="mb-[15px]">
-                <label className={fieldLabelClass}>শিপিং *</label>
-                <div className="flex flex-col gap-[9px]">
-                  {shipOptions.map((opt) => (
-                    <label
-                      key={opt.key}
-                      className={`flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-3.5 py-3 transition-brand duration-brand ${selectedShip === opt.key ? 'border-ink bg-surface-muted' : 'border-border-base'}`}
-                      onClick={() => selectShip(opt.key)}
-                    >
-                      <input type="radio" name="ship" checked={selectedShip === opt.key} readOnly className="accent-ink" />
-                      <div>
-                        <div className="font-body text-[13px] font-semibold text-ink">{opt.name}</div>
-                        <div className="font-body text-[11px] text-muted">{opt.sub}</div>
-                      </div>
-                      <div className="ml-auto font-body text-sm font-bold text-ink">৳{shipPrice(opt.key, shipCfg)}</div>
-                    </label>
-                  ))}
+              {shipOptions.length > 0 && (
+                <div className="mb-[15px]">
+                  <label className={fieldLabelClass}>শিপিং *</label>
+                  <div className="flex flex-col gap-[9px]">
+                    {shipOptions.map((opt) => (
+                      <label
+                        key={opt.key}
+                        className={`flex cursor-pointer items-center gap-3 rounded-[10px] border-[1.5px] px-3.5 py-3 transition-brand duration-brand ${selectedShip === opt.key ? 'border-brand-primary bg-brand-bg/25' : 'border-border-base'}`}
+                        onClick={() => selectShip(opt.key)}
+                      >
+                        <input type="radio" name="ship" checked={selectedShip === opt.key} readOnly className="accent-brand-primary" />
+                        <div>
+                          <div className="font-body text-[13px] font-semibold text-ink">{opt.name}</div>
+                          <div className="font-body text-[11px] text-muted">{opt.sub}</div>
+                        </div>
+                        <div className="ml-auto font-body text-sm font-bold text-ink">৳{shipPrice(opt.key, shipCfg)}</div>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.eShip && <div className={fieldErrClass}><IconWarning />{errors.eShip}</div>}
                 </div>
-                {errors.eShip && <div className={fieldErrClass}>{errors.eShip}</div>}
-              </div>
+              )}
               <div className="flex gap-[9px] pt-3.5">
-                <button className={`${btnNextClass} flex-1`} onClick={goToStep2}>পরবর্তী → পেমেন্ট</button>
+                <button className={`${btnNextClass} flex flex-1 items-center justify-center gap-1.5`} onClick={goToStep2}>পরবর্তী ধাপ: পেমেন্ট <IconArrowRight /></button>
               </div>
             </div>
           )}
@@ -598,8 +742,9 @@ export default function CheckoutPage() {
           {step === 2 && (
             <div className="px-6 py-5">
               <div className="mb-4 rounded-[16px] border-[1.5px] border-border-base bg-white p-5">
-                <div className="mb-3.5 inline-flex items-center gap-[7px] rounded-lg bg-surface-muted px-[13px] py-[7px] font-body text-[13px] font-bold">
-                  💳 এডভান্স পেমেন্ট <span className="font-body text-base font-extrabold text-brand-primary">৳২০০</span>
+                <div className="mb-3.5 inline-flex items-center gap-[7px] rounded-lg bg-surface-muted px-[13px] py-[7px] font-body text-[13px] font-bold text-ink">
+                  <IconCard />
+                  এডভান্স পেমেন্ট <span className="font-body text-base font-extrabold text-brand-primary">৳২০০</span>
                 </div>
                 <p className="mb-3.5 font-body text-[13px] leading-[1.6] text-muted">অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।</p>
                 <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border-[1.5px] border-[#FDA4AF] bg-gradient-to-br from-[#FFF5F5] to-[#FFE4E6] p-4">
@@ -619,14 +764,18 @@ export default function CheckoutPage() {
                       onClick={copyBkash}
                       style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
                     >
-                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                      {copyLabel === 'Copy' ? (
+                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                      ) : (
+                        <IconCheck />
+                      )}
                       {copyLabel}
                     </button>
                   </div>
                   <button className="mt-2.5 flex items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-[#D1D5DB] bg-transparent px-3.5 py-2.5 font-body text-[12.5px] text-[#6B7280] transition-colors duration-200 hover:bg-[#F9FAFB]" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
                     <span>{qrOpen ? 'QR কোড বন্ধ করুন' : 'QR কোড দিয়ে পেমেন্ট করুন'}</span>
-                    <span className="inline-block text-xs transition-transform duration-300" style={qrOpen ? { transform: 'rotate(180deg)' } : undefined}>▾</span>
+                    <IconChevronDown open={qrOpen} />
                   </button>
                   <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-2.5 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
                     <div className="flex items-start gap-3.5 rounded-[10px] border border-[#E5E7EB] bg-white p-3.5">
@@ -642,8 +791,9 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 <p className="mb-0 font-body text-[11.5px] text-muted">Personal নম্বরে Send Money করুন (Payment নয়)</p>
-                <div className="mt-3.5 rounded-r-lg border-l-[3px] border-brand-primary bg-[#FEF2F2] px-[13px] py-2.5 font-body text-xs leading-[1.6] text-[#7F1D1D]">
-                  ⚠️ ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।
+                <div className="mt-3.5 flex items-start gap-2 rounded-r-lg border-l-[3px] border-red-500 bg-red-50 px-[13px] py-2.5 font-body text-xs leading-[1.6] text-red-800">
+                  <IconWarning />
+                  <span>ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।</span>
                 </div>
               </div>
               <div className="mb-3 text-center font-body text-[13px] font-bold text-ink">
@@ -651,18 +801,18 @@ export default function CheckoutPage() {
               </div>
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>ট্রানজেকশন আইডি <span className={optionalTagClass}>(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)</span></label>
-                <input className={fieldInputClass} value={txn} maxLength={10} onChange={(e) => setTxn(e.target.value)} placeholder="bKash Transaction ID" />
-                {errors.eTxn && <div className={fieldErrClass}>{errors.eTxn}</div>}
+                <input className={fieldInputClass(!!errors.eTxn)} value={txn} maxLength={10} onChange={(e) => setTxn(e.target.value)} placeholder="bKash Transaction ID" />
+                {errors.eTxn && <div className={fieldErrClass}><IconWarning />{errors.eTxn}</div>}
               </div>
               <div className="my-4 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">অথবা</div>
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>Send Money করা bKash নম্বরের শেষ ৪ ডিজিট</label>
-                <input className={fieldInputClass} value={last4} maxLength={4} onChange={(e) => setLast4(e.target.value.replace(/\D/g, ''))} placeholder="যেমন: 5504" />
-                {errors.eL4 && <div className={fieldErrClass}>{errors.eL4}</div>}
+                <input className={fieldInputClass(!!errors.eL4)} value={last4} maxLength={4} onChange={(e) => setLast4(e.target.value.replace(/\D/g, ''))} placeholder="যেমন: 5504" />
+                {errors.eL4 && <div className={fieldErrClass}><IconWarning />{errors.eL4}</div>}
               </div>
               <div className="flex gap-[9px] pt-3.5">
-                <button className={btnBackClass} onClick={() => goBack(1)}>← পেছনে</button>
-                <button className={btnNextClass} onClick={goToStep3}>পরবর্তী → নিশ্চিত করুন</button>
+                <button className={`${btnBackClass} flex items-center gap-1.5`} onClick={() => goBack(1)}><IconArrowLeft /> পেছনে</button>
+                <button className={`${btnNextClass} flex items-center justify-center gap-1.5`} onClick={goToStep3}>পরবর্তী ধাপ: নিশ্চিত করুন <IconArrowRight /></button>
               </div>
             </div>
           )}
@@ -670,13 +820,11 @@ export default function CheckoutPage() {
           {step === 3 && (
             <div className="px-6 py-5">
               <div className="relative mb-5 rounded-[16px] border-[1.5px] border-border-base bg-surface-muted p-[18px]">
-                <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">📋 অর্ডার মেমো (Invoice)</span>
+                <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">অর্ডার মেমো (Invoice)</span>
                 <div>
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-[#374151]">
-                      <span className="flex items-center gap-1.5">
-                        {i.emoji || '📦'} {i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}
-                      </span>
+                      <span>{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
                       <span>৳{(i.price * i.qty).toLocaleString()}</span>
                     </div>
                   ))}
@@ -685,26 +833,29 @@ export default function CheckoutPage() {
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-[#374151]"><span>ডেলিভারি চার্জ (Shipping)</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
                 <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>সর্বমোট বিল (Total)</span><span>৳{total.toLocaleString()}</span></div>
-                <div className="flex justify-between py-1.5 font-body text-[13px] font-semibold text-success"><span>✅ Paid (bKash Advance)</span><span>- ৳২০০</span></div>
+                <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-success">
+                  <span className="flex items-center gap-1.5"><IconCheck /> Paid (bKash Advance)</span>
+                  <span>- ৳২০০</span>
+                </div>
                 <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-brand-primary"><span>বাকি বিল (Cash on Delivery)</span><span>৳{balance.toLocaleString()}</span></div>
               </div>
 
               <div className="relative mb-5 rounded-[16px] border-[1.5px] border-dashed border-[#F59E0B] bg-[#FFFBEB] p-4">
-                <span className="mb-2.5 block font-body text-[10px] font-bold uppercase tracking-wide text-[#B45309]">📦 ডেলিভারি লেবেল (Shipping Label)</span>
-                <div className="flex gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="w-5 flex-shrink-0">👤</div><div>{name}</div></div>
-                <div className="flex gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="w-5 flex-shrink-0">📞</div><div>{phone}</div></div>
-                <div className="flex gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]">
-                  <div className="w-5 flex-shrink-0">📍</div>
+                <span className="mb-2.5 block font-body text-[10px] font-bold uppercase tracking-wide text-[#B45309]">ডেলিভারি লেবেল (Shipping Label)</span>
+                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="flex w-5 flex-shrink-0 justify-center"><IconUser /></div><div>{name}</div></div>
+                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]"><div className="flex w-5 flex-shrink-0 justify-center"><IconPhone /></div><div>{phone}</div></div>
+                <div className="flex items-start gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-[#78350F]">
+                  <div className="flex w-5 flex-shrink-0 justify-center pt-1"><IconPin /></div>
                   <div>{dist && dist !== 'ঢাকা' ? `${dist}, ${addr}` : addr}</div>
                 </div>
               </div>
 
               <div
-                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] bg-surface-muted px-3.5 py-3 transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-[#ef4444]' : 'border-border-base'}`}
+                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border-[1.5px] bg-surface-muted px-3.5 py-3 transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-red-500' : 'border-border-base'}`}
                 onClick={toggleTerms}
               >
-                <div className={`mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded border-2 transition-brand duration-brand ${termsChecked ? 'border-ink bg-ink' : 'border-border-base bg-white'}`}>
-                  {termsChecked && <span className="font-body text-[13px] font-extrabold leading-none text-white">✓</span>}
+                <div className={`mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded border-2 transition-brand duration-brand ${termsChecked ? 'border-brand-primary bg-brand-primary' : 'border-border-base bg-white'}`}>
+                  {termsChecked && <span className="text-white"><IconCheck /></span>}
                 </div>
                 <div className="font-body text-xs leading-[1.6] text-ink">
                   আমি ভাঙচুরের সকল{' '}
@@ -719,18 +870,19 @@ export default function CheckoutPage() {
               </div>
               {termsError && (
                 <div className={`${fieldErrClass} ml-3.5 mt-1.5`}>
-                  অর্ডার কনফার্ম করতে শর্তাবলী মেনে নেওয়া আবশ্যক
+                  <IconWarning />অর্ডার কনফার্ম করতে শর্তাবলী মেনে নেওয়া আবশ্যক
                 </div>
               )}
 
               <div className="flex gap-[9px] pt-3.5">
-                <button className={btnBackClass} onClick={() => goBack(2)}>← পেছনে</button>
-                <button className={btnNextClass} onClick={handleConfirmClick} disabled={submitting}>
-                  {submitting ? '⏳ প্রক্রিয়া হচ্ছে...' : '✅ অর্ডার কনফার্ম করুন'}
+                <button className={`${btnBackClass} flex items-center gap-1.5`} onClick={() => goBack(2)}><IconArrowLeft /> পেছনে</button>
+                <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={handleConfirmClick} disabled={submitting}>
+                  {submitting ? (<><IconSpinner /> প্রক্রিয়া হচ্ছে...</>) : 'অর্ডার কনফার্ম করুন'}
                 </button>
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
