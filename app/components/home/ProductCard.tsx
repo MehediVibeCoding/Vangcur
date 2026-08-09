@@ -104,7 +104,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
   return (
     <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-brand duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
-      <div className="relative aspect-[0.75] overflow-hidden rounded-[15px] bg-surface-muted">
+      <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
         <div className="absolute inset-0 cursor-pointer" onClick={openProduct}>
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </div>
