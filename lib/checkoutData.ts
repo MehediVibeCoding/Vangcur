@@ -38,10 +38,7 @@ export function getShipOptions(dist: string): ShipOption[] {
   if (dist) {
     return [{ key: 'bangladesh', name: 'সারা বাংলাদেশ', sub: 'Pathao Courier · Home Delivery 2-4 Days' }];
   }
-  return [
-    { key: 'dhaka', name: 'ঢাকা সিটি কর্পোরেশনের আওতাধীন', sub: 'Pathao Courier · Home Delivery 1-2 Days' },
-    { key: 'bangladesh', name: 'সারা বাংলাদেশ', sub: 'Pathao Courier · Home Delivery 2-4 Days' },
-  ];
+  return [];
 }
 
 export function shipPrice(shipKey: string, shipCfg: ShipConfig = DEFAULT_SHIP_CFG): number {
@@ -60,12 +57,12 @@ export function validatePhone(ph: string): boolean {
 }
 
 export function validateAddress(addr: string): boolean {
-  return addr.length >= 8 && /\s/.test(addr) && !/(.)\1{4,}/.test(addr);
+  return addr.length >= 8 && addr.length <= 300 && /\s/.test(addr) && !/(.)\1{4,}/.test(addr);
 }
 
 export function validateEmail(em: string): boolean {
   if (!em) return true;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em);
+  return em.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em);
 }
 
 export function validateTxnId(txn: string): boolean {
