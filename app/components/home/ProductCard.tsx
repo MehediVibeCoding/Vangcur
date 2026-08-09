@@ -137,31 +137,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </div>
 
-        {/* গ্র্যাজুয়েটেড ব্লার — নিচের দিকে বেশি ব্লার, উপরের দিকে আস্তে আস্তে ফেড হয়ে
-            ক্লিয়ার হয়ে যায় (কালো গ্র্যাডিয়েন্টের ঠিক একই শেপ অনুসরণ করে, শুধু blur) */}
-        <div
-          className="pointer-events-none absolute inset-0 backdrop-blur-[2px]"
-          style={{
-            WebkitMaskImage: 'linear-gradient(180deg, transparent 55%, #000 75%, #000 100%)',
-            maskImage: 'linear-gradient(180deg, transparent 55%, #000 75%, #000 100%)',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-0 backdrop-blur-[5px]"
-          style={{
-            WebkitMaskImage: 'linear-gradient(180deg, transparent 68%, #000 85%, #000 100%)',
-            maskImage: 'linear-gradient(180deg, transparent 68%, #000 85%, #000 100%)',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-0 backdrop-blur-[9px]"
-          style={{
-            WebkitMaskImage: 'linear-gradient(180deg, transparent 82%, #000 100%)',
-            maskImage: 'linear-gradient(180deg, transparent 82%, #000 100%)',
-          }}
-        />
-
-        {/* কালো টিন্ট — আগের মতোই অপরিবর্তিত, উপরের ৭০% স্বচ্ছ, নিচের ৩০% গাঢ় */}
+        {/* কালো টিন্ট — উপরের ৭০% স্বচ্ছ, নিচের ৩০% গাঢ় */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.94) 100%)' }}
@@ -172,17 +148,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         ) : p.badge && (
           <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary text-white" style={{ padding: 'clamp(3px,1.6cqw,6px) clamp(7px,3.8cqw,12px)', fontSize: 'clamp(9px,5cqw,11px)', fontWeight: 700 }}>
             {p.badge}
-          </div>
-        )}
-        {showDiscBadge && (
-          <div
-            className="absolute left-[4.5%] z-[2] rounded-full bg-[#FF6B00] text-white"
-            style={{
-              top: p.badge && !sold ? 'clamp(26px,16cqw,34px)' : '4.5%',
-              padding: 'clamp(3px,1.6cqw,6px) clamp(7px,3.8cqw,12px)', fontSize: 'clamp(9px,5cqw,11px)', fontWeight: 700,
-            }}
-          >
-            -{discPct}%
           </div>
         )}
 
@@ -208,6 +173,9 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <div className="flex items-center" style={{ gap: 'clamp(3px,1.6cqw,5px)', marginTop: 'clamp(2px,1.3cqw,4px)', fontSize: 'clamp(8.5px,5.3cqw,12px)' }}>
             <StarRating rating={p.rating || 4.5} />
             <span className="text-white/65" style={{ fontSize: 'clamp(8px,5cqw,11px)' }}>{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            {showDiscBadge && (
+              <span className="font-bold text-[#FF9142]" style={{ fontSize: 'clamp(8px,5cqw,11px)' }}>-{discPct}%</span>
+            )}
           </div>
           <div className="flex items-baseline" style={{ gap: 'clamp(4px,2.5cqw,7px)', marginTop: 'clamp(1px,1cqw,3px)' }}>
             <span className="font-extrabold text-white" style={{ fontSize: 'clamp(12px,7.6cqw,18px)' }}>৳{p.price.toLocaleString()}</span>
