@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts } from '@/lib/productData';
 import {
   getCurrentUser, saveCurrentUser, checkOAuthCallback, mergeGuestOrdersToUser, signInWithGoogle,
@@ -88,7 +87,6 @@ export default function CheckoutPage() {
   const submitOrderNowRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    lockBody();
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
@@ -123,7 +121,6 @@ export default function CheckoutPage() {
     }
     fetchBkashNumber(supabase).then(setBkashNum);
     fetchShipConfig(supabase).then(setShipCfg);
-    return () => unlockBody();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -205,6 +202,18 @@ export default function CheckoutPage() {
   }, [name, phone, dist, addr, email, cartItems]);
 
   const shipOptions = getShipOptions(dist);
+
+  useEffect(() => {
+    if (selectedShip && !shipOptions.some((opt) => opt.key === selectedShip)) {
+      setSelectedShip('');
+      try {
+        sessionStorage.removeItem('vc_ship');
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dist]);
 
   const selectShip = (key: string) => {
     setSelectedShip(key);
