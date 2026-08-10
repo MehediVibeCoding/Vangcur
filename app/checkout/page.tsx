@@ -620,13 +620,11 @@ export default function CheckoutPage() {
   return (
     <>
       <div className="min-h-dvh bg-[#DCEBFD]">
-        <div className="relative mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EAF3FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] bg-gradient-to-b from-[#3E7DEA] via-[#8FB7F7] to-[#EAF3FE]" />
-
-            <div className="relative z-10">
-              <div className="flex items-center justify-between gap-3 px-6 pb-3 pt-5">
+        <div className="relative mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
+            <div className="bg-[#87C2F9] px-6 pb-5 pt-6">
+              <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-primary shadow-sh1">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-primary shadow-sh1">
                     <IconLock />
                   </span>
                   <h2 className="font-body text-[17px] font-bold text-white">
@@ -653,52 +651,52 @@ export default function CheckoutPage() {
                   </button>
                 )}
               </div>
+            </div>
 
-              {step === 1 && cartItems.length === 1 && (
-                <div className="mx-6 mb-1 mt-4 rounded-[16px] bg-gradient-to-br from-info to-brand-primary px-4 py-3.5 shadow-sh2">
-                  <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-white/80">
-                    <IconBag /> YOUR ORDER
-                  </div>
-                  <div className="flex flex-col gap-[5px] text-white">
-                    {cartItems.map((i) => (
-                      <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
-                        <span>{i.name} × {i.qty}</span>
-                        <span className="flex-shrink-0">৳{(i.price * i.qty).toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
+            {step === 1 && cartItems.length === 1 && (
+              <div className="mx-6 mb-1 mt-4 rounded-[16px] bg-gradient-to-br from-info to-brand-primary px-4 py-3.5 shadow-sh2">
+                <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-white/80">
+                  <IconBag /> YOUR ORDER
                 </div>
-              )}
-
-              <div className="flex px-6 pb-2.5 pt-[13px]">
-                {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => {
-                  const isDone = step > s.n;
-                  const isActive = step === s.n;
-                  return (
-                    <div
-                      key={s.n}
-                      className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
-                    >
-                      <div
-                        className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
-                      >
-                        {isDone ? <IconCheck /> : s.n}
-                      </div>
-                      <div>{s.label}</div>
+                <div className="flex flex-col gap-[5px] text-white">
+                  {cartItems.map((i) => (
+                    <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
+                      <span>{i.name} × {i.qty}</span>
+                      <span className="flex-shrink-0">৳{(i.price * i.qty).toLocaleString()}</span>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-              <div className="px-6 pb-1.5 pt-1.5">
-                <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
+            )}
+
+            <div className="flex px-6 pb-2.5 pt-[13px]">
+              {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => {
+                const isDone = step > s.n;
+                const isActive = step === s.n;
+                return (
                   <div
-                    className="h-full rounded-full bg-info transition-[width] duration-300"
-                    style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
-                  />
-                </div>
-                <div className="text-right font-body text-[11px] font-semibold text-info">
-                  {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
-                </div>
+                    key={s.n}
+                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
+                  >
+                    <div
+                      className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
+                    >
+                      {isDone ? <IconCheck /> : s.n}
+                    </div>
+                    <div>{s.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-6 pb-1.5 pt-1.5">
+              <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
+                <div
+                  className="h-full rounded-full bg-info transition-[width] duration-300"
+                  style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
+                />
+              </div>
+              <div className="text-right font-body text-[11px] font-semibold text-info">
+                {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
               </div>
             </div>
 
