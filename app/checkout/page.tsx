@@ -118,8 +118,8 @@ function IconUser() {
 }
 function IconPhone() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6.5 3.5c.4 1.6.9 3 1.6 4.3.3.6.2 1.3-.3 1.8L6.4 11c1 2.6 3 4.6 5.6 5.6l1.4-1.4c.5-.5 1.2-.6 1.8-.3 1.3.7 2.7 1.2 4.3 1.6.9.2 1.5 1 1.4 1.9l-.3 2c-.1.9-.9 1.5-1.8 1.4C10.9 20.9 3.1 13.1 2.2 4.2c-.1-.9.5-1.7 1.4-1.8l2-.3c.9-.1 1.7.5 1.9 1.4Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   );
 }
@@ -133,10 +133,17 @@ function IconPin() {
 }
 function IconHome() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3.5 11.5 12 4l8.5 7.5" />
-      <path d="M6 10v9.5a1 1 0 001 1h10a1 1 0 001-1V10" />
-      <path d="M10 20.5v-5h4v5" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-4.5a.5.5 0 0 1-.5-.5V14h-6v6.5a.5.5 0 0 1-.5.5H4a1 1 0 0 1-1-1V9.5Z" />
+    </svg>
+  );
+}
+function IconInfo() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" className="flex-shrink-0">
+      <circle cx="12" cy="12" r="12" fill="currentColor" />
+      <rect x="10.85" y="10.3" width="2.3" height="7.3" rx="1.15" fill="white" />
+      <circle cx="12" cy="6.9" r="1.4" fill="white" />
     </svg>
   );
 }
@@ -612,84 +619,88 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="min-h-dvh bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
-        <div className="mx-auto min-h-dvh w-full max-w-[640px] bg-gradient-to-b from-brand-bg/20 to-white sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base sm:overflow-hidden">
-            <div className="flex items-center justify-between gap-3 rounded-b-[28px] bg-gradient-to-b from-brand-bg to-[#DCEBFD] px-6 py-4 shadow-sh2">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-info to-brand-primary text-white shadow-sh1">
-                  <IconLock />
-                </span>
-                <h2 className="font-body text-[17px] font-bold text-brand-primary">
-                  {step === 1 ? 'নিরাপদ চেকআউট' : step === 2 ? 'নিরাপদ পেমেন্ট' : 'নিরাপদ নিশ্চিতকরণ'}
-                </h2>
-              </div>
-              {step === 1 ? (
-                <button
-                  onClick={closeCheckout}
-                  aria-label="বন্ধ করুন"
-                  title="বন্ধ করুন"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/70 text-brand-primary shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white"
-                >
-                  <IconClose />
-                </button>
-              ) : (
-                <button
-                  onClick={() => goBack(step - 1)}
-                  aria-label="আগের ধাপে যান"
-                  title="আগের ধাপে যান"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/70 text-brand-primary shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white"
-                >
-                  <IconArrowLeft />
-                </button>
-              )}
-            </div>
+      <div className="min-h-dvh bg-[#DCEBFD]">
+        <div className="relative mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EAF3FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[300px] bg-gradient-to-b from-[#3E7DEA] via-[#8FB7F7] to-[#EAF3FE]" />
 
-            {step === 1 && cartItems.length === 1 && (
-              <div className="mx-6 mb-1 mt-4 rounded-[16px] bg-gradient-to-br from-info to-brand-primary px-4 py-3.5 shadow-sh2">
-                <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-white/80">
-                  <IconBag /> YOUR ORDER
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-3 px-6 pb-3 pt-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-primary shadow-sh1">
+                    <IconLock />
+                  </span>
+                  <h2 className="font-body text-[17px] font-bold text-white">
+                    {step === 1 ? 'নিরাপদ চেকআউট' : step === 2 ? 'নিরাপদ পেমেন্ট' : 'নিরাপদ নিশ্চিতকরণ'}
+                  </h2>
                 </div>
-                <div className="flex flex-col gap-[5px] text-white">
-                  {cartItems.map((i) => (
-                    <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
-                      <span>{i.name} × {i.qty}</span>
-                      <span className="flex-shrink-0">৳{(i.price * i.qty).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex px-6 pb-2.5 pt-[13px]">
-              {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => {
-                const isDone = step > s.n;
-                const isActive = step === s.n;
-                return (
-                  <div
-                    key={s.n}
-                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
+                {step === 1 ? (
+                  <button
+                    onClick={closeCheckout}
+                    aria-label="বন্ধ করুন"
+                    title="বন্ধ করুন"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
                   >
-                    <div
-                      className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
-                    >
-                      {isDone ? <IconCheck /> : s.n}
-                    </div>
-                    <div>{s.label}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="px-6 pb-1.5 pt-1.5">
-              <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
-                <div
-                  className="h-full rounded-full bg-info transition-[width] duration-300"
-                  style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
-                />
+                    <IconClose />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => goBack(step - 1)}
+                    aria-label="আগের ধাপে যান"
+                    title="আগের ধাপে যান"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                  >
+                    <IconArrowLeft />
+                  </button>
+                )}
               </div>
-              <div className="text-right font-body text-[11px] font-semibold text-info">
-                {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
+
+              {step === 1 && cartItems.length === 1 && (
+                <div className="mx-6 mb-1 mt-4 rounded-[16px] bg-gradient-to-br from-info to-brand-primary px-4 py-3.5 shadow-sh2">
+                  <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-white/80">
+                    <IconBag /> YOUR ORDER
+                  </div>
+                  <div className="flex flex-col gap-[5px] text-white">
+                    {cartItems.map((i) => (
+                      <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
+                        <span>{i.name} × {i.qty}</span>
+                        <span className="flex-shrink-0">৳{(i.price * i.qty).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex px-6 pb-2.5 pt-[13px]">
+                {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => {
+                  const isDone = step > s.n;
+                  const isActive = step === s.n;
+                  return (
+                    <div
+                      key={s.n}
+                      className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
+                    >
+                      <div
+                        className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
+                      >
+                        {isDone ? <IconCheck /> : s.n}
+                      </div>
+                      <div>{s.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="px-6 pb-1.5 pt-1.5">
+                <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
+                  <div
+                    className="h-full rounded-full bg-info transition-[width] duration-300"
+                    style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
+                  />
+                </div>
+                <div className="text-right font-body text-[11px] font-semibold text-info">
+                  {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
+                </div>
+              </div>
             </div>
-          </div>
 
           {step === 1 && (
             <div className="px-6 py-5">
@@ -853,8 +864,8 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 <p className="mb-0 font-body text-[11.5px] text-muted">Personal নম্বরে Send Money করুন (Payment নয়)</p>
-                <div className="mt-3.5 flex items-start gap-2 rounded-r-lg border-l-[3px] border-red-500 bg-red-50 px-[13px] py-2.5 font-body text-xs leading-[1.6] text-red-800">
-                  <IconWarning />
+                <div className="mt-3.5 flex items-start gap-2.5 rounded-r-lg border-l-[3px] border-info bg-info/10 px-[13px] py-2.5 font-body text-xs leading-[1.6] text-ink">
+                  <span className="mt-0.5 text-info"><IconInfo /></span>
                   <span>ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।</span>
                 </div>
               </div>
