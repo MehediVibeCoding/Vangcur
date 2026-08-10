@@ -1,44 +1,130 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import Navbar from '@/app/components/layout/Navbar';
 import Footer from '@/app/components/layout/Footer';
-import LoginModal from '@/app/components/auth/LoginModal';
-import AccountPage from '@/app/components/auth/AccountPage';
 import ProductCard from '@/app/components/home/ProductCard';
-import { searchProducts } from '@/lib/searchData';
+import { searchProducts, matchCategories } from '@/lib/searchData';
 import {
   DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
-  getWishlist, WISHLIST_EVENT,
 } from '@/lib/productData';
-import { getCart, cartCount, CART_EVENT } from '@/lib/cartData';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
-import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
-import type { CurrentUser, Product } from '@/types';
+import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
+import { sanitizeSvgHtml } from '@/lib/sanitize';
+import type { Category, Product } from '@/types';
 
 const PRODS_PER_PAGE = 20;
 const PRODS_AUTO_THRESHOLD = 2;
 
-type SortKey = 'relevance' | 'price-asc' | 'price-desc';
+// ---------- সরলীকৃত SRP-হেডার: শুধু হোম বাটন + সার্চ বক্স ----------
+// (হোমপেজের পুরো Navbar-এর একই sticky/glass/rounded-pill চেহারা ধরে রাখা
+// হয়েছে — শুধু ভিতরের আইটেম কমিয়ে হোম বাটন আর সার্চ বক্সে নামিয়ে আনা হয়েছে,
+// আগের ওয়েবসাইটের মতো।)
+function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v: string) => void }) {
+  const [value, setValue] = useState(query);
 
-function EmptyState({ query }: { query: string }) {
+  useEffect(() => { setValue(query); }, [query]);
+
   return (
-    <div className="flex flex-col items-center gap-3 rounded-[18px] bg-white px-5 py-16 text-center shadow-[0_4px_14px_rgba(0,88,199,.08)]">
+    <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
+      <nav className="navbar-glass relative z-[900] rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md">
+        <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-2.5 px-3 sm:gap-3 sm:px-5">
+          <Link
+            href="/"
+            aria-label="হোম পেইজে যান"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-sm transition-brand duration-brand hover:bg-brand-bg hover:text-brand-primary"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 11.5 12 4l8 7.5" />
+              <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
+            </svg>
+          </Link>
+
+          <div className="relative flex-1">
+            <svg className="pointer-events-none absolute left-[15px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              type="search"
+              value={value}
+              placeholder="পুনরায় সার্চ করুন..."
+              onChange={(e) => { setValue(e.target.value); onQueryChange(e.target.value); }}
+              autoComplete="off"
+              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none transition-brand duration-brand focus:border-brand-primary pl-10 ${value ? 'pr-9' : 'pr-4'}`}
+            />
+            {value && (
+              <button
+                type="button"
+                onClick={() => { setValue(''); onQueryChange(''); }}
+                aria-label="মুছুন"
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-surface-muted text-muted hover:bg-border-base"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+function CategoryIcon({ icon }: { icon?: string }) {
+  const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
+  if (isSvg) {
+    return (
+      <span
+        className="flex h-5 w-5 shrink-0 items-center justify-center text-brand-primary [&_svg]:!h-5 [&_svg]:!w-5"
+        dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
+      />
+    );
+  }
+  return <span className="text-base leading-none">{icon || '📂'}</span>;
+}
+
+// ---------- সার্চ কোয়েরির সাথে কোনো ক্যাটাগরি না মিললে (খুব ছোট কোয়েরি,
+// বাংলা কোয়েরি ইত্যাদি) পুরো সেকশন খালি না দেখিয়ে জনপ্রিয় কয়েকটা ক্যাটাগরি
+// ফলব্যাক হিসেবে দেখানো হয় — আগের ওয়েবসাইটেও ক্যাটাগরি অংশ কখনো খালি থাকত না। ----------
+function relatedCategories(cats: Category[], query: string): Category[] {
+  const matched = matchCategories(cats, query, 8);
+  if (matched.length) return matched;
+  return cats.filter((c) => c.id !== 'all').slice(0, 8);
+}
+
+function NoQueryState() {
+  return (
+    <div className="flex flex-col items-center gap-3 px-5 py-20 text-center">
       <div className="text-5xl">🔍</div>
-      {query ? (
-        <>
-          <p className="text-[15px] font-bold text-ink">&quot;{query}&quot; এর জন্য কোনো প্রোডাক্ট পাওয়া যায়নি</p>
-          <p className="max-w-sm text-[13px] text-muted">অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে সব প্রোডাক্ট দেখুন।</p>
-        </>
-      ) : (
-        <p className="text-[15px] font-bold text-ink">প্রোডাক্ট খুঁজতে উপরের সার্চ বক্সে লিখুন</p>
-      )}
+      <p className="text-[15px] font-bold text-ink">কিছু লিখে সার্চ করুন</p>
+      <div className="my-1 flex w-full max-w-xs items-center gap-3 text-[12px] text-muted">
+        <span className="h-px flex-1 bg-border-base" />
+        অথবা
+        <span className="h-px flex-1 bg-border-base" />
+      </div>
       <Link
         href="/"
-        className="mt-2 inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
+        className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 11.5 12 4l8 7.5" />
+          <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
+        </svg>
+        ওয়েবসাইটের হোম পেইজে ফিরে যান
+      </Link>
+    </div>
+  );
+}
+
+function ZeroResultsState({ query }: { query: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-[18px] bg-white px-5 py-14 text-center shadow-[0_4px_14px_rgba(0,88,199,.08)]">
+      <div className="text-5xl">🔍</div>
+      <p className="text-[15px] font-bold text-ink">&quot;{query}&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</p>
+      <p className="max-w-sm text-[13px] text-muted">অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে সব প্রোডাক্ট দেখুন।</p>
+      <Link
+        href="/"
+        className="mt-1 inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
       >
         সব প্রোডাক্ট দেখুন
       </Link>
@@ -47,47 +133,18 @@ function EmptyState({ query }: { query: string }) {
 }
 
 export default function SrpClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const query = (searchParams.get('q') || '').trim();
 
   const supabase = useRef(createClient()).current;
   const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
-  const [sortKey, setSortKey] = useState<SortKey>('relevance');
-
-  const [cartQty, setCartQty] = useState(() => (typeof window !== 'undefined' ? cartCount(getCart()) : 0));
-  const [wishQty, setWishQty] = useState(() => (typeof window !== 'undefined' ? getWishlist().length : 0));
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
-    typeof window !== 'undefined' ? getCurrentUser() : null
-  ));
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [activeCat, setActiveCat] = useState<string | null>(null);
 
   useEffect(() => {
-    const onCartChange = () => setCartQty(cartCount(getCart()));
-    window.addEventListener(CART_EVENT, onCartChange);
-    return () => window.removeEventListener(CART_EVENT, onCartChange);
-  }, []);
-
-  useEffect(() => {
-    const onWishChange = () => setWishQty(getWishlist().length);
-    window.addEventListener(WISHLIST_EVENT, onWishChange);
-    return () => window.removeEventListener(WISHLIST_EVENT, onWishChange);
-  }, []);
-
-  useEffect(() => {
-    const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());
-    window.addEventListener(AUTH_EVENT, onAuthChange);
-    return () => window.removeEventListener(AUTH_EVENT, onAuthChange);
-  }, []);
-
-  useEffect(() => {
-    const onOpenAccount = () => {
-      if (!getCurrentUser()) setLoginOpen(true);
-      else setAccountOpen(true);
-    };
-    window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-    return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-  }, []);
+    fetchCategories(supabase).then((c) => { if (c.length) setCats(c); });
+  }, [supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,12 +170,26 @@ export default function SrpClient() {
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
+  // হেডারের সার্চ বক্সে টাইপ করার সাথে সাথে (debounce দিয়ে) URL-এর ?q= আপডেট
+  // হয় — router.replace + scroll:false, তাই প্রতিটা অক্ষরে পেজ লাফিয়ে উপরে
+  // উঠে যায় না, আর history-তেও প্রতিটা কি-স্ট্রোক জমা হয় না।
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleQueryChange = useCallback((value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setActiveCat(null);
+      const url = value.trim() ? `/srp?q=${encodeURIComponent(value.trim())}` : '/srp';
+      router.replace(url, { scroll: false });
+    }, 300);
+  }, [router]);
+
+  const cats5 = useMemo(() => relatedCategories(cats, query), [cats, query]);
+
   const results = useMemo(() => {
     const matched = searchProducts(prods, query);
-    if (sortKey === 'price-asc') return [...matched].sort((a, b) => a.price - b.price);
-    if (sortKey === 'price-desc') return [...matched].sort((a, b) => b.price - a.price);
-    return matched;
-  }, [prods, query, sortKey]);
+    if (!activeCat) return matched;
+    return matched.filter((p) => p.cat === activeCat || p.cats?.includes(activeCat));
+  }, [prods, query, activeCat]);
 
   const [renderedCount, setRenderedCount] = useState(0);
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
@@ -191,80 +262,74 @@ export default function SrpClient() {
 
   return (
     <>
-      <Navbar
-        cartCount={cartQty}
-        wishCount={wishQty}
-        currentUser={currentUser}
-        onCartClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
-        onWishClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
-        onTrackClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
-        onLoginClick={() => setLoginOpen(true)}
-        onAccountClick={() => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT))}
-      />
+      <SrpHeader query={query} onQueryChange={handleQueryChange} />
 
-      <div className="mx-auto mb-11 mt-5 min-h-[40vh] max-w-[1300px] px-5">
-        {hasQuery && (
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-lg font-bold text-ink sm:text-xl">
-                &quot;<span className="text-brand-primary">{query}</span>&quot; এর জন্য ফলাফল
-              </h1>
-              <p className="mt-1 text-[13px] text-muted">{results.length}টি প্রোডাক্ট পাওয়া গেছে</p>
-            </div>
-            {results.length > 1 && (
-              <select
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as SortKey)}
-                className="rounded-[10px] border border-border-base bg-white px-3 py-2 text-[12.5px] font-semibold text-ink"
-              >
-                <option value="relevance">প্রাসঙ্গিকতা</option>
-                <option value="price-asc">দাম: কম থেকে বেশি</option>
-                <option value="price-desc">দাম: বেশি থেকে কম</option>
-              </select>
-            )}
-          </div>
-        )}
-
-        {results.length === 0 ? (
-          <EmptyState query={query} />
+      <div className="mx-auto mb-11 mt-3 min-h-[40vh] max-w-[1300px] px-5">
+        {!hasQuery ? (
+          <NoQueryState />
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {visibleItems.map((p, i) => (
-                <ProductCard key={p.id} prod={p} isFirst={i === 0} />
-              ))}
+            <div className="mb-4">
+              <h2 className="mb-2.5 text-[13px] font-bold text-ink">ক্যাটাগরি</h2>
+              <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {cats5.map((c) => {
+                  const active = activeCat === c.id;
+                  return (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => setActiveCat((prev) => (prev === c.id ? null : c.id))}
+                      className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-[13px] font-semibold transition-brand duration-brand ${
+                        active
+                          ? 'border-brand-primary bg-brand-primary text-white'
+                          : 'border-border-base bg-white text-ink hover:bg-surface-muted'
+                      }`}
+                    >
+                      <CategoryIcon icon={c.icon} />
+                      {c.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
-              {showSpinner && (
-                <div className="flex items-center gap-2 text-[13px] text-muted">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                  </svg>
-                  লোড হচ্ছে...
+
+            <p className="mb-4 text-[13px] text-muted">{results.length}টি পণ্য পাওয়া গেছে</p>
+
+            {results.length === 0 ? (
+              <ZeroResultsState query={query} />
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {visibleItems.map((p, i) => (
+                    <ProductCard key={p.id} prod={p} isFirst={i === 0} />
+                  ))}
                 </div>
-              )}
-              {showLoadMoreBtn && (
-                <button
-                  onClick={handleLoadMoreClick}
-                  className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-8 py-[13px] font-body text-sm font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,.13)]"
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                  আরো প্রোডাক্ট দেখুন
-                </button>
-              )}
-            </div>
+                <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
+                  {showSpinner && (
+                    <div className="flex items-center gap-2 text-[13px] text-muted">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                      </svg>
+                      লোড হচ্ছে...
+                    </div>
+                  )}
+                  {showLoadMoreBtn && (
+                    <button
+                      onClick={handleLoadMoreClick}
+                      className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-8 py-[13px] font-body text-sm font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,.13)]"
+                    >
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                      আরো প্রোডাক্ট দেখুন
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
 
       <Footer />
-      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      <AccountPage
-        isOpen={accountOpen}
-        onClose={() => setAccountOpen(false)}
-        currentUser={currentUser}
-        onAddAccount={() => setLoginOpen(true)}
-      />
     </>
   );
 }
