@@ -60,56 +60,57 @@ const btnNextClass =
 
 function IconLock() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 018 0v4" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="11" width="14" height="9" rx="2.5" />
+      <path d="M8 11V8a4 4 0 018 0v3" />
+      <circle cx="12" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 function IconClose() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
       <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   );
 }
 function IconWarning() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-      <path d="M12 3.5 21.5 20h-19L12 3.5Z" />
-      <path d="M12 10v4M12 17h.01" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+      <path d="M10.3 4.2 2.7 18a1.7 1.7 0 0 0 1.5 2.5h15.6a1.7 1.7 0 0 0 1.5-2.5L13.7 4.2a1.7 1.7 0 0 0-3.4 0Z" />
+      <path d="M12 9.75v4.25M12 17.25h.01" />
     </svg>
   );
 }
 function IconCheck() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 12.5l5 5L20 6" />
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12.5 9.5 17.5 19.5 6" />
     </svg>
   );
 }
 function IconChevronDown({ open }: { open: boolean }) {
   return (
     <svg
-      width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"
+      width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
       className="transition-transform duration-300"
       style={open ? { transform: 'rotate(180deg)' } : undefined}
     >
-      <path d="M6 9l6 6 6-6" />
+      <path d="M5.5 8.5 12 15l6.5-6.5" />
     </svg>
   );
 }
 function IconSpinner() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" className="animate-spin">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
-      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.75" opacity="0.22" />
+      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
     </svg>
   );
 }
 function IconUser() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4" />
       <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
     </svg>
@@ -117,14 +118,14 @@ function IconUser() {
 }
 function IconPhone() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6.5 3.5c.4 1.6.9 3 1.6 4.3.3.6.2 1.3-.3 1.8L6.4 11c1 2.6 3 4.6 5.6 5.6l1.4-1.4c.5-.5 1.2-.6 1.8-.3 1.3.7 2.7 1.2 4.3 1.6.9.2 1.5 1 1.4 1.9l-.3 2c-.1.9-.9 1.5-1.8 1.4C10.9 20.9 3.1 13.1 2.2 4.2c-.1-.9.5-1.7 1.4-1.8l2-.3c.9-.1 1.7.5 1.9 1.4Z" />
     </svg>
   );
 }
 function IconPin() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 21s7-6.1 7-11.5A7 7 0 005 9.5C5 14.9 12 21 12 21Z" />
       <circle cx="12" cy="9.5" r="2.3" />
     </svg>
@@ -132,23 +133,24 @@ function IconPin() {
 }
 function IconHome() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 11.5 12 4l8 7.5" />
-      <path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 11.5 12 4l8.5 7.5" />
+      <path d="M6 10v9.5a1 1 0 001 1h10a1 1 0 001-1V10" />
+      <path d="M10 20.5v-5h4v5" />
     </svg>
   );
 }
 function IconMail() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2.5" y="5" width="19" height="14" rx="2.2" />
-      <path d="M3 6.5l9 6.5 9-6.5" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.75" y="5.25" width="18.5" height="13.5" rx="2.4" />
+      <path d="M3.5 6.75 12 13l8.5-6.25" />
     </svg>
   );
 }
 function IconBag() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 8h12l-1 12.5a1.5 1.5 0 01-1.5 1.5h-7a1.5 1.5 0 01-1.5-1.5L6 8Z" />
       <path d="M9 8V6a3 3 0 016 0v2" />
     </svg>
@@ -156,7 +158,7 @@ function IconBag() {
 }
 function IconDoc() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2.5h9l4 4v15h-13v-19Z" />
       <path d="M14.5 2.5V7h4M9 12h6M9 15.5h6M9 8.5h2" />
     </svg>
@@ -164,23 +166,24 @@ function IconDoc() {
 }
 function IconCard() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2.5" y="5.5" width="19" height="13" rx="2.2" />
       <path d="M2.5 9.5h19" />
+      <path d="M6 15h4" />
     </svg>
   );
 }
 function IconArrowRight() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14M13 6l6 6-6 6" />
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12h15M13 5.5 20 12l-7 6.5" />
     </svg>
   );
 }
 function IconArrowLeft() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 12H5M11 6l-6 6 6 6" />
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19.5 12h-15M11 5.5 4 12l7 6.5" />
     </svg>
   );
 }
@@ -609,14 +612,14 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="min-h-dvh bg-[#F6F9FF]">
-        <div className="mx-auto w-full max-w-[640px] bg-white sm:my-6 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base sm:overflow-hidden">
-            <div className="flex items-center justify-between gap-3 rounded-b-[28px] bg-gradient-to-b from-brand-bg to-info px-6 py-4 shadow-sh2">
+      <div className="min-h-dvh bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
+        <div className="mx-auto min-h-dvh w-full max-w-[640px] bg-gradient-to-b from-brand-bg/20 to-white sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base sm:overflow-hidden">
+            <div className="flex items-center justify-between gap-3 rounded-b-[28px] bg-gradient-to-b from-brand-bg to-[#DCEBFD] px-6 py-4 shadow-sh2">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-info">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-info to-brand-primary text-white shadow-sh1">
                   <IconLock />
                 </span>
-                <h2 className="font-body text-[17px] font-bold text-white">
+                <h2 className="font-body text-[17px] font-bold text-brand-primary">
                   {step === 1 ? 'নিরাপদ চেকআউট' : step === 2 ? 'নিরাপদ পেমেন্ট' : 'নিরাপদ নিশ্চিতকরণ'}
                 </h2>
               </div>
@@ -625,7 +628,7 @@ export default function CheckoutPage() {
                   onClick={closeCheckout}
                   aria-label="বন্ধ করুন"
                   title="বন্ধ করুন"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white transition-brand duration-brand hover:bg-white/30"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/70 text-brand-primary shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white"
                 >
                   <IconClose />
                 </button>
@@ -634,7 +637,7 @@ export default function CheckoutPage() {
                   onClick={() => goBack(step - 1)}
                   aria-label="আগের ধাপে যান"
                   title="আগের ধাপে যান"
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white transition-brand duration-brand hover:bg-white/30"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/70 text-brand-primary shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white"
                 >
                   <IconArrowLeft />
                 </button>
@@ -658,19 +661,23 @@ export default function CheckoutPage() {
             )}
 
             <div className="flex px-6 pb-2.5 pt-[13px]">
-              {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => (
-                <div
-                  key={s.n}
-                  className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${step === s.n ? 'text-ink' : 'text-muted'} ${step > s.n ? 'after:bg-info' : 'after:bg-info/15'}`}
-                >
+              {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => {
+                const isDone = step > s.n;
+                const isActive = step === s.n;
+                return (
                   <div
-                    className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${step === s.n ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
+                    key={s.n}
+                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
                   >
-                    {s.n}
+                    <div
+                      className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
+                    >
+                      {isDone ? <IconCheck /> : s.n}
+                    </div>
+                    <div>{s.label}</div>
                   </div>
-                  <div>{s.label}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="px-6 pb-1.5 pt-1.5">
               <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
@@ -802,20 +809,20 @@ export default function CheckoutPage() {
                   এডভান্স পেমেন্ট <span className="font-body text-base font-extrabold text-info">৳২০০</span>
                 </div>
                 <p className="mb-3.5 font-body text-[13px] leading-[1.6] text-muted">অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।</p>
-                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border-[1.5px] border-[#FDA4AF] bg-gradient-to-br from-[#FFF5F5] to-[#FFE4E6] p-4">
+                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border-[1.5px] border-info/25 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex flex-shrink-0 items-center justify-center rounded-[10px] border-[1.5px] border-white/60 bg-white/40 p-1">
+                      <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-white/70 bg-white/60 p-1.5">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-logo-icon_beuxfl.png" alt="bKash" className="h-11 w-11 flex-shrink-0 object-contain" />
+                        <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-logo-icon_beuxfl.png" alt="bKash" className="h-9 w-9 flex-shrink-0 object-contain" />
                       </div>
                       <div>
-                        <div className="mb-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">bKash Send Money</div>
-                        <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-[#E63946]">{bkashNum}</div>
+                        <div className="mb-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-muted">bKash Send Money</div>
+                        <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-brand-primary">{bkashNum}</div>
                       </div>
                     </div>
                     <button
-                      className="flex items-center gap-1.5 rounded-full border-[1.5px] border-[rgba(225,29,72,0.22)] bg-[rgba(225,29,72,0.08)] px-4 py-2 font-body text-xs font-bold text-[#E11D48] transition-colors duration-200 hover:bg-[#E11D48] hover:text-white"
+                      className="flex items-center gap-1.5 rounded-full border-[1.5px] border-info/25 bg-info/10 px-4 py-2 font-body text-xs font-bold text-brand-primary transition-colors duration-200 hover:bg-info hover:text-white"
                       onClick={copyBkash}
                       style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
                     >
@@ -827,7 +834,7 @@ export default function CheckoutPage() {
                       {copyLabel}
                     </button>
                   </div>
-                  <button className="mt-2.5 flex items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-[#D1D5DB] bg-transparent px-3.5 py-2.5 font-body text-[12.5px] text-[#6B7280] transition-colors duration-200 hover:bg-[#F9FAFB]" onClick={() => setQrOpen((v) => !v)}>
+                  <button className="mt-2.5 flex items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-info/30 bg-white/40 px-3.5 py-2.5 font-body text-[12.5px] text-brand-primary transition-colors duration-200 hover:bg-white/70" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
                     <span>{qrOpen ? 'QR কোড বন্ধ করুন' : 'QR কোড দিয়ে পেমেন্ট করুন'}</span>
                     <IconChevronDown open={qrOpen} />
