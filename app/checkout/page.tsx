@@ -60,14 +60,14 @@ const btnNextClass =
 
 function IconLock() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5V9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-.5V6.5A4.5 4.5 0 0 0 12 2Zm0 2.1A2.4 2.4 0 0 1 14.4 6.5V9H9.6V6.5A2.4 2.4 0 0 1 12 4.1ZM12 13.4a1.5 1.5 0 0 1 .82 2.76l-.17 2.24a.65.65 0 0 1-1.3 0l-.17-2.24A1.5 1.5 0 0 1 12 13.4Z" />
     </svg>
   );
 }
 function IconClose() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
       <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   );
@@ -179,7 +179,7 @@ function IconArrowRight() {
 }
 function IconArrowLeft() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M19.5 12h-15M11 5.5 4 12l7 6.5" />
     </svg>
   );
@@ -318,6 +318,14 @@ export default function CheckoutPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const submitOrderNowRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const prevBg = document.body.style.background;
+    document.body.style.background = '#EFF6FE';
+    return () => {
+      document.body.style.background = prevBg;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -710,13 +718,13 @@ export default function CheckoutPage() {
       <div className="relative min-h-dvh overflow-hidden bg-[#EFF6FE]">
         <DesktopSideDecor />
         <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
-            <div className="bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-6 pb-5 pt-6 shadow-[0_10px_26px_-10px_rgba(37,99,235,0.45)]">
+            <div className="rounded-t-[20px] bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-5 pb-3.5 pt-4 shadow-[0_10px_26px_-10px_rgba(37,99,235,0.45)]">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-primary shadow-sh1">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#5CB0FA] shadow-sh1">
                     <IconLock />
                   </span>
-                  <h2 className="font-body text-[17px] font-bold text-white">
+                  <h2 className="font-body text-[15px] font-bold text-white">
                     {step === 1 ? 'নিরাপদ চেকআউট' : step === 2 ? 'নিরাপদ পেমেন্ট' : 'নিরাপদ নিশ্চিতকরণ'}
                   </h2>
                 </div>
@@ -725,7 +733,7 @@ export default function CheckoutPage() {
                     onClick={closeCheckout}
                     aria-label="বন্ধ করুন"
                     title="বন্ধ করুন"
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
                   >
                     <IconClose />
                   </button>
@@ -734,7 +742,7 @@ export default function CheckoutPage() {
                     onClick={() => goBack(step - 1)}
                     aria-label="আগের ধাপে যান"
                     title="আগের ধাপে যান"
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
                   >
                     <IconArrowLeft />
                   </button>
