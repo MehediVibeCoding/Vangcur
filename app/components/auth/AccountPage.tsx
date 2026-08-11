@@ -140,7 +140,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
   const closeNameEdit = () => { setNameEditOpen(false); setNameEditErr(''); };
   const saveNameEdit = async () => {
     const nm = nameEditValue.trim();
-    if (!validateName(nm)) { setNameEditErr('অন্তত ২ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'); return; }
+    if (!validateName(nm)) { setNameEditErr('অন্তত ৩ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'); return; }
     if (currentUser.id) {
       const limit = await checkNameChangeLimit(supabase, currentUser.id);
       if (!limit.allowed) { setNameEditErr('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'); return; }

@@ -44,7 +44,7 @@ export function sanitizePlainName(value: string): string {
 
 export function validateName(name: string): boolean {
   const trimmed = name.trim();
-  return trimmed.length >= 2 && trimmed.length <= MAX_NAME_LEN && PLAIN_NAME_REGEX.test(trimmed);
+  return trimmed.length >= 3 && trimmed.length <= MAX_NAME_LEN && PLAIN_NAME_REGEX.test(trimmed);
 }
 
 export function sanitizeEmailInput(value: string): string {

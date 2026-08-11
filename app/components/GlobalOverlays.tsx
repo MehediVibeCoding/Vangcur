@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import CartSidebar from './cart/CartSidebar';
 import WishlistDrawer from './cart/WishlistDrawer';
 import TrackOrderModal from './cart/TrackOrderModal';
@@ -16,6 +17,10 @@ export default function GlobalOverlays() {
   const [cartOpen, setCartOpen] = useState(false);
   const [wishOpen, setWishOpen] = useState(false);
   const [trackOpen, setTrackOpen] = useState(false);
+  const pathname = usePathname();
+  // চেকআউট পেজে কোনো ফ্লোটিং কার্ট/উইশলিস্ট বাটন দেখানো উচিত না — এখানে সেগুলো শুধু
+  // বিভ্রান্তিকর, কারণ চেকআউট নিজেই একটা ফোকাসড ফ্লো।
+  const hideFloatingBadges = pathname?.startsWith('/checkout') ?? false;
 
   useEffect(() => {
     const onOpenCart = () => setCartOpen(true);
@@ -37,8 +42,12 @@ export default function GlobalOverlays() {
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <WishlistDrawer isOpen={wishOpen} onClose={() => setWishOpen(false)} />
       <TrackOrderModal isOpen={trackOpen} onClose={() => setTrackOpen(false)} />
-      <FloatCartBadge />
-      <FloatWishBadge />
+      {!hideFloatingBadges && (
+        <>
+          <FloatCartBadge />
+          <FloatWishBadge />
+        </>
+      )}
       <QuickOrderBridge />
       <WaitingOverlay />
       <BgConfirmPopup />

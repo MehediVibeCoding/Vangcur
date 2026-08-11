@@ -387,7 +387,7 @@ export default function LoginModal({
     setREmailErr('');
     setRPassErr(false);
 
-    if (!validateName(nm)) { setRErr(`২-${MAX_NAME_LEN} অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)`); return; }
+    if (!validateName(nm)) { setRErr(`৩-${MAX_NAME_LEN} অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)`); return; }
     if (!ph || !validatePhone(ph)) { setRErr('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)'); return; }
     if (!em || !validateEmail(em)) { setREmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
     const strength = await checkPasswordStrength(pw);

@@ -480,7 +480,7 @@ export default function CheckoutPage() {
       return;
     }
     const nextErrors: CheckoutErrors = {};
-    if (!name.trim()) nextErrors.eN = 'নাম দিন';
+    if (!validateName(name)) nextErrors.eN = name.trim() ? 'নাম কমপক্ষে ৩ অক্ষরের হতে হবে' : 'নাম দিন';
     if (!validatePhone(phone.trim())) nextErrors.eP = 'দয়া করে সঠিক মোবাইল নম্বর দিন';
     if (!dist) nextErrors.eD = 'জেলা সিলেক্ট করুন';
     if (!validateAddress(addr.trim())) nextErrors.eA = 'দয়া করে বিস্তারিত ঠিকানা দিন (যেমন: রোড বা বাসা নম্বর)';
@@ -773,10 +773,10 @@ export default function CheckoutPage() {
                 return (
                   <div
                     key={s.n}
-                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
+                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-3 after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
                   >
                     <div
-                      className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
+                      className={`relative z-10 mx-auto mb-[3px] flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-body text-[11px] font-bold transition-all duration-300 ${isDone || isActive ? 'border-info bg-info text-white' : 'border-info/50 bg-white text-info'}`}
                     >
                       {isDone ? <IconCheck /> : s.n}
                     </div>
@@ -840,12 +840,21 @@ export default function CheckoutPage() {
                 <label className={fieldLabelClass}>জেলা</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPin /></span>
-                  <select className={fieldInputClass(!!errors.eD)} value={dist} onChange={(e) => setDist(e.target.value)}>
+                  <select
+                    className={`${fieldInputClass(!!errors.eD)} appearance-none pr-9`}
+                    value={dist}
+                    onChange={(e) => setDist(e.target.value)}
+                  >
                     <option value="">জেলা সিলেক্ট করুন</option>
                     {DISTRICTS.map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
+                  <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </span>
                 </div>
                 {errors.eD && <div className={fieldErrClass}><IconWarning />{errors.eD}</div>}
               </div>
