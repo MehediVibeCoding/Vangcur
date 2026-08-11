@@ -33,8 +33,7 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-// Navbar-এ যে হার্ট (উইশলিস্ট) আইকনটা ব্যবহার হয়েছে, ঠিক সেই একই SVG পাথ —
-// ইমোজির বদলে আসল ভেক্টর আইকন, তাই ডিভাইস/ফন্ট যাই হোক শেপ সবসময় নিখুঁত গোল থাকবে
+// Navbar-এর সেই একই হার্ট SVG পাথ — ইমোজির বদলে vector আইকন, তাই সব ডিভাইসে নিখুঁত গোল
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg width="52%" height="52%" viewBox="0 0 24 24" fill={filled ? '#FF5A6E' : 'none'} stroke={filled ? '#FF5A6E' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -125,14 +124,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
   return (
     <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-brand duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
-      {/*
-        container-type: inline-size — এই প্যানেলটাকে নিজেই একটা "container" বানানো
-        হলো, যাতে ভিতরের সবকিছুর সাইজ (নিচে cqw এককে লেখা) এই প্যানেলের নিজের
-        width অনুযায়ী স্কেল করে — পুরো ভিউপোর্ট/স্ক্রিন width অনুযায়ী না। এতে
-        ছোট স্ক্রিনের ফোনেও (যেখানে কার্ড সরু হয়ে যায়) টেক্সট/বাটন ব্লকটা কার্ডের
-        ঠিক ৩০%-ই থাকে — বড় স্ক্রিনের মতো একই অনুপাত, কোনো device-ভেদে হেরফের হয় না।
-      */}
-      <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted" style={{ containerType: 'inline-size' }}>
+      <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
         <div className="absolute inset-0 cursor-pointer" onClick={openProduct}>
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </div>
@@ -144,48 +136,41 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted text-white" style={{ padding: 'clamp(3px,1.6cqw,6px) clamp(7px,3.8cqw,12px)', fontSize: 'clamp(9px,5cqw,11px)', fontWeight: 700 }}>Sold Out</div>
+          <div className="absolute left-2 top-2 z-[2] rounded-full bg-muted px-2.5 py-[3px] text-[10px] font-bold text-white">Sold Out</div>
         ) : p.badge && (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary text-white" style={{ padding: 'clamp(3px,1.6cqw,6px) clamp(7px,3.8cqw,12px)', fontSize: 'clamp(9px,5cqw,11px)', fontWeight: 700 }}>
+          <div className="absolute left-2 top-2 z-[2] animate-badge-hot-glow rounded-full bg-brand-primary px-2.5 py-[3px] text-[10px] font-bold text-white">
             {p.badge}
           </div>
         )}
 
         <button
           ref={wishBtnRef}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] aspect-square shrink-0 rounded-full backdrop-blur-md transition-brand duration-brand hover:scale-[1.15] ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/30'} ${heartBeat ? 'animate-heartbeat' : ''}`}
-          style={{ width: 'clamp(26px,16cqw,34px)', color: wished ? undefined : '#fff' }}
+          className={`absolute right-2 top-2 z-[3] flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-brand duration-brand hover:scale-[1.15] max-[380px]:h-7 max-[380px]:w-7 ${wished ? 'bg-white/95' : 'border border-white/55 bg-white/40'} ${heartBeat ? 'animate-heartbeat' : ''}`}
+          style={{ color: wished ? undefined : '#fff' }}
           onClick={handleWish}
           onAnimationEnd={() => setHeartBeat(false)}
           title="Wishlist"
         >
-          <span className="flex h-full w-full items-center justify-center"><HeartIcon filled={wished} /></span>
+          <HeartIcon filled={wished} />
         </button>
 
-        <div className="absolute inset-x-0 bottom-0 z-[2]" style={{ padding: 'clamp(6px,4.2cqw,13px)' }}>
-          <div
-            className="line-clamp-1 cursor-pointer font-extrabold leading-tight text-white"
-            style={{ fontSize: 'clamp(10px,6.3cqw,15px)' }}
-            onClick={openProduct}
-          >
+        <div className="absolute inset-x-0 bottom-0 z-[2] p-2.5 max-[380px]:p-2">
+          <div className="line-clamp-1 cursor-pointer text-[12.5px] font-extrabold leading-tight text-white max-[380px]:text-[11px]" onClick={openProduct}>
             {p.name}
           </div>
-          <div className="flex items-center" style={{ gap: 'clamp(3px,1.6cqw,5px)', marginTop: 'clamp(2px,1.3cqw,4px)', fontSize: 'clamp(8.5px,5.3cqw,12px)' }}>
+          <div className="mt-1 flex items-center gap-1 text-[10.5px] max-[380px]:text-[9.5px]">
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/65" style={{ fontSize: 'clamp(8px,5cqw,11px)' }}>{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
-            {showDiscBadge && (
-              <span className="font-bold text-[#FF9142]" style={{ fontSize: 'clamp(8px,5cqw,11px)' }}>-{discPct}%</span>
-            )}
+            <span className="text-white/65">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            {showDiscBadge && <span className="font-bold text-[#FF9142]">-{discPct}%</span>}
           </div>
-          <div className="flex items-baseline" style={{ gap: 'clamp(4px,2.5cqw,7px)', marginTop: 'clamp(1px,1cqw,3px)' }}>
-            <span className="font-extrabold text-white" style={{ fontSize: 'clamp(12px,7.6cqw,18px)' }}>৳{p.price.toLocaleString()}</span>
-            <span className="text-white/50 line-through" style={{ fontSize: 'clamp(9px,5.5cqw,13px)' }}>৳{p.old.toLocaleString()}</span>
+          <div className="mt-0.5 flex items-baseline gap-1.5">
+            <span className="text-[14.5px] font-extrabold text-white max-[380px]:text-[13px]">৳{p.price.toLocaleString()}</span>
+            <span className="text-[10.5px] text-white/50 line-through max-[380px]:text-[9.5px]">৳{p.old.toLocaleString()}</span>
           </div>
-          <div className="flex w-full items-center" style={{ gap: 'clamp(4px,2.5cqw,7px)', marginTop: 'clamp(4px,2.6cqw,8px)' }}>
+          <div className="mt-2 flex w-full items-center gap-1.5 max-[380px]:mt-1.5">
             {sold ? (
               <button
-                className="relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body font-bold text-white transition-brand duration-brand"
-                style={{ height: 'clamp(28px,18cqw,40px)', fontSize: 'clamp(9px,5.8cqw,13px)' }}
+                className="relative flex h-9 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body text-[11px] font-bold text-white transition-brand duration-brand max-[380px]:h-8 max-[380px]:text-[10px]"
                 onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                   new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
                 ))}
@@ -195,20 +180,15 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             ) : (
               <>
                 <button
-                  className="box-border flex aspect-square shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/15 text-white backdrop-blur-md transition-brand duration-brand hover:bg-white/30"
-                  style={{ height: 'clamp(28px,18cqw,40px)' }}
+                  className="box-border flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/55 bg-white/25 text-white transition-brand duration-brand hover:bg-white/40 max-[380px]:h-8 max-[380px]:w-8"
                   title="কার্টে যোগ করুন"
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
                 >
                   <CartIcon />
                 </button>
                 <button
-                  className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-primary backdrop-blur-md transition-brand duration-brand hover:brightness-95"
-                  style={{
-                    height: 'clamp(28px,18cqw,40px)',
-                    fontSize: 'clamp(9px,5.8cqw,13px)',
-                    background: 'linear-gradient(115deg, rgba(255,255,255,.92) 0%, rgba(195,222,252,.85) 38%, rgba(255,255,255,.9) 64%, rgba(0,94,252,.35) 100%)',
-                  }}
+                  className="relative flex h-9 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[11px] font-bold text-brand-primary transition-brand duration-brand hover:brightness-95 max-[380px]:h-8 max-[380px]:text-[10px]"
+                  style={{ background: 'linear-gradient(115deg, rgba(255,255,255,.92) 0%, rgba(195,222,252,.85) 38%, rgba(255,255,255,.9) 64%, rgba(0,94,252,.35) 100%)' }}
                   onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                     new CustomEvent(QUICK_ORDER_EVENT, { detail: { id: p.id } }),
                   ))}
