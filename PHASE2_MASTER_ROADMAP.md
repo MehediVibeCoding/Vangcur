@@ -243,7 +243,7 @@ app/(policies)/refund-policy/page.tsx
 - `@supabase/ssr` setup + `lib/supabase/client.ts` (httpOnly cookie logic) — Navbar/Footer এটা ব্যবহার করছে
 - Vercel-এ প্রথম build test — ✅ successful
 
-| B | Component TS+Tailwind conversion | 🟡 আংশিক — নিচে বিস্তারিত |
+| B | Component TS+Tailwind conversion | ✅ সম্পূর্ণ — নিচে বিস্তারিত |
 ### Phase B বিস্তারিত status (২০২৬-০৮-০৬ পর্যন্ত — GitHub repo সরাসরি audit করে যাচাই করা)
 
 **ক্রম অনুযায়ী অগ্রগতি:**
@@ -275,19 +275,27 @@ app/(policies)/refund-policy/page.tsx
 - `LoginModal.tsx`, `AccountPage.tsx`, `PasswordStrengthMeter.tsx`, `app/reset-password/` (page + client)
 - Phase D-এর কিছু কাজ auth-এর সাথেই আগেভাগে হয়ে গেছে: `TurnstileWidget.tsx`, `lib/turnstile.ts`, `app/api/verify-turnstile/route.ts`, `lib/rateLimit.ts`, `lib/sanitize.ts`, `lib/security.ts` (validation/sanitization + password-reset rate limit + Cloudflare Turnstile ইতিমধ্যে LoginModal-এ ব্যবহার হচ্ছে)
 
-**✅ Checkout flow — এই session-এ সম্পূর্ণ করা হলো, build-tested:**
-- `app/checkout/page.tsx` — **[NEW FILE]** — ৩-ধাপ ফর্ম (তথ্য → bKash পেমেন্ট → নিশ্চিত), guest pre-confirm login flow, Google OAuth return-trip resume, rate-limit + authoritative price re-verification সহ order insert
-- `app/components/checkout/PreConfirmLoginModal.tsx` — **[NEW FILE]**
-- `app/components/checkout/PolicyModal.tsx` — **[NEW FILE]** — সম্পূর্ণ নীতিমালা/শর্তাবলী কপি সহ
-- `lib/checkoutData.ts` — **[NEW FILE]** — জেলা লিস্ট, শিপিং লজিক, ভ্যালিডেশন, bKash/শিপিং কনফিগ fetch
-- `lib/orderMapping.ts`, `lib/orderStatus.ts` — **[NEW FILE]** — Supabase row mapping, status poll + realtime subscription
-- `lib/draftRecovery.ts`, `lib/leadCapture.ts` — **[NEW FILE]** — abandoned-checkout draft (recovery toast এর জন্য) + Leads sheet capture
-- `types/index.ts` — **[REPLACE]** — `Order` টাইপে `subtotal`/`shippingCost`/`shipping`/`advancePaid`/`payment` যোগ হয়েছে
-- ⚠️ **এখনো বাকি (checkout-এরই অংশ, roadmap আইটেমে "ইত্যাদি" হিসেবে গণ্য):** `WaitingPage.js` (অর্ডারের পর realtime approve/reject waiting screen), `OrderTracking.js`, `QuickOrderModal.js`, `BgConfirmPopup.js`, `PostOrderInfo.js`, `QuickOrderBridge.js` — এখন `submitOrderNow()` সফল হলে সরাসরি হোমপেজে redirect করে, কোনো waiting/tracking overlay নেই এখনো
+**✅ Checkout flow — সম্পূর্ণ, build-tested (ওয়েটিং/ট্র্যাকিং overlay সহ):**
+- `app/checkout/page.tsx` — ৩-ধাপ ফর্ম (তথ্য → bKash পেমেন্ট → নিশ্চিত), guest pre-confirm login flow, Google OAuth return-trip resume, rate-limit + authoritative price re-verification সহ order insert, এবং `lib/draftRecovery.ts`-এর persistent draft থেকে ফর্ম রিস্টোর
+- `app/components/checkout/PreConfirmLoginModal.tsx`, `PolicyModal.tsx`
+- `app/components/checkout/WaitingOverlay.tsx`, `BgConfirmPopup.tsx`, `PostOrderInfoModal.tsx`, `QuickOrderBridge.tsx` — অর্ডার submit-এর পর realtime approve/reject waiting screen + কনফার্মেশন ফ্লো, `app/components/GlobalOverlays.tsx`-এ মাউন্ট করা (আগের নোটে এগুলো "বাকি" লেখা ছিল, ভুলবশত tracker আপডেট হয়নি — আসলে আগেই তৈরি হয়ে গিয়েছিল)
+- `lib/checkoutData.ts` — জেলা লিস্ট, শিপিং লজিক, ভ্যালিডেশন, bKash/শিপিং কনফিগ fetch
+- `lib/orderMapping.ts`, `lib/orderStatus.ts` — Supabase row mapping, status poll + realtime subscription
+- `lib/draftRecovery.ts`, `lib/leadCapture.ts` — abandoned-checkout draft + Leads sheet capture
+- `types/index.ts` — `Order` টাইপে `subtotal`/`shippingCost`/`shipping`/`advancePaid`/`payment` যোগ হয়েছে
+
+**✅ বাকি সব modal — এই session-এ সম্পূর্ণ করা হলো, build-tested:**
+- `app/components/modals/MembershipModal.tsx` — `lib/membershipData.ts`-এর tier/crown ডেটা ব্যবহার করে, `OPEN_MEMBERSHIP_EVENT` শোনে
+- `app/components/modals/InvoiceModal.tsx` — `lib/orderStatus.ts`-এর `fetchFullOrder` দিয়ে অর্ডার আনে, `GENERATE_INVOICE_EVENT` শোনে, প্রিন্ট বাটন সহ
+- `app/components/modals/StockNotifyModal.tsx` — `STOCK_NOTIFY_EVENT` শোনে, `vc_sn_<id>` localStorage key-তে সেভ করে (AccountPage-এর stock-notification list এই একই key ব্যবহার করে)
+- `app/components/modals/BackInStockToast.tsx` — সেভ করা notification-গুলো লাইভ প্রোডাক্ট স্টকের সাথে মিলিয়ে toast দেখায়
+- `app/components/modals/OfferPopup.tsx` — `old > price` থাকা প্রোডাক্টগুলো ডিসকাউন্ট% অনুযায়ী সাজিয়ে দেখায়, Footer-এর `OPEN_OFFER_PAGE_EVENT` শোনে
+- `app/components/modals/RecoveryToast.tsx` — persistent draft থাকলে (checkout পেজ ছাড়া অন্য যেকোনো পেজে) resume করার toast দেখায়
+- সবগুলো `app/components/GlobalOverlays.tsx`-এ মাউন্ট করা হয়েছে
 
 **⏳ এরপর — পরবর্তী ধাপ:**
-1. **WaitingPage + OrderTracking + QuickOrderModal** (checkout flow-এর বাকি অংশ) — সবচেয়ে জরুরি, কারণ checkout এখন "sabmit করলে কী হয়" অংশটা অসম্পূর্ণ রেখে দিচ্ছে
-2. বাকি সব modal — OfferPopup, MembershipModal, InvoiceModal, StockNotifyModal, RecoveryToast, BackInStockToast (এগুলোর কোনোটাই এখনো `GlobalOverlays.tsx`-এ মাউন্ট নেই)
+1. Phase C — Zustand state migration
+2. Phase D-এর বাকি অংশ — Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ
 
 **🧹 ছোট cleanup নোট:** repo root-এ (app/components/home/-এর বাইরে) একটা stray `CustomerGallery.tsx` কপি আছে — এটা সম্ভবত ভুল জায়গায় upload হয়ে গেছে, আসল ফাইলটা `app/components/home/CustomerGallery.tsx`-এ ঠিকই আছে। মুছে দেওয়া নিরাপদ (build এটাকে ব্যবহার করছে না)।
 

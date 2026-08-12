@@ -13,6 +13,12 @@ import QuickOrderBridge from './checkout/QuickOrderBridge';
 import WaitingOverlay from './checkout/WaitingOverlay';
 import BgConfirmPopup from './checkout/BgConfirmPopup';
 import PostOrderInfoModal from './checkout/PostOrderInfoModal';
+import StockNotifyModal from './modals/StockNotifyModal';
+import BackInStockToast from './modals/BackInStockToast';
+import MembershipModal from './modals/MembershipModal';
+import InvoiceModal from './modals/InvoiceModal';
+import OfferPopup from './modals/OfferPopup';
+import RecoveryToast from './modals/RecoveryToast';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 
 export default function GlobalOverlays() {
@@ -56,6 +62,12 @@ export default function GlobalOverlays() {
       <WaitingOverlay />
       <BgConfirmPopup />
       <PostOrderInfoModal />
+      <StockNotifyModal />
+      <BackInStockToast />
+      <MembershipModal />
+      <InvoiceModal />
+      <OfferPopup />
+      <RecoveryToast />
     </>
   );
 }

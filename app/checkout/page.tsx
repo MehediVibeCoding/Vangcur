@@ -28,7 +28,7 @@ import {
   sanitizePlainName, validateName, MAX_NAME_LEN,
   sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN,
 } from '@/lib/security';
-import { saveDraft, clearDraft } from '@/lib/draftRecovery';
+import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
 import type { CartItem, CurrentUser } from '@/types';
 
@@ -256,6 +256,16 @@ export default function CheckoutPage() {
         if (draft.email) setEmail(draft.email);
         if (draft.txn) setTxn(draft.txn);
         if (draft.l4) setLast4(draft.l4);
+      } else {
+        const saved = getDraft();
+        if (saved) {
+          if (saved.name) setName(saved.name);
+          if (saved.phone) setPhone(saved.phone);
+          if (saved.dist) setDist(saved.dist);
+          if (saved.addr) setAddr(saved.addr);
+          if (saved.email) setEmail(saved.email);
+          if (saved.ship) setSelectedShip(saved.ship);
+        }
       }
       const savedShip = sessionStorage.getItem('vc_ship');
       if (savedShip) setSelectedShip(savedShip);
