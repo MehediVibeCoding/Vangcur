@@ -43,11 +43,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  const title = `${p.name} - ৳${Number(p.price).toLocaleString()} | Vangcur`;
+  const title = `${p.name} - ৳${Number(p.price).toLocaleString('en-US')} | Vangcur`;
   const rawDesc = p.desc_text || p.desc || '';
   const description = rawDesc
     ? (rawDesc.length > 160 ? rawDesc.slice(0, 157) + '...' : rawDesc)
-    : `${p.name} মাত্র ৳${Number(p.price).toLocaleString()} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`;
+    : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`;
   const imgs = Array.isArray(p.imgs) ? p.imgs : [];
   const firstImg = imgs.find((im): im is string => typeof im === 'string' && im.startsWith('http'));
   const canonicalSlug = `${makeSlug(p.name)}-${p.id}`;

@@ -170,12 +170,12 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                     {(order.items || []).map((i, idx) => (
                       <div key={idx} className="flex items-center justify-between font-body text-[12.5px] text-ink">
                         <span className="min-w-0 flex-1 truncate">{i.name}</span>
-                        <span className="ml-2 whitespace-nowrap font-semibold">{i.qty} × ৳{i.price.toLocaleString()}</span>
+                        <span className="ml-2 whitespace-nowrap font-semibold">{i.qty} × ৳{i.price.toLocaleString('en-US')}</span>
                       </div>
                     ))}
                   </div>
                   <div className="mt-2 flex items-center justify-between border-t border-border-base pt-2 font-body text-[13px] font-bold text-ink">
-                    <span>মোট (শিপিং সহ):</span><span>৳{(order.total || 0).toLocaleString()}</span>
+                    <span>মোট (শিপিং সহ):</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
                   </div>
                 </div>
               </>

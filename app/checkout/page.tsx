@@ -60,22 +60,25 @@ const btnNextClass =
 
 function IconLock() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5V9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-.5V6.5A4.5 4.5 0 0 0 12 2Zm0 2.1A2.4 2.4 0 0 1 14.4 6.5V9H9.6V6.5A2.4 2.4 0 0 1 12 4.1ZM12 13.4a1.5 1.5 0 0 1 .82 2.76l-.17 2.24a.65.65 0 0 1-1.3 0l-.17-2.24A1.5 1.5 0 0 1 12 13.4Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="11" width="14" height="9" rx="2.5" />
+      <path d="M8 11V8a4 4 0 018 0v3" />
+      <circle cx="12" cy="15.5" r="1.1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 function IconClose() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
       <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   );
 }
 function IconWarning() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="flex-shrink-0">
-      <path d="M13.24 3.87 21.4 18a2 2 0 0 1-1.73 3H4.32a2 2 0 0 1-1.73-3L10.76 3.87a2 2 0 0 1 3.48 0ZM12 8.75a.95.95 0 0 0-.95.95v4a.95.95 0 0 0 1.9 0v-4a.95.95 0 0 0-.95-.95Zm0 8.4a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+      <path d="M10.3 4.2 2.7 18a1.7 1.7 0 0 0 1.5 2.5h15.6a1.7 1.7 0 0 0 1.5-2.5L13.7 4.2a1.7 1.7 0 0 0-3.4 0Z" />
+      <path d="M12 9.75v4.25M12 17.25h.01" />
     </svg>
   );
 }
@@ -107,29 +110,31 @@ function IconSpinner() {
 }
 function IconUser() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 12.75a5.25 5.25 0 1 0 0-10.5 5.25 5.25 0 0 0 0 10.5Zm0 2.15c-4.55 0-8.75 2.28-8.75 5.7a1.35 1.35 0 0 0 1.35 1.35h14.8a1.35 1.35 0 0 0 1.35-1.35c0-3.42-4.2-5.7-8.75-5.7Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
     </svg>
   );
 }
 function IconPhone() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M7.1 2.5h2.32a1.3 1.3 0 0 1 1.26.98l.74 2.92a1.5 1.5 0 0 1-.4 1.44L9.4 9.46a1 1 0 0 0-.18 1.15 13.9 13.9 0 0 0 6.17 6.17 1 1 0 0 0 1.15-.18l1.62-1.62a1.5 1.5 0 0 1 1.44-.4l2.92.74a1.3 1.3 0 0 1 .98 1.26v2.32a1.65 1.65 0 0 1-1.8 1.65C10.99 19.71 4.29 13.01 3.45 4.3A1.65 1.65 0 0 1 5.1 2.5H7.1Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   );
 }
 function IconPin() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 22s7.5-6.6 7.5-12.2A7.5 7.5 0 1 0 4.5 9.8C4.5 15.4 12 22 12 22Zm0-9.15a2.85 2.85 0 1 1 0-5.7 2.85 2.85 0 0 1 0 5.7Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21s7-6.1 7-11.5A7 7 0 005 9.5C5 14.9 12 21 12 21Z" />
+      <circle cx="12" cy="9.5" r="2.3" />
     </svg>
   );
 }
 function IconHome() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2.7 2.35 10.55a1 1 0 0 0 .63 1.78h1.27v8.17a1 1 0 0 0 1 1H9.5a.5.5 0 0 0 .5-.5V15h4v6a.5.5 0 0 0 .5.5h4.25a1 1 0 0 0 1-1v-8.17h1.27a1 1 0 0 0 .63-1.78L12 2.7Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-4.5a.5.5 0 0 1-.5-.5V14h-6v6.5a.5.5 0 0 1-.5.5H4a1 1 0 0 1-1-1V9.5Z" />
     </svg>
   );
 }
@@ -144,29 +149,34 @@ function IconInfo() {
 }
 function IconMail() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M3.5 5.5A1.5 1.5 0 0 1 5 4h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-13Zm2.34.5 6.16 4.82L18.16 6H5.84ZM19 8.16l-6.36 4.98a1 1 0 0 1-1.28 0L5 8.16V18.5h14V8.16Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.75" y="5.25" width="18.5" height="13.5" rx="2.4" />
+      <path d="M3.5 6.75 12 13l8.5-6.25" />
     </svg>
   );
 }
 function IconBag() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M9.75 7V6a2.25 2.25 0 0 1 4.5 0v1H18a1 1 0 0 1 1 .93l.85 12.5a1.5 1.5 0 0 1-1.5 1.57H5.65a1.5 1.5 0 0 1-1.5-1.57L5 7.93A1 1 0 0 1 6 7h3.75Zm1.5-1v1h1.5V6a.75.75 0 0 0-1.5 0Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8h12l-1 12.5a1.5 1.5 0 01-1.5 1.5h-7a1.5 1.5 0 01-1.5-1.5L6 8Z" />
+      <path d="M9 8V6a3 3 0 016 0v2" />
     </svg>
   );
 }
 function IconDoc() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6.5 2.5A1.5 1.5 0 0 0 5 4v16a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 20V8.5L13 2.5H6.5Zm6.5.94L18.06 8.5H14a1 1 0 0 1-1-1V3.44ZM8 12.75h8v1.5H8v-1.5Zm0 3.5h8v1.5H8v-1.5Zm0-7h4v1.5H8v-1.5Z" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2.5h9l4 4v15h-13v-19Z" />
+      <path d="M14.5 2.5V7h4M9 12h6M9 15.5h6M9 8.5h2" />
     </svg>
   );
 }
 function IconCard() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M3.5 5.5A2 2 0 0 1 5.5 3.5h13a2 2 0 0 1 2 2V8h-19V5.5Zm0 5.25V18a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7.25h-17ZM6 14h4.5v1.75H6V14Z" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.2" />
+      <path d="M2.5 9.5h19" />
+      <path d="M6 15h4" />
     </svg>
   );
 }
@@ -179,107 +189,9 @@ function IconArrowRight() {
 }
 function IconArrowLeft() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M19.5 12h-15M11 5.5 4 12l7 6.5" />
     </svg>
-  );
-}
-
-function IconGlyphHeadphones() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 14.5a8 8 0 0 1 16 0" />
-      <rect x="2.7" y="14.5" width="4.3" height="7" rx="1.6" />
-      <rect x="17" y="14.5" width="4.3" height="7" rx="1.6" />
-    </svg>
-  );
-}
-function IconGlyphRemote() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="7.5" y="2" width="9" height="20" rx="3.2" />
-      <circle cx="12" cy="7" r="1.15" fill="currentColor" stroke="none" />
-      <path d="M9.3 12h5.4M9.3 15.6h5.4" />
-    </svg>
-  );
-}
-function IconGlyphSpeaker() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="2" width="14" height="20" rx="3.2" />
-      <circle cx="12" cy="8.3" r="3.1" />
-      <circle cx="12" cy="17" r="1.4" />
-    </svg>
-  );
-}
-function IconGlyphWatch() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="7" y="6.2" width="10" height="11.6" rx="3" />
-      <path d="M9.2 6.2V3.6h5.6v2.6M9.2 17.8v2.6h5.6v-2.6" />
-    </svg>
-  );
-}
-function IconGlyphBulb() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 18.2h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.1 1 1.85v.75h5v-.75c0-.75.4-1.4 1-1.85A6 6 0 0 0 12 3Z" />
-    </svg>
-  );
-}
-function IconGlyphGamepad() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6.7 8h10.6A3.8 3.8 0 0 1 21 12.4l-.75 4.4a2.6 2.6 0 0 1-4.7 1.05L14.6 16H9.4l-.95 1.85a2.6 2.6 0 0 1-4.7-1.05L3 12.4A3.8 3.8 0 0 1 6.7 8Z" />
-      <path d="M7 11.3v3M5.5 12.8h3" />
-      <circle cx="16" cy="11.5" r="0.75" fill="currentColor" stroke="none" />
-      <circle cx="18" cy="13.5" r="0.75" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-const decorIcons = [IconGlyphHeadphones, IconGlyphRemote, IconGlyphSpeaker, IconGlyphWatch, IconGlyphBulb, IconGlyphGamepad];
-
-function DesktopSideDecor() {
-  const left: { top: string; offset: string; size: number; rotate: number; icon: number }[] = [
-    { top: '10%', offset: '9%', size: 30, rotate: -14, icon: 0 },
-    { top: '32%', offset: '4%', size: 24, rotate: 10, icon: 2 },
-    { top: '55%', offset: '10%', size: 28, rotate: -8, icon: 4 },
-    { top: '78%', offset: '5%', size: 26, rotate: 14, icon: 5 },
-  ];
-  const right: { top: string; offset: string; size: number; rotate: number; icon: number }[] = [
-    { top: '14%', offset: '7%', size: 26, rotate: 12, icon: 1 },
-    { top: '36%', offset: '11%', size: 30, rotate: -10, icon: 3 },
-    { top: '60%', offset: '5%', size: 24, rotate: 8, icon: 0 },
-    { top: '82%', offset: '9%', size: 28, rotate: -12, icon: 2 },
-  ];
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">
-      {left.map((d, i) => {
-        const Icon = decorIcons[d.icon];
-        return (
-          <div
-            key={`l${i}`}
-            className="absolute text-brand-primary/[0.09]"
-            style={{ top: d.top, left: d.offset, width: d.size, height: d.size, transform: `rotate(${d.rotate}deg)` }}
-          >
-            <Icon />
-          </div>
-        );
-      })}
-      {right.map((d, i) => {
-        const Icon = decorIcons[d.icon];
-        return (
-          <div
-            key={`r${i}`}
-            className="absolute text-brand-primary/[0.09]"
-            style={{ top: d.top, right: d.offset, width: d.size, height: d.size, transform: `rotate(${d.rotate}deg)` }}
-          >
-            <Icon />
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
@@ -318,14 +230,6 @@ export default function CheckoutPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const submitOrderNowRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    const prevBg = document.body.style.background;
-    document.body.style.background = '#EFF6FE';
-    return () => {
-      document.body.style.background = prevBg;
-    };
-  }, []);
 
   useEffect(() => {
     try {
@@ -480,7 +384,7 @@ export default function CheckoutPage() {
       return;
     }
     const nextErrors: CheckoutErrors = {};
-    if (!validateName(name)) nextErrors.eN = name.trim() ? 'নাম কমপক্ষে ৩ অক্ষরের হতে হবে' : 'নাম দিন';
+    if (!name.trim()) nextErrors.eN = 'নাম দিন';
     if (!validatePhone(phone.trim())) nextErrors.eP = 'দয়া করে সঠিক মোবাইল নম্বর দিন';
     if (!dist) nextErrors.eD = 'জেলা সিলেক্ট করুন';
     if (!validateAddress(addr.trim())) nextErrors.eA = 'দয়া করে বিস্তারিত ঠিকানা দিন (যেমন: রোড বা বাসা নম্বর)';
@@ -715,16 +619,15 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="relative min-h-dvh overflow-hidden bg-[#EFF6FE]">
-        <DesktopSideDecor />
-        <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
-            <div className="rounded-t-[20px] bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-5 pb-3.5 pt-4 shadow-[0_10px_26px_-10px_rgba(37,99,235,0.45)]">
+      <div className="min-h-dvh bg-[#DCEBFD]">
+        <div className="relative mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
+            <div className="bg-[#87C2F9] px-6 pb-5 pt-6">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#5CB0FA] shadow-sh1">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-brand-primary shadow-sh1">
                     <IconLock />
                   </span>
-                  <h2 className="font-body text-[15px] font-bold text-white">
+                  <h2 className="font-body text-[17px] font-bold text-white">
                     {step === 1 ? 'নিরাপদ চেকআউট' : step === 2 ? 'নিরাপদ পেমেন্ট' : 'নিরাপদ নিশ্চিতকরণ'}
                   </h2>
                 </div>
@@ -733,7 +636,7 @@ export default function CheckoutPage() {
                     onClick={closeCheckout}
                     aria-label="বন্ধ করুন"
                     title="বন্ধ করুন"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
                   >
                     <IconClose />
                   </button>
@@ -742,7 +645,7 @@ export default function CheckoutPage() {
                     onClick={() => goBack(step - 1)}
                     aria-label="আগের ধাপে যান"
                     title="আগের ধাপে যান"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
                   >
                     <IconArrowLeft />
                   </button>
@@ -751,15 +654,15 @@ export default function CheckoutPage() {
             </div>
 
             {step === 1 && cartItems.length === 1 && (
-              <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/70 bg-gradient-to-br from-white/80 via-brand-bg/55 to-white/50 px-4 py-3.5 shadow-sh2 backdrop-blur-md">
-                <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-brand-primary/70">
+              <div className="mx-6 mb-1 mt-4 rounded-[16px] bg-gradient-to-br from-info to-brand-primary px-4 py-3.5 shadow-sh2">
+                <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-white/80">
                   <IconBag /> YOUR ORDER
                 </div>
-                <div className="flex flex-col gap-[5px] text-ink">
+                <div className="flex flex-col gap-[5px] text-white">
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
                       <span>{i.name} × {i.qty}</span>
-                      <span className="flex-shrink-0 text-brand-primary">৳{(i.price * i.qty).toLocaleString()}</span>
+                      <span className="flex-shrink-0">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                     </div>
                   ))}
                 </div>
@@ -773,10 +676,10 @@ export default function CheckoutPage() {
                 return (
                   <div
                     key={s.n}
-                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-3 after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
+                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-[10px] after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
                   >
                     <div
-                      className={`relative z-10 mx-auto mb-[3px] flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-body text-[11px] font-bold transition-all duration-300 ${isDone || isActive ? 'border-info bg-info text-white' : 'border-info/50 bg-white text-info'}`}
+                      className={`relative z-10 mx-auto mb-[3px] flex items-center justify-center rounded-full border-[1.5px] font-body font-bold transition-all duration-300 ${isDone || isActive ? 'h-6 w-6 border-info bg-info text-[11px] text-white' : 'h-5 w-5 border-info/50 bg-white text-[10px] text-info'}`}
                     >
                       {isDone ? <IconCheck /> : s.n}
                     </div>
@@ -840,21 +743,12 @@ export default function CheckoutPage() {
                 <label className={fieldLabelClass}>জেলা</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPin /></span>
-                  <select
-                    className={`${fieldInputClass(!!errors.eD)} appearance-none pr-9`}
-                    value={dist}
-                    onChange={(e) => setDist(e.target.value)}
-                  >
+                  <select className={fieldInputClass(!!errors.eD)} value={dist} onChange={(e) => setDist(e.target.value)}>
                     <option value="">জেলা সিলেক্ট করুন</option>
                     {DISTRICTS.map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
-                  <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </span>
                 </div>
                 {errors.eD && <div className={fieldErrClass}><IconWarning />{errors.eD}</div>}
               </div>
@@ -1007,19 +901,19 @@ export default function CheckoutPage() {
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/80">
                       <span>{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
-                      <span>৳{(i.price * i.qty).toLocaleString()}</span>
+                      <span>৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>Subtotal</span><span>৳{sub.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>Subtotal</span><span>৳{sub.toLocaleString('en-US')}</span></div>
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>ডেলিভারি চার্জ (Shipping)</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
-                <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>সর্বমোট বিল (Total)</span><span>৳{total.toLocaleString()}</span></div>
+                <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>সর্বমোট বিল (Total)</span><span>৳{total.toLocaleString('en-US')}</span></div>
                 <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-ink">
                   <span className="flex items-center gap-1.5 text-info"><IconCheck /> Paid (bKash Advance)</span>
                   <span>- ৳২০০</span>
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>বাকি বিল (Cash on Delivery)</span><span className="text-info">৳{balance.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>বাকি বিল (Cash on Delivery)</span><span className="text-info">৳{balance.toLocaleString('en-US')}</span></div>
 
                 <div className="my-4 h-px bg-border-base" />
 

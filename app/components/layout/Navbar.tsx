@@ -257,7 +257,7 @@ function SearchDropdown({
                     {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-primary">স্টক শেষ</span></>}
                   </div>
                 </div>
-                <div className="shrink-0 text-[13px] font-bold">৳{Number(p.price).toLocaleString()}</div>
+                <div className="shrink-0 text-[13px] font-bold">৳{Number(p.price).toLocaleString('en-US')}</div>
               </Link>
             ))}
             {catResults.length > 0 && (

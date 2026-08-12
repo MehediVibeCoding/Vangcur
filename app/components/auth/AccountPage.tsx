@@ -140,7 +140,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
   const closeNameEdit = () => { setNameEditOpen(false); setNameEditErr(''); };
   const saveNameEdit = async () => {
     const nm = nameEditValue.trim();
-    if (!validateName(nm)) { setNameEditErr('অন্তত ৩ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'); return; }
+    if (!validateName(nm)) { setNameEditErr('অন্তত ২ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'); return; }
     if (currentUser.id) {
       const limit = await checkNameChangeLimit(supabase, currentUser.id);
       if (!limit.allowed) { setNameEditErr('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'); return; }
@@ -507,7 +507,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                           <div className="min-w-0 flex-1 truncate font-body text-xs font-semibold text-ink">
                             {prodName.length > 32 ? `${prodName.slice(0, 32)}...` : prodName}
                           </div>
-                          <div className="whitespace-nowrap font-body text-xs font-bold text-ink">৳{tot.toLocaleString()}</div>
+                          <div className="whitespace-nowrap font-body text-xs font-bold text-ink">৳{tot.toLocaleString('en-US')}</div>
                         </div>
                         <div className="mt-2 flex gap-1.5">
                           <button onClick={() => handleDeleteDraft(draft.id, draft._sbId)} className="flex-1 rounded-[8px] border border-border-base py-1.5 font-body text-[11px] font-semibold text-muted hover:bg-surface-muted">🗑️ সরান</button>
@@ -574,12 +574,12 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                             <div key={idx} className="flex items-center gap-2.5">
                               <ItemThumb imgVal={(i.imgs || ['📦'])[0]} />
                               <div className="min-w-0 flex-1 truncate font-body text-[12.5px] text-ink">{i.name}</div>
-                              <div className="whitespace-nowrap font-body text-[12.5px] font-semibold text-ink">{i.qty} × ৳{i.price.toLocaleString()}</div>
+                              <div className="whitespace-nowrap font-body text-[12.5px] font-semibold text-ink">{i.qty} × ৳{i.price.toLocaleString('en-US')}</div>
                             </div>
                           ))}
                         </div>
                         <div className="mt-3 flex items-center justify-between border-t border-border-base pt-3">
-                          <div className="font-body text-[13px] font-bold text-ink">মোট: ৳{(o.total || 0).toLocaleString()} (শিপিং সহ)</div>
+                          <div className="font-body text-[13px] font-bold text-ink">মোট: ৳{(o.total || 0).toLocaleString('en-US')} (শিপিং সহ)</div>
                           <button onClick={() => openInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 ইনভয়েস</button>
                         </div>
                       </div>

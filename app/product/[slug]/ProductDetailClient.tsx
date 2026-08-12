@@ -269,7 +269,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
     if (!prod) return '';
     const pageUrl = window.location.href.split('?')[0].split('#')[0];
     const productRef = `${pageUrl}#prod-${prod.id}`;
-    return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString()}\n🔢 পরিমাণ: ${qty}\n🛡️ ওয়ারেন্টি: ${prod.warranty}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
+    return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 পরিমাণ: ${qty}\n🛡️ ওয়ারেন্টি: ${prod.warranty}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
   }
   const waOrder = () => { if (prod) window.open(`${waLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
   const msgOrder = () => { if (prod && msgLink) window.open(`${msgLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
@@ -400,8 +400,8 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         <div>
           <h1 className="mb-2 font-display text-xl font-bold leading-[1.3] text-ink">{prod.name}</h1>
           <div className="mb-2.5 flex items-baseline gap-2.5">
-            <span className="text-2xl font-bold text-ink">৳{prod.price.toLocaleString()}</span>
-            <span className="text-sm text-muted line-through">৳{prod.old.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-ink">৳{prod.price.toLocaleString('en-US')}</span>
+            <span className="text-sm text-muted line-through">৳{prod.old.toLocaleString('en-US')}</span>
           </div>
           <div className="mb-4 flex items-center gap-1.5 text-[13px] text-muted">
             🛡️ <span>{prod.warranty}</span>
@@ -445,7 +445,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             </button>
             {qty > 1 && (
               <div className="rounded-[9px] border-[1.5px] border-border-base bg-surface-muted px-3 py-1.5 text-[13px] font-bold text-ink">
-                মোট: ৳{(prod.price * qty).toLocaleString()}
+                মোট: ৳{(prod.price * qty).toLocaleString('en-US')}
               </div>
             )}
             <div className="ml-auto flex gap-2">
@@ -629,7 +629,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             })()}
           </div>
           <div className="shrink-0 whitespace-nowrap text-[15px] font-bold text-ink">
-            ৳{(prod.price * qty).toLocaleString()}
+            ৳{(prod.price * qty).toLocaleString('en-US')}
             {qty > 1 && <span className="ml-1 text-[11px] font-normal text-muted">×{qty}</span>}
           </div>
           {sold ? (
