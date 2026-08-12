@@ -39,8 +39,17 @@ export function subscribeContactSettings(
   supabase: SupabaseClient,
   onChange: (contact: ContactSettings) => void,
 ): RealtimeChannel {
+  // Unique per-call channel name — this function is called from BOTH the
+  // site-wide FloatContactButtons (mounted in every page's layout) and
+  // ProductDetailClient (mounted on top of it on product pages). A fixed
+  // channel name meant both calls fought over the same Realtime topic:
+  // the 2nd .subscribe() on an already-subscribed topic throws "cannot add
+  // postgres_changes callbacks ... after subscribe()", which crashed the
+  // whole product page. Matches the same fix already used in
+  // subscribeCustomProducts() (lib/productData.ts) for this exact class of bug.
+  const uniqueName = `float-btns-contact-watch-${Math.random().toString(36).slice(2, 9)}`;
   return supabase
-    .channel('float-btns-contact-watch')
+    .channel(uniqueName)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_contact' },
