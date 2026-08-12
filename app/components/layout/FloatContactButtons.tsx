@@ -11,10 +11,21 @@ import {
 } from '@/lib/floatButtonsData';
 
 export default function FloatContactButtons() {
-  const supabase = useMemo(() => createClient(), []);
+  // If Supabase env vars are missing/misconfigured, createClient() throws.
+  // This component renders on every page, so an unguarded throw here used to
+  // take down the entire app. Fall back to the default WA/Messenger links
+  // instead of crashing.
+  const supabase = useMemo(() => {
+    try {
+      return createClient();
+    } catch {
+      return null;
+    }
+  }, []);
   const [contact, setContact] = useState<ContactSettings | null>(null);
 
   useEffect(() => {
+    if (!supabase) return;
     let cancelled = false;
     (async () => {
       const settings = await fetchContactSettings(supabase);

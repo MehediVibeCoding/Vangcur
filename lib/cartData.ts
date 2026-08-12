@@ -28,6 +28,10 @@ export function saveCart(cart: CartItem[]): void {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 function saveCartDebounced(cart: CartItem[]): void {
+  // Notify listeners (floating cart badge, header count, etc.) immediately —
+  // only the actual localStorage write is debounced, so rapid +/- clicks
+  // don't hammer storage while the UI still stays in sync every time.
+  window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: { cart } }));
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => persist(cart), 300);
 }
