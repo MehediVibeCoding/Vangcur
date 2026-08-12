@@ -262,6 +262,15 @@ app/(policies)/refund-policy/page.tsx
 - `CartSidebar.tsx`, `WishlistDrawer.tsx`, `FloatCartBadge.tsx`, `FloatWishBadge.tsx`, `TrackOrderModal.tsx`
 - `app/components/GlobalOverlays.tsx`-এ সব মাউন্ট করা আছে, `layout.tsx`-এ `<GlobalOverlays />` মাউন্ট করা আছে (আগের একটা bug ছিল, ঠিক হয়ে গেছে)
 
+**✅ Global floating buttons (WhatsApp, Messenger, Back-to-top, persistent Wishlist) — এই session-এ সম্পূর্ণ করা হলো, `tsc --noEmit` clean:**
+- `app/components/layout/FloatContactButtons.tsx` — **[NEW FILE]** — bottom-left, WhatsApp (নিচে) + Messenger (উপরে, `bottom-[86px]`), `lib/floatButtonsData.ts`-এর আগে থেকে বানানো কিন্তু কোথাও ব্যবহার না-হওয়া `computeWaLink`/`computeMsgLink`/`fetchContactSettings`/`subscribeContactSettings` এখন এখানে কাজে লাগছে
+- `app/components/layout/BackToTopButton.tsx` — **[NEW FILE]** — bottom-right, cart badge-এর ঠিক উপরে (`bottom-[86px] right-5`), ৪০০px স্ক্রল করার পর দেখা যায়
+- `app/components/cart/FloatWishBadge.tsx` — **[REPLACE]** — আগে শুধু wishlist-এ item যোগ করলে ৩ সেকেন্ডের toast হিসেবে দেখাত; এখন `FloatCartBadge`-এর মতোই persistent (wishlist-এ item থাকলে সবসময় দেখা যায়, count badge সহ), item যোগ হলে heartbeat animation চলে
+- `app/components/GlobalOverlays.tsx` — **[REPLACE]** — উপরের দুটো নতুন component মাউন্ট করা হয়েছে, checkout পেজে cart/wishlist badge-এর মতোই hide হয়
+- **পজিশন রুল:** ডান পাশে আগে থেকে established rhythm (`right-5` cart, `right-[86px]` wishlist — ৫৬px বাটনের মাঝে ১০px গ্যাপ) সেটাই back-to-top-এর জন্য bottom-অ্যাক্সিসে (`bottom-[86px]`) এবং contact বাটনের জন্য বাম পাশে reuse করা হয়েছে — নতুন কোনো spacing scale বানানো হয়নি
+- **কালার রুল:** WhatsApp (`#25D366`) ও Messenger (`#0084FF`) নিজেদের অফিসিয়াল ব্র্যান্ড কালারেই রাখা হয়েছে — কারণ এই একই repo-র `ProductDetailClient.tsx`-এ (Phase B-তে আগেই ✅ সম্পূর্ণ হওয়া কোড) ঠিক এই একই hex value দিয়ে WhatsApp/Messenger অর্ডার বাটন আগে থেকেই আছে, তাই এটাই এই repo-র established precedent — প্ল্যাটফর্মের নিজস্ব রঙ বদলালে বরং inconsistency তৈরি হতো। যা কিছু সম্পূর্ণ আমাদের নিজস্ব (back-to-top, wishlist badge) সেগুলো `brand-primary`/সাদা/`shadow-sh3`/`rounded-full` টোকেন দিয়েই বানানো হয়েছে
+- ⚠️ **নোট:** পুরনো `vangcur-next` repo প্রাইভেট হওয়ায় (auth ছাড়া clone করা যায়নি) legacy Phase-1 সাইটের exact পজিশন সরাসরি verify করা যায়নি — উপরের পজিশন/কালার সিদ্ধান্ত এই repo-র নিজস্ব established convention (cart/wishlist spacing rhythm + product-page WA/Messenger কালার) থেকে reconstruct করা
+
 **✅ Auth — সম্পূর্ণ (roadmap-এর তালিকার চেয়ে বেশি করা হয়ে গেছে):**
 - `LoginModal.tsx`, `AccountPage.tsx`, `PasswordStrengthMeter.tsx`, `app/reset-password/` (page + client)
 - Phase D-এর কিছু কাজ auth-এর সাথেই আগেভাগে হয়ে গেছে: `TurnstileWidget.tsx`, `lib/turnstile.ts`, `app/api/verify-turnstile/route.ts`, `lib/rateLimit.ts`, `lib/sanitize.ts`, `lib/security.ts` (validation/sanitization + password-reset rate limit + Cloudflare Turnstile ইতিমধ্যে LoginModal-এ ব্যবহার হচ্ছে)

@@ -7,6 +7,8 @@ import WishlistDrawer from './cart/WishlistDrawer';
 import TrackOrderModal from './cart/TrackOrderModal';
 import FloatCartBadge from './cart/FloatCartBadge';
 import FloatWishBadge from './cart/FloatWishBadge';
+import FloatContactButtons from './layout/FloatContactButtons';
+import BackToTopButton from './layout/BackToTopButton';
 import QuickOrderBridge from './checkout/QuickOrderBridge';
 import WaitingOverlay from './checkout/WaitingOverlay';
 import BgConfirmPopup from './checkout/BgConfirmPopup';
@@ -46,6 +48,8 @@ export default function GlobalOverlays() {
         <>
           <FloatCartBadge />
           <FloatWishBadge />
+          <FloatContactButtons />
+          <BackToTopButton />
         </>
       )}
       <QuickOrderBridge />

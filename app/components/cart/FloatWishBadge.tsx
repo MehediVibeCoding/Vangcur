@@ -1,36 +1,41 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { WISH_ADD_EVENT } from '@/lib/productData';
+import { getWishlist, WISHLIST_EVENT, WISH_ADD_EVENT } from '@/lib/productData';
 import { OPEN_WISHLIST_EVENT } from '@/lib/uiEvents';
 
-const AUTO_DISMISS_MS = 3000;
-
 export default function FloatWishBadge() {
-  const [visible, setVisible] = useState(false);
+  const [count, setCount] = useState(0);
+  const [beat, setBeat] = useState(false);
 
   useEffect(() => {
-    let hideTimer: ReturnType<typeof setTimeout> | null = null;
-    const onAdd = () => {
-      if (hideTimer) clearTimeout(hideTimer);
-      setVisible(true);
-      hideTimer = setTimeout(() => setVisible(false), AUTO_DISMISS_MS);
-    };
-    window.addEventListener(WISH_ADD_EVENT, onAdd);
-    return () => {
-      window.removeEventListener(WISH_ADD_EVENT, onAdd);
-      if (hideTimer) clearTimeout(hideTimer);
-    };
+    setCount(getWishlist().length);
+    const onChange = () => setCount(getWishlist().length);
+    window.addEventListener(WISHLIST_EVENT, onChange);
+    return () => window.removeEventListener(WISHLIST_EVENT, onChange);
   }, []);
 
-  if (!visible) return null;
+  useEffect(() => {
+    const onAdd = () => {
+      setBeat(false);
+      requestAnimationFrame(() => setBeat(true));
+    };
+    window.addEventListener(WISH_ADD_EVENT, onAdd);
+    return () => window.removeEventListener(WISH_ADD_EVENT, onAdd);
+  }, []);
+
+  if (count <= 0) return null;
 
   return (
     <div
-      className="fixed bottom-5 right-[86px] z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-white shadow-sh3 animate-section-reveal"
+      className={`fixed bottom-5 right-[86px] z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-white shadow-sh3 animate-section-reveal ${beat ? 'animate-heartbeat' : ''}`}
       onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
+      onAnimationEnd={() => setBeat(false)}
     >
       <span className="text-2xl">❤️</span>
+      <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand-primary px-1 text-[11px] font-bold text-white">
+        {count}
+      </span>
     </div>
   );
 }
