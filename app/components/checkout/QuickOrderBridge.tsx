@@ -33,7 +33,7 @@ export default function QuickOrderBridge() {
       const p = prodsRef.current.find((x) => String(x.id) === String(id));
       if (!p) return;
       if (p.stock <= 0) {
-        showToast('❌ স্টক শেষ!');
+        showToast('স্টক শেষ!');
         return;
       }
       const qty = Math.max(1, Math.min(Number(detail.qty) || 1, p.stock, 99));

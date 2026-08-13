@@ -114,7 +114,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
 
   const addToCart = (id: number | string) => {
     window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id } }));
-    showToast('✅ কার্টে যোগ হয়েছে');
+    showToast('কার্টে যোগ হয়েছে');
   };
 
   const orderNow = (id: number | string) => {

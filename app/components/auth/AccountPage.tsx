@@ -31,8 +31,8 @@ const STATUS_CLASS: Record<OrderStatus, string> = {
   rejected: 'bg-[#FEE2E2] text-[#991B1B]',
 };
 const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: '⏳ Pending', confirmed: '✅ Confirmed', shipped: '🚚 Shipped',
-  delivered: '📦 Delivered', cancelled: '❌ Cancelled', rejected: '❌ Cancelled',
+  pending: '⏳ Pending', confirmed: 'Confirmed', shipped: '🚚 Shipped',
+  delivered: '📦 Delivered', cancelled: 'Cancelled', rejected: 'Cancelled',
 };
 
 const STATE_BG: Record<string, string> = {
@@ -148,7 +148,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
     await updateProfileName(supabase, currentUser, nm);
     saveCurrentUser({ ...currentUser, name: nm });
     closeNameEdit();
-    showToast('✅ নাম পরিবর্তন হয়েছে');
+    showToast('নাম পরিবর্তন হয়েছে');
   };
 
   const toggleSwitchPanel = () => {
@@ -162,11 +162,11 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
     showToast('⏳ সুইচ হচ্ছে...');
     const result = await switchToAccount(supabase, email);
     if (result.error) {
-      showToast(result.error === 'expired' ? 'সেশন মেয়াদ শেষ, আবার লগইন করুন' : '❌ সুইচ করতে সমস্যা হয়েছে');
+      showToast(result.error === 'expired' ? 'সেশন মেয়াদ শেষ, আবার লগইন করুন' : 'সুইচ করতে সমস্যা হয়েছে');
       return;
     }
     setSwitchPanelOpen(false);
-    showToast('✅ অ্যাকাউন্ট পরিবর্তন হয়েছে');
+    showToast('অ্যাকাউন্ট পরিবর্তন হয়েছে');
   };
 
   const doLogout = async () => {

@@ -149,7 +149,7 @@ export default function ResetPasswordClient() {
     saveCurrentUser(null);
     setLoading(false);
     setStatus('done');
-    showToast('✅ পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন');
+    showToast('পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন');
     setTimeout(() => router.push('/'), 1500);
   };
 

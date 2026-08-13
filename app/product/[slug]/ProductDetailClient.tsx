@@ -250,7 +250,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   const addCartFromPP = () => {
     if (!prod || prod.stock <= 0) return;
     window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
-    showToast('✅ কার্টে যোগ হয়েছে');
+    showToast('কার্টে যোগ হয়েছে');
   };
 
   const orderNow = () => {

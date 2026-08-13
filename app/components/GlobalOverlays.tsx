@@ -51,14 +51,14 @@ export default function GlobalOverlays() {
   return (
     <>
       {/*
-        আগে toast-টা top-6 এ ছিল, z-[80] দিয়ে — কিন্তু Navbar sticky z-[900] এ থাকায়
-        toast আসলে Navbar-এর পিছনে ঢাকা পড়ে যেত, তাই কখনো চোখেই পড়ত না (উইশলিস্টে
-        যোগ করলে, কার্টে যোগ করলে — কোনো toast-ই visually দেখা যেত না)। এখন legacy
-        সাইটের মতোই নিচে (bottom-center) বসানো হয়েছে, আর z-index Navbar/dropdown
+        toast আগে top-6 এ ছিল, z-[80] দিয়ে — Navbar sticky z-[900] এ থাকায় toast
+        Navbar-এর পিছনে ঢাকা পড়ে যেত, কখনো চোখেই পড়ত না। এখন legacy CSS-এর
+        exact bottom:80px মেনে bottom-20 এ বসানো হয়েছে (floating WhatsApp বাটনের
+        উচ্চতা বরাবর, স্ক্রিনের একদম কিনারায় না), আর z-index Navbar/dropdown
         (900/1100) দুটোরই উপরে (1300) রাখা হয়েছে, যাতে কখনো ঢাকা না পড়ে।
       */}
       <div
-        className="pointer-events-none fixed bottom-6 left-1/2 z-[1300] flex -translate-x-1/2 translate-y-2 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-primary/15 bg-brand-bg px-5 py-3 text-[13px] font-semibold text-brand-primary opacity-0 shadow-sh3 transition-all duration-300 ease-out max-w-[92vw] [&.show]:pointer-events-auto [&.show]:translate-y-0 [&.show]:opacity-100"
+        className="pointer-events-none fixed bottom-20 left-1/2 z-[1300] flex -translate-x-1/2 translate-y-2 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-primary/15 bg-brand-bg px-5 py-3 text-[13px] font-semibold text-brand-primary opacity-0 shadow-sh3 transition-all duration-300 ease-out max-w-[92vw] [&.show]:pointer-events-auto [&.show]:translate-y-0 [&.show]:opacity-100"
         id="toast"
       />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />

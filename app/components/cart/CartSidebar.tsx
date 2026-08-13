@@ -129,8 +129,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       const id = (e as CustomEvent).detail?.id;
       if (id === undefined) return;
       const res = addToCart(prodsRef.current, id, 1);
-      if (res.ok) showToast('✅ কার্টে যোগ হয়েছে');
-      else if (res.reason === 'stock') showToast('❌ স্টক শেষ!');
+      if (res.ok) showToast('কার্টে যোগ হয়েছে');
+      else if (res.reason === 'stock') showToast('স্টক শেষ!');
     };
     window.addEventListener(QUICK_CART_EVENT, onQuickCart);
     return () => window.removeEventListener(QUICK_CART_EVENT, onQuickCart);
@@ -144,7 +144,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const handleQty = (id: number | string, delta: number) => {
     const res = updateQty(prodsRef.current, id, delta);
     if (!res.ok && res.reason === 'stock') {
-      showToast(`❌ সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে (${res.maxStock}টি)`);
+      showToast(`সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে (${res.maxStock}টি)`);
       return;
     }
     setCart(res.cart);
