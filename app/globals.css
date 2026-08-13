@@ -105,10 +105,18 @@ input[type='search']::-webkit-search-results-decoration {
    ফ্রস্টেড-গ্লাস লুক আনছে — Android বা Desktop Chrome-এর রেন্ডারিং (যা
    ইতিমধ্যে ঠিক আছে) এতে একদমই প্রভাবিত হয় না। */
 @supports (-webkit-hyphens: none) {
-  .navbar-glass,
-  .search-dropdown-glass {
+  .navbar-glass {
     -webkit-backdrop-filter: blur(26px) !important;
     backdrop-filter: blur(26px) !important;
+  }
+  /* search dropdown-টা navbar-এর ব্লার-বুস্টের পরেও দুর্বল থেকে গিয়েছিল —
+     এর মানে শুধু ব্লার radius যথেষ্ট ছিল না, তাই এখানে আরও শক্তিশালী blur
+     আর সামান্য বেশি opacity (শুধু এই Safari-only ব্লকের ভিতরেই, তাই Android/
+     Chrome-এ ৯৫%-ই থেকে যাচ্ছে, কোনো পরিবর্তন হচ্ছে না) দেওয়া হলো। */
+  .search-dropdown-glass {
+    -webkit-backdrop-filter: blur(46px) !important;
+    backdrop-filter: blur(46px) !important;
+    background-color: rgba(255, 255, 255, 0.985) !important;
   }
 }
 
