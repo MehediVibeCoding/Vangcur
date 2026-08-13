@@ -29,6 +29,10 @@ export default function GlobalOverlays() {
   // চেকআউট পেজে কোনো ফ্লোটিং কার্ট/উইশলিস্ট বাটন দেখানো উচিত না — এখানে সেগুলো শুধু
   // বিভ্রান্তিকর, কারণ চেকআউট নিজেই একটা ফোকাসড ফ্লো।
   const hideFloatingBadges = pathname?.startsWith('/checkout') ?? false;
+  // প্রোডাক্ট পেজে (নিজের একটা ফোকাসড, বিস্তারিত পেজ) মেসেঞ্জার/হোয়াটসঅ্যাপ কার্ড,
+  // ফ্লোটিং উইশলিস্ট বাজ, আর ব্যাক-টু-টপ বাটন থাকবে না — শুধু হোম আর SRP পেজে থাকবে।
+  // ফ্লোটিং কার্ট বাজ ইচ্ছাকৃতভাবে বাদ (এটা প্রোডাক্ট পেজেও রাখতে বলা হয়েছে)।
+  const isProductPage = pathname?.startsWith('/product/') ?? false;
 
   useEffect(() => {
     const onOpenCart = () => setCartOpen(true);
@@ -46,13 +50,23 @@ export default function GlobalOverlays() {
 
   return (
     <>
-      <div className="pointer-events-none fixed left-1/2 top-6 z-[80] -translate-x-1/2 rounded-full bg-ink px-4 py-2.5 text-[13px] font-semibold text-white opacity-0 transition-all duration-300 [&.show]:pointer-events-auto [&.show]:opacity-100" id="toast" />
+      {/*
+        আগে toast-টা top-6 এ ছিল, z-[80] দিয়ে — কিন্তু Navbar sticky z-[900] এ থাকায়
+        toast আসলে Navbar-এর পিছনে ঢাকা পড়ে যেত, তাই কখনো চোখেই পড়ত না (উইশলিস্টে
+        যোগ করলে, কার্টে যোগ করলে — কোনো toast-ই visually দেখা যেত না)। এখন legacy
+        সাইটের মতোই নিচে (bottom-center) বসানো হয়েছে, আর z-index Navbar/dropdown
+        (900/1100) দুটোরই উপরে (1300) রাখা হয়েছে, যাতে কখনো ঢাকা না পড়ে।
+      */}
+      <div
+        className="pointer-events-none fixed bottom-6 left-1/2 z-[1300] flex -translate-x-1/2 translate-y-2 items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-5 py-3 text-[13px] font-semibold text-white opacity-0 shadow-[0_10px_32px_rgba(0,88,199,.25)] transition-all duration-300 ease-out max-w-[92vw] [&.show]:pointer-events-auto [&.show]:translate-y-0 [&.show]:opacity-100"
+        id="toast"
+      />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <WishlistDrawer isOpen={wishOpen} onClose={() => setWishOpen(false)} />
       <TrackOrderModal isOpen={trackOpen} onClose={() => setTrackOpen(false)} />
-      {!hideFloatingBadges && (
+      {!hideFloatingBadges && <FloatCartBadge />}
+      {!hideFloatingBadges && !isProductPage && (
         <>
-          <FloatCartBadge />
           <FloatWishBadge />
           <FloatContactButtons />
           <BackToTopButton />
