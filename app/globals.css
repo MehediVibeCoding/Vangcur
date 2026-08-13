@@ -87,6 +87,29 @@ input[type='search']::-webkit-search-results-decoration {
   .navbar-glass {
     background-color: rgba(255, 255, 255, 0.94) !important;
   }
+  .search-dropdown-glass {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+  }
+}
+
+/* উপরের ব্লকটা শুধু তখনই ধরে যখন backdrop-filter সম্পূর্ণ unsupported (যেমন
+   iPhone 7-এর পুরনো iOS)। কিন্তু আধুনিক iPhone/iPad ও Mac-এর Safari-তে
+   backdrop-filter সাপোর্টেড থাকা সত্ত্বেও, Chrome/Android-এর তুলনায় একই px
+   মানে চোখে অনেক কম ঘন ব্লার দেখায় — WebKit-এর blur রেন্ডারিং অ্যালগরিদম
+   Blink (Chrome)-এর চেয়ে দুর্বল, ফলে navbar/search dropdown-এর পিছনের লেখা
+   Safari-তে স্পষ্ট পড়া যায় যেখানে Chrome-এ ঠিকভাবে ঝাপসা থাকে।
+
+   `-webkit-hyphens: none` শুধু Safari (iOS + macOS)-ই বৈধ মান হিসেবে চেনে —
+   Chrome/Firefox এই @supports শর্তে ঢোকে না। তাই এই ব্লকটা শুধু Safari-কেই
+   টার্গেট করে সেখানকার blur radius বাড়িয়ে Android/Chrome-এর মতো ঘন
+   ফ্রস্টেড-গ্লাস লুক আনছে — Android বা Desktop Chrome-এর রেন্ডারিং (যা
+   ইতিমধ্যে ঠিক আছে) এতে একদমই প্রভাবিত হয় না। */
+@supports (-webkit-hyphens: none) {
+  .navbar-glass,
+  .search-dropdown-glass {
+    -webkit-backdrop-filter: blur(26px) !important;
+    backdrop-filter: blur(26px) !important;
+  }
 }
 
 /* সার্চ ড্রপডাউন (রেজাল্ট/ডিফল্ট প্যানেল) খোলার সময় হালকা fade-in — আগে এটা
