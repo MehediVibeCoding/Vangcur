@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   isWishlisted, toggleWish, productHref,
@@ -11,6 +11,49 @@ import type { Product } from '@/types';
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && !!window.matchMedia
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// CSS Container Query units (cqw) iOS 16 (Sept 2022)-এর আগে কোনো Safari-তে
+// সাপোর্ট করে না। iPhone 7 সর্বোচ্চ iOS 15.8.3 পর্যন্ত আপডেট হতে পারে — অর্থাৎ
+// container query কখনোই পাবে না। ব্রাউজার একটা অচেনা এককের (cqw) মুখোমুখি হলে
+// পুরো clamp() declaration-টাই invalid ধরে নিয়ে বাদ দিয়ে দেয়, ফলে card-এর সব
+// padding/font-size/gap একদম ভেঙে পড়ে।
+//
+// একই "card-এর নিজের width অনুযায়ী স্কেল হওয়া" (পুরো viewport না) আচরণ ধরে
+// রাখতে এখানে ResizeObserver দিয়ে card-এর আসল pixel width মেপে, সেই width
+// থেকে JS-এ clamp() হিসাব করা হচ্ছে। ResizeObserver iOS 13.4 থেকেই সাপোর্টেড,
+// তাই iPhone 7 সহ সব পুরনো ডিভাইসেও নিরাপদে কাজ করে।
+function useCardWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(200); // hydration-এর আগ পর্যন্ত একটা যুক্তিসঙ্গত ডিফল্ট
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+
+    const update = () => {
+      const w = el.offsetWidth;
+      if (w > 0) setWidth(w);
+    };
+    update();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(update);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  return [ref, width];
+}
+
+// clamp(minPx, cardWidth * fraction, maxPx) — পুরনো cqw-ভিত্তিক clamp()-গুলোর
+// হুবহু একই আচরণ, শুধু cqw-এর বদলে মাপা pixel width দিয়ে হিসাব করা হয়েছে।
+function cq(cardWidth: number, minPx: number, fraction: number, maxPx: number): string {
+  const val = Math.min(maxPx, Math.max(minPx, cardWidth * fraction));
+  return `${val}px`;
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -84,6 +127,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const [wished, setWished] = useState(() => isWishlisted(p.id));
   const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
+  const [panelRef, cw] = useCardWidth<HTMLDivElement>();
 
   useEffect(() => {
     const handler = () => setWished(isWishlisted(p.id));
@@ -125,14 +169,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
   return (
     <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-brand duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
-      {/*
-        container-type: inline-size — এই প্যানেলটাকে নিজেই একটা "container" বানানো
-        হলো, যাতে ভিতরের সবকিছুর সাইজ (নিচে cqw এককে লেখা) এই প্যানেলের নিজের
-        width অনুযায়ী স্কেল করে — পুরো ভিউপোর্ট/স্ক্রিন width অনুযায়ী না। এতে
-        ছোট স্ক্রিনের ফোনেও (যেখানে কার্ড সরু হয়ে যায়) টেক্সট/বাটন ব্লকটা কার্ডের
-        ঠিক ৩০%-ই থাকে — বড় স্ক্রিনের মতো একই অনুপাত, কোনো device-ভেদে হেরফের হয় না।
-      */}
-      <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted" style={{ containerType: 'inline-size' }}>
+      <div ref={panelRef} className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
         <div className="absolute inset-0 cursor-pointer" onClick={openProduct}>
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </div>
@@ -144,9 +181,9 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted text-white" style={{ padding: 'clamp(3px,1.6cqw,6px) clamp(7px,3.8cqw,12px)', fontSize: 'clamp(9px,5cqw,11px)', fontWeight: 700 }}>Sold Out</div>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>Sold Out</div>
         ) : p.badge && (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary text-white" style={{ padding: 'clamp(3px,1.6cqw,6px) clamp(7px,3.8cqw,12px)', fontSize: 'clamp(9px,5cqw,11px)', fontWeight: 700 }}>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>
             {p.badge}
           </div>
         )}
@@ -154,7 +191,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         <button
           ref={wishBtnRef}
           className={`absolute right-[4.5%] top-[4.5%] z-[3] aspect-square shrink-0 rounded-full backdrop-blur-md transition-brand duration-brand hover:scale-[1.15] ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/30'} ${heartBeat ? 'animate-heartbeat' : ''}`}
-          style={{ width: 'clamp(26px,16cqw,34px)', color: wished ? undefined : '#fff' }}
+          style={{ width: cq(cw, 26, 0.16, 34), color: wished ? undefined : '#fff' }}
           onClick={handleWish}
           onAnimationEnd={() => setHeartBeat(false)}
           title="Wishlist"
@@ -162,30 +199,30 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <span className="flex h-full w-full items-center justify-center"><HeartIcon filled={wished} /></span>
         </button>
 
-        <div className="absolute inset-x-0 bottom-0 z-[2]" style={{ padding: 'clamp(6px,4.2cqw,13px)' }}>
+        <div className="absolute inset-x-0 bottom-0 z-[2]" style={{ padding: cq(cw, 6, 0.042, 13) }}>
           <div
             className="line-clamp-1 cursor-pointer font-extrabold leading-tight text-white"
-            style={{ fontSize: 'clamp(10px,6.3cqw,15px)' }}
+            style={{ fontSize: cq(cw, 10, 0.063, 15) }}
             onClick={openProduct}
           >
             {p.name}
           </div>
-          <div className="flex items-center" style={{ gap: 'clamp(3px,1.6cqw,5px)', marginTop: 'clamp(2px,1.3cqw,4px)', fontSize: 'clamp(8.5px,5.3cqw,12px)' }}>
+          <div className="flex items-center" style={{ gap: cq(cw, 3, 0.016, 5), marginTop: cq(cw, 2, 0.013, 4), fontSize: cq(cw, 8.5, 0.053, 12) }}>
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/65" style={{ fontSize: 'clamp(8px,5cqw,11px)' }}>{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            <span className="text-white/65" style={{ fontSize: cq(cw, 8, 0.05, 11) }}>{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
             {showDiscBadge && (
-              <span className="font-bold text-[#FF9142]" style={{ fontSize: 'clamp(8px,5cqw,11px)' }}>-{discPct}%</span>
+              <span className="font-bold text-[#FF9142]" style={{ fontSize: cq(cw, 8, 0.05, 11) }}>-{discPct}%</span>
             )}
           </div>
-          <div className="flex items-baseline" style={{ gap: 'clamp(4px,2.5cqw,7px)', marginTop: 'clamp(1px,1cqw,3px)' }}>
-            <span className="font-extrabold text-white" style={{ fontSize: 'clamp(12px,7.6cqw,18px)' }}>৳{p.price.toLocaleString('en-US')}</span>
-            <span className="text-white/50 line-through" style={{ fontSize: 'clamp(9px,5.5cqw,13px)' }}>৳{p.old.toLocaleString('en-US')}</span>
+          <div className="flex items-baseline" style={{ gap: cq(cw, 4, 0.025, 7), marginTop: cq(cw, 1, 0.01, 3) }}>
+            <span className="font-extrabold text-white" style={{ fontSize: cq(cw, 12, 0.076, 18) }}>৳{p.price.toLocaleString('en-US')}</span>
+            <span className="text-white/50 line-through" style={{ fontSize: cq(cw, 9, 0.055, 13) }}>৳{p.old.toLocaleString('en-US')}</span>
           </div>
-          <div className="flex w-full items-center" style={{ gap: 'clamp(4px,2.5cqw,7px)', marginTop: 'clamp(4px,2.6cqw,8px)' }}>
+          <div className="flex w-full items-center" style={{ gap: cq(cw, 4, 0.025, 7), marginTop: cq(cw, 4, 0.026, 8) }}>
             {sold ? (
               <button
                 className="relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body font-bold text-white transition-brand duration-brand"
-                style={{ height: 'clamp(28px,18cqw,40px)', fontSize: 'clamp(9px,5.8cqw,13px)' }}
+                style={{ height: cq(cw, 28, 0.18, 40), fontSize: cq(cw, 9, 0.058, 13) }}
                 onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                   new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
                 ))}
@@ -196,7 +233,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
               <>
                 <button
                   className="box-border flex aspect-square shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/15 text-white backdrop-blur-md transition-brand duration-brand hover:bg-white/30"
-                  style={{ height: 'clamp(28px,18cqw,40px)' }}
+                  style={{ height: cq(cw, 28, 0.18, 40) }}
                   title="কার্টে যোগ করুন"
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
                 >
@@ -205,8 +242,8 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                 <button
                   className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-primary backdrop-blur-md transition-brand duration-brand hover:brightness-95"
                   style={{
-                    height: 'clamp(28px,18cqw,40px)',
-                    fontSize: 'clamp(9px,5.8cqw,13px)',
+                    height: cq(cw, 28, 0.18, 40),
+                    fontSize: cq(cw, 9, 0.058, 13),
                     background: 'linear-gradient(115deg, rgba(255,255,255,.92) 0%, rgba(195,222,252,.85) 38%, rgba(255,255,255,.9) 64%, rgba(0,94,252,.35) 100%)',
                   }}
                   onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
