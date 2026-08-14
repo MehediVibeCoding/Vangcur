@@ -33,7 +33,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
           <Link
             href="/"
             aria-label="হোম পেইজে যান"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-sm transition-brand duration-brand hover:bg-brand-bg hover:text-brand-primary"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-primary shadow-sm transition-brand duration-brand hover:bg-brand-primary hover:text-white"
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 11.5 12 4l8 7.5" />
@@ -58,7 +58,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
                 type="button"
                 onClick={() => { setValue(''); onQueryChange(''); }}
                 aria-label="মুছুন"
-                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-surface-muted text-muted hover:bg-border-base"
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
@@ -67,6 +67,29 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
         </div>
       </nav>
     </div>
+  );
+}
+
+// ---------- ইমোজির বদলে ব্র্যান্ডিং অনুযায়ী প্রফেশনাল সার্চ-আইকন ব্যাজ —
+// হোমপেজের ক্যাটাগরি/আইকন ব্যাজগুলোর মতোই brand-bg ব্যাকগ্রাউন্ড + brand-primary
+// রঙের আইকন ব্যবহার করা হয়েছে, যাতে খালি-স্টেটগুলোও সাইটের বাকি অংশের সাথে
+// দৃশ্যত মিলে যায়। ----------
+function SearchGlyph() {
+  return (
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg text-brand-primary">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+      </svg>
+    </div>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
+    </svg>
   );
 }
 
@@ -83,19 +106,10 @@ function CategoryIcon({ icon }: { icon?: string }) {
   return <span className="text-base leading-none">{icon || '📂'}</span>;
 }
 
-// ---------- সার্চ কোয়েরির সাথে কোনো ক্যাটাগরি না মিললে (খুব ছোট কোয়েরি,
-// বাংলা কোয়েরি ইত্যাদি) পুরো সেকশন খালি না দেখিয়ে জনপ্রিয় কয়েকটা ক্যাটাগরি
-// ফলব্যাক হিসেবে দেখানো হয় — আগের ওয়েবসাইটেও ক্যাটাগরি অংশ কখনো খালি থাকত না। ----------
-function relatedCategories(cats: Category[], query: string): Category[] {
-  const matched = matchCategories(cats, query, 8);
-  if (matched.length) return matched;
-  return cats.filter((c) => c.id !== 'all').slice(0, 8);
-}
-
 function NoQueryState() {
   return (
     <div className="flex flex-col items-center gap-3 px-5 py-20 text-center">
-      <div className="text-5xl">🔍</div>
+      <SearchGlyph />
       <p className="text-[15px] font-bold text-ink">কিছু লিখে সার্চ করুন</p>
       <div className="my-1 flex w-full max-w-xs items-center gap-3 text-[12px] text-muted">
         <span className="h-px flex-1 bg-border-base" />
@@ -106,27 +120,48 @@ function NoQueryState() {
         href="/"
         className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 11.5 12 4l8 7.5" />
-          <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
-        </svg>
+        <HomeIcon />
         ওয়েবসাইটের হোম পেইজে ফিরে যান
       </Link>
     </div>
   );
 }
 
+// ---------- আগে এখানে সাদা কার্ড ব্যাকগ্রাউন্ড/প্যাডিং ছিল — এখন সরাসরি পেইজের
+// মূল ব্যাকগ্রাউন্ডের উপরেই বসে, NoQueryState-এর মতো। কোনো ক্যাটাগরিও না মিললে
+// (query prop খালি না হলেও hasCategoryMatch false হলে) নিচের সাজেশন-লাইন ও
+// বাটন-টেক্সট "হোম পেইজে ফিরে যান"-এ নেমে আসে (আগে "সব প্রোডাক্ট দেখুন" ছিল)। ----------
 function ZeroResultsState({ query }: { query: string }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-[18px] bg-white px-5 py-14 text-center shadow-[0_4px_14px_rgba(0,88,199,.08)]">
-      <div className="text-5xl">🔍</div>
+    <div className="flex flex-col items-center gap-3 px-5 py-16 text-center">
+      <SearchGlyph />
       <p className="text-[15px] font-bold text-ink">&quot;{query}&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</p>
-      <p className="max-w-sm text-[13px] text-muted">অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে সব প্রোডাক্ট দেখুন।</p>
+      <p className="max-w-sm text-[13px] text-muted">অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে ওয়েবসাইটের হোম পেইজে ফিরে যান।</p>
       <Link
         href="/"
         className="mt-1 inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
       >
-        সব প্রোডাক্ট দেখুন
+        <HomeIcon />
+        ওয়েবসাইটের হোম পেইজে ফিরে যান
+      </Link>
+    </div>
+  );
+}
+
+// ---------- আগের ওয়েবসাইটের লজিক: রেজাল্ট লিস্টের একদম শেষে (আর কোনো প্রোডাক্ট
+// লোড করার বাকি নেই) একটা ছোট্ট "আর কোনো প্রোডাক্ট নেই" লাইন + হোমপেইজে ফেরার
+// বাটন দেখানো হয় — হোমপেজের ProductGrid-এর ক্যাটাগরি-শেষ বাটনের ঠিক same প্যাটার্ন,
+// শুধু SRP-তে "সব প্রোডাক্ট দেখুন" এর বদলে সরাসরি হোমপেইজে ফেরত পাঠানো হয়। ----------
+function EndOfResults() {
+  return (
+    <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">
+      <p className="font-body text-[13.5px] font-medium text-muted">আর কোনো প্রোডাক্ট নেই</p>
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
+      >
+        <HomeIcon />
+        ওয়েবসাইটের হোম পেইজে ফিরে যান
       </Link>
     </div>
   );
@@ -140,7 +175,6 @@ export default function SrpClient() {
   const supabase = useRef(createClient()).current;
   const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
   const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
-  const [activeCat, setActiveCat] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories(supabase).then((c) => { if (c.length) setCats(c); });
@@ -177,19 +211,27 @@ export default function SrpClient() {
   const handleQueryChange = useCallback((value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      setActiveCat(null);
       const url = value.trim() ? `/srp?q=${encodeURIComponent(value.trim())}` : '/srp';
       router.replace(url, { scroll: false });
     }, 300);
   }, [router]);
 
-  const cats5 = useMemo(() => relatedCategories(cats, query), [cats, query]);
+  // ক্যাটাগরি বাটনে ক্লিক করলে আর এখানে (SRP পেইজে) লোকালি ফিল্টার হবে না —
+  // আগের ওয়েবসাইটের লজিক অনুযায়ী সরাসরি হোমপেইজের ক্যাটাগরি ট্রিগার করে সেই
+  // ক্যাটাগরির সব প্রোডাক্ট হোমপেইজে গিয়ে দেখানো হয় (দেখুন ProductGrid.tsx-এর
+  // ?cat= রিড করার লজিক)।
+  const goToHomeCategory = useCallback((catId: string) => {
+    router.push(`/?cat=${encodeURIComponent(catId)}`);
+  }, [router]);
 
-  const results = useMemo(() => {
-    const matched = searchProducts(prods, query);
-    if (!activeCat) return matched;
-    return matched.filter((p) => p.cat === activeCat || p.cats?.includes(activeCat));
-  }, [prods, query, activeCat]);
+  // এই কোয়েরির সাথে সত্যিকারের কোনো ক্যাটাগরি না মিললে (matched.length === 0)
+  // আর কোনো ফলব্যাক/জনপ্রিয় ক্যাটাগরি দেখানো হয় না — আগে এখানে না-মেলা কোয়েরিতেও
+  // ৮টা র‍্যান্ডম ক্যাটাগরি দেখানো হতো, যেটা ইউজারের কাছে বিভ্রান্তিকর লাগছিল
+  // ("এই নামে তো কোনো ক্যাটাগরিই নেই, তাহলে ক্যাটাগরি সাজেস্ট করছে কেন")।
+  const matchedCats = useMemo(() => matchCategories(cats, query, 8), [cats, query]);
+  const hasCategoryMatch = matchedCats.length > 0;
+
+  const results = useMemo(() => searchProducts(prods, query), [prods, query]);
 
   const [renderedCount, setRenderedCount] = useState(0);
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
@@ -259,6 +301,13 @@ export default function SrpClient() {
 
   const visibleItems = results.slice(0, renderedCount);
   const hasQuery = query.length > 0;
+  const isDone = renderedCount >= results.length;
+
+  // দুটোই (পণ্য এবং ক্যাটাগরি) না মিললে ক্যাটাগরি-চিপ সেকশন আর "X টি পণ্য
+  // পাওয়া গেছে" — কোনোটাই দেখানো হয় না, শুধু ZeroResultsState-টুকুই থাকে।
+  // ক্যাটাগরি মিললে (পণ্য শূন্য হোক বা না হোক) দুটোই থাকে।
+  const showCategorySection = hasCategoryMatch;
+  const showCountLine = hasCategoryMatch || results.length > 0;
 
   return (
     <>
@@ -269,31 +318,28 @@ export default function SrpClient() {
           <NoQueryState />
         ) : (
           <>
-            <div className="mb-4">
-              <h2 className="mb-2.5 text-[13px] font-bold text-ink">ক্যাটাগরি</h2>
-              <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {cats5.map((c) => {
-                  const active = activeCat === c.id;
-                  return (
+            {showCategorySection && (
+              <div className="mb-4">
+                <h2 className="mb-2.5 text-[13px] font-bold text-ink">ক্যাটাগরি</h2>
+                <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {matchedCats.map((c) => (
                     <button
                       type="button"
                       key={c.id}
-                      onClick={() => setActiveCat((prev) => (prev === c.id ? null : c.id))}
-                      className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-[13px] font-semibold transition-brand duration-brand ${
-                        active
-                          ? 'border-brand-primary bg-brand-primary text-white'
-                          : 'border-border-base bg-white text-ink hover:bg-surface-muted'
-                      }`}
+                      onClick={() => goToHomeCategory(c.id)}
+                      className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border-base bg-white px-4 py-2.5 text-[13px] font-semibold text-ink transition-brand duration-brand hover:border-brand-primary hover:bg-brand-bg hover:text-brand-primary"
                     >
                       <CategoryIcon icon={c.icon} />
                       {c.name}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            <p className="mb-4 text-[13px] text-muted">{results.length}টি পণ্য পাওয়া গেছে</p>
+            {showCountLine && (
+              <p className="mb-4 text-[13px] text-muted">{results.length}টি পণ্য পাওয়া গেছে</p>
+            )}
 
             {results.length === 0 ? (
               <ZeroResultsState query={query} />
@@ -303,6 +349,7 @@ export default function SrpClient() {
                   {visibleItems.map((p, i) => (
                     <ProductCard key={p.id} prod={p} isFirst={i === 0} />
                   ))}
+                  {isDone && !showSpinner && !showLoadMoreBtn && <EndOfResults />}
                 </div>
                 <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
                   {showSpinner && (

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { CATEGORY_FILTER_EVENT } from '@/lib/categoryData';
+import { CATEGORY_FILTER_EVENT, makeCatSlug } from '@/lib/categoryData';
 import {
   DEFAULT_PRODS, prodInCat, fetchCustomProducts, mergeCustomProducts,
   subscribeCustomProducts,
@@ -15,6 +16,7 @@ const PRODS_AUTO_THRESHOLD = 2;
 
 export default function ProductGrid() {
   const supabase = useRef(createClient()).current;
+  const searchParams = useSearchParams();
   const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
   const [activeCat, setActiveCat] = useState('all');
   const [renderedCount, setRenderedCount] = useState(0);
@@ -96,6 +98,28 @@ export default function ProductGrid() {
     };
     window.addEventListener(CATEGORY_FILTER_EVENT, onFilter);
     return () => window.removeEventListener(CATEGORY_FILTER_EVENT, onFilter);
+  }, []);
+
+  // অন্য পেইজ থেকে (যেমন সার্চ ফলাফল পেইজ, SRP) কোনো ক্যাটাগরির বাটনে ক্লিক
+  // করলে সেটা এখানে ?cat=<id> কোয়েরি প্যারামিটার নিয়ে হোমপেইজে নিয়ে আসে —
+  // মাউন্ট হওয়ার সাথে সাথেই সেই ক্যাটাগরিটা সরাসরি ট্রিগার হয় (Categories.tsx-এর
+  // handleSelect ঠিক যা করে তারই সমতুল্য), যাতে অন্য পেইজ থেকে ক্লিক করলেও একই
+  // রকম আচরণ পাওয়া যায় — আগের ওয়েবসাইটের লজিক অনুযায়ী।
+  useEffect(() => {
+    const catFromUrl = searchParams.get('cat');
+    if (!catFromUrl) return;
+    setActiveCat(catFromUrl);
+    try {
+      const cosmeticUrl = catFromUrl === 'all' ? '/' : `/category/${makeCatSlug(catFromUrl)}`;
+      window.history.replaceState({ vcStack: [], homeCurrent: true, vcCat: catFromUrl }, '', cosmeticUrl);
+    } catch {
+      // history API unavailable, ignore
+    }
+    const t = setTimeout(() => {
+      document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
