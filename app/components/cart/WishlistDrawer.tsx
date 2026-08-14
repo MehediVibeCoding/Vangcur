@@ -158,7 +158,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
               <IconClose />
             </button>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-brand-bg via-rose-400 to-brand-primary" />
+          <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-brand-bg via-rose-400 to-brand-light" />
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -171,7 +171,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
               <p className="mb-5 font-body text-[12.5px] text-muted">পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন</p>
               <button
                 onClick={goToProducts}
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-primary px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               >
                 প্রোডাক্ট দেখুন <IconArrowRight />
               </button>
@@ -206,18 +206,18 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                         <IconTrash />
                       </button>
                     </div>
-                    <div className="mb-2 font-body text-[13.5px] font-extrabold text-brand-primary">
+                    <div className="mb-2 font-body text-[13.5px] font-extrabold text-brand-light">
                       ৳{Number(item.price).toLocaleString('en-US')}
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
-                        className="flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] border-brand-primary/25 bg-white px-2.5 py-1.5 font-body text-[11px] font-bold text-brand-primary transition-brand duration-brand hover:bg-info/10"
+                        className="flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] border-brand-light/25 bg-white px-2.5 py-1.5 font-body text-[11px] font-bold text-brand-light transition-brand duration-brand hover:bg-info/10"
                         onClick={() => addToCart(item.id)}
                       >
                         <IconBag /> কার্টে যোগ
                       </button>
                       <button
-                        className="flex items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-info to-brand-primary px-2.5 py-1.5 font-body text-[11px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-[1.03]"
+                        className="flex items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-info to-brand-light px-2.5 py-1.5 font-body text-[11px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-[1.03]"
                         onClick={() => orderNow(item.id)}
                       >
                         <IconBolt /> অর্ডার করুন

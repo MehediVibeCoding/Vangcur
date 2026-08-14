@@ -63,7 +63,7 @@ export default function FloatWishBadge() {
       onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
       title="উইশলিস্ট"
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-brand-primary">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-brand-light">
         <path
           d="M12 20.7s-7.36-4.6-10-8.86C.44 8.9 1.36 5.1 4.5 3.66a6 6 0 017.5 1.5 6 6 0 017.5-1.5c3.14 1.44 4.06 5.24 2.5 8.18-2.64 4.26-10 8.86-10 8.86z"
           fill="currentColor"

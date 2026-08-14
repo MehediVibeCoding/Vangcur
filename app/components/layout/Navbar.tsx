@@ -58,7 +58,7 @@ function CategoryIcon({ icon }: { icon?: string }) {
   if (isSvg) {
     return (
       <div
-        className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[9px] bg-brand-bg text-brand-primary [&_svg]:!h-[22px] [&_svg]:!w-[22px]"
+        className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[9px] bg-brand-bg text-brand-light [&_svg]:!h-[22px] [&_svg]:!w-[22px]"
         dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
       />
     );
@@ -79,12 +79,12 @@ function highlightMatch(text: string, q: string) {
   const truncBefore = before.length > 20 ? '...' + before.slice(-20) : before;
   const truncAfter = after.length > 25 ? after.slice(0, 25) + '...' : after;
   return (
-    <>{truncBefore}<span className="bg-brand-accent/20 text-brand-primary">{match}</span>{truncAfter}</>
+    <>{truncBefore}<span className="bg-brand-light-hover/20 text-brand-light">{match}</span>{truncAfter}</>
   );
 }
 
-const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:outline-none';
-const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-primary/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-primary/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
+const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:outline-none';
+const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
 
 // যাদের সার্চ হিস্ট্রি একেবারে খালি (নতুন ইউজার বা সব মুছে ফেলেছে), তাদের জন্য
 // ডিফল্ট জনপ্রিয় সার্চ-টার্ম — আপাতত হার্ডকোড, পরে অ্যাডমিন প্যানেল থেকে
@@ -113,7 +113,7 @@ function SearchDefaultPanel({
         <>
           <div className="flex items-center justify-between px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
             <span>সাম্প্রতিক অনুসন্ধান</span>
-            <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={(e) => { e.stopPropagation(); onClearRecent(); }}>সব মুছুন</a>
+            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={(e) => { e.stopPropagation(); onClearRecent(); }}>সব মুছুন</a>
           </div>
           <div className="flex flex-wrap gap-2 px-3.5 pb-2.5">
             {recentSearches.map((term) => (
@@ -136,7 +136,7 @@ function SearchDefaultPanel({
                 </button>
                 <button
                   type="button"
-                  className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-primary"
+                  className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-light"
                   onClick={(e) => { e.stopPropagation(); onRemoveRecent(term); }}
                   aria-label="মুছুন"
                 >
@@ -177,7 +177,7 @@ function SearchDefaultPanel({
         <>
           <div className="flex items-center justify-between px-3.5 pb-2 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
             <span>জনপ্রিয় ক্যাটাগরি</span>
-            <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={() => onGoToCat('all')}>সব দেখুন →</a>
+            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={() => onGoToCat('all')}>সব দেখুন →</a>
           </div>
           <div className="grid grid-cols-4 gap-2 px-3.5 pb-3">
             {popularCategories.map((c) => (
@@ -247,7 +247,7 @@ function SearchDropdown({
           <div className="flex-1 overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border-base px-3.5 pb-1.5 pt-2 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
               <span>{searchResults.length}টি পণ্য পাওয়া গেছে</span>
-              <a className="cursor-pointer text-[11px] font-semibold text-brand-primary hover:underline" onClick={onGoToSrp}>সব দেখুন →</a>
+              <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={onGoToSrp}>সব দেখুন →</a>
             </div>
             <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">পণ্য</div>
             {searchResults.map((p) => (
@@ -261,7 +261,7 @@ function SearchDropdown({
                 <div className="min-w-0 flex-1">
                   <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold">{highlightMatch(p.name, searchQuery)}</div>
                   <div className="mt-0.5 text-[11px] text-muted">
-                    {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-primary">স্টক শেষ</span></>}
+                    {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-light">স্টক শেষ</span></>}
                   </div>
                 </div>
                 <div className="shrink-0 text-[13px] font-bold">৳{Number(p.price).toLocaleString('en-US')}</div>
@@ -287,7 +287,7 @@ function SearchDropdown({
               উপরের কনটেন্ট যত লম্বাই হোক, এটা সবসময় নিচে দৃশ্যমান থাকবে। */}
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-accent"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-light-hover"
               onClick={onGoToSrp}
             >
               <SearchIcon />
@@ -666,7 +666,7 @@ export default function Navbar({
               <Link
                 href="/"
                 aria-label="হোম পেইজে যান"
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-primary py-2 pl-2.5 pr-4 font-body text-[13px] font-semibold text-white no-underline shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:pl-2 max-[400px]:pr-3"
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-light py-2 pl-2.5 pr-4 font-body text-[13px] font-semibold text-white no-underline shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:pl-2 max-[400px]:pr-3"
               >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 11.5 12 4l8 7.5" />
@@ -705,7 +705,7 @@ export default function Navbar({
                   className={`absolute left-0 top-0 h-full w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-light/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
                   <input
@@ -724,7 +724,7 @@ export default function Navbar({
                     <button
                       type="button"
                       onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
+                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
                       title="মুছুন"
                       aria-label="মুছুন"
                     >
@@ -752,15 +752,15 @@ export default function Navbar({
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onWishClick} title="Wishlist">
+                <button className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onWishClick} title="Wishlist">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
-                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-primary text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
+                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
                 </button>
 
                 <button
-                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary"
+                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title="কার্ট"
@@ -769,23 +769,23 @@ export default function Navbar({
                     <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                     <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
                   </svg>
-                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-primary text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
+                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
                 </button>
 
                 {currentUser ? (
                   <button className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5" onClick={onAccountClick}>
-                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
+                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <span className="truncate">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
                   </button>
                 ) : (
-                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
+                  <button className="shrink-0 rounded-full bg-brand-light px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
                     লগইন করুন
                   </button>
                 )}
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
@@ -794,7 +794,7 @@ export default function Navbar({
 
                 <button
                   ref={mobileSearchToggleRef}
-                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-primary md:hidden"
+                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light md:hidden"
                   onClick={(e) => {
                     e.stopPropagation();
                     const next = !mobileSearchOpen;
@@ -828,7 +828,7 @@ export default function Navbar({
           <div className="min-h-0 overflow-hidden">
             <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
               <div className="relative" onClick={(e) => e.stopPropagation()}>
-                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-light/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                 </svg>
                 <input
@@ -844,7 +844,7 @@ export default function Navbar({
                 />
                 {searchQuery && (
                   <button
-                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
+                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
                     onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                     title="মুছুন"
                     aria-label="মুছুন"

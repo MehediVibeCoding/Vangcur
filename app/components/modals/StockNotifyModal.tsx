@@ -61,7 +61,7 @@ export default function StockNotifyModal() {
         </p>
         <button
           onClick={confirm}
-          className="mb-2 w-full rounded-[9px] border-none bg-brand-primary py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-brand-accent"
+          className="mb-2 w-full rounded-[9px] border-none bg-brand-light py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-brand-light-hover"
         >
           🔔 জানিয়ে দিন
         </button>

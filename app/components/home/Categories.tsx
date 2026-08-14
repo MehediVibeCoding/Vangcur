@@ -63,10 +63,10 @@ export default function Categories() {
     });
     const btn = btnKey === 'prev' ? prevBtnRef.current : nextBtnRef.current;
     if (btn) {
-      btn.classList.add('scale-95', 'bg-brand-primary', 'text-white', 'border-brand-primary');
+      btn.classList.add('scale-95', 'bg-brand-light', 'text-white', 'border-brand-light');
       clearTimeout(btnResetTimerRef.current[btnKey]);
       btnResetTimerRef.current[btnKey] = setTimeout(() => {
-        btn.classList.remove('scale-95', 'bg-brand-primary', 'text-white', 'border-brand-primary');
+        btn.classList.remove('scale-95', 'bg-brand-light', 'text-white', 'border-brand-light');
       }, 500);
     }
   };
@@ -142,15 +142,15 @@ export default function Categories() {
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
-          ক্যাটাগরি <span className="text-brand-primary">সমূহ</span>
+        <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
+          ক্যাটাগরি <span className="text-brand-light">সমূহ</span>
         </h2>
       </div>
 
       <div className="relative overflow-visible px-[38px] md:px-[44px]">
         <button
           ref={prevBtnRef}
-          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-primary hover:bg-brand-primary hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
         >
           &#8249;
@@ -168,10 +168,10 @@ export default function Categories() {
               return (
                 <div
                   key={cat.id}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-brand-primary hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'}`}
+                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'}`}
                   onClick={() => handleSelect(cat.id)}
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-brand-bg text-[22px] text-brand-primary md:h-[52px] md:w-[52px] md:text-2xl">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-brand-bg text-[22px] text-brand-light md:h-[52px] md:w-[52px] md:text-2xl">
                     <CatIcon icon={cat.icon} />
                   </div>
                   <div className="text-xs font-bold leading-tight text-ink md:text-[13px]">{cat.name}</div>
@@ -183,7 +183,7 @@ export default function Categories() {
 
         <button
           ref={nextBtnRef}
-          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-primary hover:bg-brand-primary hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
         >
           &#8250;
@@ -194,7 +194,7 @@ export default function Categories() {
         {Array.from({ length: pageCount }).map((_, p) => (
           <div
             key={p}
-            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-brand-primary' : 'w-2 bg-[#D1D5DB]'}`}
+            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-brand-light' : 'w-2 bg-[#D1D5DB]'}`}
             onClick={() => setCatPage(p)}
           />
         ))}

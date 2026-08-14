@@ -20,7 +20,7 @@ const TRUST_ITEMS: TrustItem[] = [
   {
     label: 'দ্রুত ডেলিভারি',
     sub: 'ঢাকা ১–৩ দিন',
-    tint: 'text-brand-primary bg-brand-primary/10',
+    tint: 'text-brand-light bg-brand-light/10',
     icon: (
       <svg {...iconProps}>
         <path d="M2.5 7.5h11v9h-11z" />
@@ -33,7 +33,7 @@ const TRUST_ITEMS: TrustItem[] = [
   {
     label: 'ওয়ারেন্টি',
     sub: 'সকল প্রোডাক্টে',
-    tint: 'text-brand-accent bg-brand-accent/10',
+    tint: 'text-brand-light-hover bg-brand-light-hover/10',
     icon: (
       <svg {...iconProps}>
         <path d="M12 3.5l7 2.5v5.2c0 4.4-3 7.4-7 9.3-4-1.9-7-4.9-7-9.3V6l7-2.5z" />

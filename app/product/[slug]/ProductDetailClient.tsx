@@ -130,7 +130,7 @@ function ArrowIcon({ className = '', dir = 'left' }: { className?: string; dir?:
 function SectionHeading({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="mb-5 flex items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-primary">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-light">
         {icon}
       </div>
       <div className="font-display text-lg font-bold text-ink">{children}</div>
@@ -493,7 +493,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
           <Navbar {...navbarProps} />
           <div className="flex min-h-[50vh] items-center justify-center gap-2.5 text-sm text-muted">
-            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-primary/25 border-t-brand-primary" />
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-light/25 border-t-brand-light" />
             লোড হচ্ছে...
           </div>
           <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
@@ -505,7 +505,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
       <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
         <Navbar {...navbarProps} />
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3.5 px-4 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-bg/60 text-brand-primary">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-bg/60 text-brand-light">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
               <path d="M3 8.5v7L12 20l9-4.5v-7" />
@@ -515,7 +515,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           <p className="text-sm text-muted">এই প্রোডাক্টটি খুঁজে পাওয়া যায়নি</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-primary px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh3"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-light px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3"
           >
             হোমে ফিরে যান
             <ArrowIcon dir="right" className="h-3.5 w-3.5" />
@@ -551,11 +551,11 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             type="button"
             onClick={() => router.back()}
             aria-label="ফিরে যান"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border-base text-ink transition-brand duration-brand hover:border-brand-primary/40 hover:text-brand-primary"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border-base text-ink transition-brand duration-brand hover:border-brand-light/40 hover:text-brand-light"
           >
             <ArrowIcon dir="left" className="h-3.5 w-3.5" />
           </button>
-          <Link href="/" className="shrink-0 transition-brand duration-brand hover:text-brand-primary">হোম</Link>
+          <Link href="/" className="shrink-0 transition-brand duration-brand hover:text-brand-light">হোম</Link>
           <span className="text-border-base">/</span>
           <span className="truncate text-ink/70">{nameShort}</span>
         </nav>
@@ -570,7 +570,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             onTouchEnd={handleGalleryTouchEnd}
           >
             {discountPct > 0 && (
-              <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-brand-primary px-3 py-1 text-[11px] font-bold text-white shadow-sh1">
+              <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-brand-light px-3 py-1 text-[11px] font-bold text-white shadow-sh1">
                 −{discountPct}%
               </div>
             )}
@@ -593,7 +593,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
                   <button
                     key={i}
                     aria-label={`ছবি ${i + 1}`}
-                    className={`h-1.5 rounded-full transition-brand duration-brand ${i === curImgIdx ? 'w-6 bg-brand-primary' : 'w-1.5 bg-border-base hover:bg-brand-primary/40'}`}
+                    className={`h-1.5 rounded-full transition-brand duration-brand ${i === curImgIdx ? 'w-6 bg-brand-light' : 'w-1.5 bg-border-base hover:bg-brand-light/40'}`}
                     onClick={() => goImg(i)}
                   />
                 ))}
@@ -604,7 +604,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
                     type="button"
                     key={i}
                     aria-label={`ছবি ${i + 1} দেখুন`}
-                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-primary shadow-[0_0_0_3px_rgba(0,88,199,.12)]' : 'border-border-base hover:border-brand-primary/40'}`}
+                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-light shadow-[0_0_0_3px_rgba(0,88,199,.12)]' : 'border-border-base hover:border-brand-light/40'}`}
                     onClick={() => goImg(i)}
                   >
                     <GalleryImg val={im} name={prod.name} isThumb />
@@ -619,7 +619,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           <h1 className="mb-3 font-display text-[21px] font-bold leading-snug text-ink sm:text-2xl">{prod.name}</h1>
 
           <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="font-display text-[28px] font-bold text-brand-primary sm:text-[32px]">৳{prod.price.toLocaleString('en-US')}</span>
+            <span className="font-display text-[28px] font-bold text-brand-light sm:text-[32px]">৳{prod.price.toLocaleString('en-US')}</span>
             {prod.old > prod.price && (
               <>
                 <span className="text-[15px] text-muted line-through">৳{prod.old.toLocaleString('en-US')}</span>
@@ -632,10 +632,10 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
 
           <div className="mb-5 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border-base bg-surface-muted px-3 py-1.5 text-[12.5px] font-medium text-ink">
-              <ShieldIcon className="text-brand-primary" /> {prod.warranty}
+              <ShieldIcon className="text-brand-light" /> {prod.warranty}
             </span>
             <button
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-border-base text-[11px] font-bold text-muted transition-brand duration-brand hover:border-brand-primary hover:text-brand-primary"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-border-base text-[11px] font-bold text-muted transition-brand duration-brand hover:border-brand-light hover:text-brand-light"
               onClick={() => setWarrantyOpen(true)}
               title="ওয়ারেন্টি বিস্তারিত"
             >
@@ -651,7 +651,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
               <div className="flex flex-wrap gap-2">
                 {quickSpecs.map(([k, v]) => (
                   <div key={k} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[12.5px] text-ink">
-                    <span className="mr-1 font-semibold text-brand-primary">{k}:</span>{v}
+                    <span className="mr-1 font-semibold text-brand-light">{k}:</span>{v}
                   </div>
                 ))}
               </div>
@@ -680,7 +680,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
               </button>
             </div>
             {qty > 1 && (
-              <div className="rounded-[10px] border-[1.5px] border-brand-primary/20 bg-brand-bg/25 px-3 py-2 text-[13px] font-bold text-brand-primary">
+              <div className="rounded-[10px] border-[1.5px] border-brand-light/20 bg-brand-bg/25 px-3 py-2 text-[13px] font-bold text-brand-light">
                 মোট: ৳{(prod.price * qty).toLocaleString('en-US')}
               </div>
             )}
@@ -688,7 +688,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
               <button
                 onClick={toggleWishFromPP}
                 title="Wishlist এ যোগ করুন"
-                className={`flex h-10 w-10 items-center justify-center rounded-[10px] border-[1.5px] transition-brand duration-brand ${wished ? 'border-brand-primary bg-brand-bg/40 text-brand-primary' : 'border-border-base bg-white text-muted hover:border-brand-primary/40 hover:text-brand-primary'}`}
+                className={`flex h-10 w-10 items-center justify-center rounded-[10px] border-[1.5px] transition-brand duration-brand ${wished ? 'border-brand-light bg-brand-bg/40 text-brand-light' : 'border-border-base bg-white text-muted hover:border-brand-light/40 hover:text-brand-light'}`}
               >
                 <HeartIcon filled={wished} />
               </button>
@@ -711,10 +711,10 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
               </button>
             ) : (
               <>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-primary py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh3" onClick={orderNow}>
+                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
                   <BoltIcon /> এখনই অর্ডার করুন
                 </button>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-border-base bg-white py-3.5 text-sm font-bold text-ink transition-brand duration-brand hover:border-brand-primary/30 hover:bg-surface-muted" onClick={addCartFromPP}>
+                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-border-base bg-white py-3.5 text-sm font-bold text-ink transition-brand duration-brand hover:border-brand-light/30 hover:bg-surface-muted" onClick={addCartFromPP}>
                   <CartIcon /> কার্টে যোগ করুন
                 </button>
                 {msgLink && (
@@ -734,7 +734,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           {TABS.map((t) => (
             <button
               key={t.id}
-              className={`whitespace-nowrap border-b-2 px-3.5 py-3.5 text-[13px] font-semibold transition-brand duration-brand ${activeTab === t.id ? 'border-brand-primary text-brand-primary' : 'border-transparent text-muted hover:text-ink'}`}
+              className={`whitespace-nowrap border-b-2 px-3.5 py-3.5 text-[13px] font-semibold transition-brand duration-brand ${activeTab === t.id ? 'border-brand-light text-brand-light' : 'border-transparent text-muted hover:text-ink'}`}
               onClick={() => scrollToSection(t.id)}
             >
               {t.label}
@@ -745,7 +745,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
 
       <div className="mx-auto max-w-[1100px] px-4 py-6 md:px-8">
         <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
-          <SectionHeading icon={<DocIcon />}>প্রোডাক্টের <span className="text-brand-primary">বিস্তারিত বিবরণ</span></SectionHeading>
+          <SectionHeading icon={<DocIcon />}>প্রোডাক্টের <span className="text-brand-light">বিস্তারিত বিবরণ</span></SectionHeading>
           <div className="text-[14px] leading-[1.85] text-ink/80">
             {(prod.longDesc || prod.desc) ? (
               (prod.longDesc || prod.desc)!.split('\n\n').map((p, i) => (
@@ -760,7 +760,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         </div>
 
         <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecFeatures" ref={(el) => { sectionRefs.current.ppSecFeatures = el; }}>
-          <SectionHeading icon={<SparkIcon />}>প্রধান <span className="text-brand-primary">ফিচারস</span></SectionHeading>
+          <SectionHeading icon={<SparkIcon />}>প্রধান <span className="text-brand-light">ফিচারস</span></SectionHeading>
           {features.length ? (
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {features.map((f, i) => <FeatureItem key={i} text={f} />)}
@@ -771,7 +771,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         </div>
 
         <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
-          <SectionHeading icon={<WrenchIcon />}>কারিগরি <span className="text-brand-primary">স্পেসিফিকেশন</span></SectionHeading>
+          <SectionHeading icon={<WrenchIcon />}>কারিগরি <span className="text-brand-light">স্পেসিফিকেশন</span></SectionHeading>
           <div className="overflow-x-auto rounded-brand border border-border-base">
             <table className="w-full border-collapse text-[13px]">
               <thead>
@@ -807,16 +807,16 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         </div>
 
         <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
-          <SectionHeading icon={<QuestionIcon />}>কমন <span className="text-brand-primary">প্রশ্নোত্তর (FAQ)</span></SectionHeading>
+          <SectionHeading icon={<QuestionIcon />}>কমন <span className="text-brand-light">প্রশ্নোত্তর (FAQ)</span></SectionHeading>
           {faqs.length ? faqs.map((f, i) => (
             <div className="border-b border-border-base last:border-0" key={i}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between gap-3 py-4 text-left text-[13.5px] font-semibold text-ink transition-brand duration-brand hover:text-brand-primary"
+                className="flex w-full items-center justify-between gap-3 py-4 text-left text-[13.5px] font-semibold text-ink transition-brand duration-brand hover:text-brand-light"
                 onClick={() => toggleFaq(i)}
               >
                 <span>{f.q}</span>
-                <ChevronIcon className={`shrink-0 transition-transform duration-brand ${openFaqIdx === i ? 'rotate-180 text-brand-primary' : 'text-muted'}`} />
+                <ChevronIcon className={`shrink-0 transition-transform duration-brand ${openFaqIdx === i ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
               </button>
               {openFaqIdx === i && <div className="pb-4 text-[13px] leading-[1.7] text-muted">{f.a}</div>}
             </div>
@@ -853,7 +853,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         <div className="mx-auto max-w-[1100px] px-4 pb-10 md:px-8">
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-base" />
-            <div className="whitespace-nowrap font-display text-lg font-bold text-ink">একই ক্যাটাগরির <span className="text-brand-primary">আরও পণ্য</span></div>
+            <div className="whitespace-nowrap font-display text-lg font-bold text-ink">একই ক্যাটাগরির <span className="text-brand-light">আরও পণ্য</span></div>
             <div className="h-px flex-1 bg-border-base" />
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4" ref={relatedGridRef}>
@@ -888,7 +888,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             </button>
           ) : (
             <>
-              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-primary px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-accent" onClick={orderNow}>
+              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
                 <BoltIcon /> অর্ডার করুন
               </button>
               <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-[1.5px] border-border-base bg-white px-4 py-2.5 text-[13px] font-bold text-ink transition-brand duration-brand hover:bg-surface-muted" onClick={addCartFromPP}>

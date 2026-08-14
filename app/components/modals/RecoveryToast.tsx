@@ -51,7 +51,7 @@ export default function RecoveryToast() {
         </div>
         <button
           onClick={resume}
-          className="mt-2.5 w-full rounded-full bg-brand-primary py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:bg-brand-accent"
+          className="mt-2.5 w-full rounded-full bg-brand-light py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:bg-brand-light-hover"
         >
           চেকআউট চালিয়ে যান
         </button>

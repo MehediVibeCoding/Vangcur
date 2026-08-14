@@ -185,11 +185,11 @@ export default function CustomerGallery() {
 
   const headerBlock = (
     <div className="mb-8 px-5 text-center">
-      <div className="mb-2.5 inline-block rounded-full border border-brand-primary/20 bg-brand-primary/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1px] text-brand-accent">
+      <div className="mb-2.5 inline-block rounded-full border border-brand-light/20 bg-brand-light/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1px] text-brand-light-hover">
         ❤️ Customer Love
       </div>
       <h2 className="mb-1.5 font-display text-[28px] font-extrabold leading-tight text-ink">
-        Unboxing <span className="text-brand-primary">গ্যালারি</span>
+        Unboxing <span className="text-brand-light">গ্যালারি</span>
       </h2>
       <p className="text-[13.5px] text-muted">আমাদের কাস্টমারদের আনন্দময় মুহূর্ত</p>
     </div>
@@ -272,14 +272,14 @@ export default function CustomerGallery() {
             </div>
           </div>
           <button
-            className="absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-xl leading-none text-white shadow-[0_4px_14px_rgba(0,0,0,.2)] transition-brand duration-brand hover:bg-brand-primary sm:flex"
+            className="absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-xl leading-none text-white shadow-[0_4px_14px_rgba(0,0,0,.2)] transition-brand duration-brand hover:bg-brand-light sm:flex"
             onClick={() => slide(-1)}
             aria-label="আগের"
           >
             ‹
           </button>
           <button
-            className="absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-xl leading-none text-white shadow-[0_4px_14px_rgba(0,0,0,.2)] transition-brand duration-brand hover:bg-brand-primary sm:flex"
+            className="absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-xl leading-none text-white shadow-[0_4px_14px_rgba(0,0,0,.2)] transition-brand duration-brand hover:bg-brand-light sm:flex"
             onClick={() => slide(1)}
             aria-label="পরের"
           >
@@ -293,7 +293,7 @@ export default function CustomerGallery() {
           {reviews.map((r, i) => (
             <button
               key={r.id}
-              className={`h-2 w-2 rounded-full transition-brand duration-brand ${i === activeIdx ? 'scale-[1.25] bg-brand-primary' : 'bg-border-base'}`}
+              className={`h-2 w-2 rounded-full transition-brand duration-brand ${i === activeIdx ? 'scale-[1.25] bg-brand-light' : 'bg-border-base'}`}
               onClick={() => goTo(i)}
               aria-label={`রিভিউ ${i + 1}`}
             />

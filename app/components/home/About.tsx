@@ -52,7 +52,7 @@ export default function About() {
   return (
     <section className="m-0 px-5 pb-11 pt-[52px]" style={{ background: 'linear-gradient(135deg,#1A1A1A 0%,#0f1a2e 60%,#1A1A1A 100%)' }}>
       <div className="mx-auto max-w-[760px] text-center">
-        <div className="mb-3.5 inline-block rounded-full border border-brand-primary/30 bg-brand-primary/[.15] px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1.2px] text-brand-accent">
+        <div className="mb-3.5 inline-block rounded-full border border-brand-light/30 bg-brand-light/[.15] px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1.2px] text-brand-light-hover">
           আমাদের সম্পর্কে
         </div>
         <h2 className="mb-4 font-display text-2xl leading-tight text-white md:text-[30px]">

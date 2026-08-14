@@ -180,7 +180,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-brand-bg/60 via-white to-white px-5 pb-4 pt-5 sm:rounded-t-[20px]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-info to-brand-primary text-white shadow-sh1">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-info to-brand-light text-white shadow-sh1">
                 <IconBag />
               </span>
               <div>
@@ -198,20 +198,20 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               <IconClose />
             </button>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-brand-bg via-info to-brand-primary" />
+          <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-brand-bg via-info to-brand-light" />
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {cart.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-primary/60">
+              <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
                 <IconCartEmpty />
               </div>
               <p className="mb-1 font-body text-sm font-bold text-ink">আপনার কার্ট খালি</p>
               <p className="mb-5 font-body text-[12.5px] text-muted">পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন</p>
               <button
                 onClick={goToProducts}
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-primary px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               >
                 প্রোডাক্ট দেখুন <IconArrowRight />
               </button>
@@ -238,19 +238,19 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         <IconTrash />
                       </button>
                     </div>
-                    <div className="mb-2 font-body text-[13.5px] font-extrabold text-brand-primary">
+                    <div className="mb-2 font-body text-[13.5px] font-extrabold text-brand-light">
                       ৳{(item.price * item.qty).toLocaleString('en-US')}
                     </div>
                     <div className="inline-flex items-center gap-0.5 rounded-full border border-border-base bg-surface-muted/70 p-[3px]">
                       <button
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-sh1 transition-brand duration-brand hover:text-brand-primary"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-sh1 transition-brand duration-brand hover:text-brand-light"
                         onClick={() => handleQty(item.id, -1)}
                       >
                         <IconMinus />
                       </button>
                       <span className="min-w-[22px] text-center font-body text-[12.5px] font-bold text-ink">{item.qty}</span>
                       <button
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-sh1 transition-brand duration-brand hover:text-brand-primary"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-sh1 transition-brand duration-brand hover:text-brand-light"
                         onClick={() => handleQty(item.id, 1)}
                       >
                         <IconPlus />
@@ -270,7 +270,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               <span className="font-body text-lg font-extrabold text-ink">৳{total.toLocaleString('en-US')}</span>
             </div>
             <button
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-primary py-3.5 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               onClick={handleCheckout}
             >
               চেকআউট করুন <IconArrowRight />

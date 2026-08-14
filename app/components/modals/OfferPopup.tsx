@@ -68,14 +68,14 @@ export default function OfferPopup() {
                 <button
                   key={p.id}
                   onClick={() => goToProduct(p)}
-                  className="flex items-center gap-3 rounded-[12px] border border-border-base p-2.5 text-left transition-brand duration-brand hover:border-brand-primary/40 hover:bg-brand-bg/30"
+                  className="flex items-center gap-3 rounded-[12px] border border-border-base p-2.5 text-left transition-brand duration-brand hover:border-brand-light/40 hover:bg-brand-bg/30"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={(p.imgs || [])[0] || ''} alt={p.name} className="h-14 w-14 shrink-0 rounded-[8px] object-cover" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-body text-[13px] font-semibold text-ink">{p.name}</div>
                     <div className="mt-0.5 flex items-center gap-1.5">
-                      <span className="font-body text-[13px] font-bold text-brand-primary">৳{p.price.toLocaleString()}</span>
+                      <span className="font-body text-[13px] font-bold text-brand-light">৳{p.price.toLocaleString()}</span>
                       <span className="font-body text-[11px] text-muted line-through">৳{p.old.toLocaleString()}</span>
                     </div>
                   </div>

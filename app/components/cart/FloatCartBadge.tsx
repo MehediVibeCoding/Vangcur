@@ -29,7 +29,7 @@ export default function FloatCartBadge() {
 
   return (
     <div
-      className={`fixed bottom-[152px] right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-primary shadow-sh3 ${jiggle ? 'animate-cart-jiggle' : ''}`}
+      className={`fixed bottom-[152px] right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-light shadow-sh3 ${jiggle ? 'animate-cart-jiggle' : ''}`}
       ref={btnRef}
       onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
       onAnimationEnd={() => setJiggle(false)}
@@ -39,7 +39,7 @@ export default function FloatCartBadge() {
         <line x1="3" y1="6" x2="21" y2="6" />
         <path d="M16 10a4 4 0 01-8 0" />
       </svg>
-      <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-brand-primary">
+      <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-brand-light">
         {count}
       </span>
     </div>

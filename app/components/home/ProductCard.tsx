@@ -183,7 +183,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         {sold ? (
           <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>Sold Out</div>
         ) : p.badge && (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>
             {p.badge}
           </div>
         )}
@@ -240,7 +240,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   <CartIcon />
                 </button>
                 <button
-                  className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-primary backdrop-blur-md transition-brand duration-brand hover:brightness-95"
+                  className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-light backdrop-blur-md transition-brand duration-brand hover:brightness-95"
                   style={{
                     height: cq(cw, 28, 0.18, 40),
                     fontSize: cq(cw, 9, 0.058, 13),

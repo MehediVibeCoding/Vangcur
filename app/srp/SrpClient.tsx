@@ -33,7 +33,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
           <Link
             href="/"
             aria-label="হোম পেইজে যান"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-primary shadow-sm transition-brand duration-brand hover:bg-brand-primary hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-light shadow-sm transition-brand duration-brand hover:bg-brand-light hover:text-white"
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 11.5 12 4l8 7.5" />
@@ -42,7 +42,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
           </Link>
 
           <div className="relative flex-1">
-            <svg className="pointer-events-none absolute left-[15px] top-1/2 -translate-y-1/2 text-brand-primary/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <svg className="pointer-events-none absolute left-[15px] top-1/2 -translate-y-1/2 text-brand-light/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
             </svg>
             <input
@@ -51,14 +51,14 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
               placeholder="পুনরায় সার্চ করুন..."
               onChange={(e) => { setValue(e.target.value); onQueryChange(e.target.value); }}
               autoComplete="off"
-              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none transition-brand duration-brand focus:border-brand-primary pl-10 ${value ? 'pr-9' : 'pr-4'}`}
+              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none transition-brand duration-brand focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
             />
             {value && (
               <button
                 type="button"
                 onClick={() => { setValue(''); onQueryChange(''); }}
                 aria-label="মুছুন"
-                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-primary transition-brand duration-brand hover:bg-brand-primary hover:text-white"
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
@@ -72,11 +72,11 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
 
 // ---------- ইমোজির বদলে ব্র্যান্ডিং অনুযায়ী প্রফেশনাল আইকন ব্যাজ — CartSidebar-এর
 // খালি-কার্ট আইকনের ঠিক same gradient circle প্যাটার্ন (from-brand-bg/50 to-surface-muted
-// ব্যাকগ্রাউন্ড + brand-primary/60 রঙের স্ট্রোক আইকন), যাতে সাইটের সব খালি-স্টেট
+// ব্যাকগ্রাউন্ড + brand-light/60 রঙের স্ট্রোক আইকন), যাতে সাইটের সব খালি-স্টেট
 // দেখতে এক রকম লাগে। ----------
 function SearchGlyph() {
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-primary/60">
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
       </svg>
@@ -93,16 +93,16 @@ function ArrowRightIcon() {
 }
 
 // ---------- কার্ট সাইডবার/চেকআউট বাটনের ঠিক same ব্র্যান্ডেড pill বাটন —
-// rounded-full + gradient (info -> brand-primary) + shadow-sh2, আগে যেটা
+// rounded-full + gradient (info -> brand-light) + shadow-sh2, আগে যেটা
 // সাধারণ কালো (bg-ink) বর্গাকৃতির বাটন ছিল। ----------
-const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
+const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
 
 function CategoryIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
   if (isSvg) {
     return (
       <span
-        className="flex h-5 w-5 shrink-0 items-center justify-center text-brand-primary [&_svg]:!h-5 [&_svg]:!w-5"
+        className="flex h-5 w-5 shrink-0 items-center justify-center text-brand-light [&_svg]:!h-5 [&_svg]:!w-5"
         dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
       />
     );
@@ -319,7 +319,7 @@ export default function SrpClient() {
                       type="button"
                       key={c.id}
                       onClick={() => goToHomeCategory(c.id)}
-                      className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border-base bg-white px-4 py-2.5 text-[13px] font-semibold text-ink transition-brand duration-brand hover:border-brand-primary hover:bg-brand-bg hover:text-brand-primary"
+                      className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border-base bg-white px-4 py-2.5 text-[13px] font-semibold text-ink transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg hover:text-brand-light"
                     >
                       <CategoryIcon icon={c.icon} />
                       {c.name}
@@ -355,7 +355,7 @@ export default function SrpClient() {
                   {showLoadMoreBtn && (
                     <button
                       onClick={handleLoadMoreClick}
-                      className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+                      className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
                       আরো প্রোডাক্ট দেখুন

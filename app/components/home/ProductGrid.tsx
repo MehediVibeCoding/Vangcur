@@ -16,7 +16,7 @@ const PRODS_AUTO_THRESHOLD = 2;
 
 // ---------- CartSidebar-এর খালি-কার্ট স্টেটের ঠিক same ভিজ্যুয়াল ভাষা —
 // gradient circle ব্যাজে প্রফেশনাল স্ট্রোক আইকন (📦 ইমোজির বদলে), আর
-// rounded-full gradient (info -> brand-primary) pill বাটন (আগের কালো
+// rounded-full gradient (info -> brand-light) pill বাটন (আগের কালো
 // rounded-xl বাটনের বদলে) — চেকআউট/কার্ট বাটনের সাথে মিলিয়ে। ----------
 function EmptyBoxIcon() {
   return (
@@ -36,7 +36,7 @@ function ArrowRightIcon() {
   );
 }
 
-const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-7 py-3 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
+const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-7 py-3 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
 
 export default function ProductGrid() {
   const supabase = useRef(createClient()).current;
@@ -186,15 +186,15 @@ export default function ProductGrid() {
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5" id="prodSec">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="border-l-[3px] border-brand-primary pl-3 text-xl font-bold">
-          সকল <span className="text-brand-primary">প্রোডাক্ট</span>
+        <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
+          সকল <span className="text-brand-light">প্রোডাক্ট</span>
         </h2>
         <span className="text-[13px] text-muted">{list.length}টি প্রোডাক্ট</span>
       </div>
 
       {list.length === 0 ? (
         <div className="col-span-full flex flex-col items-center gap-3.5 px-5 py-[60px] text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-primary/60">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
             <EmptyBoxIcon />
           </div>
           <p className="text-sm text-muted">এই ক্যাটাগরিতে এখন কোনো পণ্য নেই</p>
@@ -232,7 +232,7 @@ export default function ProductGrid() {
         {showLoadMoreBtn && (
           <button
             onClick={handleLoadMoreClick}
-            className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+            className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
             আরো প্রোডাক্ট দেখুন

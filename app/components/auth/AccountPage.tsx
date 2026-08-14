@@ -281,7 +281,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
 
           <button
             onClick={() => { onClose(); router.push('/'); }}
-            className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-brand-primary px-3 py-2 font-body text-[12.5px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-accent md:px-4"
+            className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-brand-light px-3 py-2 font-body text-[12.5px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover md:px-4"
           >
             ব্যাক টু হোম
           </button>
@@ -511,7 +511,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                         </div>
                         <div className="mt-2 flex gap-1.5">
                           <button onClick={() => handleDeleteDraft(draft.id, draft._sbId)} className="flex-1 rounded-[8px] border border-border-base py-1.5 font-body text-[11px] font-semibold text-muted hover:bg-surface-muted">🗑️ সরান</button>
-                          <button onClick={() => continueFromDraft(draft)} className="flex-1 rounded-[8px] bg-brand-primary py-1.5 font-body text-[11px] font-bold text-white hover:bg-brand-accent">⚡ চালিয়ে যান</button>
+                          <button onClick={() => continueFromDraft(draft)} className="flex-1 rounded-[8px] bg-brand-light py-1.5 font-body text-[11px] font-bold text-white hover:bg-brand-light-hover">⚡ চালিয়ে যান</button>
                         </div>
                       </div>
                     );
@@ -602,7 +602,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
             <div className="mb-4 font-body text-sm font-semibold text-ink">আপনি কি নিশ্চিতভাবে লগআউট করতে চান?</div>
             <div className="flex gap-2.5">
               <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 rounded-full border border-border-base py-2.5 font-body text-[13px] font-semibold text-ink hover:bg-surface-muted">না</button>
-              <button onClick={doLogout} className="flex-1 rounded-full bg-brand-primary py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-accent">লগআউট</button>
+              <button onClick={doLogout} className="flex-1 rounded-full bg-brand-light py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-light-hover">লগআউট</button>
             </div>
           </div>
         </div>

@@ -105,7 +105,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                     type="text" placeholder="যেমন: VC-1082" value={orderNum}
                     onChange={(e) => setOrderNum(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                    className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-primary/40 focus:bg-white"
+                    className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-light/40 focus:bg-white"
                   />
                 </div>
                 <div className="mb-4">
@@ -114,13 +114,13 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                     type="tel" placeholder="যে নম্বরে অর্ডার করেছিলেন" value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                    className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-primary/40 focus:bg-white"
+                    className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-light/40 focus:bg-white"
                   />
                 </div>
                 {err && <div className="mb-3 text-center font-body text-[12px] font-semibold text-[#DC2626]">{err}</div>}
                 <button
                   onClick={handleSearch} disabled={loading}
-                  className="w-full rounded-full bg-ink py-[13px] font-body text-[15px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary disabled:opacity-70"
+                  className="w-full rounded-full bg-ink py-[13px] font-body text-[15px] font-bold text-white transition-brand duration-brand hover:bg-brand-light disabled:opacity-70"
                 >
                   {loading ? '⏳ খোঁজা হচ্ছে...' : 'ট্র্যাক করুন'}
                 </button>
@@ -132,7 +132,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                     <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
                     <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                   </div>
-                  <button onClick={reset} className="font-body text-[12px] font-semibold text-brand-primary hover:underline">অন্য অর্ডার</button>
+                  <button onClick={reset} className="font-body text-[12px] font-semibold text-brand-light hover:underline">অন্য অর্ডার</button>
                 </div>
 
                 {isCancelled ? (
@@ -150,10 +150,10 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                       return (
                         <div key={step.key} className="flex gap-3">
                           <div className="flex flex-col items-center">
-                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${done ? 'bg-brand-primary text-white' : 'bg-surface-muted text-muted'}`}>
+                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${done ? 'bg-brand-light text-white' : 'bg-surface-muted text-muted'}`}>
                               {step.icon}
                             </div>
-                            {!isLast && <div className={`w-[2px] flex-1 ${idx < currentStepIdx ? 'bg-brand-primary' : 'bg-border-base'}`} style={{ minHeight: 24 }} />}
+                            {!isLast && <div className={`w-[2px] flex-1 ${idx < currentStepIdx ? 'bg-brand-light' : 'bg-border-base'}`} style={{ minHeight: 24 }} />}
                           </div>
                           <div className={`pb-6 pt-1 font-body text-[13px] font-semibold ${done ? 'text-ink' : 'text-muted'}`}>
                             {step.label}

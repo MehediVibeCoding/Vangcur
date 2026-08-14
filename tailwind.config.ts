@@ -19,7 +19,8 @@ const config: Config = {
       colors: {
         brand: {
           bg: '#C3DEFC',
-          light: '#44A4FB',
+          light: '#44A7FC',
+          'light-hover': '#3C93DE',
           primary: '#0058C7',
           accent: '#005EFC',
           surface: '#FFFFFF',
@@ -65,8 +66,8 @@ const config: Config = {
           to: { opacity: '1', transform: 'translateX(0)' },
         },
         badgeHotGlow: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(0,88,199,.45)' },
-          '50%': { boxShadow: '0 0 8px 3px rgba(0,88,199,0)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(68,167,252,.45)' },
+          '50%': { boxShadow: '0 0 8px 3px rgba(68,167,252,0)' },
         },
         heartbeat: {
           '0%': { transform: 'scale(1)' },

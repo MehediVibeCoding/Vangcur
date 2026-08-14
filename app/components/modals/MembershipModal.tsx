@@ -53,11 +53,11 @@ export default function MembershipModal() {
                 <div className="font-body text-[15px] font-bold" style={cssStringToStyle(tierColorStyle(currentTier.key))}>{currentTier.bn}</div>
                 <div className="mt-1 font-body text-[12px] text-muted">সম্পন্ন অর্ডার: {completedCount}টি</div>
                 {nextTier && (
-                  <div className="mt-2 font-body text-[12px] font-semibold text-brand-primary">
+                  <div className="mt-2 font-body text-[12px] font-semibold text-brand-light">
                     পরবর্তী লেভেল ({nextTier.bn})-এর জন্য আর {Math.max(0, nextTier.min - (completedCount || 0))}টি অর্ডার লাগবে
                   </div>
                 )}
-                {!nextTier && <div className="mt-2 font-body text-[12px] font-semibold text-brand-primary">আপনি সর্বোচ্চ লেভেলে আছেন 🎉</div>}
+                {!nextTier && <div className="mt-2 font-body text-[12px] font-semibold text-brand-light">আপনি সর্বোচ্চ লেভেলে আছেন 🎉</div>}
               </div>
               <div className="flex flex-col gap-2">
                 {MEMBERSHIP_TIERS.map((t, i) => {
@@ -65,14 +65,14 @@ export default function MembershipModal() {
                   return (
                     <div
                       key={t.key}
-                      className={`flex items-center gap-3 rounded-[10px] border px-3 py-2.5 ${reached ? 'border-brand-primary/30 bg-brand-bg/40' : 'border-border-base bg-white'}`}
+                      className={`flex items-center gap-3 rounded-[10px] border px-3 py-2.5 ${reached ? 'border-brand-light/30 bg-brand-bg/40' : 'border-border-base bg-white'}`}
                     >
                       <div className="h-7 w-7 shrink-0" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(crownSVG(t.crown)) }} />
                       <div className="min-w-0 flex-1">
                         <div className="font-body text-[13px] font-bold text-ink">{t.bn}</div>
                         <div className="font-body text-[11px] text-muted">{t.max === Infinity ? `${t.min}+ অর্ডার সম্পন্ন` : `${t.min}-${t.max}টি অর্ডার সম্পন্ন`}</div>
                       </div>
-                      {reached && <span className="shrink-0 text-brand-primary">✓</span>}
+                      {reached && <span className="shrink-0 text-brand-light">✓</span>}
                     </div>
                   );
                 })}
