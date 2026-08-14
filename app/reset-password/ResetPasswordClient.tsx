@@ -59,7 +59,7 @@ function IconCheck() {
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-primary/[0.14]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
       <svg {...deco} width="34" height="34" className="absolute -left-1 top-3 -rotate-12" viewBox="0 0 24 24">
         <rect x="5" y="10.5" width="14" height="9" rx="2" />
         <path d="M7.5 10.5V7.8a4.5 4.5 0 0 1 9 0v2.7" />
@@ -87,7 +87,7 @@ function fieldClass(hasErr: boolean, extra = '') {
   const base =
     'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70';
   const normal =
-    'border-border-base bg-white focus:border-brand-primary/50 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+    'border-border-base bg-white focus:border-brand-light/50 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
   const error =
     'border-[#FCA5A5] bg-[#FEF2F2] focus:border-[#DC2626] focus:bg-[#FEF2F2] focus:shadow-[0_0_0_3px_rgba(220,38,38,.12)]';
   return `${base} ${hasErr ? error : normal} ${extra}`;
@@ -96,7 +96,7 @@ function fieldClass(hasErr: boolean, extra = '') {
 const fieldIconWrapClass = 'pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-muted';
 const fieldLabelClass = 'mb-1.5 block font-body text-[12.5px] font-bold text-ink';
 const primaryBtnClass =
-  'w-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:shadow-[0_2px_10px_rgba(0,88,199,.28)] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2';
+  'w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:shadow-[0_2px_10px_rgba(0,88,199,.28)] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50 focus-visible:ring-offset-2';
 
 export default function ResetPasswordClient() {
   const supabase = useRef(createClient()).current;
@@ -199,7 +199,7 @@ export default function ResetPasswordClient() {
                   />
                   <button
                     type="button" title={showPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowPass((v) => !v)}
-                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showPass ? 'text-brand-primary' : ''}`}
+                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showPass} />
                   </button>
@@ -219,7 +219,7 @@ export default function ResetPasswordClient() {
                   />
                   <button
                     type="button" title={showConfirmPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowConfirmPass((v) => !v)}
-                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showConfirmPass ? 'text-brand-primary' : ''}`}
+                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showConfirmPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showConfirmPass} />
                   </button>
@@ -240,7 +240,7 @@ export default function ResetPasswordClient() {
 
           {status === 'done' && (
             <div className="py-6 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-light/10 text-brand-light">
                 <IconCheck />
               </div>
               <p className="font-body text-[14px] font-bold leading-relaxed text-ink">

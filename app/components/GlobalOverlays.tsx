@@ -58,7 +58,7 @@ export default function GlobalOverlays() {
         (900/1100) দুটোরই উপরে (1300) রাখা হয়েছে, যাতে কখনো ঢাকা না পড়ে।
       */}
       <div
-        className="pointer-events-none fixed bottom-20 left-1/2 z-[1300] flex -translate-x-1/2 translate-y-2 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-primary/15 bg-brand-bg px-5 py-3 text-[13px] font-semibold text-brand-primary opacity-0 shadow-sh3 transition-all duration-300 ease-out max-w-[92vw] [&.show]:pointer-events-auto [&.show]:translate-y-0 [&.show]:opacity-100"
+        className="pointer-events-none fixed bottom-20 left-1/2 z-[1300] flex -translate-x-1/2 translate-y-2 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-light/15 bg-brand-bg px-5 py-3 text-[13px] font-semibold text-brand-light opacity-0 shadow-sh3 transition-all duration-300 ease-out max-w-[92vw] [&.show]:pointer-events-auto [&.show]:translate-y-0 [&.show]:opacity-100"
         id="toast"
       />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />

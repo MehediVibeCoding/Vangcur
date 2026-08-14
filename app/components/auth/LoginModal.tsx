@@ -129,7 +129,7 @@ function IconMailCheck() {
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-primary/[0.14]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
       <svg {...deco} width="34" height="34" className="absolute -left-1 top-3 -rotate-12" viewBox="0 0 24 24">
         <path d="M4 13a8 8 0 0 1 16 0" />
         <rect x="3" y="13" width="4" height="6" rx="1.5" />
@@ -170,7 +170,7 @@ function fieldClass(hasErr: boolean, extra = '') {
   const base =
     'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70';
   const normal =
-    'border-border-base bg-white focus:border-brand-primary/50 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
+    'border-border-base bg-white focus:border-brand-light/50 focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)]';
   const error =
     'border-[#FCA5A5] bg-[#FEF2F2] focus:border-[#DC2626] focus:bg-[#FEF2F2] focus:shadow-[0_0_0_3px_rgba(220,38,38,.12)]';
   return `${base} ${hasErr ? error : normal} ${extra}`;
@@ -182,13 +182,13 @@ const fieldIconWrapClass =
 const fieldLabelClass = 'mb-1.5 block font-body text-[12.5px] font-bold text-ink';
 
 const primaryBtnClass =
-  'w-full rounded-full bg-gradient-to-r from-brand-primary to-brand-accent py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:shadow-[0_2px_10px_rgba(0,88,199,.28)] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 focus-visible:ring-offset-2';
+  'w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:shadow-[0_2px_10px_rgba(0,88,199,.28)] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50 focus-visible:ring-offset-2';
 
 const backBtnClass =
-  'mt-2.5 w-full rounded-full border-[1.5px] border-border-base bg-transparent py-[11px] font-body text-[13px] font-semibold text-muted transition-brand duration-brand hover:border-brand-primary/30 hover:bg-brand-primary/5 hover:text-brand-primary';
+  'mt-2.5 w-full rounded-full border-[1.5px] border-border-base bg-transparent py-[11px] font-body text-[13px] font-semibold text-muted transition-brand duration-brand hover:border-brand-light/30 hover:bg-brand-light/5 hover:text-brand-light';
 
 const linkChipClass =
-  'bg-transparent p-0 border-0 font-bold text-brand-primary transition-brand duration-brand hover:opacity-75';
+  'bg-transparent p-0 border-0 font-bold text-brand-light transition-brand duration-brand hover:opacity-75';
 
 const rememberLabelClass = 'flex items-center gap-1.5 text-ink';
 
@@ -476,7 +476,7 @@ export default function LoginModal({
           <button
             onClick={onClose}
             title="বন্ধ করুন"
-            className="absolute right-3.5 top-3.5 z-[1] flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/60 bg-white/70 text-ink/60 shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+            className="absolute right-3.5 top-3.5 z-[1] flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/60 bg-white/70 text-ink/60 shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50"
           >
             <IconClose />
           </button>
@@ -513,7 +513,7 @@ export default function LoginModal({
                   />
                   <button
                     type="button" title={showLPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowLPass((v) => !v)}
-                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showLPass ? 'text-brand-primary' : ''}`}
+                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showLPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showLPass} />
                   </button>
@@ -522,7 +522,7 @@ export default function LoginModal({
               </div>
               <div className="flex items-center justify-between font-body text-[12.5px]">
                 <label className={rememberLabelClass}>
-                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 cursor-pointer rounded border-[1.5px] border-border-base accent-brand-primary transition-brand duration-brand hover:border-brand-primary/50" />
+                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 cursor-pointer rounded border-[1.5px] border-border-base accent-brand-light transition-brand duration-brand hover:border-brand-light/50" />
                   মনে রাখুন
                 </label>
                 <button onClick={switchToForgot} className={linkChipClass}>পাসওয়ার্ড ভুলে গেছেন?</button>
@@ -533,7 +533,7 @@ export default function LoginModal({
                 <>
                   <div className="relative my-1 text-center font-body text-[12px] text-muted before:absolute before:left-0 before:top-1/2 before:h-px before:w-[42%] before:bg-border-base after:absolute after:right-0 after:top-1/2 after:h-px after:w-[42%] after:bg-border-base">অথবা</div>
                   <button
-                    className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-brand-bg bg-brand-bg/70 py-3 font-body text-[13.5px] font-bold text-ink backdrop-blur-sm transition-brand duration-brand hover:border-brand-primary/25 hover:bg-brand-bg disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/40"
+                    className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-brand-bg bg-brand-bg/70 py-3 font-body text-[13.5px] font-bold text-ink backdrop-blur-sm transition-brand duration-brand hover:border-brand-light/25 hover:bg-brand-bg disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/40"
                     onClick={loginWithGoogle} disabled={googleLoading}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24">
@@ -606,7 +606,7 @@ export default function LoginModal({
                   />
                   <button
                     type="button" title={showRPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowRPass((v) => !v)}
-                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showRPass ? 'text-brand-primary' : ''}`}
+                    className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showRPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showRPass} />
                   </button>
@@ -629,7 +629,7 @@ export default function LoginModal({
             <div className="flex flex-col gap-3.5">
               {forgotSubmitted ? (
                 <div className="pt-1 pb-3 text-center">
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-light/10 text-brand-light">
                     <IconMailCheck />
                   </div>
                   <p className="font-body text-[14px] leading-relaxed text-ink">
