@@ -321,10 +321,22 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
     }
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3.5 text-center">
-        <div className="text-5xl">📦</div>
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-primary/60">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
+            <path d="M3 8.5v7L12 20l9-4.5v-7" />
+            <path d="M12 13v7" />
+          </svg>
+        </div>
         <p className="text-sm text-muted">এই প্রোডাক্টটি খুঁজে পাওয়া যায়নি</p>
-        <Link href="/" className="rounded-[10px] bg-ink px-[22px] py-2.5 text-[13px] font-bold text-white no-underline">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-primary px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+        >
           হোমে ফিরে যান
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4.5 12h15M13 5.5 20 12l-7 6.5" />
+          </svg>
         </Link>
       </div>
     );

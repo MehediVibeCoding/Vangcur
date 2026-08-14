@@ -70,28 +70,32 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
   );
 }
 
-// ---------- ইমোজির বদলে ব্র্যান্ডিং অনুযায়ী প্রফেশনাল সার্চ-আইকন ব্যাজ —
-// হোমপেজের ক্যাটাগরি/আইকন ব্যাজগুলোর মতোই brand-bg ব্যাকগ্রাউন্ড + brand-primary
-// রঙের আইকন ব্যবহার করা হয়েছে, যাতে খালি-স্টেটগুলোও সাইটের বাকি অংশের সাথে
-// দৃশ্যত মিলে যায়। ----------
+// ---------- ইমোজির বদলে ব্র্যান্ডিং অনুযায়ী প্রফেশনাল আইকন ব্যাজ — CartSidebar-এর
+// খালি-কার্ট আইকনের ঠিক same gradient circle প্যাটার্ন (from-brand-bg/50 to-surface-muted
+// ব্যাকগ্রাউন্ড + brand-primary/60 রঙের স্ট্রোক আইকন), যাতে সাইটের সব খালি-স্টেট
+// দেখতে এক রকম লাগে। ----------
 function SearchGlyph() {
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg text-brand-primary">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-primary/60">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
       </svg>
     </div>
   );
 }
 
-function HomeIcon() {
+function ArrowRightIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 11.5 12 4l8 7.5" />
-      <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12h15M13 5.5 20 12l-7 6.5" />
     </svg>
   );
 }
+
+// ---------- কার্ট সাইডবার/চেকআউট বাটনের ঠিক same ব্র্যান্ডেড pill বাটন —
+// rounded-full + gradient (info -> brand-primary) + shadow-sh2, আগে যেটা
+// সাধারণ কালো (bg-ink) বর্গাকৃতির বাটন ছিল। ----------
+const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
 
 function CategoryIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
@@ -116,12 +120,8 @@ function NoQueryState() {
         অথবা
         <span className="h-px flex-1 bg-border-base" />
       </div>
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
-      >
-        <HomeIcon />
-        ওয়েবসাইটের হোম পেইজে ফিরে যান
+      <Link href="/" className={brandCtaBtnClass}>
+        ওয়েবসাইটের হোম পেইজে ফিরে যান <ArrowRightIcon />
       </Link>
     </div>
   );
@@ -137,12 +137,8 @@ function ZeroResultsState({ query }: { query: string }) {
       <SearchGlyph />
       <p className="text-[15px] font-bold text-ink">&quot;{query}&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</p>
       <p className="max-w-sm text-[13px] text-muted">অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে ওয়েবসাইটের হোম পেইজে ফিরে যান।</p>
-      <Link
-        href="/"
-        className="mt-1 inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
-      >
-        <HomeIcon />
-        ওয়েবসাইটের হোম পেইজে ফিরে যান
+      <Link href="/" className={`mt-1 ${brandCtaBtnClass}`}>
+        ওয়েবসাইটের হোম পেইজে ফিরে যান <ArrowRightIcon />
       </Link>
     </div>
   );
@@ -156,12 +152,8 @@ function EndOfResults() {
   return (
     <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">
       <p className="font-body text-[13.5px] font-medium text-muted">আর কোনো প্রোডাক্ট নেই</p>
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white no-underline shadow-[0_4px_16px_rgba(0,0,0,.13)]"
-      >
-        <HomeIcon />
-        ওয়েবসাইটের হোম পেইজে ফিরে যান
+      <Link href="/" className={brandCtaBtnClass}>
+        ওয়েবসাইটের হোম পেইজে ফিরে যান <ArrowRightIcon />
       </Link>
     </div>
   );
@@ -363,7 +355,7 @@ export default function SrpClient() {
                   {showLoadMoreBtn && (
                     <button
                       onClick={handleLoadMoreClick}
-                      className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-8 py-[13px] font-body text-sm font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,.13)]"
+                      className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
                       আরো প্রোডাক্ট দেখুন

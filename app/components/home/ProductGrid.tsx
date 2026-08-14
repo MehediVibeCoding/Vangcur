@@ -14,6 +14,30 @@ import ProductCard from './ProductCard';
 const PRODS_PER_PAGE = 20;
 const PRODS_AUTO_THRESHOLD = 2;
 
+// ---------- CartSidebar-এর খালি-কার্ট স্টেটের ঠিক same ভিজ্যুয়াল ভাষা —
+// gradient circle ব্যাজে প্রফেশনাল স্ট্রোক আইকন (📦 ইমোজির বদলে), আর
+// rounded-full gradient (info -> brand-primary) pill বাটন (আগের কালো
+// rounded-xl বাটনের বদলে) — চেকআউট/কার্ট বাটনের সাথে মিলিয়ে। ----------
+function EmptyBoxIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
+      <path d="M3 8.5v7L12 20l9-4.5v-7" />
+      <path d="M12 13v7" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12h15M13 5.5 20 12l-7 6.5" />
+    </svg>
+  );
+}
+
+const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-7 py-3 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
+
 export default function ProductGrid() {
   const supabase = useRef(createClient()).current;
   const searchParams = useSearchParams();
@@ -169,14 +193,13 @@ export default function ProductGrid() {
       </div>
 
       {list.length === 0 ? (
-        <div className="col-span-full px-5 py-[60px] text-center text-muted">
-          <div className="mb-3 text-5xl">📦</div>
-          <p className="mb-4 text-sm">এই ক্যাটাগরিতে এখন কোনো পণ্য নেই</p>
-          <button
-            onClick={handleShowAll}
-            className="rounded-[10px] border-none bg-ink px-[22px] py-2.5 text-[13px] font-bold text-white"
-          >
-            সব পণ্য দেখুন
+        <div className="col-span-full flex flex-col items-center gap-3.5 px-5 py-[60px] text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-primary/60">
+            <EmptyBoxIcon />
+          </div>
+          <p className="text-sm text-muted">এই ক্যাটাগরিতে এখন কোনো পণ্য নেই</p>
+          <button onClick={handleShowAll} className={brandCtaBtnClass}>
+            সব পণ্য দেখুন <ArrowRightIcon />
           </button>
         </div>
       ) : (
@@ -189,11 +212,8 @@ export default function ProductGrid() {
               <p className="font-body text-[13.5px] font-medium text-muted">
                 এই ক্যাটাগরিতে আর কোনো প্রোডাক্ট নেই
               </p>
-              <button
-                onClick={handleShowAll}
-                className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-7 py-[13px] font-body text-sm font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,.13)]"
-              >
-                ওয়েবসাইটের সকল প্রোডাক্ট দেখুন
+              <button onClick={handleShowAll} className={brandCtaBtnClass}>
+                ওয়েবসাইটের সকল প্রোডাক্ট দেখুন <ArrowRightIcon />
               </button>
             </div>
           )}
@@ -212,7 +232,7 @@ export default function ProductGrid() {
         {showLoadMoreBtn && (
           <button
             onClick={handleLoadMoreClick}
-            className="inline-flex items-center gap-2 rounded-xl border-none bg-ink px-8 py-[13px] font-body text-sm font-bold text-white shadow-[0_4px_16px_rgba(0,0,0,.13)]"
+            className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-primary px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
             আরো প্রোডাক্ট দেখুন
