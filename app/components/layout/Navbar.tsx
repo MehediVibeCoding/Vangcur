@@ -25,6 +25,13 @@ interface NavbarProps {
   onTrackClick?: () => void;
   currentUser?: CurrentUser | null;
   onAccountClick?: () => void;
+  /** false হলে Navbar viewport-এর top-এ sticky/pinned থাকে না — স্বাভাবিক
+   * document flow-তে বসে থাকে এবং scroll করলে কনটেন্টের সাথেই উপরে সরে যায়।
+   * প্রোডাক্ট পেজের মতো নিজস্ব sticky tabs-bar থাকা পেজে ব্যবহার হয় (default: true)। */
+  sticky?: boolean;
+  /** true হলে বাম পাশের Vangcur লোগোর বদলে একটা ব্র্যান্ড-কালার "হোমে যান" বাটন
+   * দেখানো হয় — প্রোডাক্ট পেজের মতো sub-page-এ ব্যবহারের জন্য (default: false)। */
+  showHomeButton?: boolean;
 }
 
 function SearchIcon({ className = '' }: { className?: string }) {
@@ -295,6 +302,7 @@ function SearchDropdown({
 
 export default function Navbar({
   cartCount = 0, wishCount = 0, onCartClick, onWishClick, onLoginClick, onTrackClick, currentUser, onAccountClick,
+  sticky = true, showHomeButton = false,
 }: NavbarProps) {
   const supabase = useMemo(() => createClient(), []);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -642,7 +650,7 @@ export default function Navbar({
   }, [showDropdown, hasResults, searchQuery]);
 
   return (
-    <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
+    <div className={`z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3 ${sticky ? 'sticky top-[14px]' : 'relative'}`}>
       {showDropdown && (
         <div
           className="fixed inset-0 z-[850]"
@@ -654,17 +662,31 @@ export default function Navbar({
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
-            <Link className="flex shrink-0 items-center no-underline" href="/">
-              <Image
-                src="/vangcur-logo.png"
-                alt="Vangcur Gadgets"
-                width={900}
-                height={317}
-                priority
-                className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
-                draggable={false}
-              />
-            </Link>
+            {showHomeButton ? (
+              <Link
+                href="/"
+                aria-label="হোম পেইজে যান"
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-primary py-2 pl-2.5 pr-4 font-body text-[13px] font-semibold text-white no-underline shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:pl-2 max-[400px]:pr-3"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 11.5 12 4l8 7.5" />
+                  <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
+                </svg>
+                <span className="max-[400px]:hidden">হোমে ফিরুন</span>
+              </Link>
+            ) : (
+              <Link className="flex shrink-0 items-center no-underline" href="/">
+                <Image
+                  src="/vangcur-logo.png"
+                  alt="Vangcur Gadgets"
+                  width={900}
+                  height={317}
+                  priority
+                  className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
+                  draggable={false}
+                />
+              </Link>
+            )}
 
             <div className="flex items-center gap-2 md:gap-3">
               <div
