@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -225,7 +224,6 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({ slug, initialId }: ProductDetailClientProps) {
-  const router = useRouter();
   const supabase = useRef(createClient()).current;
 
   const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
@@ -538,30 +536,13 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
     .filter((p) => prodInCat(p, prod.cat) && p.id !== prod.id)
     .sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0))
     .slice(0, 4);
-  const nameShort = prod.name.length > 32 ? prod.name.slice(0, 32) + '...' : prod.name;
   const discountPct = prod.old && prod.old > prod.price ? Math.round((1 - prod.price / prod.old) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
       <Navbar {...navbarProps} />
 
-      <div className="mx-auto max-w-[1100px] px-4 md:px-8">
-        <nav aria-label="breadcrumb" className="flex items-center gap-2 py-4 text-[12.5px] text-muted">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="ফিরে যান"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border-base text-ink transition-brand duration-brand hover:border-brand-light/40 hover:text-brand-light"
-          >
-            <ArrowIcon dir="left" className="h-3.5 w-3.5" />
-          </button>
-          <Link href="/" className="shrink-0 transition-brand duration-brand hover:text-brand-light">হোম</Link>
-          <span className="text-border-base">/</span>
-          <span className="truncate text-ink/70">{nameShort}</span>
-        </nav>
-      </div>
-
-      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 md:grid-cols-2 md:px-8 md:pb-10">
+      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-5 md:grid-cols-2 md:px-8 md:pb-10">
         <div>
           <div
             className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
@@ -569,14 +550,13 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             onTouchStart={handleGalleryTouchStart}
             onTouchEnd={handleGalleryTouchEnd}
           >
-            {discountPct > 0 && (
-              <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-brand-light px-3 py-1 text-[11px] font-bold text-white shadow-sh1">
-                −{discountPct}%
-              </div>
-            )}
-            {sold && (
-              <div className="absolute right-3.5 top-3.5 z-10 rounded-full bg-ink/85 px-3 py-1 text-[11px] font-bold text-white backdrop-blur">
+            {sold ? (
+              <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-ink/85 px-3 py-1 text-[11px] font-bold text-white backdrop-blur">
                 স্টক আউট
+              </div>
+            ) : prod.badge && (
+              <div className="absolute left-3.5 top-3.5 z-10 animate-badge-hot-glow rounded-full bg-brand-light px-3 py-1 text-[11px] font-bold text-white">
+                {prod.badge}
               </div>
             )}
             <div
@@ -618,30 +598,33 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         <div>
           <h1 className="mb-3 font-display text-[21px] font-bold leading-snug text-ink sm:text-2xl">{prod.name}</h1>
 
-          <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
             <span className="font-display text-[28px] font-bold text-brand-light sm:text-[32px]">৳{prod.price.toLocaleString('en-US')}</span>
             {prod.old > prod.price && (
               <>
                 <span className="text-[15px] text-muted line-through">৳{prod.old.toLocaleString('en-US')}</span>
                 {discountPct > 0 && (
-                  <span className="rounded-full bg-success/10 px-2.5 py-1 text-[11.5px] font-bold text-success">{discountPct}% ছাড়</span>
+                  <span className="text-[13px] font-bold text-success">{discountPct}% ছাড়</span>
                 )}
               </>
             )}
           </div>
 
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border-base bg-surface-muted px-3 py-1.5 text-[12.5px] font-medium text-ink">
+          <button
+            type="button"
+            onClick={() => setWarrantyOpen(true)}
+            className="mb-5 flex w-full items-center justify-between gap-2 rounded-[10px] border border-border-base bg-surface-muted px-3.5 py-2.5 text-left transition-brand duration-brand hover:border-brand-light/40"
+          >
+            <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
               <ShieldIcon className="text-brand-light" /> {prod.warranty}
             </span>
-            <button
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-border-base text-[11px] font-bold text-muted transition-brand duration-brand hover:border-brand-light hover:text-brand-light"
-              onClick={() => setWarrantyOpen(true)}
+            <span
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-base text-[10.5px] font-bold text-muted"
               title="ওয়ারেন্টি বিস্তারিত"
             >
               ?
-            </button>
-          </div>
+            </span>
+          </button>
 
           {quickSpecs.length > 0 && (
             <div className="mb-5 rounded-brand border border-border-base bg-white p-4 shadow-sh1">
@@ -743,8 +726,8 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1100px] px-4 py-6 md:px-8">
-        <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
+      <div className="mx-auto max-w-[1100px] px-4 md:px-8">
+        <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
           <SectionHeading icon={<DocIcon />}>প্রোডাক্টের <span className="text-brand-light">বিস্তারিত বিবরণ</span></SectionHeading>
           <div className="text-[14px] leading-[1.85] text-ink/80">
             {(prod.longDesc || prod.desc) ? (
@@ -759,7 +742,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           </div>
         </div>
 
-        <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecFeatures" ref={(el) => { sectionRefs.current.ppSecFeatures = el; }}>
+        <div className="border-b border-border-base py-8" id="ppSecFeatures" ref={(el) => { sectionRefs.current.ppSecFeatures = el; }}>
           <SectionHeading icon={<SparkIcon />}>প্রধান <span className="text-brand-light">ফিচারস</span></SectionHeading>
           {features.length ? (
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
@@ -770,7 +753,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           )}
         </div>
 
-        <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
+        <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<WrenchIcon />}>কারিগরি <span className="text-brand-light">স্পেসিফিকেশন</span></SectionHeading>
           <div className="overflow-x-auto rounded-brand border border-border-base">
             <table className="w-full border-collapse text-[13px]">
@@ -806,7 +789,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           </div>
         </div>
 
-        <div className="mb-5 rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
+        <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
           <SectionHeading icon={<QuestionIcon />}>কমন <span className="text-brand-light">প্রশ্নোত্তর (FAQ)</span></SectionHeading>
           {faqs.length ? faqs.map((f, i) => (
             <div className="border-b border-border-base last:border-0" key={i}>
@@ -825,7 +808,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           )}
         </div>
 
-        <div className="rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
+        <div className="py-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             <div className="flex shrink-0 flex-col items-center gap-1.5 sm:border-r sm:border-border-base sm:pr-8">
               <div className="font-display text-4xl font-bold text-ink">{rating.toFixed(1)}</div>

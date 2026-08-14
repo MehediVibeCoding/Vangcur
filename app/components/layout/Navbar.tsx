@@ -666,13 +666,13 @@ export default function Navbar({
               <Link
                 href="/"
                 aria-label="হোম পেইজে যান"
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-light py-2 pl-2.5 pr-4 font-body text-[13px] font-semibold text-white no-underline shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:pl-2 max-[400px]:pr-3"
+                className="flex shrink-0 items-center gap-1.5 text-brand-light no-underline transition-brand duration-brand hover:text-brand-light-hover"
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 11.5 12 4l8 7.5" />
                   <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
                 </svg>
-                <span className="max-[400px]:hidden">হোমে ফিরুন</span>
+                <span className="font-body text-[15px] font-bold">হোম</span>
               </Link>
             ) : (
               <Link className="flex shrink-0 items-center no-underline" href="/">
