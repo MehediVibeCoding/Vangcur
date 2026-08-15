@@ -8,17 +8,21 @@ export const metadata: Metadata = {
   description: 'ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ',
 };
 
-// মোবাইলে pinch-zoom-out করার সময় যে background flash / step-by-step repaint
-// হচ্ছিল তা এড়াতে ভিউপোর্ট স্কেল 100%-এ লক করা হলো। মনে রাখা দরকার: iOS
-// Safari অ্যাক্সেসিবিলিটির কারণে (iOS 10 থেকে) maximumScale/userScalable
-// ইচ্ছাকৃতভাবে ignore করে — তাই এটা মূলত Android Chrome-এ কাজ করবে, iPhone-এ
-// ইউজার এখনো pinch করে zoom করতে পারবে।
+// মোবাইলে pinch-zoom-OUT করার সময় (100%-এর নিচে স্কেল হলে) যে background
+// flash / step-by-step repaint হচ্ছিল, শুধু সেটাই আটকানোর জন্য ন্যূনতম স্কেল
+// 100%-এ বাঁধা হয়েছে। আগের ভার্সনে `maximumScale: 1` + `userScalable: false`
+// দেওয়ায় zoom-in সহ পুরো zoom-ই বন্ধ হয়ে গিয়েছিল (Android Chrome-এ) — এখন
+// শুধু নিচের দিকে (zoom-out) আটকানো হচ্ছে, উপরের দিকে (zoom-in) স্বাভাবিক
+// আছে (ব্রাউজার ডিফল্ট ম্যাক্স, সাধারণত 5x পর্যন্ত)।
+//
+// মনে রাখা দরকার: iOS Safari অ্যাক্সেসিবিলিটির কারণে (iOS 10 থেকে) এই স্কেল
+// সীমা ইচ্ছাকৃতভাবে ignore করে — তাই এই লক মূলত Android Chrome-এ কাজ করবে,
+// iPhone-এ ইউজার এখনো 100%-এর নিচে pinch করে zoom-out করতে পারবে।
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   minimumScale: 1,
-  userScalable: false,
+  userScalable: true,
 };
 
 export default function RootLayout({
