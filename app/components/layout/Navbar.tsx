@@ -386,6 +386,11 @@ export default function Navbar({
     let armed = false;
     const armTimer = setTimeout(() => { armed = true; }, 500);
     const onScroll = () => {
+      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া scroll ইভেন্টে state আপডেট
+      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
+      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
+        return;
+      }
       if (armed && Math.abs(window.scrollY - startY) > 15) {
         setMobileSearchOpen(false);
         setShowDropdown(false);
@@ -419,6 +424,11 @@ export default function Navbar({
   useEffect(() => {
     let raf = 0;
     function measure() {
+      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া resize ইভেন্টে state আপডেট
+      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
+      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
+        return;
+      }
       const wrap = desktopSearchWrapRef.current;
       const row = desktopNavRowRef.current;
       if (!wrap || !row) return;

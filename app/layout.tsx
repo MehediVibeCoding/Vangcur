@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
@@ -6,6 +6,19 @@ import GlobalOverlays from './components/GlobalOverlays';
 export const metadata: Metadata = {
   title: 'Vangcur',
   description: 'ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ',
+};
+
+// মোবাইলে pinch-zoom-out করার সময় যে background flash / step-by-step repaint
+// হচ্ছিল তা এড়াতে ভিউপোর্ট স্কেল 100%-এ লক করা হলো। মনে রাখা দরকার: iOS
+// Safari অ্যাক্সেসিবিলিটির কারণে (iOS 10 থেকে) maximumScale/userScalable
+// ইচ্ছাকৃতভাবে ignore করে — তাই এটা মূলত Android Chrome-এ কাজ করবে, iPhone-এ
+// ইউজার এখনো pinch করে zoom করতে পারবে।
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  minimumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

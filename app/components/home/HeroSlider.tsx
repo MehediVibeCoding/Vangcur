@@ -181,6 +181,11 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
       }
     };
     const onResize = () => {
+      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া resize ইভেন্টে state আপডেট
+      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
+      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
+        return;
+      }
       if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
       resizeTimerRef.current = setTimeout(() => {
         duoIdxRef.current = DUO_TOTAL;

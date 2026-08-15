@@ -130,6 +130,11 @@ export default function ProductGrid() {
         if (timer) return;
         timer = setTimeout(() => {
           timer = null;
+          // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া state আপডেট (এবং তার ফলে
+          // re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
+          if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
+            return;
+          }
           if (renderedCountRef.current < listRef.current.length && !loadMorePausedRef.current) {
             appendNextBatch();
           }

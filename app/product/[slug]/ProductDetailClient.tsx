@@ -292,6 +292,11 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
       setIsMobileWidth(window.innerWidth <= 600);
     };
     const scheduleCheck = () => {
+      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া resize ইভেন্টে state আপডেট
+      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
+      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
+        return;
+      }
       if (raf) return;
       raf = requestAnimationFrame(check);
     };
@@ -388,6 +393,11 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
       setStickyShown(el.getBoundingClientRect().top <= 70);
     };
     const scheduleHandler = () => {
+      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া scroll ইভেন্টে state আপডেট
+      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
+      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
+        return;
+      }
       if (raf) return;
       raf = requestAnimationFrame(handler);
     };
