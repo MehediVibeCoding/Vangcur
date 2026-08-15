@@ -106,7 +106,11 @@ function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?:
       <img
         src={optimizeCloudinaryUrl(imgVal, 500)}
         alt={name || ''}
-        loading={lazy ? 'lazy' : undefined}
+        loading={lazy ? 'lazy' : 'eager'}
+        // প্রথম প্রোডাক্ট কার্ডের ছবিটাই LCP element — এটাকে fetchPriority=high
+        // দিয়ে ব্রাউজারকে বলে দেওয়া হচ্ছে এটা আগে ফেচ করতে (font/JS চাংকগুলোর
+        // সাথে প্রতিযোগিতায় পিছিয়ে না পড়ে)
+        fetchPriority={lazy ? undefined : 'high'}
         draggable={false}
         onContextMenu={(e) => e.preventDefault()}
         className="block h-full w-full select-none object-cover [-webkit-touch-callout:none]"

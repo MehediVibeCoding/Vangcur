@@ -297,7 +297,15 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
-            const isEager = i % DUO_TOTAL < 2;
+            // tripled অ্যারেতে ৩টা কপি আছে (infinite-loop স্লাইডারের জন্য), কিন্তু
+            // প্রথম পেইন্টে আসলে দেখা যায় শুধু মাঝের কপি থেকে duoIdxRef.current
+            // (=DUO_TOTAL) ইনডেক্স থেকে শুরু করা কার্ডগুলো (মোবাইলে ২টা, ডেস্কটপে
+            // ৬টা)। আগে প্রতিটা কপির প্রথম ২টা কার্ডকে eager+high-priority
+            // ধরা হতো (মোট ৬টা ছবি), যার মধ্যে ৪টা আসলে পর্দার বাইরে থাকা
+            // ডুপ্লিকেট কপি — এগুলো অহেতুক নেটওয়ার্ক/প্রায়োরিটি খেয়ে আসল LCP
+            // ছবিটাকে দেরি করাচ্ছিল। এখন শুধু মাঝের কপির প্রথম ৬টা কার্ডকেই
+            // eager রাখা হচ্ছে (মোবাইলে ২টা দৃশ্যমান + ডেস্কটপে বাকি ৪টা কভার করে)।
+            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 6;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
             return (
               <div

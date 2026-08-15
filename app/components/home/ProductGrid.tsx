@@ -43,15 +43,25 @@ export default function ProductGrid() {
   const searchParams = useSearchParams();
   const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
   const [activeCat, setActiveCat] = useState('all');
-  const [renderedCount, setRenderedCount] = useState(0);
+  // আগে এটা 0 দিয়ে শুরু হতো — মানে প্রথম পেইন্টে গ্রিড একদম খালি থাকতো, তারপর
+  // mount হওয়ার পর setTimeout(0)-এ প্রথম ব্যাচ দেখানো হতো। এতে (ক) পুরো গ্রিড
+  // + নিচের সব সেকশন (FAQ/About/Gallery/Footer) হঠাৎ নিচে নেমে যেত — বড় CLS,
+  // আর (খ) প্রথম প্রোডাক্ট ছবিটাই (LCP element) সার্ভার-রেন্ডারড HTML-এ না
+  // থেকে হাইড্রেশনের পর তৈরি হতো, তাই ব্রাউজার প্রিলোড স্ক্যানার সেটা আগে থেকে
+  // ফেচ শুরু করতে পারতো না — মোবাইলে LCP 7s+ হওয়ার মূল কারণ এটাই। এখন প্রথম
+  // ব্যাচ সরাসরি initial state-এই ধরে রাখা হচ্ছে, ফলে সার্ভার-রেন্ডারড HTML-এই
+  // প্রোডাক্ট কার্ড থাকবে।
+  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, DEFAULT_PRODS.length));
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const batchCountRef = useRef(0);
+  const batchCountRef = useRef(1);
   const loadMorePausedRef = useRef(false);
-  const renderedCountRef = useRef(0);
+  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, DEFAULT_PRODS.length));
   const listRef = useRef<Product[]>([]);
+  const didInitRef = useRef(false);
+  const prevCatRef = useRef(activeCat);
 
   const list = useMemo(() => {
     const filtered = activeCat === 'all' ? prods : prods.filter((p) => prodInCat(p, activeCat));
@@ -86,6 +96,17 @@ export default function ProductGrid() {
   }, []);
 
   useEffect(() => {
+    const catChanged = prevCatRef.current !== activeCat;
+    prevCatRef.current = activeCat;
+
+    if (!didInitRef.current) {
+      // প্রথম মাউন্ট — প্রথম ব্যাচ ইতিমধ্যে initial state-এ রেন্ডার হয়ে আছে,
+      // তাই এখানে রিসেট করে খালি করার দরকার নেই।
+      didInitRef.current = true;
+      return;
+    }
+    if (!catChanged) return;
+
     batchCountRef.current = 0;
     loadMorePausedRef.current = false;
     renderedCountRef.current = 0;
@@ -94,7 +115,7 @@ export default function ProductGrid() {
     setRenderedCount(0);
     const t = setTimeout(() => appendNextBatch(), 0);
     return () => clearTimeout(t);
-  }, [list, appendNextBatch]);
+  }, [list, activeCat, appendNextBatch]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
