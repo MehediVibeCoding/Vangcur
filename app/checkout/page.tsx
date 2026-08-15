@@ -7,10 +7,12 @@ import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts } from '@/lib/p
 import {
   getCurrentUser, saveCurrentUser, checkOAuthCallback, mergeGuestOrdersToUser, signInWithGoogle,
 } from '@/lib/authData';
+import dynamic from 'next/dynamic';
 import { showToast } from '@/lib/toast';
-import LoginModal from '@/app/components/auth/LoginModal';
-import PreConfirmLoginModal from '@/app/components/checkout/PreConfirmLoginModal';
-import PolicyModal from '@/app/components/checkout/PolicyModal';
+
+const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
+const PreConfirmLoginModal = dynamic(() => import('@/app/components/checkout/PreConfirmLoginModal'));
+const PolicyModal = dynamic(() => import('@/app/components/checkout/PolicyModal'));
 import {
   DISTRICTS,
   DEFAULT_SHIP_CFG,

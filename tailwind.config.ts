@@ -34,8 +34,8 @@ const config: Config = {
         info: '#3B82F6',
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'serif'],
-        body: ['"DM Sans"', '"Hind Siliguri"', 'sans-serif'],
+        display: ['var(--font-display)', 'serif'],
+        body: ['var(--font-dm-sans)', 'var(--font-hind-siliguri)', 'sans-serif'],
       },
       boxShadow: {
         sh1: '0 1px 4px rgba(0,0,0,.07)',

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Navbar from './components/layout/Navbar';
 import HeroSlider from './components/home/HeroSlider';
 import TrustStrip from './components/home/TrustStrip';
@@ -10,13 +11,16 @@ import FAQ from './components/home/FAQ';
 import About from './components/home/About';
 import CustomerGallery from './components/home/CustomerGallery';
 import Footer from './components/layout/Footer';
-import LoginModal from './components/auth/LoginModal';
-import AccountPage from './components/auth/AccountPage';
 import { getCart, cartCount, CART_EVENT } from '@/lib/cartData';
 import { getWishlist, WISHLIST_EVENT } from '@/lib/productData';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
 import type { CurrentUser } from '@/types';
+
+// লগইন মোডাল আর অ্যাকাউন্ট পেজ (৩৬KB + ৩৬KB) শুধু ইউজার লগইন/অ্যাকাউন্ট বাটনে
+// ক্লিক করলেই দরকার — প্রথম পেজ-লোডে না। dynamic import দিয়ে আলাদা চাংকে ভাগ করা হলো।
+const LoginModal = dynamic(() => import('./components/auth/LoginModal'));
+const AccountPage = dynamic(() => import('./components/auth/AccountPage'));
 
 export default function ClientHome() {
   const [cartQty, setCartQty] = useState(() => (typeof window !== 'undefined' ? cartCount(getCart()) : 0));

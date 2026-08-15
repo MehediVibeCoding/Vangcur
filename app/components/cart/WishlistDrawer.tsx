@@ -20,6 +20,8 @@ function WishImg({ emoji }: { emoji?: string }) {
         src={emoji}
         alt=""
         className="block h-full w-full rounded-[11px] object-cover"
+        loading="lazy"
+        decoding="async"
         onError={() => setBroken(true)}
       />
     );

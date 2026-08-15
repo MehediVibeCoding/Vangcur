@@ -50,6 +50,7 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
     return (
       <img
         src={imgVal} alt="" className="h-9 w-9 shrink-0 rounded-[7px] border border-border-base object-cover"
+        loading="lazy" decoding="async"
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
       />
     );

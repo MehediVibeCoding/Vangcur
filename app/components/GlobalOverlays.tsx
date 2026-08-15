@@ -1,25 +1,32 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import CartSidebar from './cart/CartSidebar';
-import WishlistDrawer from './cart/WishlistDrawer';
-import TrackOrderModal from './cart/TrackOrderModal';
 import FloatCartBadge from './cart/FloatCartBadge';
 import FloatWishBadge from './cart/FloatWishBadge';
 import FloatContactButtons from './layout/FloatContactButtons';
 import BackToTopButton from './layout/BackToTopButton';
-import QuickOrderBridge from './checkout/QuickOrderBridge';
-import WaitingOverlay from './checkout/WaitingOverlay';
-import BgConfirmPopup from './checkout/BgConfirmPopup';
-import PostOrderInfoModal from './checkout/PostOrderInfoModal';
-import StockNotifyModal from './modals/StockNotifyModal';
-import BackInStockToast from './modals/BackInStockToast';
-import MembershipModal from './modals/MembershipModal';
-import InvoiceModal from './modals/InvoiceModal';
-import OfferPopup from './modals/OfferPopup';
-import RecoveryToast from './modals/RecoveryToast';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
+
+// এই ওভারলে/মোডাল/ড্রয়ারগুলো প্রথম পেজ-লোডে দরকার হয় না — ইউজার কার্ট/উইশলিস্ট/
+// ট্র্যাক অর্ডার/মেম্বারশিপ ইত্যাদিতে ক্লিক না করা পর্যন্ত এগুলোর কোড লাগবে না।
+// next/dynamic দিয়ে এগুলোকে আলাদা চাংকে ভাগ করে দেওয়া হলো (ssr: false, কারণ এগুলো
+// পুরোপুরি ক্লায়েন্ট-সাইড ইন্টারঅ্যাকশন-নির্ভর, প্রথম রেন্ডারে দরকার নেই), যাতে
+// মূল/প্রথম JS বান্ডেল ছোট থাকে এবং TBT/LCP কমে।
+const CartSidebar = dynamic(() => import('./cart/CartSidebar'));
+const WishlistDrawer = dynamic(() => import('./cart/WishlistDrawer'));
+const TrackOrderModal = dynamic(() => import('./cart/TrackOrderModal'));
+const QuickOrderBridge = dynamic(() => import('./checkout/QuickOrderBridge'), { ssr: false });
+const WaitingOverlay = dynamic(() => import('./checkout/WaitingOverlay'), { ssr: false });
+const BgConfirmPopup = dynamic(() => import('./checkout/BgConfirmPopup'), { ssr: false });
+const PostOrderInfoModal = dynamic(() => import('./checkout/PostOrderInfoModal'), { ssr: false });
+const StockNotifyModal = dynamic(() => import('./modals/StockNotifyModal'), { ssr: false });
+const BackInStockToast = dynamic(() => import('./modals/BackInStockToast'), { ssr: false });
+const MembershipModal = dynamic(() => import('./modals/MembershipModal'), { ssr: false });
+const InvoiceModal = dynamic(() => import('./modals/InvoiceModal'), { ssr: false });
+const OfferPopup = dynamic(() => import('./modals/OfferPopup'), { ssr: false });
+const RecoveryToast = dynamic(() => import('./modals/RecoveryToast'), { ssr: false });
 
 export default function GlobalOverlays() {
   const [cartOpen, setCartOpen] = useState(false);

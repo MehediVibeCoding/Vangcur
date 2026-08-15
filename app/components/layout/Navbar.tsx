@@ -47,7 +47,7 @@ function SearchThumb({ imgVal }: { imgVal?: string }) {
   return (
     <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[9px] bg-surface-muted text-[22px]">
       {isUrl
-        ? <img src={imgVal} alt="" className="h-10 w-10 rounded-md object-cover" />
+        ? <img src={imgVal} alt="" className="h-10 w-10 rounded-md object-cover" loading="lazy" decoding="async" />
         : <span className="text-2xl">{imgVal || '📦'}</span>}
     </div>
   );

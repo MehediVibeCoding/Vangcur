@@ -130,6 +130,8 @@ export default function Footer() {
                 alt={logo.alt}
                 style={{ maxHeight: logo.height }}
                 className="mb-2 block w-auto"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <>
