@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   isWishlisted, toggleWish, productHref,
@@ -14,66 +14,18 @@ function prefersReducedMotion(): boolean {
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-// CSS Container Query units (cqw) iOS 16 (Sept 2022)-এর আগে কোনো Safari-তে
-// সাপোর্ট করে না। iPhone 7 সর্বোচ্চ iOS 15.8.3 পর্যন্ত আপডেট হতে পারে — অর্থাৎ
-// container query কখনোই পাবে না। ব্রাউজার একটা অচেনা এককের (cqw) মুখোমুখি হলে
-// পুরো clamp() declaration-টাই invalid ধরে নিয়ে বাদ দিয়ে দেয়, ফলে card-এর সব
-// padding/font-size/gap একদম ভেঙে পড়ে।
+// আগে card-এর নিজের pixel width অনুযায়ী ফন্ট/প্যাডিং স্কেল করার জন্য প্রতিটা
+// ProductCard-এ একটা ResizeObserver বসানো ছিল (useCardWidth + cq() হেল্পার)।
+// পিঞ্চ-জুম বা window resize-এর সময় এই ডজনখানেক observer একসাথে ফায়ার হয়ে
+// React state আপডেট করত, যা প্রতিটা কার্ডের জন্য আলাদা layout recalculation +
+// repaint ট্রিগার করত — এটাই মোবাইলে pinch-zoom স্টেপ-বাই-স্টেপ রিপেইন্ট/জ্যাঙ্কের
+// একটা বড় কারণ ছিল।
 //
-// একই "card-এর নিজের width অনুযায়ী স্কেল হওয়া" (পুরো viewport না) আচরণ ধরে
-// রাখতে এখানে ResizeObserver দিয়ে card-এর আসল pixel width মেপে, সেই width
-// থেকে JS-এ clamp() হিসাব করা হচ্ছে। ResizeObserver iOS 13.4 থেকেই সাপোর্টেড,
-// তাই iPhone 7 সহ সব পুরনো ডিভাইসেও নিরাপদে কাজ করে।
-function useCardWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(200); // hydration-এর আগ পর্যন্ত একটা যুক্তিসঙ্গত ডিফল্ট
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-
-    let raf = 0;
-    const applyUpdate = () => {
-      raf = 0;
-      const w = el.offsetWidth;
-      // ১px-এর কম পার্থক্য (sub-pixel jitter, যেমন পিঞ্চ-জুমের সময় ব্রাউজারের
-      // মাঝামাঝি রিফ্লো-তে দেখা যায়) উপেক্ষা করা হচ্ছে — নাহলে অনেকগুলো কার্ড
-      // একসাথে ছোট ছোট width পরিবর্তনে বারবার re-render হয়ে জ্যাঙ্ক তৈরি করে।
-      if (w > 0) setWidth((prev) => (Math.abs(prev - w) < 1 ? prev : w));
-    };
-    // একই ফ্রেমে একাধিকবার ফায়ার করা ResizeObserver কলব্যাককে rAF দিয়ে
-    // ব্যাচ করে একটাতে নামিয়ে আনা হচ্ছে।
-    const scheduleUpdate = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(applyUpdate);
-    };
-
-    applyUpdate();
-
-    if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(scheduleUpdate);
-      ro.observe(el);
-      return () => {
-        ro.disconnect();
-        if (raf) cancelAnimationFrame(raf);
-      };
-    }
-    window.addEventListener('resize', scheduleUpdate);
-    return () => {
-      window.removeEventListener('resize', scheduleUpdate);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  return [ref, width];
-}
-
-// clamp(minPx, cardWidth * fraction, maxPx) — পুরনো cqw-ভিত্তিক clamp()-গুলোর
-// হুবহু একই আচরণ, শুধু cqw-এর বদলে মাপা pixel width দিয়ে হিসাব করা হয়েছে।
-function cq(cardWidth: number, minPx: number, fraction: number, maxPx: number): string {
-  const val = Math.min(maxPx, Math.max(minPx, cardWidth * fraction));
-  return `${val}px`;
-}
+// এখন কোনো runtime JS observer নেই — নিচের সব সাইজ স্ট্যাটিক Tailwind
+// breakpoint ক্লাস (base/sm/xl) দিয়ে করা, যেগুলো grid-এর column breakpoint
+// (2 → 2 → 3 → 4 → 6 কলাম) অনুযায়ী আগের cq() ভ্যালুগুলোর কাছাকাছি রাখা হয়েছে।
+// এতে zoom/resize-এর সময় শুধু CSS media query re-evaluate হয় — কোনো JS
+// measurement, state update, বা extra repaint হয় না।
 
 function StarRating({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, rating || 4.5));
@@ -150,7 +102,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const [wished, setWished] = useState(() => isWishlisted(p.id));
   const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
-  const [panelRef, cw] = useCardWidth<HTMLDivElement>();
 
   useEffect(() => {
     const handler = () => setWished(isWishlisted(p.id));
@@ -192,7 +143,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
   return (
     <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-brand duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
-      <div ref={panelRef} className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
+      <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
         <div className="absolute inset-0 cursor-pointer" onClick={openProduct}>
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </div>
@@ -204,17 +155,17 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>Sold Out</div>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-white sm:px-2.5">Sold Out</div>
         ) : p.badge && (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light text-white" style={{ padding: `${cq(cw, 3, 0.016, 6)} ${cq(cw, 7, 0.038, 12)}`, fontSize: cq(cw, 9, 0.05, 11), fontWeight: 700 }}>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light px-2 py-1 text-[10px] font-bold text-white sm:px-2.5">
             {p.badge}
           </div>
         )}
 
         <button
           ref={wishBtnRef}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] aspect-square shrink-0 rounded-full backdrop-blur-[8px] transition-brand duration-brand hover:scale-[1.15] ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/40'} ${heartBeat ? 'animate-heartbeat' : ''}`}
-          style={{ width: cq(cw, 26, 0.16, 34), color: wished ? undefined : '#fff' }}
+          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full backdrop-blur-[8px] transition-brand duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/40'} ${heartBeat ? 'animate-heartbeat' : ''}`}
+          style={{ color: wished ? undefined : '#fff' }}
           onClick={handleWish}
           onAnimationEnd={() => setHeartBeat(false)}
           title="Wishlist"
@@ -222,30 +173,28 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <span className="flex h-full w-full items-center justify-center"><HeartIcon filled={wished} /></span>
         </button>
 
-        <div className="absolute inset-x-0 bottom-0 z-[2]" style={{ padding: cq(cw, 6, 0.042, 13) }}>
+        <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
           <div
-            className="line-clamp-1 cursor-pointer font-extrabold leading-tight text-white"
-            style={{ fontSize: cq(cw, 10, 0.063, 15) }}
+            className="line-clamp-1 cursor-pointer text-[10px] font-extrabold leading-tight text-white sm:text-sm xl:text-xs"
             onClick={openProduct}
           >
             {p.name}
           </div>
-          <div className="flex items-center" style={{ gap: cq(cw, 3, 0.016, 5), marginTop: cq(cw, 2, 0.013, 4), fontSize: cq(cw, 8.5, 0.053, 12) }}>
+          <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/65" style={{ fontSize: cq(cw, 8, 0.05, 11) }}>{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            <span className="text-white/65">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
             {showDiscBadge && (
-              <span className="font-bold text-[#FF9142]" style={{ fontSize: cq(cw, 8, 0.05, 11) }}>-{discPct}%</span>
+              <span className="font-bold text-[#FF9142]">-{discPct}%</span>
             )}
           </div>
-          <div className="flex items-baseline" style={{ gap: cq(cw, 4, 0.025, 7), marginTop: cq(cw, 1, 0.01, 3) }}>
-            <span className="font-extrabold text-white" style={{ fontSize: cq(cw, 12, 0.076, 18) }}>৳{p.price.toLocaleString('en-US')}</span>
-            <span className="text-white/50 line-through" style={{ fontSize: cq(cw, 9, 0.055, 13) }}>৳{p.old.toLocaleString('en-US')}</span>
+          <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5">
+            <span className="text-sm font-extrabold text-white sm:text-lg xl:text-sm">৳{p.price.toLocaleString('en-US')}</span>
+            <span className="text-[10px] text-white/50 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
           </div>
-          <div className="flex w-full items-center" style={{ gap: cq(cw, 4, 0.025, 7), marginTop: cq(cw, 4, 0.026, 8) }}>
+          <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
               <button
-                className="relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body font-bold text-white transition-brand duration-brand"
-                style={{ height: cq(cw, 28, 0.18, 40), fontSize: cq(cw, 9, 0.058, 13) }}
+                className="relative flex h-8 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body text-[10px] font-bold text-white transition-brand duration-brand sm:h-9 sm:text-xs lg:h-10"
                 onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                   new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
                 ))}
@@ -255,18 +204,15 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             ) : (
               <>
                 <button
-                  className="box-border flex aspect-square shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/30"
-                  style={{ height: cq(cw, 28, 0.18, 40) }}
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/30 sm:h-9 lg:h-10"
                   title="কার্টে যোগ করুন"
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
                 >
                   <CartIcon />
                 </button>
                 <button
-                  className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-light backdrop-blur-[8px] transition-brand duration-brand hover:brightness-95"
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[10px] font-bold text-brand-light backdrop-blur-[8px] transition-brand duration-brand hover:brightness-95 sm:h-9 sm:text-xs lg:h-10"
                   style={{
-                    height: cq(cw, 28, 0.18, 40),
-                    fontSize: cq(cw, 9, 0.058, 13),
                     background: 'linear-gradient(115deg, rgba(255,255,255,.92) 0%, rgba(195,222,252,.85) 38%, rgba(255,255,255,.9) 64%, rgba(0,94,252,.35) 100%)',
                   }}
                   onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
