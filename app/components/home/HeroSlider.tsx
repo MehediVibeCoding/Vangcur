@@ -295,8 +295,8 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
   const tripled = [...cards, ...cards, ...cards];
 
   return (
-    <div className="relative bg-transparent p-3.5 pb-0">
-      <div className="relative w-full touch-pan-y overflow-hidden bg-transparent" ref={wrapRef}>
+    <div className="relative max-w-full overflow-hidden bg-transparent p-3.5 pb-0">
+      <div className="relative w-full max-w-full touch-pan-y overflow-hidden bg-transparent" ref={wrapRef}>
         <div className="flex gap-3 bg-transparent px-0.5" style={{ transition: 'transform .42s cubic-bezier(.4,0,.2,1)', willChange: 'transform' }} ref={trackRef}>
           {tripled.map((card, i) => {
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
