@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
 import {
   getCart, cartTotal, addToCart, updateQty, removeItem,
@@ -19,7 +20,7 @@ function CartImg({ emoji }: { emoji?: string }) {
   if (isUrl && !broken) {
     return (
       <img
-        src={emoji}
+        src={optimizeCloudinaryUrl(emoji, 150)}
         alt=""
         className="block h-full w-full rounded-[11px] object-cover"
         loading="lazy"

@@ -6,6 +6,7 @@ import {
   isWishlisted, toggleWish, productHref,
   QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT, WISHLIST_EVENT,
 } from '@/lib/productData';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import type { Product } from '@/types';
 
 function prefersReducedMotion(): boolean {
@@ -103,7 +104,7 @@ function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?:
   if (isUrl && !broken) {
     return (
       <img
-        src={imgVal}
+        src={optimizeCloudinaryUrl(imgVal, 500)}
         alt={name || ''}
         loading={lazy ? 'lazy' : undefined}
         draggable={false}

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { parseSupabaseVal } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 
 interface HeroCard {
   label: string;
@@ -34,13 +35,6 @@ const CATH_CARD_DEFAULTS: HeroCard[] = [
   { label: 'Power Bank', catId: 'powerbank', emoji: '🔋', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535311/Enhancer-AI_UHD-Power_20260523_104015_0000_aa9euv.png', bg: 'linear-gradient(155deg,#1a0a00,#3d1f00,#5c2d00)' },
   { label: 'Headphone', catId: 'headphone', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535317/Enhancer-Ultra_HD-Untitled_design_20260523_080608_0000_offzxw.png', bg: 'linear-gradient(155deg,#00101a,#001f3d,#003366)' },
 ];
-
-function optimizeCloudinaryUrl(url: string): string {
-  if (!url) return url;
-  if (!url.includes('res.cloudinary.com')) return url;
-  if (url.includes('/w_')) return url;
-  return url.replace(/\/q_auto\/f_auto\//, '/w_600,q_auto,f_auto/');
-}
 
 function padCards(arr: unknown): HeroCard[] {
   const padded: HeroCard[] = Array.isArray(arr) ? arr.slice() : [];

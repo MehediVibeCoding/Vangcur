@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 
 interface Review {
   id: number | string;
@@ -243,7 +244,7 @@ export default function CustomerGallery() {
                       {imgUrl ? (
                         <img
                           className="block h-full w-full object-cover [will-change:transform]"
-                          src={imgUrl}
+                          src={optimizeCloudinaryUrl(imgUrl, 450)}
                           alt="Review"
                           loading="lazy"
                           draggable={false}

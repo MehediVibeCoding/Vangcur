@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
   DEFAULT_PRODS, prodInCat, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
   findProdBySlug, isWishlisted, toggleWish, getWishlist, WISHLIST_EVENT,
@@ -199,7 +200,7 @@ function GalleryImg({ val, name, isThumb }: { val?: string; name: string; isThum
   if (isUrl && !broken) {
     return (
       <img
-        src={val}
+        src={optimizeCloudinaryUrl(val, isThumb ? 200 : 900)}
         alt={name || ''}
         loading="lazy"
         className={isThumb ? 'h-full w-full rounded-lg object-cover' : 'block h-full w-full object-contain'}

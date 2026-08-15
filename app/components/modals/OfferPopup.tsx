@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, productHref } from '@/lib/productData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import type { Product } from '@/types';
 
 function discountPct(p: Product): number {
@@ -71,7 +72,7 @@ export default function OfferPopup() {
                   className="flex items-center gap-3 rounded-[12px] border border-border-base p-2.5 text-left transition-brand duration-brand hover:border-brand-light/40 hover:bg-brand-bg/30"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={(p.imgs || [])[0] || ''} alt={p.name} className="h-14 w-14 shrink-0 rounded-[8px] object-cover" loading="lazy" decoding="async" />
+                  <img src={optimizeCloudinaryUrl((p.imgs || [])[0], 150)} alt={p.name} className="h-14 w-14 shrink-0 rounded-[8px] object-cover" loading="lazy" decoding="async" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-body text-[13px] font-semibold text-ink">{p.name}</div>
                     <div className="mt-0.5 flex items-center gap-1.5">

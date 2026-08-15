@@ -8,6 +8,7 @@ import {
 } from '@/lib/productData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import type { WishlistItem } from '@/types';
 
 function WishImg({ emoji }: { emoji?: string }) {
@@ -17,7 +18,7 @@ function WishImg({ emoji }: { emoji?: string }) {
   if (isUrl && !broken) {
     return (
       <img
-        src={emoji}
+        src={optimizeCloudinaryUrl(emoji, 150)}
         alt=""
         className="block h-full w-full rounded-[11px] object-cover"
         loading="lazy"

@@ -10,6 +10,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
   DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, productHref,
 } from '@/lib/productData';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
@@ -47,7 +48,7 @@ function SearchThumb({ imgVal }: { imgVal?: string }) {
   return (
     <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[9px] bg-surface-muted text-[22px]">
       {isUrl
-        ? <img src={imgVal} alt="" className="h-10 w-10 rounded-md object-cover" loading="lazy" decoding="async" />
+        ? <img src={optimizeCloudinaryUrl(imgVal, 120)} alt="" className="h-10 w-10 rounded-md object-cover" loading="lazy" decoding="async" />
         : <span className="text-2xl">{imgVal || '📦'}</span>}
     </div>
   );

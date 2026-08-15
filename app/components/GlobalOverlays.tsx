@@ -9,24 +9,19 @@ import FloatContactButtons from './layout/FloatContactButtons';
 import BackToTopButton from './layout/BackToTopButton';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 
-// এই ওভারলে/মোডাল/ড্রয়ারগুলো প্রথম পেজ-লোডে দরকার হয় না — ইউজার কার্ট/উইশলিস্ট/
-// ট্র্যাক অর্ডার/মেম্বারশিপ ইত্যাদিতে ক্লিক না করা পর্যন্ত এগুলোর কোড লাগবে না।
-// next/dynamic দিয়ে এগুলোকে আলাদা চাংকে ভাগ করে দেওয়া হলো (ssr: false, কারণ এগুলো
-// পুরোপুরি ক্লায়েন্ট-সাইড ইন্টারঅ্যাকশন-নির্ভর, প্রথম রেন্ডারে দরকার নেই), যাতে
-// মূল/প্রথম JS বান্ডেল ছোট থাকে এবং TBT/LCP কমে।
+// CartSidebar/WishlistDrawer/TrackOrderModal প্রথম রেন্ডারে দরকার নেই, তাই আলাদা
+// চাংকে রাখা হয়েছে (মূল বান্ডেল ছোট রাখতে) — এই তিনটা তুলনামূলক বড় ও প্রায়ই
+// ব্যবহৃত হয় বলে আলাদা রাখা হয়েছে, যাতে একটা খোলার সময় বাকিগুলোর কোড আটকে না থাকে।
+//
+// বাকি সব (মেম্বারশিপ, ইনভয়েস, স্টক-নোটিফাই ইত্যাদি) খুবই কম ব্যবহৃত ছোট
+// কম্পোনেন্ট — এগুলোকে আলাদা আলাদা চাংকে ভাগ করলে হাইড্রেশনের পরপরই একগাদা ছোট
+// HTTP রিকোয়েস্ট তৈরি হয়, যা স্লো/হাই-লেটেন্সি মোবাইল নেটওয়ার্কে একটার সাথে
+// একটা মিলিয়ে ফেলার চেয়ে খারাপ পারফর্ম করে — তাই এগুলো `RareOverlays`-এ
+// একসাথে বান্ডেল করে মাত্র একটা অতিরিক্ত চাংক হিসেবে লোড করা হচ্ছে।
 const CartSidebar = dynamic(() => import('./cart/CartSidebar'));
 const WishlistDrawer = dynamic(() => import('./cart/WishlistDrawer'));
 const TrackOrderModal = dynamic(() => import('./cart/TrackOrderModal'));
-const QuickOrderBridge = dynamic(() => import('./checkout/QuickOrderBridge'), { ssr: false });
-const WaitingOverlay = dynamic(() => import('./checkout/WaitingOverlay'), { ssr: false });
-const BgConfirmPopup = dynamic(() => import('./checkout/BgConfirmPopup'), { ssr: false });
-const PostOrderInfoModal = dynamic(() => import('./checkout/PostOrderInfoModal'), { ssr: false });
-const StockNotifyModal = dynamic(() => import('./modals/StockNotifyModal'), { ssr: false });
-const BackInStockToast = dynamic(() => import('./modals/BackInStockToast'), { ssr: false });
-const MembershipModal = dynamic(() => import('./modals/MembershipModal'), { ssr: false });
-const InvoiceModal = dynamic(() => import('./modals/InvoiceModal'), { ssr: false });
-const OfferPopup = dynamic(() => import('./modals/OfferPopup'), { ssr: false });
-const RecoveryToast = dynamic(() => import('./modals/RecoveryToast'), { ssr: false });
+const RareOverlays = dynamic(() => import('./RareOverlays'), { ssr: false });
 
 export default function GlobalOverlays() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -79,16 +74,7 @@ export default function GlobalOverlays() {
           <BackToTopButton />
         </>
       )}
-      <QuickOrderBridge />
-      <WaitingOverlay />
-      <BgConfirmPopup />
-      <PostOrderInfoModal />
-      <StockNotifyModal />
-      <BackInStockToast />
-      <MembershipModal />
-      <InvoiceModal />
-      <OfferPopup />
-      <RecoveryToast />
+      <RareOverlays />
     </>
   );
 }

@@ -9,6 +9,7 @@ import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { sanitizePlainName, validateName, MAX_NAME_LEN } from '@/lib/security';
 import { checkNameChangeLimit } from '@/lib/rateLimit';
 import { productHref, WISHLIST_EVENT } from '@/lib/productData';
+import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { saveCurrentUser, logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
 import {
   OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
@@ -49,7 +50,7 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
   if (isUrl) {
     return (
       <img
-        src={imgVal} alt="" className="h-9 w-9 shrink-0 rounded-[7px] border border-border-base object-cover"
+        src={optimizeCloudinaryUrl(imgVal, 120)} alt="" className="h-9 w-9 shrink-0 rounded-[7px] border border-border-base object-cover"
         loading="lazy" decoding="async"
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
       />
