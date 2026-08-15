@@ -659,7 +659,7 @@ export default function Navbar({
         />
       )}
       <nav
-        className={`navbar-glass relative z-[900] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
+        className={`navbar-glass relative z-[900] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
