@@ -286,10 +286,21 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   const [isMobileWidth, setIsMobileWidth] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobileWidth(window.innerWidth <= 600);
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      setIsMobileWidth(window.innerWidth <= 600);
+    };
+    const scheduleCheck = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(check);
+    };
     check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    window.addEventListener('resize', scheduleCheck);
+    return () => {
+      window.removeEventListener('resize', scheduleCheck);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
@@ -369,14 +380,23 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   }, [supabase]);
 
   useEffect(() => {
+    let raf = 0;
     const handler = () => {
+      raf = 0;
       const el = tabsWrapRef.current;
       if (!el) return;
       setStickyShown(el.getBoundingClientRect().top <= 70);
     };
-    window.addEventListener('scroll', handler, { passive: true });
+    const scheduleHandler = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(handler);
+    };
+    window.addEventListener('scroll', scheduleHandler, { passive: true });
     handler();
-    return () => window.removeEventListener('scroll', handler);
+    return () => {
+      window.removeEventListener('scroll', scheduleHandler);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [prod?.id]);
 
   useEffect(() => {
@@ -392,7 +412,10 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
     }, { rootMargin: '0px 0px -30px 0px', threshold: 0.08 });
     grid.querySelectorAll('.prod-card').forEach((card, i) => {
       card.classList.add('vc-reveal');
-      (card as HTMLElement).style.transitionDelay = (i * 60) + 'ms';
+      // অনেকগুলো কার্ড একসাথে (যেমন জুম-আউটের পরে হঠাৎ) ভিউতে চলে এলে delay
+      // cap না থাকলে সেগুলো লম্বা সময় ধরে একটার পর একটা "লোড হচ্ছে"-র মতো
+      // দেখায় — তাই স্ট্যাগার সর্বোচ্চ ৫টা কার্ড পর্যন্তই বাড়বে (৩০০ms ক্যাপ)।
+      (card as HTMLElement).style.transitionDelay = (Math.min(i, 5) * 60) + 'ms';
       obs.observe(card);
     });
     return () => obs.disconnect();

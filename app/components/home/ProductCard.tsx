@@ -32,19 +32,37 @@ function useCardWidth<T extends HTMLElement>(): [React.RefObject<T | null>, numb
     const el = ref.current;
     if (!el) return undefined;
 
-    const update = () => {
+    let raf = 0;
+    const applyUpdate = () => {
+      raf = 0;
       const w = el.offsetWidth;
-      if (w > 0) setWidth(w);
+      // ১px-এর কম পার্থক্য (sub-pixel jitter, যেমন পিঞ্চ-জুমের সময় ব্রাউজারের
+      // মাঝামাঝি রিফ্লো-তে দেখা যায়) উপেক্ষা করা হচ্ছে — নাহলে অনেকগুলো কার্ড
+      // একসাথে ছোট ছোট width পরিবর্তনে বারবার re-render হয়ে জ্যাঙ্ক তৈরি করে।
+      if (w > 0) setWidth((prev) => (Math.abs(prev - w) < 1 ? prev : w));
     };
-    update();
+    // একই ফ্রেমে একাধিকবার ফায়ার করা ResizeObserver কলব্যাককে rAF দিয়ে
+    // ব্যাচ করে একটাতে নামিয়ে আনা হচ্ছে।
+    const scheduleUpdate = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(applyUpdate);
+    };
+
+    applyUpdate();
 
     if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(update);
+      const ro = new ResizeObserver(scheduleUpdate);
       ro.observe(el);
-      return () => ro.disconnect();
+      return () => {
+        ro.disconnect();
+        if (raf) cancelAnimationFrame(raf);
+      };
     }
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    window.addEventListener('resize', scheduleUpdate);
+    return () => {
+      window.removeEventListener('resize', scheduleUpdate);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   return [ref, width];
@@ -195,7 +213,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
         <button
           ref={wishBtnRef}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] aspect-square shrink-0 rounded-full backdrop-blur-md transition-brand duration-brand hover:scale-[1.15] ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/30'} ${heartBeat ? 'animate-heartbeat' : ''}`}
+          className={`absolute right-[4.5%] top-[4.5%] z-[3] aspect-square shrink-0 rounded-full backdrop-blur-[8px] transition-brand duration-brand hover:scale-[1.15] ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/40'} ${heartBeat ? 'animate-heartbeat' : ''}`}
           style={{ width: cq(cw, 26, 0.16, 34), color: wished ? undefined : '#fff' }}
           onClick={handleWish}
           onAnimationEnd={() => setHeartBeat(false)}
@@ -237,7 +255,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             ) : (
               <>
                 <button
-                  className="box-border flex aspect-square shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/15 text-white backdrop-blur-md transition-brand duration-brand hover:bg-white/30"
+                  className="box-border flex aspect-square shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/30"
                   style={{ height: cq(cw, 28, 0.18, 40) }}
                   title="কার্টে যোগ করুন"
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
@@ -245,7 +263,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   <CartIcon />
                 </button>
                 <button
-                  className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-light backdrop-blur-md transition-brand duration-brand hover:brightness-95"
+                  className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body font-bold text-brand-light backdrop-blur-[8px] transition-brand duration-brand hover:brightness-95"
                   style={{
                     height: cq(cw, 28, 0.18, 40),
                     fontSize: cq(cw, 9, 0.058, 13),

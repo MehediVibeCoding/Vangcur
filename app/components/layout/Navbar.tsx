@@ -223,7 +223,7 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`search-dropdown-reveal search-dropdown-glass ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-md`}
+      className={`search-dropdown-reveal search-dropdown-glass ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-[8px]`}
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
@@ -827,7 +827,7 @@ export default function Navbar({
           className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-200 ease-out ${mobileSearchOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
         >
           <div className="min-h-0 overflow-hidden">
-            <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/70 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-md">
+            <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/80 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-[8px]">
               <div className="relative" onClick={(e) => e.stopPropagation()}>
                 <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-light/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />

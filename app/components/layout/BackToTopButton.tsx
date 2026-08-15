@@ -1,15 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const SHOW_AFTER_PX = 400;
+const HIDE_BELOW_PX = 320; // শো/হাইড থ্রেশহোল্ডে সামান্য gap (hysteresis) রাখা হলো —
+// ঠিক ৪০০px বরাবর থাকলে সামান্য স্ক্রল/জুম-জনিত resize-এ বারবার true/false
+// টগল হয়ে বাটনটা unmount-remount হচ্ছিল (ফলে প্রতিবার entrance animation
+// রিপ্লে হতো, "আবার লোড হওয়ার" মতো দেখাতো)।
 
 export default function BackToTopButton() {
   const [visible, setVisible] = useState(false);
+  const tickingRef = useRef(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > SHOW_AFTER_PX);
-    onScroll();
+    const check = () => {
+      tickingRef.current = false;
+      setVisible((prev) => {
+        const y = window.scrollY;
+        if (!prev && y > SHOW_AFTER_PX) return true;
+        if (prev && y < HIDE_BELOW_PX) return false;
+        return prev;
+      });
+    };
+    const onScroll = () => {
+      if (tickingRef.current) return;
+      tickingRef.current = true;
+      requestAnimationFrame(check);
+    };
+    check();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);

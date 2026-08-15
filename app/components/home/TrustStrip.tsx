@@ -83,7 +83,7 @@ const TRUST_ITEMS: TrustItem[] = [
 export default function TrustStrip() {
   return (
     <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
-      <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/60 bg-white/70 px-4 py-3 shadow-sh2 backdrop-blur-md md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
+      <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/60 bg-white/80 px-4 py-3 shadow-sh2 backdrop-blur-[8px] md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
         {TRUST_ITEMS.map((item, i) => (
           <div
             key={item.label}

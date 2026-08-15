@@ -28,7 +28,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
 
   return (
     <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-      <nav className="navbar-glass relative z-[900] rounded-[35px] border border-white/60 bg-white/70 shadow-sh2 backdrop-blur-md">
+      <nav className="navbar-glass relative z-[900] rounded-[35px] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px]">
         <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-2.5 px-3 sm:gap-3 sm:px-5">
           <Link
             href="/"

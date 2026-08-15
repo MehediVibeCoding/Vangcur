@@ -228,7 +228,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
     <div
       className={`fixed inset-0 z-[950] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <div className="sticky top-[14px] z-10 mx-3 mb-1.5 mt-[14px] flex items-center gap-1.5 overflow-hidden rounded-[35px] border border-white/60 bg-white/70 px-3 py-2 shadow-sh2 backdrop-blur-md md:gap-2 md:px-4">
+      <div className="sticky top-[14px] z-10 mx-3 mb-1.5 mt-[14px] flex items-center gap-1.5 overflow-hidden rounded-[35px] border border-white/60 bg-white/80 px-3 py-2 shadow-sh2 backdrop-blur-[8px] md:gap-2 md:px-4">
         <button
           onClick={() => { onClose(); router.push('/'); }} aria-label="হোম" title="হোম"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink transition-brand duration-brand hover:bg-surface-muted"

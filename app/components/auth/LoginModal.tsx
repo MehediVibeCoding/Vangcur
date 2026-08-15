@@ -476,7 +476,7 @@ export default function LoginModal({
           <button
             onClick={onClose}
             title="বন্ধ করুন"
-            className="absolute right-3.5 top-3.5 z-[1] flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/60 bg-white/70 text-ink/60 shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50"
+            className="absolute right-3.5 top-3.5 z-[1] flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50"
           >
             <IconClose />
           </button>

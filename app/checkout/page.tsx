@@ -745,7 +745,7 @@ export default function CheckoutPage() {
                     onClick={closeCheckout}
                     aria-label="বন্ধ করুন"
                     title="বন্ধ করুন"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
                   >
                     <IconClose />
                   </button>
@@ -754,7 +754,7 @@ export default function CheckoutPage() {
                     onClick={() => goBack(step - 1)}
                     aria-label="আগের ধাপে যান"
                     title="আগের ধাপে যান"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/25 text-white shadow-sh1 backdrop-blur-md transition-brand duration-brand hover:bg-white/40"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
                   >
                     <IconArrowLeft />
                   </button>
@@ -763,7 +763,7 @@ export default function CheckoutPage() {
             </div>
 
             {step === 1 && cartItems.length === 1 && (
-              <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/70 bg-gradient-to-br from-white/80 via-brand-bg/55 to-white/50 px-4 py-3.5 shadow-sh2 backdrop-blur-md">
+              <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/70 bg-gradient-to-br from-white/88 via-brand-bg/65 to-white/60 px-4 py-3.5 shadow-sh2 backdrop-blur-[8px]">
                 <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-brand-primary/70">
                   <IconBag /> YOUR ORDER
                 </div>

@@ -120,13 +120,30 @@ export default function ProductGrid() {
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    // পিঞ্চ-জুমের সময় ভিজ্যুয়াল ভিউপোর্ট বদলে যাওয়ায় sentinel মুহূর্তের জন্য
+    // intersecting হয়ে যেতে পারে যদিও ব্যবহারকারী আসলে স্ক্রল করেননি — তাই
+    // সাথে সাথে ব্যাচ লোড না করে একটা ছোট delay (debounce) দেওয়া হচ্ছে, আর সেই
+    // সময়ের মধ্যে intersection চলে গেলে (transient/জুম-জনিত হলে) বাতিল হয়ে যায়।
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const obs = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && renderedCountRef.current < listRef.current.length && !loadMorePausedRef.current) {
-        appendNextBatch();
+      if (entries[0].isIntersecting) {
+        if (timer) return;
+        timer = setTimeout(() => {
+          timer = null;
+          if (renderedCountRef.current < listRef.current.length && !loadMorePausedRef.current) {
+            appendNextBatch();
+          }
+        }, 180);
+      } else if (timer) {
+        clearTimeout(timer);
+        timer = null;
       }
     }, { rootMargin: '300px' });
     obs.observe(sentinel);
-    return () => obs.disconnect();
+    return () => {
+      if (timer) clearTimeout(timer);
+      obs.disconnect();
+    };
   }, [appendNextBatch]);
 
   const handleLoadMoreClick = () => {
