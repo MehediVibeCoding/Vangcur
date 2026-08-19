@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  getWishlist, saveWishlist, WISHLIST_EVENT, productHref,
+  productHref,
   QUICK_ORDER_EVENT, QUICK_CART_EVENT,
 } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -91,14 +92,7 @@ interface WishlistDrawerProps {
 
 export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
   const router = useRouter();
-  const [items, setItems] = useState<WishlistItem[]>([]);
-
-  useEffect(() => {
-    setItems(getWishlist());
-    const handler = (e: Event) => setItems((e as CustomEvent).detail?.wishlist ?? getWishlist());
-    window.addEventListener(WISHLIST_EVENT, handler);
-    return () => window.removeEventListener(WISHLIST_EVENT, handler);
-  }, []);
+  const items = useWishlistStore((s) => s.wishlist);
 
   useEffect(() => {
     if (isOpen) lockBody();
@@ -126,7 +120,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
   };
 
   const removeItem = (id: number | string) => {
-    saveWishlist(getWishlist().filter((x) => String(x.id) !== String(id)));
+    useWishlistStore.getState().removeItem(id);
     showToast('Wishlist থেকে সরানো হয়েছে');
   };
 

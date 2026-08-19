@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
-import { getWishlist, WISHLIST_EVENT } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import {
   saveCurrentUser, saveLinkedAccount,
   signInWithPassword, signUp, signInWithGoogle, checkOAuthCallback,
@@ -260,28 +260,22 @@ export default function LoginModal({
   }, []);
 
   useEffect(() => {
-    const onWishChange = (e: Event) => {
+    const unsub = useWishlistStore.subscribe((state, prevState) => {
+      if (state.wishlist === prevState.wishlist) return;
       const user = getCurrentUser();
       if (!user?.id) return;
-      const items = (e as CustomEvent).detail?.wishlist ?? getWishlist();
-      saveWishlistToSupabase(supabase, user.id, items);
-    };
-    window.addEventListener(WISHLIST_EVENT, onWishChange);
-    return () => window.removeEventListener(WISHLIST_EVENT, onWishChange);
+      saveWishlistToSupabase(supabase, user.id, state.wishlist);
+    });
+    return unsub;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function applyWishlistSync(userId: string) {
     const items = await syncWishlistFromSupabase(supabase, userId);
     if (items) {
-      try {
-        localStorage.setItem('vc_wish', JSON.stringify(items));
-      } catch {
-        // storage full/blocked — wishlist still applied in-memory via the event below
-      }
-      window.dispatchEvent(new CustomEvent(WISHLIST_EVENT, { detail: { wishlist: items } }));
+      useWishlistStore.getState().setWishlist(items);
     } else {
-      const local = getWishlist();
+      const local = useWishlistStore.getState().wishlist;
       if (local.length) saveWishlistToSupabase(supabase, userId, local);
     }
   }

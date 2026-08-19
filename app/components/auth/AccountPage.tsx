@@ -8,7 +8,8 @@ import { showToast } from '@/lib/toast';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { sanitizePlainName, validateName, MAX_NAME_LEN } from '@/lib/security';
 import { checkNameChangeLimit } from '@/lib/rateLimit';
-import { productHref, WISHLIST_EVENT } from '@/lib/productData';
+import { productHref } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { saveCurrentUser, logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
 import {
@@ -174,12 +175,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
   const doLogout = async () => {
     setShowLogoutConfirm(false);
     await logout(supabase);
-    try {
-      localStorage.removeItem('vc_wish');
-    } catch {
-      // storage unavailable — wishlist clear event below still fires
-    }
-    window.dispatchEvent(new CustomEvent(WISHLIST_EVENT, { detail: { wishlist: [] } }));
+    useWishlistStore.getState().clearWishlist();
     onClose();
     showToast('লগআউট হয়েছে');
   };

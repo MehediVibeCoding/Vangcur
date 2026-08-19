@@ -1,7 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Product, WishlistItem } from '@/types';
+import type { Product } from '@/types';
 import { logWarn, logError } from './logger';
-import { showToast } from './toast';
 
 export const DEFAULT_PRODS: Product[] = [
   { id: 1, cat: 'rgb', cats: ['rgb'], name: 'GearUP NRGB50 5M RGB Neon Light with App & Remote Control', nameBn: 'নিয়ন লাইট',
@@ -212,48 +211,10 @@ export function isDefaultProductId(id: number): boolean {
   return DEFAULT_IDS.has(id);
 }
 
-export const WISHLIST_EVENT = 'vc:wishlistChange';
-export const WISH_ADD_EVENT = 'vc:wishAdd';
 export const QUICK_ORDER_EVENT = 'vc:quickOrder';
 export const QUICK_CART_EVENT = 'vc:quickCart';
 export const QUICK_ORDER_MODAL_EVENT = 'vc:quickOrderModal';
 export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
-
-export function getWishlist(): WishlistItem[] {
-  try {
-    return JSON.parse(localStorage.getItem('vc_wish') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-export function saveWishlist(w: WishlistItem[]): void {
-  try {
-    localStorage.setItem('vc_wish', JSON.stringify(w));
-  } catch {
-    // storage unavailable, ignore
-  }
-  window.dispatchEvent(new CustomEvent(WISHLIST_EVENT, { detail: { wishlist: w } }));
-}
-
-export function isWishlisted(id: number | string): boolean {
-  return getWishlist().some((x) => String(x.id) === String(id));
-}
-
-export function toggleWish(prod: Product): boolean {
-  let w = getWishlist();
-  const already = isWishlisted(prod.id);
-  if (already) {
-    w = w.filter((x) => String(x.id) !== String(prod.id));
-    showToast('Wishlist থেকে সরানো হয়েছে');
-  } else {
-    w.push({ id: prod.id, name: prod.name, emoji: prod.imgs[0], price: prod.price, cat: prod.cat });
-    showToast('❤️ Wishlist এ যোগ হয়েছে!');
-  }
-  saveWishlist(w);
-  if (!already) window.dispatchEvent(new CustomEvent(WISH_ADD_EVENT));
-  return !already;
-}
 
 export function makeSlug(str: string): string {
   return String(str || '')

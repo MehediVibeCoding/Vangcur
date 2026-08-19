@@ -12,7 +12,7 @@ import About from './components/home/About';
 import CustomerGallery from './components/home/CustomerGallery';
 import Footer from './components/layout/Footer';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
-import { getWishlist, WISHLIST_EVENT } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
 import type { CurrentUser } from '@/types';
@@ -24,18 +24,12 @@ const AccountPage = dynamic(() => import('./components/auth/AccountPage'));
 
 export default function ClientHome() {
   const cartQty = useCartStore((s) => cartCount(s.cart));
-  const [wishQty, setWishQty] = useState(() => (typeof window !== 'undefined' ? getWishlist().length : 0));
+  const wishQty = useWishlistStore((s) => s.wishlist.length);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
     typeof window !== 'undefined' ? getCurrentUser() : null
   ));
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-
-  useEffect(() => {
-    const onWishChange = () => setWishQty(getWishlist().length);
-    window.addEventListener(WISHLIST_EVENT, onWishChange);
-    return () => window.removeEventListener(WISHLIST_EVENT, onWishChange);
-  }, []);
 
   useEffect(() => {
     const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());

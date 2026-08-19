@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  isWishlisted, toggleWish, productHref,
-  QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT, WISHLIST_EVENT,
+  productHref,
+  QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import type { Product } from '@/types';
 
@@ -99,15 +100,9 @@ interface ProductCardProps {
 
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const router = useRouter();
-  const [wished, setWished] = useState(() => isWishlisted(p.id));
+  const wished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const handler = () => setWished(isWishlisted(p.id));
-    window.addEventListener(WISHLIST_EVENT, handler);
-    return () => window.removeEventListener(WISHLIST_EVENT, handler);
-  }, [p.id]);
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -119,8 +114,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   };
 
   const handleWish = () => {
-    const nowWished = toggleWish(p);
-    setWished(nowWished);
+    useWishlistStore.getState().toggleWish(p);
     if (!prefersReducedMotion()) {
       setHeartBeat(false);
       requestAnimationFrame(() => setHeartBeat(true));

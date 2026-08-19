@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { WISH_ADD_EVENT } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { OPEN_WISHLIST_EVENT } from '@/lib/uiEvents';
 
 // How long it stays fully visible before fading out, and how long the fade itself takes.
@@ -9,6 +9,8 @@ const VISIBLE_MS = 4500;
 const FADE_MS = 300;
 
 export default function FloatWishBadge() {
+  const addedTick = useWishlistStore((s) => s.addedTick);
+  const prevTick = useRef(addedTick);
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
   const isVisibleRef = useRef(false);
@@ -17,40 +19,39 @@ export default function FloatWishBadge() {
   const rafId = useRef<number | null>(null);
 
   useEffect(() => {
-    const onAdd = () => {
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-      if (removeTimer.current) clearTimeout(removeTimer.current);
+    if (addedTick === prevTick.current) return;
+    prevTick.current = addedTick;
 
-      if (!isVisibleRef.current) {
-        // Mount it hidden first, then flip to visible a frame later so the
-        // opacity/scale transition actually plays instead of snapping in.
-        setMounted(true);
-        setShow(false);
-        if (rafId.current) cancelAnimationFrame(rafId.current);
-        rafId.current = requestAnimationFrame(() => {
-          rafId.current = requestAnimationFrame(() => {
-            isVisibleRef.current = true;
-            setShow(true);
-          });
-        });
-      }
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (removeTimer.current) clearTimeout(removeTimer.current);
 
-      // Every add — whether it's freshly appearing or already on screen —
-      // (re)starts the hold timer, so rapid adds simply keep it visible longer.
-      hideTimer.current = setTimeout(() => {
-        isVisibleRef.current = false;
-        setShow(false);
-        removeTimer.current = setTimeout(() => setMounted(false), FADE_MS);
-      }, VISIBLE_MS);
-    };
-
-    window.addEventListener(WISH_ADD_EVENT, onAdd);
-    return () => {
-      window.removeEventListener(WISH_ADD_EVENT, onAdd);
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-      if (removeTimer.current) clearTimeout(removeTimer.current);
+    if (!isVisibleRef.current) {
+      // Mount it hidden first, then flip to visible a frame later so the
+      // opacity/scale transition actually plays instead of snapping in.
+      setMounted(true);
+      setShow(false);
       if (rafId.current) cancelAnimationFrame(rafId.current);
-    };
+      rafId.current = requestAnimationFrame(() => {
+        rafId.current = requestAnimationFrame(() => {
+          isVisibleRef.current = true;
+          setShow(true);
+        });
+      });
+    }
+
+    // Every add — whether it's freshly appearing or already on screen —
+    // (re)starts the hold timer, so rapid adds simply keep it visible longer.
+    hideTimer.current = setTimeout(() => {
+      isVisibleRef.current = false;
+      setShow(false);
+      removeTimer.current = setTimeout(() => setMounted(false), FADE_MS);
+    }, VISIBLE_MS);
+  }, [addedTick]);
+
+  useEffect(() => () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (removeTimer.current) clearTimeout(removeTimer.current);
+    if (rafId.current) cancelAnimationFrame(rafId.current);
   }, []);
 
   if (!mounted) return null;

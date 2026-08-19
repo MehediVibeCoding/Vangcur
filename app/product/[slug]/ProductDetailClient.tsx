@@ -6,9 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
   DEFAULT_PRODS, prodInCat, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
-  findProdBySlug, isWishlisted, toggleWish, getWishlist, WISHLIST_EVENT,
+  findProdBySlug,
   QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { fetchProductDetail } from '@/lib/productDetailData';
 import { trackProductView } from '@/lib/visitorTracking';
 import {
@@ -280,7 +281,6 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   const [transformOrigin, setTransformOrigin] = useState('center center');
   const [activeTab, setActiveTab] = useState('ppSecDesc');
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
-  const [wished, setWished] = useState(false);
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
   const [isMobileWidth, setIsMobileWidth] = useState(false);
@@ -314,18 +314,12 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   // Navbar (হোম পেইজের অরিজিনাল Navbar-ই এখানে reuse হচ্ছে) চালাতে যে state/ইভেন্ট
   // দরকার — ঠিক ClientHome.tsx-এ যেভাবে ওয়্যার করা আছে, এখানেও সেই একই প্যাটার্ন।
   const cartQty = useCartStore((s) => cartCount(s.cart));
-  const [wishQty, setWishQty] = useState(() => (typeof window !== 'undefined' ? getWishlist().length : 0));
+  const wishQty = useWishlistStore((s) => s.wishlist.length);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
     typeof window !== 'undefined' ? getCurrentUser() : null
   ));
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-
-  useEffect(() => {
-    const onWishChange = () => setWishQty(getWishlist().length);
-    window.addEventListener(WISHLIST_EVENT, onWishChange);
-    return () => window.removeEventListener(WISHLIST_EVENT, onWishChange);
-  }, []);
 
   useEffect(() => {
     const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());
@@ -347,6 +341,8 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const relatedGridRef = useRef<HTMLDivElement>(null);
 
+  const wished = useWishlistStore((s) => (prod ? s.wishlist.some((x) => String(x.id) === String(prod.id)) : false));
+
   useEffect(() => {
     if (!prod) return;
     setQty(1);
@@ -354,13 +350,6 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
     setZoomed(false);
     setActiveTab('ppSecDesc');
     setOpenFaqIdx(null);
-    setWished(isWishlisted(prod.id));
-  }, [prod?.id]);
-
-  useEffect(() => {
-    const handler = () => { if (prod) setWished(isWishlisted(prod.id)); };
-    window.addEventListener(WISHLIST_EVENT, handler);
-    return () => window.removeEventListener(WISHLIST_EVENT, handler);
   }, [prod?.id]);
 
   useEffect(() => {
@@ -445,7 +434,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
     window.dispatchEvent(new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: prod.id, name: prod.name } }));
   };
 
-  const toggleWishFromPP = () => { if (prod) setWished(toggleWish(prod)); };
+  const toggleWishFromPP = () => { if (prod) useWishlistStore.getState().toggleWish(prod); };
 
   function buildOrderMsg(): string {
     if (!prod) return '';
