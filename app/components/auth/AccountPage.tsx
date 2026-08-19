@@ -10,8 +10,9 @@ import { sanitizePlainName, validateName, MAX_NAME_LEN } from '@/lib/security';
 import { checkNameChangeLimit } from '@/lib/rateLimit';
 import { productHref } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useAuthStore } from '@/lib/store/authStore';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { saveCurrentUser, logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
+import { logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
 import {
   OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
 } from '@/lib/uiEvents';
@@ -149,7 +150,7 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
       if (!limit.allowed) { setNameEditErr('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'); return; }
     }
     await updateProfileName(supabase, currentUser, nm);
-    saveCurrentUser({ ...currentUser, name: nm });
+    useAuthStore.getState().setCurrentUser({ ...currentUser, name: nm });
     closeNameEdit();
     showToast('নাম পরিবর্তন হয়েছে');
   };

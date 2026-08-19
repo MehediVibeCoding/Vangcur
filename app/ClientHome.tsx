@@ -13,9 +13,8 @@ import CustomerGallery from './components/home/CustomerGallery';
 import Footer from './components/layout/Footer';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
-import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
-import type { CurrentUser } from '@/types';
 
 // লগইন মোডাল আর অ্যাকাউন্ট পেজ (৩৬KB + ৩৬KB) শুধু ইউজার লগইন/অ্যাকাউন্ট বাটনে
 // ক্লিক করলেই দরকার — প্রথম পেজ-লোডে না। dynamic import দিয়ে আলাদা চাংকে ভাগ করা হলো।
@@ -25,21 +24,13 @@ const AccountPage = dynamic(() => import('./components/auth/AccountPage'));
 export default function ClientHome() {
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
-    typeof window !== 'undefined' ? getCurrentUser() : null
-  ));
+  const currentUser = useAuthStore((s) => s.currentUser);
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
-    const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());
-    window.addEventListener(AUTH_EVENT, onAuthChange);
-    return () => window.removeEventListener(AUTH_EVENT, onAuthChange);
-  }, []);
-
-  useEffect(() => {
     const onOpenAccount = () => {
-      if (!getCurrentUser()) setLoginOpen(true);
+      if (!useAuthStore.getState().currentUser) setLoginOpen(true);
       else setAccountOpen(true);
     };
     window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);

@@ -17,14 +17,14 @@ import {
 } from '@/lib/floatButtonsData';
 import { showToast } from '@/lib/toast';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
-import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
+import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import Navbar from '@/app/components/layout/Navbar';
 import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
 import LoginModal from '@/app/components/auth/LoginModal';
 import AccountPage from '@/app/components/auth/AccountPage';
-import type { Product, ProductSpecs, CurrentUser } from '@/types';
+import type { Product, ProductSpecs } from '@/types';
 
 /* ---------- ছোট, একরঙা line-icon সেট (DESIGN_SYSTEM-এর Icon System অনুযায়ী —
    viewBox 0 0 24 24, stroke=currentColor, কোনো emoji নয়) — প্রোডাক্ট পেজের
@@ -315,21 +315,13 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
   // দরকার — ঠিক ClientHome.tsx-এ যেভাবে ওয়্যার করা আছে, এখানেও সেই একই প্যাটার্ন।
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
-    typeof window !== 'undefined' ? getCurrentUser() : null
-  ));
+  const currentUser = useAuthStore((s) => s.currentUser);
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
-    const onAuthChange = (e: Event) => setCurrentUser((e as CustomEvent).detail?.user ?? getCurrentUser());
-    window.addEventListener(AUTH_EVENT, onAuthChange);
-    return () => window.removeEventListener(AUTH_EVENT, onAuthChange);
-  }, []);
-
-  useEffect(() => {
     const onOpenAccount = () => {
-      if (!getCurrentUser()) setLoginOpen(true);
+      if (!useAuthStore.getState().currentUser) setLoginOpen(true);
       else setAccountOpen(true);
     };
     window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);

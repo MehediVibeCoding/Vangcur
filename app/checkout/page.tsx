@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts } from '@/lib/productData';
 import {
-  getCurrentUser, saveCurrentUser, checkOAuthCallback, mergeGuestOrdersToUser, signInWithGoogle,
+  checkOAuthCallback, mergeGuestOrdersToUser, signInWithGoogle,
 } from '@/lib/authData';
+import { useAuthStore } from '@/lib/store/authStore';
 import dynamic from 'next/dynamic';
 import { showToast } from '@/lib/toast';
 
@@ -382,11 +383,11 @@ export default function CheckoutPage() {
       if (action !== 'confirmOrder') return;
 
       const safeUser = await checkOAuthCallback(supabase);
-      const user = safeUser || getCurrentUser();
+      const user = safeUser || useAuthStore.getState().currentUser;
       if (!user) return;
 
       if (safeUser) {
-        saveCurrentUser(safeUser);
+        useAuthStore.getState().setCurrentUser(safeUser);
         await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
       }
       try { localStorage.removeItem('vc_post_login_action'); } catch { /* ignore */ }
@@ -536,7 +537,7 @@ export default function CheckoutPage() {
   const policyAgreeAndConfirm = () => {
     setTermsChecked(true);
     setPolicyModalOpen(false);
-    if (!getCurrentUser()) {
+    if (!useAuthStore.getState().currentUser) {
       setShowPreConfirm(true);
       return;
     }
@@ -566,7 +567,7 @@ export default function CheckoutPage() {
       setTimeout(() => setShake(false), 400);
       return;
     }
-    if (!getCurrentUser()) {
+    if (!useAuthStore.getState().currentUser) {
       setShowPreConfirm(true);
       return;
     }

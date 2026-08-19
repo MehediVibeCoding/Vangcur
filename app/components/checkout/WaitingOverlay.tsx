@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { fetchFullOrder, subscribeOrderRealtime } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
-import { getCurrentUser } from '@/lib/authData';
+import { useAuthStore } from '@/lib/store/authStore';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import {
   OPEN_WAIT_OVERLAY_EVENT, OPEN_TRACK_ORDER_EVENT, SHOW_BG_CONFIRM_EVENT, SHOW_POST_ORDER_INFO_EVENT,
@@ -38,6 +38,7 @@ export default function WaitingOverlay() {
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<OrderStatus>('pending');
   const [copyLabel, setCopyLabel] = useState('📋 কপি');
+  const currentUser = useAuthStore((s) => s.currentUser);
   const minimizedRef = useRef(false);
   const orderRef = useRef<Order | null>(null);
 
@@ -114,7 +115,7 @@ export default function WaitingOverlay() {
   const isPending = status === 'pending';
   const isRejected = status === 'cancelled' || status === 'rejected';
   const isResolvedPositive = status === 'confirmed' || status === 'shipped' || status === 'delivered';
-  const isGuest = !getCurrentUser();
+  const isGuest = !currentUser;
 
   const dismiss = () => {
     clearPendingStorage();

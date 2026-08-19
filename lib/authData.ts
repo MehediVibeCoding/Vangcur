@@ -1,28 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CurrentUser, LinkedAccount, WishlistItem } from '@/types';
 import { logWarn } from './logger';
-
-export const AUTH_EVENT = 'vc:authChange';
-
-export function getCurrentUser(): CurrentUser | null {
-  try {
-    return JSON.parse(localStorage.getItem('vc_user') || 'null');
-  } catch {
-    return null;
-  }
-}
-
-export function saveCurrentUser(user: CurrentUser | null): void {
-  try {
-    if (user) localStorage.setItem('vc_user', JSON.stringify(user));
-    else localStorage.removeItem('vc_user');
-  } catch {
-    // localStorage unavailable — auth state still flows through the dispatched event
-  }
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: { user } }));
-  }
-}
+import { useAuthStore } from './store/authStore';
 
 export async function logout(supabase: SupabaseClient): Promise<void> {
   try {
@@ -30,7 +9,7 @@ export async function logout(supabase: SupabaseClient): Promise<void> {
   } catch {
     // sign-out failure shouldn't block clearing local session state
   }
-  saveCurrentUser(null);
+  useAuthStore.getState().setCurrentUser(null);
 }
 
 export function getLinkedAccounts(): LinkedAccount[] {
@@ -91,7 +70,7 @@ export async function switchToAccount(
       name: u.user_metadata?.name || acct.name || 'Customer',
       phone: u.user_metadata?.phone || '',
     };
-    saveCurrentUser(safeUser);
+    useAuthStore.getState().setCurrentUser(safeUser);
     saveLinkedAccount(safeUser, data.session);
     return { user: safeUser };
   } catch {
@@ -147,7 +126,7 @@ export async function checkOAuthCallback(supabase: SupabaseClient): Promise<Curr
     avatar: u.user_metadata?.avatar_url || '',
     provider: u.app_metadata?.provider || 'google',
   };
-  const existing = getCurrentUser();
+  const existing = useAuthStore.getState().currentUser;
   if (existing && existing.id === safeUser.id) return null;
   saveLinkedAccount(safeUser, session);
   if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token')) {

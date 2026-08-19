@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { showToast } from '@/lib/toast';
-import { saveCurrentUser, updatePassword } from '@/lib/authData';
+import { updatePassword } from '@/lib/authData';
+import { useAuthStore } from '@/lib/store/authStore';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import PasswordStrengthMeter from '@/app/components/auth/PasswordStrengthMeter';
 
@@ -146,7 +147,7 @@ export default function ResetPasswordClient() {
     // যাতে একই রিসেট-লিংক আবার খুলে (session মেয়াদ শেষ না হওয়া পর্যন্ত) দ্বিতীয়বার
     // পাসওয়ার্ড পরিবর্তন করা না যায়। ইউজারকে নতুন পাসওয়ার্ড দিয়ে আবার লগইন করতে হবে।
     await supabase.auth.signOut();
-    saveCurrentUser(null);
+    useAuthStore.getState().setCurrentUser(null);
     setLoading(false);
     setStatus('done');
     showToast('পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন');

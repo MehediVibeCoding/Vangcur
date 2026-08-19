@@ -5,11 +5,12 @@ import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useAuthStore } from '@/lib/store/authStore';
 import {
-  saveCurrentUser, saveLinkedAccount,
+  saveLinkedAccount,
   signInWithPassword, signUp, signInWithGoogle, checkOAuthCallback,
   syncWishlistFromSupabase, saveWishlistToSupabase, mergeGuestOrdersToUser,
-  requestPasswordReset, getCurrentUser,
+  requestPasswordReset,
 } from '@/lib/authData';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import {
@@ -251,7 +252,7 @@ export default function LoginModal({
     (async () => {
       const safeUser = await checkOAuthCallback(supabase);
       if (!safeUser) return;
-      saveCurrentUser(safeUser);
+      useAuthStore.getState().setCurrentUser(safeUser);
       await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
       await applyWishlistSync(safeUser.id || '');
       showToast('Google দিয়ে লগইন সফল হয়েছে');
@@ -262,7 +263,7 @@ export default function LoginModal({
   useEffect(() => {
     const unsub = useWishlistStore.subscribe((state, prevState) => {
       if (state.wishlist === prevState.wishlist) return;
-      const user = getCurrentUser();
+      const user = useAuthStore.getState().currentUser;
       if (!user?.id) return;
       saveWishlistToSupabase(supabase, user.id, state.wishlist);
     });
@@ -301,7 +302,7 @@ export default function LoginModal({
   };
 
   const finishAuthSuccess = async (safeUser: CurrentUser, successMsg: string) => {
-    saveCurrentUser(safeUser);
+    useAuthStore.getState().setCurrentUser(safeUser);
     await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
     await applyWishlistSync(safeUser.id || '');
     showToast(successMsg);

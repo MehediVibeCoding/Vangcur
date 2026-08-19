@@ -294,12 +294,21 @@ app/(policies)/refund-policy/page.tsx
 - সবগুলো `app/components/GlobalOverlays.tsx`-এ মাউন্ট করা হয়েছে
 
 **⏳ এরপর — পরবর্তী ধাপ:**
-1. Phase C — Zustand state migration
-2. Phase D-এর বাকি অংশ — Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ
+1. Phase D-এর বাকি অংশ — Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ
 
 **🧹 ছোট cleanup নোট:** repo root-এ (app/components/home/-এর বাইরে) একটা stray `CustomerGallery.tsx` কপি আছে — এটা সম্ভবত ভুল জায়গায় upload হয়ে গেছে, আসল ফাইলটা `app/components/home/CustomerGallery.tsx`-এ ঠিকই আছে। মুছে দেওয়া নিরাপদ (build এটাকে ব্যবহার করছে না)।
 
-| C | Zustand state migration | ⏳ বাকি |
+**✅ ঠিক করা হয়েছে (এই session-এই):** সাম্প্রতিক একটা commit (`Delete lib/categoryData.ts`) দিয়ে `lib/categoryData.ts` ফাইলটা ভুলবশত মুছে ফেলা হয়েছিল, কিন্তু এটা তখনো ৮টা ফাইল থেকে import হতো (`About.tsx`, `Categories.tsx`, `HeroSlider.tsx`, `ProductGrid.tsx`, `Navbar.tsx`, `SrpClient.tsx`, `floatButtonsData.ts`, `footerData.ts`) — মালিক আসল ফাইলটা আবার দিয়েছেন, `lib/categoryData.ts` পাথে restore করা হলো, `tsc --noEmit` ও `next build` (font fetch বাদে, network sandbox limitation) দুটোই এখন ক্লিন।
+
+### Phase C বিস্তারিত status (২০২৬-০৮-১৯)
+
+**✅ সম্পূর্ণ — Cart ও Wishlist আগেই Zustand-এ ছিল (`lib/store/cartStore.ts`, `lib/store/wishlistStore.ts`); Auth slice এই session-এ শেষ করা হলো:**
+- নতুন `lib/store/authStore.ts` — `useAuthStore` (state: `currentUser`, action: `setCurrentUser`), cart/wishlist store-এর একই প্যাটার্নে (`vc_user` localStorage key persist করে)
+- পুরনো `getCurrentUser`/`saveCurrentUser`/`AUTH_EVENT` (localStorage + `window.dispatchEvent`) সম্পূর্ণ সরিয়ে ফেলা হয়েছে `lib/authData.ts` থেকে — `logout`, `checkOAuthCallback`, `switchToAccount` এখন সরাসরি `useAuthStore.getState()`/`setCurrentUser()` ব্যবহার করে
+- সব consumer আপডেট করা হয়েছে: `app/ClientHome.tsx`, `app/product/[slug]/ProductDetailClient.tsx` (event listener সরিয়ে `useAuthStore` hook), `app/components/auth/LoginModal.tsx`, `app/components/auth/AccountPage.tsx`, `app/checkout/page.tsx`, `app/components/checkout/WaitingOverlay.tsx` (render-এ ব্যবহৃত হওয়ায় reactive hook-এ বদলানো হয়েছে, একবারের `getState()` না), `app/reset-password/ResetPasswordClient.tsx`
+- `npx tsc --noEmit` দিয়ে verify করা হয়েছে — migration-touched কোনো ফাইলে টাইপ error নেই (repo-তে আলাদা একটা pre-existing `categoryData.ts` missing-ফাইল বাগ আছে, উপরে নোট করা আছে, এই migration-এর সাথে সম্পর্কহীন)
+
+| C | Zustand state migration | ✅ সম্পূর্ণ |
 | D | Server Actions & Security | 🟡 আংশিক — Turnstile, rate limiting, input sanitization ইতিমধ্যে হয়ে গেছে (auth-এর সাথে); বাকি: Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ |
 | E | RSC conversion | ⏳ বাকি |
 | F | Routing restructure (real policy routes + Cart Guard) | ⏳ বাকি |
