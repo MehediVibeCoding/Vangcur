@@ -15,7 +15,7 @@ import {
   DEFAULT_WA_LINK, DEFAULT_MSG_LINK, computeWaLink, computeMsgLink, fetchContactSettings, subscribeContactSettings,
 } from '@/lib/floatButtonsData';
 import { showToast } from '@/lib/toast';
-import { getCart, cartCount, CART_EVENT } from '@/lib/cartData';
+import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { AUTH_EVENT, getCurrentUser } from '@/lib/authData';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import Navbar from '@/app/components/layout/Navbar';
@@ -313,19 +313,13 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
 
   // Navbar (হোম পেইজের অরিজিনাল Navbar-ই এখানে reuse হচ্ছে) চালাতে যে state/ইভেন্ট
   // দরকার — ঠিক ClientHome.tsx-এ যেভাবে ওয়্যার করা আছে, এখানেও সেই একই প্যাটার্ন।
-  const [cartQty, setCartQty] = useState(() => (typeof window !== 'undefined' ? cartCount(getCart()) : 0));
+  const cartQty = useCartStore((s) => cartCount(s.cart));
   const [wishQty, setWishQty] = useState(() => (typeof window !== 'undefined' ? getWishlist().length : 0));
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => (
     typeof window !== 'undefined' ? getCurrentUser() : null
   ));
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-
-  useEffect(() => {
-    const onCartChange = () => setCartQty(cartCount(getCart()));
-    window.addEventListener(CART_EVENT, onCartChange);
-    return () => window.removeEventListener(CART_EVENT, onCartChange);
-  }, []);
 
   useEffect(() => {
     const onWishChange = () => setWishQty(getWishlist().length);

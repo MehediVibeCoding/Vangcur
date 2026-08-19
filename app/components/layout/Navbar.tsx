@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { CART_ADD_EVENT } from '@/lib/cartData';
+import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
   DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, productHref,
@@ -403,18 +403,18 @@ export default function Navbar({
     };
   }, [mobileSearchOpen]);
 
+  const cartAddedTick = useCartStore((s) => s.addedTick);
+  const prevCartAddedTick = useRef(cartAddedTick);
   useEffect(() => {
-    const onCartAdd = () => {
-      const btn = cartBtnRef.current;
-      if (!btn) return;
-      btn.classList.remove('animate-cart-jiggle');
-      void btn.offsetWidth;
-      btn.classList.add('animate-cart-jiggle');
-      window.setTimeout(() => btn.classList.remove('animate-cart-jiggle'), 750);
-    };
-    window.addEventListener(CART_ADD_EVENT, onCartAdd);
-    return () => window.removeEventListener(CART_ADD_EVENT, onCartAdd);
-  }, []);
+    if (cartAddedTick === prevCartAddedTick.current) return;
+    prevCartAddedTick.current = cartAddedTick;
+    const btn = cartBtnRef.current;
+    if (!btn) return;
+    btn.classList.remove('animate-cart-jiggle');
+    void btn.offsetWidth;
+    btn.classList.add('animate-cart-jiggle');
+    window.setTimeout(() => btn.classList.remove('animate-cart-jiggle'), 750);
+  }, [cartAddedTick]);
 
   // ডেক্সটপ সার্চ বক্সের এক্সপ্যান্ডেড (hover/focus) অবস্থার জন্য left/width হিসাব করা হয়
   // এখানে, একবারই (মাউন্ট + রিসাইজে) — hover state-এর উপর নির্ভর করে না। বক্সটা সবসময়

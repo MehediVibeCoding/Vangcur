@@ -1,29 +1,24 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getCart, cartCount, CART_EVENT, CART_ADD_EVENT } from '@/lib/cartData';
+import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { OPEN_CART_EVENT } from '@/lib/uiEvents';
 
 export default function FloatCartBadge() {
-  const [count, setCount] = useState(0);
+  const cart = useCartStore((s) => s.cart);
+  const addedTick = useCartStore((s) => s.addedTick);
+  const count = cartCount(cart);
   const [jiggle, setJiggle] = useState(false);
   const btnRef = useRef<HTMLDivElement>(null);
+  const prevTick = useRef(addedTick);
 
   useEffect(() => {
-    setCount(cartCount(getCart()));
-    const onChange = (e: Event) => setCount(cartCount((e as CustomEvent).detail?.cart ?? getCart()));
-    window.addEventListener(CART_EVENT, onChange);
-    return () => window.removeEventListener(CART_EVENT, onChange);
-  }, []);
-
-  useEffect(() => {
-    const onAdd = () => {
+    if (addedTick !== prevTick.current) {
+      prevTick.current = addedTick;
       setJiggle(false);
       requestAnimationFrame(() => setJiggle(true));
-    };
-    window.addEventListener(CART_ADD_EVENT, onAdd);
-    return () => window.removeEventListener(CART_ADD_EVENT, onAdd);
-  }, []);
+    }
+  }, [addedTick]);
 
   if (count <= 0) return null;
 

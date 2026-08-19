@@ -5,13 +5,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
-import {
-  getCart, cartTotal, addToCart, updateQty, removeItem,
-  CART_EVENT, clearCartOnRealPagehide,
-} from '@/lib/cartData';
+import { useCartStore, cartTotal, clearCartOnRealPagehide } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
-import type { CartItem, Product } from '@/types';
+import type { Product } from '@/types';
 
 function CartImg({ emoji }: { emoji?: string }) {
   const [broken, setBroken] = useState(false);
@@ -104,15 +101,8 @@ interface CartSidebarProps {
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const router = useRouter();
   const supabase = useRef(createClient()).current;
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const cart = useCartStore((s) => s.cart);
   const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
-
-  useEffect(() => {
-    setCart(getCart());
-    const handler = (e: Event) => setCart((e as CustomEvent).detail?.cart ?? getCart());
-    window.addEventListener(CART_EVENT, handler);
-    return () => window.removeEventListener(CART_EVENT, handler);
-  }, []);
 
   useEffect(() => clearCartOnRealPagehide(), []);
 
@@ -131,7 +121,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     const onQuickCart = (e: Event) => {
       const id = (e as CustomEvent).detail?.id;
       if (id === undefined) return;
-      const res = addToCart(prodsRef.current, id, 1);
+      const res = useCartStore.getState().addToCart(prodsRef.current, id, 1);
       if (res.ok) showToast('কার্টে যোগ হয়েছে');
       else if (res.reason === 'stock') showToast('স্টক শেষ!');
     };
@@ -145,16 +135,14 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   }, [isOpen]);
 
   const handleQty = (id: number | string, delta: number) => {
-    const res = updateQty(prodsRef.current, id, delta);
+    const res = useCartStore.getState().updateQty(prodsRef.current, id, delta);
     if (!res.ok && res.reason === 'stock') {
       showToast(`সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে (${res.maxStock}টি)`);
-      return;
     }
-    setCart(res.cart);
   };
 
   const handleRemove = (id: number | string) => {
-    setCart(removeItem(id));
+    useCartStore.getState().removeItem(id);
   };
 
   const handleCheckout = () => {
