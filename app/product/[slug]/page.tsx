@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
-import { idFromSlug, makeSlug, DEFAULT_PRODS } from '@/lib/productData';
+import { idFromSlug, makeSlug } from '@/lib/productData';
 import ProductDetailClient from './ProductDetailClient';
 
 const SITE_URL = 'https://vangcur.com';
@@ -26,9 +26,9 @@ async function fetchMetaProduct(id: string): Promise<MetaProduct | null> {
       .maybeSingle();
     if (!error && data) return data as MetaProduct;
   } catch {
-    // fall through to DEFAULT_PRODS below
+    return null;
   }
-  return (DEFAULT_PRODS.find((p) => String(p.id) === String(id)) as unknown as MetaProduct) || null;
+  return null;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

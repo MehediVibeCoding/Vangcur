@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, productHref } from '@/lib/productData';
+import { fetchCustomProducts, productHref } from '@/lib/productData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -36,12 +36,11 @@ export default function OfferPopup() {
     setLoading(true);
     const supabase = createClient();
     (async () => {
-      let prods = DEFAULT_PRODS;
+      let prods: Product[] = [];
       try {
-        const customRows = await fetchCustomProducts(supabase);
-        if (customRows.length) prods = mergeCustomProducts(DEFAULT_PRODS, customRows);
+        prods = await fetchCustomProducts(supabase);
       } catch {
-        // fall back to defaults
+        // network/Supabase সমস্যায় খালি অফার লিস্ট দেখাবে
       }
       const offers = prods.filter((p) => discountPct(p) > 0 && p.stock > 0).sort((a, b) => discountPct(b) - discountPct(a));
       setItems(offers);

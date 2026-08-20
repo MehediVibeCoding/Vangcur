@@ -15,13 +15,18 @@ import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import type { Product } from '@/types';
 
 // লগইন মোডাল আর অ্যাকাউন্ট পেজ (৩৬KB + ৩৬KB) শুধু ইউজার লগইন/অ্যাকাউন্ট বাটনে
 // ক্লিক করলেই দরকার — প্রথম পেজ-লোডে না। dynamic import দিয়ে আলাদা চাংকে ভাগ করা হলো।
 const LoginModal = dynamic(() => import('./components/auth/LoginModal'));
 const AccountPage = dynamic(() => import('./components/auth/AccountPage'));
 
-export default function ClientHome() {
+interface ClientHomeProps {
+  initialProducts: Product[];
+}
+
+export default function ClientHome({ initialProducts }: ClientHomeProps) {
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -52,7 +57,7 @@ export default function ClientHome() {
       <HeroSlider />
       <TrustStrip />
       <Categories />
-      <ProductGrid />
+      <ProductGrid initialProducts={initialProducts} />
       <FAQ />
       <About />
       <CustomerGallery />

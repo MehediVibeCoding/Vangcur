@@ -7,9 +7,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import {
-  DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, productHref,
-} from '@/lib/productData';
+import { fetchCustomProducts, productHref } from '@/lib/productData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
@@ -322,7 +320,7 @@ export default function Navbar({
   const mobileSearchToggleRef = useRef<HTMLButtonElement>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-  const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
+  const prodsRef = useRef<Product[]>([]);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
@@ -344,7 +342,7 @@ export default function Navbar({
     (async () => {
       const customRows = await fetchCustomProducts(supabase);
       if (!cancelled && customRows.length) {
-        prodsRef.current = mergeCustomProducts(DEFAULT_PRODS, customRows);
+        prodsRef.current = customRows;
       }
     })();
     return () => { cancelled = true; };

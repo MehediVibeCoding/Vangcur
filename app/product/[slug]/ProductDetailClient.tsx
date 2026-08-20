@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
-  DEFAULT_PRODS, prodInCat, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
+  prodInCat, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
   findProdBySlug,
   QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
@@ -228,7 +228,7 @@ interface ProductDetailClientProps {
 export default function ProductDetailClient({ slug, initialId }: ProductDetailClientProps) {
   const supabase = useRef(createClient()).current;
 
-  const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
+  const [prods, setProds] = useState<Product[]>([]);
   const [prodsLoaded, setProdsLoaded] = useState(false);
 
   useEffect(() => {

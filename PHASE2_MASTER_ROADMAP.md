@@ -310,7 +310,33 @@ app/(policies)/refund-policy/page.tsx
 
 | C | Zustand state migration | ✅ সম্পূর্ণ |
 | D | Server Actions & Security | 🟡 আংশিক — Turnstile, rate limiting, input sanitization ইতিমধ্যে হয়ে গেছে (auth-এর সাথে); বাকি: Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ |
-| E | RSC conversion | ⏳ বাকি |
+| E | RSC conversion | 🟡 আংশিক — নিচে বিস্তারিত |
+
+### Phase E বিস্তারিত status (২০২৬-০৮-২০)
+
+**✅ হোমপেজ প্রোডাক্ট গ্রিড — সম্পূর্ণ Server Component-এ convert করা হলো:**
+- `app/page.tsx` — **[REPLACE]** — এখন async Server Component, `lib/supabase/server`-এর cookie-based client দিয়ে সরাসরি সার্ভারেই Supabase থেকে প্রোডাক্ট fetch করে, `ClientHome`-এ `initialProducts` prop হিসেবে পাঠায়
+- `app/ClientHome.tsx` — **[REPLACE]** — `initialProducts` prop গ্রহণ করে `ProductGrid`-এ পাঠায়
+- `app/components/home/ProductGrid.tsx` — **[REPLACE]** — state এখন `initialProducts` দিয়ে শুরু হয় (আগে হার্ডকোড `DEFAULT_PRODS` দিয়ে শুরু হয়ে mount-এর পর client fetch দিয়ে replace হতো — এই দুই-ধাপি ফ্ল্যাশ এখন নেই); redundant client-side initial fetch সরানো হয়েছে, realtime subscription (INSERT/UPDATE/DELETE) রাখা হয়েছে যাতে অ্যাডমিন প্যানেলের বদল সাথে সাথে গ্রিডে দেখা যায়
+- **ফলাফল:** `next build`-এ `/` রুট এখন `ƒ (Dynamic)` — প্রতিটা রিকোয়েস্টে সার্ভারেই fresh প্রোডাক্ট ডেটাসহ HTML রেন্ডার হয়, SEO crawler প্রথম HTML-এই আসল ডেটা পাবে, প্রথম প্রোডাক্ট ছবি (LCP) হাইড্রেশনের অপেক্ষা ছাড়াই সার্ভার HTML-এ থাকবে
+
+**✅ ৭টা হার্ডকোড ডিফল্ট প্রোডাক্ট চিরতরে অপসারণ (`lib/productData.ts`-এর `DEFAULT_PRODS`, `DEFAULT_IDS`, `isDefaultProductId`):**
+- এই ধ্রুবকটা ১০টা ফাইলে ব্যবহার হচ্ছিল (শুধু হোমপেজ গ্রিডে না) — সবগুলো audit করে ঠিক করা হয়েছে:
+  - `app/product/[slug]/page.tsx` — মেটাডেটা fallback আর ভুয়া ডিফল্ট প্রোডাক্ট দেখাবে না, না পেলে সরাসরি "প্রোডাক্ট পাওয়া যায়নি" মেটাডেটা দেখাবে
+  - `app/product/[slug]/ProductDetailClient.tsx`, `app/srp/SrpClient.tsx` — খালি লিস্ট দিয়ে শুরু, বিদ্যমান fetch effect দিয়েই আসল ডেটা লোড হয়
+  - `app/components/layout/Navbar.tsx` (সার্চ ইনডেক্স), `app/components/cart/CartSidebar.tsx`, `app/components/checkout/QuickOrderBridge.tsx` (দাম lookup) — খালি ref দিয়ে শুরু, fetch হওয়ার পর সরাসরি set হয়
+  - `app/components/modals/OfferPopup.tsx`, `app/components/modals/BackInStockToast.tsx` — অফার/স্টক-নোটিফিকেশন লিস্ট এখন শুধু আসল Supabase ডেটা থেকে তৈরি হয়, fetch fail করলে খালি থাকে (ভুয়া ডেটা দেখায় না)
+  - **`app/actions/checkout.ts` (নিরাপত্তা-সংবেদনশীল)** — অর্ডারের authoritative দাম যাচাই আগে Supabase fetch fail করলে চুপচাপ `DEFAULT_PRODS`-এর (সম্ভাব্য ভুল/পুরনো) দামে fallback করতো; এখন সেটা সরিয়ে fail-closed করা হয়েছে — fetch fail করলে অর্ডার নিরাপদে reject হয় ("একটু পরে আবার চেষ্টা করুন"), কখনো স্টেল দামে অর্ডার confirm হবে না
+
+**✅ Build verification:**
+- `npx tsc --noEmit` — এই migration-touched ১৩টা ফাইলে কোনো টাইপ error নেই (repo-তে ২টা আলাদা pre-existing bug আছে — `app/actions/checkout.ts`-এ `ShipKey` টাইপ মিসম্যাচ, আর `app/components/auth/AccountPage.tsx`-এ অনুপস্থিত `setSwitchPanelOpen` state — দুটোই এই migration-এর আগে থেকেই ছিল, RSC/প্রোডাক্ট-ডেটা কাজের সাথে সম্পর্কহীন, ঠিক করা হয়নি কারণ scope-এর বাইরে)
+- `next build` — সম্পূর্ণ production build সফল (সাময়িকভাবে dummy Supabase env var আর ফন্ট স্টাব বসিয়ে sandbox network-limitation বাইপাস করে verify করা হয়েছে, তারপর আসল ফাইলে revert করা হয়েছে) — `/` রুট `ƒ Dynamic` হিসেবে কাজ করছে
+
+**⏳ Phase E-এর বাকি অংশ:**
+- `app/product/[slug]/page.tsx` ইতিমধ্যে Server Component (metadata generation সহ), কিন্তু `ProductDetailClient.tsx` পুরোটাই এখনো `'use client'` — leaf-level interactive অংশ (বাটন, মোডাল) বাদে বাকি প্রোডাক্ট ডিটেইল markup সার্ভার-রেন্ডার করা যেতে পারে
+- `app/category/[slug]/page.tsx` — Blueprint অনুযায়ী এখনো তৈরি হয়নি (Phase F routing-এর সাথে ওভারল্যাপ করে)
+- `app/srp/page.tsx`/`SrpClient.tsx` (সার্চ) — এখনো পুরোপুরি client-side fetch-নির্ভর, চাইলে RSC pattern-এ আনা যায়
+
 | F | Routing restructure (real policy routes + Cart Guard) | ⏳ বাকি |
 | G | i18n & Dark mode | ⏳ বাকি |
 | H | AI chatbot, Telegram, Tawk.to | ⏳ বাকি |

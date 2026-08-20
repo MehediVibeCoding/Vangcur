@@ -3,23 +3,21 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import {
-  DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, QUICK_ORDER_EVENT,
-} from '@/lib/productData';
+import { fetchCustomProducts, QUICK_ORDER_EVENT } from '@/lib/productData';
 import { showToast } from '@/lib/toast';
 import type { Product, CartItem } from '@/types';
 
 export default function QuickOrderBridge() {
   const router = useRouter();
   const supabase = useRef(createClient()).current;
-  const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
+  const prodsRef = useRef<Product[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const customRows = await fetchCustomProducts(supabase);
       if (!cancelled && customRows.length) {
-        prodsRef.current = mergeCustomProducts(DEFAULT_PRODS, customRows);
+        prodsRef.current = customRows;
       }
     })();
     return () => { cancelled = true; };

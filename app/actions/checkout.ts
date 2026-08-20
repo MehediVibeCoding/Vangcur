@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/serviceClient';
-import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts } from '@/lib/productData';
+import { fetchCustomProducts } from '@/lib/productData';
 import {
   DISTRICTS, getShipOptions, shipPrice, fetchShipConfig,
   validatePhone, validateAddress, validateEmail, validateTxnId,
@@ -91,13 +91,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(GENERIC_RETRY_MSG);
   }
 
-  let authoritativeProds = DEFAULT_PRODS;
+  let authoritativeProds: Awaited<ReturnType<typeof fetchCustomProducts>> = [];
   try {
-    const customRows = await fetchCustomProducts(service);
-    if (customRows.length) authoritativeProds = mergeCustomProducts(DEFAULT_PRODS, customRows);
+    authoritativeProds = await fetchCustomProducts(service);
   } catch (e) {
-    logWarn('[checkout] product fetch fallback to defaults:', e);
+    logWarn('[checkout] authoritative product fetch failed:', e);
   }
+  if (!authoritativeProds.length) return fail(GENERIC_RETRY_MSG);
 
   const verifiedItems: { id: string | number; name: string; emoji: string; price: number; qty: number; cat: string }[] = [];
   for (const item of cleanItems) {

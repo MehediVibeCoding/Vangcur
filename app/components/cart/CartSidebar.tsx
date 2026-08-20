@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
+import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
 import { useCartStore, cartTotal, clearCartOnRealPagehide } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -102,7 +102,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const cart = useCartStore((s) => s.cart);
-  const prodsRef = useRef<Product[]>(DEFAULT_PRODS);
+  const prodsRef = useRef<Product[]>([]);
 
   useEffect(() => clearCartOnRealPagehide(), []);
 
@@ -111,7 +111,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     (async () => {
       const customRows = await fetchCustomProducts(supabase);
       if (!cancelled && customRows.length) {
-        prodsRef.current = mergeCustomProducts(DEFAULT_PRODS, customRows);
+        prodsRef.current = customRows;
       }
     })();
     return () => { cancelled = true; };

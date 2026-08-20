@@ -7,9 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import Footer from '@/app/components/layout/Footer';
 import ProductCard from '@/app/components/home/ProductCard';
 import { searchProducts, matchCategories } from '@/lib/searchData';
-import {
-  DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
-} from '@/lib/productData';
+import { fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts } from '@/lib/productData';
 import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import type { Category, Product } from '@/types';
@@ -165,7 +163,7 @@ export default function SrpClient() {
   const query = (searchParams.get('q') || '').trim();
 
   const supabase = useRef(createClient()).current;
-  const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
+  const [prods, setProds] = useState<Product[]>([]);
   const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
 
   useEffect(() => {

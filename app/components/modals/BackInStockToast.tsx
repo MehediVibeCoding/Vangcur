@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts } from '@/lib/productData';
+import { fetchCustomProducts } from '@/lib/productData';
 import { getStockNotifications, removeStockNotification } from '@/lib/accountData';
 import { showToast } from '@/lib/toast';
+import type { Product } from '@/types';
 
 export default function BackInStockToast() {
   const checkedRef = useRef(false);
@@ -18,12 +19,11 @@ export default function BackInStockToast() {
 
     (async () => {
       const supabase = createClient();
-      let prods = DEFAULT_PRODS;
+      let prods: Product[] = [];
       try {
-        const customRows = await fetchCustomProducts(supabase);
-        if (customRows.length) prods = mergeCustomProducts(DEFAULT_PRODS, customRows);
+        prods = await fetchCustomProducts(supabase);
       } catch {
-        // fall back to defaults
+        // network/Supabase সমস্যায় এই রাউন্ডে চেক স্কিপ হবে
       }
 
       notifs.forEach((n, idx) => {

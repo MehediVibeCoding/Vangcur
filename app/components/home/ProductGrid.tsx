@@ -4,10 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { CATEGORY_FILTER_EVENT, makeCatSlug } from '@/lib/categoryData';
-import {
-  DEFAULT_PRODS, prodInCat, fetchCustomProducts, mergeCustomProducts,
-  subscribeCustomProducts,
-} from '@/lib/productData';
+import { prodInCat, subscribeCustomProducts } from '@/lib/productData';
 import type { Product } from '@/types';
 import ProductCard from './ProductCard';
 
@@ -38,27 +35,28 @@ function ArrowRightIcon() {
 
 const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-7 py-3 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
 
-export default function ProductGrid() {
+interface ProductGridProps {
+  initialProducts: Product[];
+}
+
+export default function ProductGrid({ initialProducts }: ProductGridProps) {
   const supabase = useRef(createClient()).current;
   const searchParams = useSearchParams();
-  const [prods, setProds] = useState<Product[]>(DEFAULT_PRODS);
+  const [prods, setProds] = useState<Product[]>(initialProducts);
   const [activeCat, setActiveCat] = useState('all');
-  // আগে এটা 0 দিয়ে শুরু হতো — মানে প্রথম পেইন্টে গ্রিড একদম খালি থাকতো, তারপর
-  // mount হওয়ার পর setTimeout(0)-এ প্রথম ব্যাচ দেখানো হতো। এতে (ক) পুরো গ্রিড
-  // + নিচের সব সেকশন (FAQ/About/Gallery/Footer) হঠাৎ নিচে নেমে যেত — বড় CLS,
-  // আর (খ) প্রথম প্রোডাক্ট ছবিটাই (LCP element) সার্ভার-রেন্ডারড HTML-এ না
-  // থেকে হাইড্রেশনের পর তৈরি হতো, তাই ব্রাউজার প্রিলোড স্ক্যানার সেটা আগে থেকে
-  // ফেচ শুরু করতে পারতো না — মোবাইলে LCP 7s+ হওয়ার মূল কারণ এটাই। এখন প্রথম
-  // ব্যাচ সরাসরি initial state-এই ধরে রাখা হচ্ছে, ফলে সার্ভার-রেন্ডারড HTML-এই
-  // প্রোডাক্ট কার্ড থাকবে।
-  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, DEFAULT_PRODS.length));
+  // প্রোডাক্ট লিস্ট এখন app/page.tsx (Server Component)-এ সার্ভারেই Supabase
+  // থেকে fetch হয়ে initialProducts prop হিসেবে এখানে আসে — তাই প্রথম পেইন্টেই
+  // (সার্ভার-রেন্ডারড HTML-এই) আসল প্রোডাক্ট কার্ড ও প্রথম প্রোডাক্ট ছবি (LCP
+  // element) থাকে, ব্রাউজার প্রিলোড স্ক্যানার সেটা আগে থেকেই ফেচ শুরু করতে পারে,
+  // আর CLS/স্টেল-ডেটা কোনোটাই হয় না।
+  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, initialProducts.length));
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const batchCountRef = useRef(1);
   const loadMorePausedRef = useRef(false);
-  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, DEFAULT_PRODS.length));
+  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, initialProducts.length));
   const listRef = useRef<Product[]>([]);
   const didInitRef = useRef(false);
   const prevCatRef = useRef(activeCat);
@@ -190,12 +188,6 @@ export default function ProductGrid() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    fetchCustomProducts(supabase).then((customRows) => {
-      if (cancelled || !customRows.length) return;
-      setProds((prev) => mergeCustomProducts(prev, customRows));
-    });
-
     const channel = subscribeCustomProducts(supabase, {
       onInsert: (mapped) => setProds((prev) => (
         prev.find((x) => String(x.id) === String(mapped.id)) ? prev : [...prev, mapped]
@@ -210,7 +202,7 @@ export default function ProductGrid() {
       onDelete: (id) => setProds((prev) => prev.filter((x) => String(x.id) !== String(id))),
     });
 
-    return () => { cancelled = true; supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
   const handleShowAll = () => {
