@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { createClient } from '@/lib/supabase/server';
+import { fetchCustomProducts } from '@/lib/productData';
 import SrpClient from './SrpClient';
 
 export async function generateMetadata({
@@ -15,10 +17,13 @@ export async function generateMetadata({
   };
 }
 
-export default function SrpPage() {
+export default async function SrpPage() {
+  const supabase = await createClient();
+  const initialProducts = await fetchCustomProducts(supabase);
+
   return (
     <Suspense fallback={null}>
-      <SrpClient />
+      <SrpClient initialProducts={initialProducts} />
     </Suspense>
   );
 }

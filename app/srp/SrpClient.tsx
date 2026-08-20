@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import Footer from '@/app/components/layout/Footer';
 import ProductCard from '@/app/components/home/ProductCard';
 import { searchProducts, matchCategories } from '@/lib/searchData';
-import { fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts } from '@/lib/productData';
+import { subscribeCustomProducts } from '@/lib/productData';
 import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import type { Category, Product } from '@/types';
@@ -157,13 +157,20 @@ function EndOfResults() {
   );
 }
 
-export default function SrpClient() {
+interface SrpClientProps {
+  initialProducts: Product[];
+}
+
+export default function SrpClient({ initialProducts }: SrpClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = (searchParams.get('q') || '').trim();
 
   const supabase = useRef(createClient()).current;
-  const [prods, setProds] = useState<Product[]>([]);
+  // app/srp/page.tsx (Server Component) সরাসরি সার্ভারেই পুরো প্রোডাক্ট
+  // লিস্ট fetch করে initialProducts prop হিসেবে পাঠায়, তাই শেয়ার করা/বুকমার্ক
+  // করা সার্চ লিংকে সরাসরি ঢুকলেও প্রথম পেইন্টেই আসল রেজাল্ট দেখা যায়।
+  const [prods, setProds] = useState<Product[]>(initialProducts);
   const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
 
   useEffect(() => {
@@ -171,12 +178,6 @@ export default function SrpClient() {
   }, [supabase]);
 
   useEffect(() => {
-    let cancelled = false;
-    fetchCustomProducts(supabase).then((customRows) => {
-      if (cancelled || !customRows.length) return;
-      setProds((prev) => mergeCustomProducts(prev, customRows));
-    });
-
     const channel = subscribeCustomProducts(supabase, {
       onInsert: (mapped) => setProds((prev) => (
         prev.find((x) => String(x.id) === String(mapped.id)) ? prev : [...prev, mapped]
@@ -191,7 +192,7 @@ export default function SrpClient() {
       onDelete: (id) => setProds((prev) => prev.filter((x) => String(x.id) !== String(id))),
     });
 
-    return () => { cancelled = true; supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
   // হেডারের সার্চ বক্সে টাইপ করার সাথে সাথে (debounce দিয়ে) URL-এর ?q= আপডেট

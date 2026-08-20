@@ -332,10 +332,35 @@ app/(policies)/refund-policy/page.tsx
 - `npx tsc --noEmit` — এই migration-touched ১৩টা ফাইলে কোনো টাইপ error নেই (repo-তে ২টা আলাদা pre-existing bug আছে — `app/actions/checkout.ts`-এ `ShipKey` টাইপ মিসম্যাচ, আর `app/components/auth/AccountPage.tsx`-এ অনুপস্থিত `setSwitchPanelOpen` state — দুটোই এই migration-এর আগে থেকেই ছিল, RSC/প্রোডাক্ট-ডেটা কাজের সাথে সম্পর্কহীন, ঠিক করা হয়নি কারণ scope-এর বাইরে)
 - `next build` — সম্পূর্ণ production build সফল (সাময়িকভাবে dummy Supabase env var আর ফন্ট স্টাব বসিয়ে sandbox network-limitation বাইপাস করে verify করা হয়েছে, তারপর আসল ফাইলে revert করা হয়েছে) — `/` রুট `ƒ Dynamic` হিসেবে কাজ করছে
 
+### Phase E — চালিয়ে যাওয়া (২০২৬-০৮-২০, একই দিনে দ্বিতীয় সেশন)
+
+**✅ ২টা pre-existing bug ঠিক করা হয়েছে (এখন `next build` আটকায় না):**
+- `app/actions/checkout.ts` — `validShipKeys`-কে `string[]` টাইপ করা হয়েছে, যাতে ইউজারের পাঠানো `shipping` স্ট্রিং নিরাপদে যাচাই করা যায় (TS2345 ফিক্স)
+- `app/components/auth/AccountPage.tsx` — অস্তিত্বহীন `setSwitchPanelOpen(false)` কল সরানো হয়েছে (আগেই সরিয়ে ফেলা multi-account switching ফিচারের অবশিষ্টাংশ ছিল, কোথাও state define করা ছিল না — TS2304 ফিক্স)
+
+**✅ `app/product/[slug]/` — hybrid RSC (সার্ভার থেকে ডেটা, client component-এ prop হিসেবে):**
+- `lib/productData.ts`-এ নতুন `fetchProductById()` যোগ হয়েছে — `mapCustomProduct()` reuse করে base fields + detail fields (desc/long_desc/features/faqs/closing) একসাথে এক কোয়েরিতে আনে
+- `page.tsx` — `generateMetadata` আর পেজ কম্পোনেন্ট এখন React `cache()` দিয়ে wrap করা `getProduct()` শেয়ার করে (একই রিকোয়েস্টে ডাবল fetch হয় না); মেটাডেটার জন্য আগের আলাদা `fetchMetaProduct`/`MetaProduct` সরিয়ে একই fetch reuse করা হয়েছে
+- `ProductDetailClient.tsx` — নতুন `initialProduct` prop দিয়ে `prods`/`prodsLoaded` state শুরু হয়, ফলে প্রথম পেইন্টেই আসল প্রোডাক্ট দেখা যায় ("লোড হচ্ছে..." স্পিনার ফ্ল্যাশ হয় না); যেহেতু SSR fetch-এই detail fields (desc/features/faqs) চলে আসে, `_detailLoaded` true হয়ে যায় আর আগের বাড়তি client-side `fetchProductDetail()` কলও এড়ানো যায়
+- **সিদ্ধান্ত:** পুরো ৮৯৫ লাইনের ফাইলকে Server/Client component-এ ভেঙে ফেলা (true full RSC) করা হয়নি — risk/scope বিবেচনায় hybrid পদ্ধতি বেছে নেওয়া হয়েছে (নিচে বিস্তারিত কারণ)
+
+**✅ `app/category/[slug]/page.tsx` — নতুন real, crawlable রুট তৈরি হয়েছে:**
+- আগে `/category/<slug>` শুধু client-side `history.replaceState` দিয়ে cosmetic URL ছিল — direct link/reload/crawl করলে Next.js 404 দিতো
+- এখন `fetchCategories()` (Supabase-ব্যাকড, অ্যাডমিন-যোগ করা কাস্টম ক্যাটাগরিও ধরে) দিয়ে slug যাচাই হয়, না মিললে `notFound()`; ক্যাটাগরি অনুযায়ী নিজস্ব title/meta description বসে
+- সার্ভারেই প্রোডাক্ট fetch করে homepage-এর `ClientHome`/`ProductGrid` reuse করে, নতুন `initialCategory` prop দিয়ে গ্রিড সরাসরি সেই ক্যাটাগরিতে pre-filtered অবস্থায় প্রথম পেইন্টেই দেখায় (initial batch-সাইজও ফিল্টার করা কাউন্ট অনুযায়ী ঠিকভাবে হিসাব হয়)
+
+**✅ `app/srp/` (সার্চ) — homepage-এর same প্যাটার্নে RSC-তে আনা হয়েছে:**
+- `page.tsx` এখন async Server Component, সার্ভারেই পুরো প্রোডাক্ট লিস্ট fetch করে `SrpClient`-এ `initialProducts` prop পাঠায়
+- `SrpClient.tsx` — redundant client-side initial fetch সরানো হয়েছে (realtime subscription রাখা হয়েছে); শেয়ার করা/বুকমার্ক করা সার্চ লিংকে সরাসরি ঢুকলে এখন প্রথম পেইন্টেই আসল রেজাল্ট থাকে
+- এই পেজ `robots: noindex` (এটা আগে থেকেই ছিল), তাই মূল motivation SEO না, বরং সরাসরি/শেয়ার করা সার্চ লিংকের প্রথম-পেইন্ট UX
+
+**✅ Build verification (এই সেশনের শেষে):**
+- `npx tsc --noEmit` — পুরো প্রজেক্টে (pre-existing ২টা bug ফিক্স হওয়ার পর) শূন্য error
+- `next build` — সম্পূর্ণ production build সফল, নতুন `/category/[slug]` রুটসহ সব রুট ঠিকভাবে `ƒ Dynamic` হিসেবে register হয়েছে (আগের মতোই সাময়িক dummy env/ফন্ট স্টাব দিয়ে sandbox-এ verify করে রিভার্ট করা হয়েছে)
+
 **⏳ Phase E-এর বাকি অংশ:**
-- `app/product/[slug]/page.tsx` ইতিমধ্যে Server Component (metadata generation সহ), কিন্তু `ProductDetailClient.tsx` পুরোটাই এখনো `'use client'` — leaf-level interactive অংশ (বাটন, মোডাল) বাদে বাকি প্রোডাক্ট ডিটেইল markup সার্ভার-রেন্ডার করা যেতে পারে
-- `app/category/[slug]/page.tsx` — Blueprint অনুযায়ী এখনো তৈরি হয়নি (Phase F routing-এর সাথে ওভারল্যাপ করে)
-- `app/srp/page.tsx`/`SrpClient.tsx` (সার্চ) — এখনো পুরোপুরি client-side fetch-নির্ভর, চাইলে RSC pattern-এ আনা যায়
+- `ProductDetailClient.tsx`/`SrpClient.tsx` এখনো পুরোটাই `'use client'` (hybrid pattern — সার্ভার থেকে ডেটা prop হিসেবে আসে, কিন্তু পুরো markup client-এই রেন্ডার হয়); leaf-level ইন্টারঅ্যাক্টিভ অংশ বাদ দিয়ে বাকি markup সার্ভার-রেন্ডার করার সুযোগ এখনো আছে, কিন্তু ৮৯৫ লাইনের গভীরভাবে interactive একটা ফাইল (image gallery, cart, wishlist, tabs, auth মোডাল সব একসাথে) কোনো visual-regression টুল ছাড়া এক ধাক্কায় ভাঙা ঝুঁকিপূর্ণ মনে হয়েছে, তাই সেটা বাদ দেওয়া হয়েছে — hybrid পদ্ধতিতেই মূল সমস্যা (stale first paint) সমাধান হয়ে গেছে
+- `/category/[slug]` পেজ আপাতত পুরো হোমপেজ layout (Hero/TrustStrip/Categories/Grid/FAQ/About/Gallery/Footer) reuse করছে ওই ক্যাটাগরিতে filter করে — একটা লিন, ক্যাটাগরি-নির্দিষ্ট আলাদা লেআউট বানানো হয়নি (ডিজাইন সিদ্ধান্ত, চাইলে পরে বদলানো যাবে)
 
 | F | Routing restructure (real policy routes + Cart Guard) | ⏳ বাকি |
 | G | i18n & Dark mode | ⏳ বাকি |

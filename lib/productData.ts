@@ -89,6 +89,7 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
 }
 
 const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
+const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing`;
 
 export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Product[]> {
   let attempt = 0;
@@ -123,6 +124,21 @@ export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Pro
     }
   }
   return [];
+}
+
+export async function fetchProductById(supabase: SupabaseClient, id: number | string): Promise<Product | null> {
+  try {
+    const { data, error } = await supabase
+      .from('custom_products')
+      .select(DETAIL_COLS)
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return mapCustomProduct(data as unknown as RawCustomProduct);
+  } catch (e) {
+    logWarn('[Vangcur] fetchProductById exception:', e);
+    return null;
+  }
 }
 
 export function mergeCustomProducts(defaults: Product[], customRows: Product[]): Product[] {

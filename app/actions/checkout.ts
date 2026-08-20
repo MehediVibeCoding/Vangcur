@@ -42,7 +42,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   if (!validateAddress(addr) || addr.length > MAX_ADDR_LEN) return fail('সঠিক ঠিকানা দিন');
   if (email && !validateEmail(email)) return fail('সঠিক ইমেইল দিন');
 
-  const validShipKeys = getShipOptions(dist).map((o) => o.key);
+  const validShipKeys: string[] = getShipOptions(dist).map((o) => o.key);
   if (!shipping || !validShipKeys.includes(shipping)) return fail('সঠিক শিপিং অপশন সিলেক্ট করুন');
 
   const hasTxn = !!txn;

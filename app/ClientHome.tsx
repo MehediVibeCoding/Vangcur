@@ -24,9 +24,10 @@ const AccountPage = dynamic(() => import('./components/auth/AccountPage'));
 
 interface ClientHomeProps {
   initialProducts: Product[];
+  initialCategory?: string;
 }
 
-export default function ClientHome({ initialProducts }: ClientHomeProps) {
+export default function ClientHome({ initialProducts, initialCategory }: ClientHomeProps) {
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -57,7 +58,7 @@ export default function ClientHome({ initialProducts }: ClientHomeProps) {
       <HeroSlider />
       <TrustStrip />
       <Categories />
-      <ProductGrid initialProducts={initialProducts} />
+      <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
       <FAQ />
       <About />
       <CustomerGallery />

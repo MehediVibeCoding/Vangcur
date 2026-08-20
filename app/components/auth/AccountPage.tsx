@@ -118,7 +118,6 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
   useEffect(() => {
     if (!isOpen || !currentUser) return;
     setNameEditOpen(false);
-    setSwitchPanelOpen(false);
     setStockNotifs(getStockNotifications());
     fetchMyOrders(supabase, currentUser).then(setOrders);
     fetchDrafts(supabase, currentUser).then(setDrafts);

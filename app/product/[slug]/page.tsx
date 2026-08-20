@@ -1,40 +1,22 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { idFromSlug, makeSlug } from '@/lib/productData';
+import { idFromSlug, makeSlug, fetchProductById } from '@/lib/productData';
 import ProductDetailClient from './ProductDetailClient';
 
 const SITE_URL = 'https://vangcur.com';
 
-interface MetaProduct {
-  id: number | string;
-  name: string;
-  price: number;
-  old?: number;
-  imgs?: unknown;
-  desc_text?: string;
-  desc?: string;
-  stock?: number;
-}
-
-async function fetchMetaProduct(id: string): Promise<MetaProduct | null> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('custom_products')
-      .select('id,name,price,old,imgs,desc_text,stock')
-      .eq('id', id)
-      .maybeSingle();
-    if (!error && data) return data as MetaProduct;
-  } catch {
-    return null;
-  }
-  return null;
-}
+// generateMetadata আর পেজ কম্পোনেন্ট দুটোই একই প্রোডাক্ট লাগবে — React-এর cache()
+// দিয়ে একই রিকোয়েস্টের মধ্যে এই ফাংশনটা একবারই চলবে, দুইবার Supabase-এ কল যাবে না।
+const getProduct = cache(async (id: string) => {
+  const supabase = await createClient();
+  return fetchProductById(supabase, id);
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const id = idFromSlug(slug);
-  const p = id ? await fetchMetaProduct(id) : null;
+  const p = id ? await getProduct(id) : null;
 
   if (!p) {
     return {
@@ -44,12 +26,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   const title = `${p.name} - ৳${Number(p.price).toLocaleString('en-US')} | Vangcur`;
-  const rawDesc = p.desc_text || p.desc || '';
+  const rawDesc = p.desc || '';
   const description = rawDesc
     ? (rawDesc.length > 160 ? rawDesc.slice(0, 157) + '...' : rawDesc)
     : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`;
-  const imgs = Array.isArray(p.imgs) ? p.imgs : [];
-  const firstImg = imgs.find((im): im is string => typeof im === 'string' && im.startsWith('http'));
+  const firstImg = p.imgs.find((im) => typeof im === 'string' && im.startsWith('http'));
   const canonicalSlug = `${makeSlug(p.name)}-${p.id}`;
 
   return {
@@ -77,5 +58,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const id = idFromSlug(slug);
-  return <ProductDetailClient slug={slug} initialId={id} />;
+  const initialProduct = id ? await getProduct(id) : null;
+  return <ProductDetailClient slug={slug} initialId={id} initialProduct={initialProduct} />;
 }

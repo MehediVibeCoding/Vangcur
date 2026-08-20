@@ -223,13 +223,19 @@ const TABS = [
 interface ProductDetailClientProps {
   slug: string;
   initialId: string | null;
+  initialProduct: Product | null;
 }
 
-export default function ProductDetailClient({ slug, initialId }: ProductDetailClientProps) {
+export default function ProductDetailClient({ slug, initialId, initialProduct }: ProductDetailClientProps) {
   const supabase = useRef(createClient()).current;
 
-  const [prods, setProds] = useState<Product[]>([]);
-  const [prodsLoaded, setProdsLoaded] = useState(false);
+  // app/product/[slug]/page.tsx (Server Component) সরাসরি সার্ভারেই এই
+  // নির্দিষ্ট প্রোডাক্টটা fetch করে initialProduct prop হিসেবে পাঠায় — তাই
+  // প্রথম পেইন্টেই (সার্ভার HTML-এই) আসল প্রোডাক্ট দেখা যায়, "লোড হচ্ছে..."
+  // স্পিনার ফ্ল্যাশ হয় না, আর SEO crawler স্টেল/খালি HTML পায় না। বাকি প্রোডাক্ট
+  // লিস্ট (related products-এর জন্য) এখনো নিচের effect-এ client-side fetch হয়।
+  const [prods, setProds] = useState<Product[]>(initialProduct ? [initialProduct] : []);
+  const [prodsLoaded, setProdsLoaded] = useState(!!initialProduct);
 
   useEffect(() => {
     let cancelled = false;

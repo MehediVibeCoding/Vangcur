@@ -37,26 +37,33 @@ const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-non
 
 interface ProductGridProps {
   initialProducts: Product[];
+  initialCategory?: string;
 }
 
-export default function ProductGrid({ initialProducts }: ProductGridProps) {
+export default function ProductGrid({ initialProducts, initialCategory }: ProductGridProps) {
   const supabase = useRef(createClient()).current;
   const searchParams = useSearchParams();
   const [prods, setProds] = useState<Product[]>(initialProducts);
-  const [activeCat, setActiveCat] = useState('all');
+  const [activeCat, setActiveCat] = useState(initialCategory || 'all');
+  // /category/[slug] (Server Component)-এ initialCategory pass হলে প্রথম
+  // ব্যাচের সাইজ ওই ক্যাটাগরিতে ফিল্টার করা কাউন্ট অনুযায়ী হিসাব হয়, পুরো
+  // unfiltered লিস্টের length অনুযায়ী না।
+  const initialFilteredCount = initialCategory && initialCategory !== 'all'
+    ? initialProducts.filter((p) => prodInCat(p, initialCategory)).length
+    : initialProducts.length;
   // প্রোডাক্ট লিস্ট এখন app/page.tsx (Server Component)-এ সার্ভারেই Supabase
   // থেকে fetch হয়ে initialProducts prop হিসেবে এখানে আসে — তাই প্রথম পেইন্টেই
   // (সার্ভার-রেন্ডারড HTML-এই) আসল প্রোডাক্ট কার্ড ও প্রথম প্রোডাক্ট ছবি (LCP
   // element) থাকে, ব্রাউজার প্রিলোড স্ক্যানার সেটা আগে থেকেই ফেচ শুরু করতে পারে,
   // আর CLS/স্টেল-ডেটা কোনোটাই হয় না।
-  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, initialProducts.length));
+  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, initialFilteredCount));
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const batchCountRef = useRef(1);
   const loadMorePausedRef = useRef(false);
-  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, initialProducts.length));
+  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, initialFilteredCount));
   const listRef = useRef<Product[]>([]);
   const didInitRef = useRef(false);
   const prevCatRef = useRef(activeCat);
