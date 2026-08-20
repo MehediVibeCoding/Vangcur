@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { DEFAULT_PRODS, fetchCustomProducts, mergeCustomProducts } from '@/lib/productData';
+import { createOrder } from '@/app/actions/checkout';
+import { getFingerprintId } from '@/lib/fingerprint';
 import {
   checkOAuthCallback, mergeGuestOrdersToUser, signInWithGoogle,
 } from '@/lib/authData';
@@ -316,6 +317,7 @@ export default function CheckoutPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const confirmLockRef = useRef(false);
+  const fingerprintIdRef = useRef('');
 
   const [showPreConfirm, setShowPreConfirm] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -373,6 +375,7 @@ export default function CheckoutPage() {
     }
     fetchBkashNumber(supabase).then(setBkashNum);
     fetchShipConfig(supabase).then(setShipCfg);
+    getFingerprintId().then((id) => { fingerprintIdRef.current = id; });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -580,78 +583,29 @@ export default function CheckoutPage() {
     setSubmitting(true);
 
     try {
-      try {
-        const rl = await supabase.rpc('check_and_set_rate_limit', { p_phone: phone.trim() });
-        if (rl.data === false) {
-          setSubmitting(false);
-          confirmLockRef.current = false;
-          showToast('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন');
-          return;
-        }
-      } catch {
-        const lastOrderTime = parseInt(localStorage.getItem('vc_last_order_time') || '0', 10);
-        if (Date.now() - lastOrderTime < 30000) {
-          setSubmitting(false);
-          confirmLockRef.current = false;
-          showToast('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন');
-          return;
-        }
-      }
-
-      let num = `#VC-${Date.now().toString(36).toUpperCase()}`;
-      try {
-        const { data: counterData, error: counterErr } = await supabase.rpc('increment_order_counter');
-        if (!counterErr && counterData) num = `#VC-${counterData}`;
-      } catch {
-        // fallback already set above
-      }
-
-      let authoritativeProds = DEFAULT_PRODS;
-      try {
-        const customRows = await fetchCustomProducts(supabase);
-        if (customRows.length) authoritativeProds = mergeCustomProducts(DEFAULT_PRODS, customRows);
-      } catch {
-        // fetchCustomProducts already retries internally and returns [] on failure
-      }
-      const verifiedItems = cartItems.map((i) => {
-        const prod = authoritativeProds.find((p) => String(p.id) === String(i.id));
-        return prod ? { ...i, price: prod.price, name: prod.name, emoji: (prod.imgs || ['📦'])[0] } : i;
+      const result = await createOrder({
+        name: name.trim(),
+        phone: phone.trim(),
+        district: dist,
+        address: addr.trim(),
+        email: email.trim(),
+        shipping: selectedShip,
+        items: cartItems.map((i) => ({ id: String(i.id), qty: i.qty })),
+        paymentTxn: txn.trim(),
+        paymentLast4: last4.trim(),
+        fingerprintId: fingerprintIdRef.current,
       });
-      const vSub = verifiedItems.reduce((s, i) => s + i.price * i.qty, 0);
-      const vTotal = vSub + sc;
 
-      const { data: userData } = await supabase.auth.getUser();
-      const currentUserId = userData?.user?.id || null;
-
-      const { data: insData, error: insErr } = await supabase
-        .from('orders')
-        .insert({
-          order_num: num,
-          created_at: new Date().toISOString(),
-          customer_name: name.trim(),
-          customer_phone: phone.trim(),
-          customer_district: dist,
-          customer_address: addr.trim(),
-          customer_email: email.trim() || '',
-          items: verifiedItems,
-          shipping: selectedShip,
-          shipping_cost: sc,
-          subtotal: vSub,
-          total: vTotal,
-          payment_txn: txn || '',
-          payment_last4: last4 || '',
-          status: 'pending',
-          ...(currentUserId ? { user_id: currentUserId } : {}),
-        })
-        .select('id')
-        .single();
-
-      if (insErr) {
+      if (!result.ok || !result.data) {
         setSubmitting(false);
         confirmLockRef.current = false;
-        showToast('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।');
+        showToast(result.error || 'দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।');
         return;
       }
+
+      const { id: orderId, orderNum: num } = result.data;
+      const { data: userData } = await supabase.auth.getUser();
+      const currentUserId = userData?.user?.id || null;
 
       localStorage.setItem('vc_cart', '[]');
       orderDoneRef.current = true;
@@ -659,7 +613,7 @@ export default function CheckoutPage() {
       try {
         sessionStorage.removeItem('vc_form_draft');
         sessionStorage.removeItem('vc_lead_id');
-        localStorage.setItem('vc_pending_ls', insData.id);
+        localStorage.setItem('vc_pending_ls', String(orderId));
         localStorage.setItem('vc_pending_num_ls', num);
         localStorage.setItem('vc_pending_ts', String(Date.now()));
         localStorage.setItem('vc_last_order_time', String(Date.now()));
@@ -669,7 +623,7 @@ export default function CheckoutPage() {
       if (!currentUserId) {
         try {
           const guestOrders = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
-          guestOrders.push({ id: insData.id, orderNum: num });
+          guestOrders.push({ id: orderId, orderNum: num });
           localStorage.setItem('vc_guest_orders', JSON.stringify(guestOrders));
         } catch {
           // ignore
@@ -683,7 +637,7 @@ export default function CheckoutPage() {
       showToast('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, cartItems, sc, name, dist, addr, email, selectedShip, txn, last4]);
+  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4]);
 
   useEffect(() => { submitOrderNowRef.current = submitOrderNow; }, [submitOrderNow]);
 

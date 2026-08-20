@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { CurrentUser, LinkedAccount, WishlistItem } from '@/types';
+import type { CurrentUser, WishlistItem } from '@/types';
 import { logWarn } from './logger';
 import { useAuthStore } from './store/authStore';
 
@@ -10,72 +10,6 @@ export async function logout(supabase: SupabaseClient): Promise<void> {
     // sign-out failure shouldn't block clearing local session state
   }
   useAuthStore.getState().setCurrentUser(null);
-}
-
-export function getLinkedAccounts(): LinkedAccount[] {
-  try {
-    return JSON.parse(localStorage.getItem('vc_linked_accounts') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveLinkedAccounts(list: LinkedAccount[]): void {
-  try {
-    localStorage.setItem('vc_linked_accounts', JSON.stringify(list));
-  } catch {
-    // storage full/blocked — non-critical, multi-account switching just won't persist
-  }
-}
-
-export function saveLinkedAccount(
-  user: CurrentUser,
-  session: { access_token?: string; refresh_token?: string } | null
-): void {
-  if (!user || !user.email) return;
-  const initials = (user.name || '?')
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-  const accounts = getLinkedAccounts().filter((a) => a.email !== user.email);
-  accounts.unshift({
-    email: user.email,
-    name: user.name || 'Customer',
-    initials,
-    access_token: session?.access_token || '',
-    refresh_token: session?.refresh_token || '',
-  });
-  saveLinkedAccounts(accounts.slice(0, 5));
-}
-
-export async function switchToAccount(
-  supabase: SupabaseClient,
-  email: string
-): Promise<{ user?: CurrentUser; error?: string }> {
-  const accounts = getLinkedAccounts();
-  const acct = accounts.find((a) => a.email === email);
-  if (!acct || !acct.refresh_token) return { error: 'expired' };
-  try {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: acct.access_token,
-      refresh_token: acct.refresh_token,
-    });
-    if (error || !data.session) return { error: 'expired' };
-    const u = data.session.user;
-    const safeUser: CurrentUser = {
-      id: u.id,
-      email: u.email,
-      name: u.user_metadata?.name || acct.name || 'Customer',
-      phone: u.user_metadata?.phone || '',
-    };
-    useAuthStore.getState().setCurrentUser(safeUser);
-    saveLinkedAccount(safeUser, data.session);
-    return { user: safeUser };
-  } catch {
-    return { error: 'failed' };
-  }
 }
 
 export async function requestPasswordReset(supabase: SupabaseClient, email: string): Promise<true> {
@@ -128,7 +62,6 @@ export async function checkOAuthCallback(supabase: SupabaseClient): Promise<Curr
   };
   const existing = useAuthStore.getState().currentUser;
   if (existing && existing.id === safeUser.id) return null;
-  saveLinkedAccount(safeUser, session);
   if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token')) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }

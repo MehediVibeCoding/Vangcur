@@ -12,7 +12,7 @@ import { productHref } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { logout, getLinkedAccounts, switchToAccount } from '@/lib/authData';
+import { logout } from '@/lib/authData';
 import {
   OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
 } from '@/lib/uiEvents';
@@ -69,10 +69,9 @@ interface AccountPageProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: CurrentUser | null;
-  onAddAccount?: () => void;
 }
 
-export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount }: AccountPageProps) {
+export default function AccountPage({ isOpen, onClose, currentUser }: AccountPageProps) {
   const supabase = useRef(createClient()).current;
   const [now, setNow] = useState(() => new Date());
   const [isRaining, setIsRaining] = useState(false);
@@ -83,8 +82,6 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
   const [nameEditValue, setNameEditValue] = useState('');
   const [nameEditErr, setNameEditErr] = useState('');
 
-  const [switchPanelOpen, setSwitchPanelOpen] = useState(false);
-  const [linkedAccounts, setLinkedAccounts] = useState(getLinkedAccounts());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -153,24 +150,6 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
     useAuthStore.getState().setCurrentUser({ ...currentUser, name: nm });
     closeNameEdit();
     showToast('নাম পরিবর্তন হয়েছে');
-  };
-
-  const toggleSwitchPanel = () => {
-    setSwitchPanelOpen((v) => {
-      const next = !v;
-      if (next) setLinkedAccounts(getLinkedAccounts().filter((a) => a.email !== currentUser.email));
-      return next;
-    });
-  };
-  const handleSwitchToAccount = async (email: string) => {
-    showToast('⏳ সুইচ হচ্ছে...');
-    const result = await switchToAccount(supabase, email);
-    if (result.error) {
-      showToast(result.error === 'expired' ? 'সেশন মেয়াদ শেষ, আবার লগইন করুন' : 'সুইচ করতে সমস্যা হয়েছে');
-      return;
-    }
-    setSwitchPanelOpen(false);
-    showToast('অ্যাকাউন্ট পরিবর্তন হয়েছে');
   };
 
   const doLogout = async () => {
@@ -403,7 +382,6 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                 <div>
                   <div className="flex gap-2 border-t border-white/[0.12] pt-3">
                     <button onClick={openNameEdit} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">✏️ এডিট</button>
-                    <button onClick={toggleSwitchPanel} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">🔄 সুইচ</button>
                     <button onClick={() => setShowLogoutConfirm(true)} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">↩ লগআউট</button>
                   </div>
 
@@ -426,41 +404,6 @@ export default function AccountPage({ isOpen, onClose, currentUser, onAddAccount
                 </div>
               </div>
             </div>
-
-            {switchPanelOpen && (
-              <div className="rounded-brand border border-border-base bg-white p-3.5 shadow-sh1">
-                <div className="mb-2.5 font-body text-[13px] font-bold text-ink">অ্যাকাউন্ট পরিবর্তন করুন</div>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2.5 rounded-[10px] bg-surface-muted p-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">{initials}</div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-body text-xs font-bold text-ink">{currentUser.name || 'Guest'}</div>
-                      <div className="truncate font-body text-[10.5px] text-muted">{currentUser.email || ''}</div>
-                    </div>
-                    <div className="font-bold text-success">✓</div>
-                  </div>
-                  {linkedAccounts.map((a) => (
-                    <div
-                      key={a.email} onClick={() => handleSwitchToAccount(a.email)}
-                      className="flex cursor-pointer items-center gap-2.5 rounded-[10px] p-2 hover:bg-surface-muted"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6366F1] text-[11px] font-bold text-white">{a.initials || '?'}</div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-body text-xs font-bold text-ink">{a.name || ''}</div>
-                        <div className="truncate font-body text-[10.5px] text-muted">{a.email || ''}</div>
-                      </div>
-                      <div className="font-body text-[11px] font-bold text-[#6366F1]">সুইচ</div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => { onClose(); if (onAddAccount) setTimeout(onAddAccount, 150); }}
-                  className="mt-2.5 w-full rounded-[10px] border border-dashed border-border-base py-2 font-body text-xs font-semibold text-muted hover:bg-surface-muted"
-                >
-                  ➕ নতুন অ্যাকাউন্ট যোগ করুন
-                </button>
-              </div>
-            )}
 
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">

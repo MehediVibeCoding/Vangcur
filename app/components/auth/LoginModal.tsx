@@ -7,7 +7,6 @@ import { showToast } from '@/lib/toast';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import {
-  saveLinkedAccount,
   signInWithPassword, signUp, signInWithGoogle, checkOAuthCallback,
   syncWishlistFromSupabase, saveWishlistToSupabase, mergeGuestOrdersToUser,
   requestPasswordReset,
@@ -366,7 +365,6 @@ export default function LoginModal({
       name: data.user.user_metadata?.name || 'Customer',
       phone: data.user.user_metadata?.phone || '',
     };
-    saveLinkedAccount(safeUser, data.session);
     await finishAuthSuccess(safeUser, 'লগইন সফল হয়েছে');
   };
 

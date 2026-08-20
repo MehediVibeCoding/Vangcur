@@ -504,7 +504,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
             লোড হচ্ছে...
           </div>
           <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-          <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} onAddAccount={() => setLoginOpen(true)} />
+          <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
         </div>
       );
     }
@@ -529,7 +529,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
           </Link>
         </div>
         <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-        <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} onAddAccount={() => setLoginOpen(true)} />
+        <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
       </div>
     );
   }
@@ -860,7 +860,7 @@ export default function ProductDetailClient({ slug, initialId }: ProductDetailCl
 
       <WarrantyModal isOpen={warrantyOpen} onClose={() => setWarrantyOpen(false)} warrantyText={prod.warranty} />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} onAddAccount={() => setLoginOpen(true)} />
+      <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
 
       <div className={`fixed inset-x-0 bottom-0 z-30 border-t border-border-base bg-white/95 shadow-sh3 backdrop-blur transition-transform duration-brand ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-4 py-2.5 md:px-8">

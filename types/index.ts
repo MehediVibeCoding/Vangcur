@@ -59,14 +59,6 @@ export interface CurrentUser {
   createdAt?: string;
 }
 
-export interface LinkedAccount {
-  email: string;
-  name: string;
-  initials: string;
-  access_token: string;
-  refresh_token: string;
-}
-
 export interface OrderItem {
   name: string;
   price: number;
@@ -206,4 +198,27 @@ export interface ActionResponse<T = unknown> {
   data?: T;
   reason?: string;
   error?: string;
+}
+
+export interface OrderPayloadItem {
+  id: string;
+  qty: number;
+}
+
+export interface OrderPayload {
+  name: string;
+  phone: string;
+  district: string;
+  address: string;
+  email: string;
+  shipping: string;
+  items: OrderPayloadItem[];
+  paymentTxn: string;
+  paymentLast4: string;
+  fingerprintId: string;
+}
+
+export interface CreateOrderResult {
+  id: string | number;
+  orderNum: string;
 }

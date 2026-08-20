@@ -62,7 +62,6 @@ export default function ClientHome() {
         isOpen={accountOpen}
         onClose={() => setAccountOpen(false)}
         currentUser={currentUser}
-        onAddAccount={() => setLoginOpen(true)}
       />
     </>
   );
