@@ -310,7 +310,7 @@ app/(policies)/refund-policy/page.tsx
 
 | C | Zustand state migration | ✅ সম্পূর্ণ |
 | D | Server Actions & Security | 🟡 আংশিক — Turnstile, rate limiting, input sanitization ইতিমধ্যে হয়ে গেছে (auth-এর সাথে); বাকি: Server Action দিয়ে checkout order creation, `decrement_product_stock` RPC, fingerprint.js, bKash TxnID unique constraint, multi-account switching অপসারণ |
-| E | RSC conversion | 🟡 আংশিক — নিচে বিস্তারিত |
+| E | RSC conversion | ✅ মূল লক্ষ্য অনুযায়ী সম্পূর্ণ — নিচে বিস্তারিত |
 
 ### Phase E বিস্তারিত status (২০২৬-০৮-২০)
 
@@ -358,14 +358,32 @@ app/(policies)/refund-policy/page.tsx
 - `npx tsc --noEmit` — পুরো প্রজেক্টে (pre-existing ২টা bug ফিক্স হওয়ার পর) শূন্য error
 - `next build` — সম্পূর্ণ production build সফল, নতুন `/category/[slug]` রুটসহ সব রুট ঠিকভাবে `ƒ Dynamic` হিসেবে register হয়েছে (আগের মতোই সাময়িক dummy env/ফন্ট স্টাব দিয়ে sandbox-এ verify করে রিভার্ট করা হয়েছে)
 
-**⏳ Phase E-এর বাকি অংশ:**
-- `ProductDetailClient.tsx`/`SrpClient.tsx` এখনো পুরোটাই `'use client'` (hybrid pattern — সার্ভার থেকে ডেটা prop হিসেবে আসে, কিন্তু পুরো markup client-এই রেন্ডার হয়); leaf-level ইন্টারঅ্যাক্টিভ অংশ বাদ দিয়ে বাকি markup সার্ভার-রেন্ডার করার সুযোগ এখনো আছে, কিন্তু ৮৯৫ লাইনের গভীরভাবে interactive একটা ফাইল (image gallery, cart, wishlist, tabs, auth মোডাল সব একসাথে) কোনো visual-regression টুল ছাড়া এক ধাক্কায় ভাঙা ঝুঁকিপূর্ণ মনে হয়েছে, তাই সেটা বাদ দেওয়া হয়েছে — hybrid পদ্ধতিতেই মূল সমস্যা (stale first paint) সমাধান হয়ে গেছে
-- `/category/[slug]` পেজ আপাতত পুরো হোমপেজ layout (Hero/TrustStrip/Categories/Grid/FAQ/About/Gallery/Footer) reuse করছে ওই ক্যাটাগরিতে filter করে — একটা লিন, ক্যাটাগরি-নির্দিষ্ট আলাদা লেআউট বানানো হয়নি (ডিজাইন সিদ্ধান্ত, চাইলে পরে বদলানো যাবে)
+**✅ Build verification (২য় সেশনের শেষে):**
+- `npx tsc --noEmit` — পুরো প্রজেক্টে (pre-existing ২টা bug ফিক্স হওয়ার পর) শূন্য error
+- `next build` — সম্পূর্ণ production build সফল, নতুন `/category/[slug]` রুটসহ সব রুট ঠিকভাবে `ƒ Dynamic` হিসেবে register হয়েছে (আগের মতোই সাময়িক dummy env/ফন্ট স্টাব দিয়ে sandbox-এ verify করে রিভার্ট করা হয়েছে)
+
+### Phase E — চূড়ান্ত রাউন্ড (একই দিনে ৩য় সেশন): লিন ক্যাটাগরি পেজ + স্কোপ সিদ্ধান্তের ব্যাখ্যা
+
+**গুরুত্বপূর্ণ realization — hybrid pattern আসলে ইতিমধ্যেই মূল বাগটা ঠিক করে দিয়েছে:**
+Next.js App Router-এ `'use client'` কম্পোনেন্টও প্রথম রিকোয়েস্টে সার্ভারেই HTML-এ রেন্ডার হয় (শুধু হাইড্রেশনের পর ইন্টারঅ্যাক্টিভ হয়ে ওঠে)। তাই page.tsx (Server Component) থেকে `initialProduct`/`initialProducts` prop হিসেবে আসল ডেটা পাঠানোর সাথে সাথেই, সেই ডেটা দিয়ে seed করা ক্লায়েন্ট কম্পোনেন্টের সার্ভার-রেন্ডারড HTML-ও আসল কনটেন্ট দেখায় — "স্টেল/খালি HTML" বাগটা যেটার জন্য এই পুরো কাজ শুরু হয়েছিল, সেটা hybrid pattern দিয়েই সম্পূর্ণ সমাধান হয়ে গেছে সবগুলো পেজে (হোম, প্রোডাক্ট, ক্যাটাগরি, সার্চ)। বাকি থাকা "true full RSC split" (markup-কে Server/Client অংশে ভাগ করা) শুধু bundle-size/hydration-cost অপ্টিমাইজেশন — কোনো bug ফিক্স না।
+
+এই বিবেচনায়, `ProductDetailClient.tsx` (৮৯৫ লাইন, গভীরভাবে ইন্টারঅ্যাক্টিভ — image gallery, cart, wishlist, tabs, auth মোডাল একসাথে) ভেঙে সার্ভার/ক্লায়েন্ট আলাদা করার ঝুঁকিপূর্ণ কাজ **ইচ্ছাকৃতভাবে বাদ দেওয়া হয়েছে** — কোনো visual-regression টুল ছাড়া (এই sandbox-এ স্ক্রিনশট/ভিজুয়াল-ডিফ করার উপায় নেই) এত বড় একটা লাইভ, কাজ-করা ফাইলে হাত দেওয়ার ঝুঁকি বাস্তব সুবিধার চেয়ে বেশি।
+
+**✅ যা নতুন করে করা হলো (আসল, কম-ঝুঁকির উন্নতি):**
+- `/category/[slug]` পেজ আর পুরো হোমপেজ layout (Hero/TrustStrip/FAQ/About/Gallery) reuse করে না — নতুন `CategoryClient.tsx` একটা লিন, ক্যাটাগরি-নির্দিষ্ট শেল: Navbar + breadcrumb (হোম / ক্যাটাগরি-নাম) + ক্যাটাগরি আইকন+নাম হেডার + অন্যান্য ক্যাটাগরিতে যাওয়ার কুইক-লিংক পিল (internal linking-এও ভালো, crawler এখান থেকে অন্য ক্যাটাগরি পেজ discover করতে পারবে) + ফিল্টার করা `ProductGrid` + Footer
+- `ProductGrid.tsx`-এ নতুন `categoryName` prop — গ্রিডের হেডিং এখন প্রাসঙ্গিক ক্যাটাগরির নাম দেখায় ("সকল প্রোডাক্ট"-এর বদলে, যেমন "TWS"), যতক্ষণ ইউজার "সব প্রোডাক্ট দেখুন" বাটনে ক্লিক না করে
+- `page.tsx`-এ `getCategories()` (React `cache()`) দিয়ে পুরো ক্যাটাগরি লিস্ট একবার fetch হয়ে metadata + পেজ + sibling-লিংক তিন জায়গাতেই reuse হচ্ছে
+- **ফলাফল:** `next build`-এ `/category/[slug]` বান্ডেল সাইজ (215 kB) এখন হোমপেজের (224 kB) চেয়েও ছোট — লিন শেল সত্যিই হালকা প্রমাণিত
+
+**পরিচিত সামান্য leftover:** `ClientHome.tsx`-এ একটা `initialCategory` optional prop রয়ে গেছে যেটা এখন আর কোথাও পাস করা হয় না (আগে category page-এ ClientHome reuse করার প্ল্যান ছিল, এখন CategoryClient সরাসরি ProductGrid ব্যবহার করে) — সম্পূর্ণ harmless (optional, কোথাও ব্যবহার না হলেও build/type error দেয় না), পরিষ্কারের জন্য ইচ্ছা করলে বাদ দেওয়া যায়।
+
+**Phase E-এর মূল লক্ষ্য (SEO crawler প্রথম HTML-এই আসল ডেটা পাবে, প্রথম পেইন্টে স্টেল/খালি কনটেন্ট থাকবে না) এখন হোম, প্রোডাক্ট ডিটেইল, ক্যাটাগরি, আর সার্চ — এই ৪টা পাবলিক-ফেসিং পেজেই অর্জিত। এই কারণে Phase E-কে কার্যকরীভাবে সম্পূর্ণ ধরা হচ্ছে; বাকি যা আছে তা bundle-size অপ্টিমাইজেশনের মতো ঐচ্ছিক পরবর্তী কাজ, কোনো bug ফিক্স নয়।**
 
 | F | Routing restructure (real policy routes + Cart Guard) | ⏳ বাকি |
 | G | i18n & Dark mode | ⏳ বাকি |
 | H | AI chatbot, Telegram, Tawk.to | ⏳ বাকি |
 | I | SEO/GTM/sitemap | ⏳ বাকি |
+
 | J | Anti-tampering (partial — devtools block বাদে, সবসময়) | ⏳ বাকি |
 | L | Infrastructure/Scaling (documentation only) | ⏳ বাকি |
 | M | Documentation | ⏳ বাকি |

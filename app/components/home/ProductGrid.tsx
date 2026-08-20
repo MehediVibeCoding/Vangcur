@@ -38,9 +38,10 @@ const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-non
 interface ProductGridProps {
   initialProducts: Product[];
   initialCategory?: string;
+  categoryName?: string;
 }
 
-export default function ProductGrid({ initialProducts, initialCategory }: ProductGridProps) {
+export default function ProductGrid({ initialProducts, initialCategory, categoryName }: ProductGridProps) {
   const supabase = useRef(createClient()).current;
   const searchParams = useSearchParams();
   const [prods, setProds] = useState<Product[]>(initialProducts);
@@ -229,7 +230,11 @@ export default function ProductGrid({ initialProducts, initialCategory }: Produc
     <div className="mx-auto mb-11 max-w-[1300px] px-5" id="prodSec">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
-          সকল <span className="text-brand-light">প্রোডাক্ট</span>
+          {categoryName && activeCat !== 'all' ? (
+            categoryName
+          ) : (
+            <>সকল <span className="text-brand-light">প্রোডাক্ট</span></>
+          )}
         </h2>
         <span className="text-[13px] text-muted">{list.length}টি প্রোডাক্ট</span>
       </div>
