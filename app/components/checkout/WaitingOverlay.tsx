@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { fetchFullOrder, subscribeOrderRealtime } from '@/lib/orderStatus';
+import {
+  fetchFullOrder, subscribeOrderRealtime, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
+} from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
@@ -13,24 +15,11 @@ import {
 } from '@/lib/uiEvents';
 import type { Order, OrderStatus } from '@/types';
 
-const PENDING_MAX_AGE_MS = 48 * 60 * 60 * 1000;
-
-function clearPendingStorage() {
-  try {
-    localStorage.removeItem('vc_pending_ls');
-    localStorage.removeItem('vc_pending_num_ls');
-    localStorage.removeItem('vc_pending_ts');
-  } catch {
-    // ignore
-  }
-}
-
-const RESOLVED: OrderStatus[] = ['confirmed', 'shipped', 'delivered', 'cancelled', 'rejected'];
-
 const socialIconClass = 'flex h-[35px] w-[35px] items-center justify-center rounded-[9px] bg-surface-muted text-ink transition-brand duration-brand hover:bg-brand-primary hover:text-white [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-current';
 
 export default function WaitingOverlay() {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = useRef(createClient()).current;
   const [visible, setVisible] = useState(false);
   const [minimized, setMinimized] = useState(false);
@@ -63,18 +52,13 @@ export default function WaitingOverlay() {
   }, [supabase]);
 
   useEffect(() => {
-    try {
-      const id = localStorage.getItem('vc_pending_ls');
-      const num = localStorage.getItem('vc_pending_num_ls');
-      const ts = parseInt(localStorage.getItem('vc_pending_ts') || '0', 10);
-      if (id && num && ts && Date.now() - ts < PENDING_MAX_AGE_MS) {
-        openForPending(id, num);
-      } else if (id) {
-        clearPendingStorage();
-      }
-    } catch {
-      // ignore
-    }
+    // /checkout/success নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated
+    // পেজ হিসেবে) — সরাসরি ওই পেজে ঢুকলে (ফ্রেশ লোড) এই গ্লোবাল ওভারলে একই
+    // তথ্য দ্বিতীয়বার না দেখাক তাই এখানে বাদ দেওয়া হচ্ছে। শুধু প্রথম
+    // অ্যাপ-লোডেই একবার চেক করা হয় (আগের মতোই), পাথ পাল্টালে না।
+    if (pathname?.startsWith('/checkout/success')) return;
+    const pending = readPendingOrder();
+    if (pending) openForPending(pending.id, pending.orderNum);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -94,8 +78,8 @@ export default function WaitingOverlay() {
     const unsubscribe = subscribeOrderRealtime(supabase, orderId, (newStatus) => {
       setStatus(newStatus);
       setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
-      if (RESOLVED.includes(newStatus) && newStatus !== 'pending') {
-        clearPendingStorage();
+      if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') {
+        clearPendingOrder();
       }
       if (minimizedRef.current && newStatus === 'confirmed') {
         const num = orderRef.current?.orderNum;
@@ -118,7 +102,7 @@ export default function WaitingOverlay() {
   const isGuest = !currentUser;
 
   const dismiss = () => {
-    clearPendingStorage();
+    clearPendingOrder();
     setVisible(false);
     setMinimized(false);
   };

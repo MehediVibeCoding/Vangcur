@@ -173,7 +173,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     return () => window.removeEventListener(CATEGORY_FILTER_EVENT, onFilter);
   }, []);
 
-  // অন্য পেইজ থেকে (যেমন সার্চ ফলাফল পেইজ, SRP) কোনো ক্যাটাগরির বাটনে ক্লিক
+  // অন্য পেইজ থেকে (যেমন সার্চ ফলাফল পেইজ) কোনো ক্যাটাগরির বাটনে ক্লিক
   // করলে সেটা এখানে ?cat=<id> কোয়েরি প্যারামিটার নিয়ে হোমপেইজে নিয়ে আসে —
   // মাউন্ট হওয়ার সাথে সাথেই সেই ক্যাটাগরিটা সরাসরি ট্রিগার হয় (Categories.tsx-এর
   // handleSelect ঠিক যা করে তারই সমতুল্য), যাতে অন্য পেইজ থেকে ক্লিক করলেও একই

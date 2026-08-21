@@ -3,20 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { mapSupabaseOrderRow } from '@/lib/orderMapping';
-import type { Order, OrderStatus } from '@/types';
+import { lookupOrderByNumberAndPhone, ORDER_TRACK_STEPS } from '@/lib/orderStatus';
+import type { Order } from '@/types';
 
 interface TrackOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const STATUS_STEPS: { key: OrderStatus; label: string; icon: string }[] = [
-  { key: 'pending', label: 'অর্ডার গ্রহণ করা হয়েছে', icon: '🧾' },
-  { key: 'confirmed', label: 'কনফার্ম হয়েছে', icon: '✅' },
-  { key: 'shipped', label: 'পাঠানো হয়েছে', icon: '🚚' },
-  { key: 'delivered', label: 'ডেলিভারি সম্পন্ন', icon: '📦' },
-];
 
 export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProps) {
   const supabase = useRef(createClient()).current;
@@ -42,42 +35,21 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   }, [isOpen]);
 
   const handleSearch = async () => {
-    const num = orderNum.trim().replace(/^#/, '');
-    const ph = phone.trim();
-    if (!num) { setErr('অর্ডার নম্বর দিন (যেমন VC-1082)'); return; }
-    if (!ph || !/^01[3-9]\d{8}$/.test(ph)) { setErr('সঠিক মোবাইল নম্বর দিন (যে নম্বরে অর্ডার করেছিলেন)'); return; }
     setErr('');
     setLoading(true);
     setOrder(null);
-    try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .ilike('order_num', num)
-        .maybeSingle();
-
-      if (error || !data) {
-        setErr('এই অর্ডার নম্বরে কোনো অর্ডার পাওয়া যায়নি। বানান/নম্বর আবার চেক করুন।');
-        setLoading(false);
-        return;
-      }
-
-      const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
-      const orderPhone = (mapped.customer?.phone || '').replace(/\D/g, '');
-      if (orderPhone && orderPhone !== ph) {
-        setErr('অর্ডার নম্বর ও মোবাইল নম্বর মিলছে না। যে নম্বরে অর্ডার করেছিলেন সেটি দিন।');
-        setLoading(false);
-        return;
-      }
-      setOrder(mapped);
-    } catch {
-      setErr('কিছু একটা সমস্যা হয়েছে, একটু পরে আবার চেষ্টা করুন।');
+    const result = await lookupOrderByNumberAndPhone(supabase, orderNum, phone.trim());
+    if (!result.ok || !result.order) {
+      setErr(result.error || 'কিছু একটা সমস্যা হয়েছে, একটু পরে আবার চেষ্টা করুন।');
+      setLoading(false);
+      return;
     }
+    setOrder(result.order);
     setLoading(false);
   };
 
   const isCancelled = order && (order.status === 'cancelled' || order.status === 'rejected');
-  const currentStepIdx = order ? STATUS_STEPS.findIndex((s) => s.key === order.status) : -1;
+  const currentStepIdx = order ? ORDER_TRACK_STEPS.findIndex((s) => s.key === order.status) : -1;
 
   const reset = () => { setOrder(null); setOrderNum(''); setPhone(''); setErr(''); };
 
@@ -144,9 +116,9 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                   </div>
                 ) : (
                   <div className="mb-4 flex flex-col gap-0">
-                    {STATUS_STEPS.map((step, idx) => {
+                    {ORDER_TRACK_STEPS.map((step, idx) => {
                       const done = idx <= currentStepIdx;
-                      const isLast = idx === STATUS_STEPS.length - 1;
+                      const isLast = idx === ORDER_TRACK_STEPS.length - 1;
                       return (
                         <div key={step.key} className="flex gap-3">
                           <div className="flex flex-col items-center">

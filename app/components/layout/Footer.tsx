@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import {
   DEFAULT_FOOTER, DEFAULT_SERVICE_LINKS, resolveServiceLink,
@@ -97,11 +98,11 @@ export default function Footer() {
       case 'info:shipping':
         return <button key={i} className={colLinkClass} onClick={() => openInfo('shipping')}>{lnk.label}</button>;
       case 'info:returns':
-        return <button key={i} className={colLinkClass} onClick={() => openInfo('returns')}>{lnk.label}</button>;
+        return <Link key={i} href="/refund-policy" className={colLinkClass}>{lnk.label}</Link>;
       case 'info:privacy':
-        return <button key={i} className={colLinkClass} onClick={() => openInfo('privacy')}>{lnk.label}</button>;
+        return <Link key={i} href="/privacy-policy" className={colLinkClass}>{lnk.label}</Link>;
       case 'info:terms':
-        return <button key={i} className={colLinkClass} onClick={() => openInfo('terms')}>{lnk.label}</button>;
+        return <Link key={i} href="/terms" className={colLinkClass}>{lnk.label}</Link>;
       case 'scroll':
         return (
           <button

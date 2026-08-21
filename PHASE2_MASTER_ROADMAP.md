@@ -379,7 +379,45 @@ Next.js App Router-এ `'use client'` কম্পোনেন্টও প্�
 
 **Phase E-এর মূল লক্ষ্য (SEO crawler প্রথম HTML-এই আসল ডেটা পাবে, প্রথম পেইন্টে স্টেল/খালি কনটেন্ট থাকবে না) এখন হোম, প্রোডাক্ট ডিটেইল, ক্যাটাগরি, আর সার্চ — এই ৪টা পাবলিক-ফেসিং পেজেই অর্জিত। এই কারণে Phase E-কে কার্যকরীভাবে সম্পূর্ণ ধরা হচ্ছে; বাকি যা আছে তা bundle-size অপ্টিমাইজেশনের মতো ঐচ্ছিক পরবর্তী কাজ, কোনো bug ফিক্স নয়।**
 
-| F | Routing restructure (real policy routes + Cart Guard) | ⏳ বাকি |
+### Phase F — Routing Restructure (২০২৬-০৮-২১)
+
+**✅ `/srp` → `/search` — রুট রিনেম:**
+- `app/srp/` পুরোটা `app/search/`-এ মুভ করা হয়েছে, ভিতরের সব identifier রিনেম করা হয়েছে (`SrpClient`→`SearchClient`, `SrpPage`→`SearchPage`, `SrpHeader`→`SearchHeader`, `onGoToSrp`/`goToSrp`→`onGoToSearch`/`goToSearch`), `Navbar.tsx`-এর `router.push` কল আপডেট হয়েছে
+- Phase E-তেই এই রুট URL-synced (query param `q`, debounced 300ms) ছিল — শুধু নাম বদলেছে (internal codename "srp" থেকে user-friendly "search"), ফাংশনালিটি অপরিবর্তিত
+
+**✅ Cart Guard — `/checkout`-এ সরাসরি URL দিয়ে খালি cart-এ ঢোকা আটকানো হয়েছে:**
+- আগে খালি cart অবস্থায় checkout পেজে ঢুকলে শুধু একটা warning banner দেখাতো (ফর্ম পূরণ করা যেত, কিন্তু order submit করতে গেলে আটকাতো)
+- এখন একই ডিটেকশন লজিক দিয়ে (quick-order sessionStorage → না থাকলে `vc_cart` localStorage) খালি পাওয়া গেলে সাথে সাথে toast দেখিয়ে `router.replace('/')` করা হয় — dead-end খালি checkout পেজ আর দেখা যায় না
+- পুরনো ব্যবহারবিহীন `cartWarnVisible` state ও ওয়ার্নিং ব্যানার JSX সরানো হয়েছে
+
+**✅ `app/checkout/success/` — নতুন real, protected রুট:**
+- খুঁজে পাওয়া বাগ: `WaitingOverlay`-এর পেন্ডিং-অর্ডার চেক শুধু নিজের প্রথম mount-এ (`useEffect(() => {...}, [])`) `localStorage` পড়ত — checkout পেজের `router.push('/')` client-side navigation হওয়ায় `WaitingOverlay` রিমাউন্ট হতো না, ফলে অর্ডার সাবমিটের ঠিক পরপরই ওয়েটিং-ওভারলে আসলে দেখা যেত না
+- এখন সাবমিটের পর `/checkout/success`-এ পাঠানো হয় — এই নতুন পেজ নিজে `localStorage`-এ পেন্ডিং অর্ডার আছে কিনা চেক করে (নতুন শেয়ার্ড হেল্পার `readPendingOrder()`, ৪৮ ঘণ্টা window) — না থাকলে সাথে সাথে `/`-এ redirect করে দেয় (এটাই এর "protected" আচরণ — সরাসরি URL দিয়ে ভুয়া সাকসেস স্ক্রিন দেখা যায় না)
+- `lib/orderStatus.ts`-এ `PENDING_ORDER_MAX_AGE_MS`, `RESOLVED_ORDER_STATUSES`, `readPendingOrder()`, `clearPendingOrder()` — এই লজিকগুলো আগে `WaitingOverlay.tsx`-এর ভিতরে লোকাল ছিল, এখন শেয়ার্ড lib-এ এক্সট্র্যাক্ট করা হয়েছে যাতে দুই জায়গায় (overlay + নতুন success পেজ) একই লজিক ব্যবহার হয়
+- `WaitingOverlay.tsx`-এ `/checkout/success` পাথে থাকা অবস্থায় নিজের global overlay auto-open না করার গার্ড যোগ হয়েছে (একই তথ্য দুইবার দেখানো এড়াতে); বাকি সব পেজে আগের মতোই কাজ করে
+
+**✅ `app/track-order/` — নতুন real, crawlable/bookmarkable রুট:**
+- আগে থেকে থাকা `TrackOrderModal.tsx`-এর (guest order lookup: অর্ডার নম্বর + মোবাইল নম্বর) মূল লজিক নতুন শেয়ার্ড `lib/orderStatus.ts`-এর `lookupOrderByNumberAndPhone()`-এ এক্সট্র্যাক্ট করা হয়েছে — ফোন-নম্বর মিলানোর নিরাপত্তা-চেক দুই জায়গায় আলাদা করে লেখা লাগেনি
+- নতুন পেজ একই লুকআপ ব্যবহার করে, প্লাস `?order=VC-1082` query param দিয়ে prefill সাপোর্ট করে (সাপোর্ট টিম সরাসরি লিংক পাঠাতে পারবে)
+- Footer/Navbar-এর বিদ্যমান "ট্র্যাক অর্ডার" বাটন ইচ্ছাকৃতভাবে এখনো মোডাল-ই খোলে (change করা হয়নি) — নতুন রুটটা সম্পূর্ণ additive, direct URL/bookmark/শেয়ার করার জন্য
+
+**✅ `app/account/orders/` — নতুন real, bookmarkable রুট:**
+- `AccountPage.tsx`-এর অর্ডার-কার্ড UI (status badge, item thumbnail, ইনভয়েস বাটন) নতুন শেয়ার্ড `app/components/orders/OrderCard.tsx`-এ এক্সট্র্যাক্ট করা হয়েছে — মোডাল আর নতুন পেজ দুটোই এখন এক্স্যাক্টলি একই কার্ড রেন্ডার করে (ডুপ্লিকেট JSX সরানো হয়েছে)
+- নতুন পেজ `fetchMyOrders`/`orderStats` (`lib/accountData.ts`, আগে থেকেই ছিল) reuse করে; লগইন না থাকলে redirect না করে ইন-প্লেস "লগইন করুন" prompt দেখায় (LoginModal মোডালেই খোলে, পুরো সাইটের existing মোডাল-ভিত্তিক auth প্যাটার্নের সাথে সামঞ্জস্যপূর্ণ)
+- Account মোডালের অর্ডার-লিস্ট হেডিং-এ "সব দেখুন →" লিংক যোগ হয়েছে যা এই নতুন পেজে নিয়ে যায়
+
+**✅ ৩টা policy পেজ — `app/(policies)/{privacy-policy,terms,refund-policy}/page.tsx`:**
+- খুঁজে পাওয়া বাগ: Footer-এর "Privacy Policy"/"Terms & Conditions"/"Returns & Refunds" লিংক আগে `OPEN_INFO_EVENT` ডিসপ্যাচ করত, কিন্তু পুরো কোডবেসে কোথাও এই ইভেন্টের কোনো listener ছিল না — অর্থাৎ এই তিনটা লিংক dead ছিল (ক্লিক করলে কিছুই হতো না)
+- এখন `app/(policies)/layout.tsx` (Navbar+Footer শেয়ার্ড শেল, অন্যান্য রুটের প্যাটার্নেই) এর নিচে তিনটা static, crawlable, নিজস্ব `generateMetadata` সহ সার্ভার-রেন্ডারড পেজ — `Footer.tsx`-এর `info:privacy`/`info:terms`/`info:returns` কেস এখন `next/link` দিয়ে এই রুটগুলোতে নেভিগেট করে (`info:shipping` অপরিবর্তিত রাখা হয়েছে, এটা এই ফেজের স্কোপে নেই)
+- Terms ও Refund Policy-এর কনটেন্ট checkout-এর বিদ্যমান `PolicyModal.tsx` (অর্ডার, ডেলিভারি, আনবক্সিং ভিডিও, ওয়ারেন্টি, রিটার্ন/রিফান্ড — এই কনটেন্ট আগে থেকেই ছিল, শুধু checkout-এর সময় agreement হিসেবে দেখানো হতো) থেকে adapt/expand করা হয়েছে যাতে দুই জায়গায় বিরোধপূর্ণ তথ্য না থাকে
+- Privacy Policy সম্পূর্ণ নতুন লেখা কনটেন্ট — কোডবেসে যা সত্যিই আছে তা যাচাই করে লেখা হয়েছে (Supabase auth/DB, Cloudinary ছবি হোস্টিং, bKash ম্যানুয়াল পেমেন্ট ভেরিফিকেশন, Google OAuth লগইন, cart/wishlist localStorage-এ) — কোনো analytics/tracking script (Google Analytics/FB Pixel ইত্যাদি) কোডবেসে নেই তা গ্রেপ করে নিশ্চিত হয়ে সেই অনুযায়ী লেখা হয়েছে, অতিরিক্ত দাবি করা হয়নি
+- তিনটাই `app/(policies)/PolicyContent.tsx`-এর শেয়ার্ড প্রিমিটিভ (`PolicyHeader`, `PolicySection`, `PolicyNote`, `PolicyContact`) ব্যবহার করে যাতে ভিজ্যুয়ালি সামঞ্জস্যপূর্ণ থাকে
+
+**✅ Build verification:**
+- `npx tsc --noEmit` — পুরো প্রজেক্টে শূন্য error
+- `next build` — সম্পূর্ণ production build সফল (আগের সেশনগুলোর মতোই সাময়িক dummy Supabase env var আর ফন্ট স্টাব দিয়ে sandbox network-limitation বাইপাস করে verify করা হয়েছে, তারপর আসল ফাইলে revert করা হয়েছে) — নতুন সবকটা রুট ঠিকভাবে register হয়েছে: `/search` (ƒ Dynamic), `/checkout/success`, `/track-order`, `/account/orders` (○ Static shell), আর `/privacy-policy`/`/terms`/`/refund-policy` (○ Static, প্রতিটা <1kB page JS — pure server-rendered কনটেন্ট)
+
+| F | Routing restructure (real policy routes + Cart Guard) | ✅ সম্পূর্ণ |
 | G | i18n & Dark mode | ⏳ বাকি |
 | H | AI chatbot, Telegram, Tawk.to | ⏳ বাকি |
 | I | SEO/GTM/sitemap | ⏳ বাকি |

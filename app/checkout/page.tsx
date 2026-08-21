@@ -293,7 +293,6 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [cartWarnVisible, setCartWarnVisible] = useState(false);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -333,19 +332,26 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    let hasItems = false;
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
         sessionStorage.removeItem('vc_quick_order_items');
         setCartItems(quickOrder);
-        setCartWarnVisible(false);
+        hasItems = true;
       } else {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
-        setCartItems(Array.isArray(cart) ? cart : []);
-        setCartWarnVisible(!Array.isArray(cart) || cart.length === 0);
+        const validCart = Array.isArray(cart) ? cart : [];
+        setCartItems(validCart);
+        hasItems = validCart.length > 0;
       }
     } catch {
-      setCartWarnVisible(true);
+      hasItems = false;
+    }
+    if (!hasItems) {
+      showToast('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।');
+      router.replace('/');
+      return;
     }
     try {
       const draft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
@@ -492,7 +498,8 @@ export default function CheckoutPage() {
 
   const goToStep2 = () => {
     if (cartItems.length === 0) {
-      setCartWarnVisible(true);
+      showToast('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।');
+      router.replace('/');
       return;
     }
     const nextErrors: CheckoutErrors = {};
@@ -630,7 +637,7 @@ export default function CheckoutPage() {
         }
       }
 
-      router.push('/');
+      router.push('/checkout/success');
     } catch {
       setSubmitting(false);
       confirmLockRef.current = false;
@@ -766,15 +773,6 @@ export default function CheckoutPage() {
 
           {step === 1 && (
             <div className="px-6 py-5">
-              {cartWarnVisible && (
-                <div className="mb-3.5 flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3.5 font-body text-[13px] font-semibold leading-[1.55] text-red-800">
-                  <IconWarning />
-                  <span>
-                    আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন অথবা প্রোডাক্টের পেজ থেকে
-                    &quot;এখনই অর্ডার করুন&quot; বাটনে ক্লিক করুন।
-                  </span>
-                </div>
-              )}
               <div className="mb-[15px]">
                 <label className={fieldLabelClass}>পূর্ণ নাম</label>
                 <div className="relative">

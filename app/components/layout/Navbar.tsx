@@ -198,13 +198,13 @@ function SearchDefaultPanel({
 }
 
 function SearchDropdown({
-  searchQuery, searchResults, catResults, onGoToSrp, onGoToCat, onPick, wide, positioned = true, tall = false,
+  searchQuery, searchResults, catResults, onGoToSearch, onGoToCat, onPick, wide, positioned = true, tall = false,
   isDefaultView = false, recentSearches = [], popularSearches = [], popularCategories = [], onPickRecent, onRemoveRecent, onClearRecent,
 }: {
   searchQuery: string;
   searchResults: Product[];
   catResults: Category[];
-  onGoToSrp: () => void;
+  onGoToSearch: () => void;
   onGoToCat: (id: string) => void;
   onPick: () => void;
   wide?: boolean;
@@ -246,7 +246,7 @@ function SearchDropdown({
           <div className="flex-1 overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border-base px-3.5 pb-1.5 pt-2 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
               <span>{searchResults.length}টি পণ্য পাওয়া গেছে</span>
-              <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={onGoToSrp}>সব দেখুন →</a>
+              <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={onGoToSearch}>সব দেখুন →</a>
             </div>
             <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">পণ্য</div>
             {searchResults.map((p) => (
@@ -287,7 +287,7 @@ function SearchDropdown({
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
               className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-light-hover"
-              onClick={onGoToSrp}
+              onClick={onGoToSearch}
             >
               <SearchIcon />
               &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
@@ -564,7 +564,7 @@ export default function Navbar({
     router.push(catId === 'all' ? '/' : `/category/${makeCatSlug(catId)}`);
   };
 
-  const goToSrp = () => {
+  const goToSearch = () => {
     const q = searchQuery.trim();
     if (!q) return;
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -574,11 +574,11 @@ export default function Navbar({
     setSearchQuery('');
     setSearchResults([]);
     setCatResults([]);
-    router.push(`/srp?q=${encodeURIComponent(q)}`);
+    router.push(`/search?q=${encodeURIComponent(q)}`);
   };
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchQuery.trim()) goToSrp();
+    if (e.key === 'Enter' && searchQuery.trim()) goToSearch();
   };
 
   const pickRecentSearch = (term: string) => {
@@ -745,7 +745,7 @@ export default function Navbar({
                       searchQuery={searchQuery}
                       searchResults={searchResults}
                       catResults={catResults}
-                      onGoToSrp={goToSrp}
+                      onGoToSearch={goToSearch}
                       onGoToCat={goToCat}
                       onPick={() => setShowDropdown(false)}
                       isDefaultView={isDefaultView}
@@ -872,7 +872,7 @@ export default function Navbar({
               searchQuery={searchQuery}
               searchResults={searchResults}
               catResults={catResults}
-              onGoToSrp={goToSrp}
+              onGoToSearch={goToSearch}
               onGoToCat={goToCat}
               onPick={() => { setShowDropdown(false); setMobileSearchOpen(false); }}
               positioned={false}

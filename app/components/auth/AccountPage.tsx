@@ -22,21 +22,11 @@ import {
   getStockNotifications, removeStockNotification, clearAllStockNotifications,
   fetchDrafts, deleteDraft, deleteAllDrafts,
 } from '@/lib/accountData';
-import { getTier, tierIconSVG, crownSVG } from '@/lib/membershipData';
-import type { CurrentUser, Order, DraftOrder, StockNotification, OrderStatus } from '@/types';
-
-const STATUS_CLASS: Record<OrderStatus, string> = {
-  pending: 'bg-[#FEF3C7] text-[#92400E]',
-  confirmed: 'bg-[#D1FAE5] text-[#065F46]',
-  shipped: 'bg-[#D1FAE5] text-[#065F46]',
-  delivered: 'bg-[#DBEAFE] text-[#1E40AF]',
-  cancelled: 'bg-[#FEE2E2] text-[#991B1B]',
-  rejected: 'bg-[#FEE2E2] text-[#991B1B]',
-};
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: '⏳ Pending', confirmed: 'Confirmed', shipped: '🚚 Shipped',
-  delivered: '📦 Delivered', cancelled: 'Cancelled', rejected: 'Cancelled',
-};
+import {
+  getTier, tierIconSVG, crownSVG,
+} from '@/lib/membershipData';
+import OrderCard from '@/app/components/orders/OrderCard';
+import type { CurrentUser, Order, DraftOrder, StockNotification } from '@/types';
 
 const STATE_BG: Record<string, string> = {
   dawn: 'bg-gradient-to-b from-[#3d2145] via-[#7c4a6b] to-[#e8935f]',
@@ -491,7 +481,17 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
 
           {/* COLUMN 2: ORDERS */}
           <div>
-            <div className="mb-4 font-body text-[15px] font-bold text-ink">📦 আমার অর্ডার সমূহ</div>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="font-body text-[15px] font-bold text-ink">📦 আমার অর্ডার সমূহ</span>
+              {orders.length > 0 && (
+                <button
+                  onClick={() => { onClose(); router.push('/account/orders'); }}
+                  className="font-body text-[12px] font-semibold text-brand-light hover:underline"
+                >
+                  সব দেখুন →
+                </button>
+              )}
+            </div>
             <div className="flex flex-col gap-3.5">
               {orders.length === 0 ? (
                 <div className="rounded-brand border border-dashed border-border-base py-9 text-center">
@@ -500,33 +500,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                   <div className="font-body text-xs text-muted">অর্ডার করলে এখানে দেখাবে</div>
                 </div>
               ) : (
-                orders.map((o) => {
-                  const dateStr = new Date(o.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
-                  return (
-                    <div key={o.id} className="rounded-brand border border-border-base bg-white shadow-sh1">
-                      <div className="flex items-center justify-between border-b border-border-base px-4 py-2.5">
-                        <span className="font-body text-[13px] font-bold text-ink">{o.orderNum}</span>
-                        <span className={`rounded-full px-2.5 py-1 font-body text-[11px] font-bold ${STATUS_CLASS[o.status] || STATUS_CLASS.pending}`}>{STATUS_LABEL[o.status] || STATUS_LABEL.pending}</span>
-                      </div>
-                      <div className="px-4 py-3">
-                        <div className="mb-2.5 font-body text-[11.5px] text-muted">📅 {dateStr} &nbsp;|&nbsp; 👤 {o.customer?.name || '-'}</div>
-                        <div className="flex flex-col gap-2">
-                          {(o.items || []).map((i, idx) => (
-                            <div key={idx} className="flex items-center gap-2.5">
-                              <ItemThumb imgVal={(i.imgs || ['📦'])[0]} />
-                              <div className="min-w-0 flex-1 truncate font-body text-[12.5px] text-ink">{i.name}</div>
-                              <div className="whitespace-nowrap font-body text-[12.5px] font-semibold text-ink">{i.qty} × ৳{i.price.toLocaleString('en-US')}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-3 flex items-center justify-between border-t border-border-base pt-3">
-                          <div className="font-body text-[13px] font-bold text-ink">মোট: ৳{(o.total || 0).toLocaleString('en-US')} (শিপিং সহ)</div>
-                          <button onClick={() => openInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 ইনভয়েস</button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                orders.map((o) => <OrderCard key={o.id} order={o} onInvoice={openInvoice} />)
               )}
             </div>
           </div>
