@@ -164,7 +164,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       shipping_cost: sc,
       subtotal: vSub,
       total: vTotal,
-      payment_txn: txn,
+      payment_txn: txn || null,
       payment_last4: last4,
       fingerprint_id: fingerprintId || null,
       status: 'pending',
