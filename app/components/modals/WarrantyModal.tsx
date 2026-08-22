@@ -33,15 +33,15 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
         <div className="mb-2.5 inline-block rounded-full bg-brand-bg px-2.5 py-1 text-[11px] font-bold text-brand-light">
           🛡️ {t('ওয়ারেন্টি তথ্য')}
         </div>
-        <div className="mb-2 font-display text-[17px] font-bold text-ink">{content.title}</div>
-        <p className="mb-4 text-[13px] leading-[1.7] text-muted">{content.body}</p>
+        <div className="mb-2 font-display text-[17px] font-bold text-ink">{t(content.title)}</div>
+        <p className="mb-4 text-[13px] leading-[1.7] text-muted">{t(content.body)}</p>
         <ul className="mb-5 flex flex-col gap-2.5">
           {content.rules.map((r, i) => (
             <li key={i} className="flex items-start gap-2.5 text-[13px] leading-[1.6] text-ink">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-bg text-[11px] font-bold text-brand-light">
                 {i + 1}
               </span>
-              <span>{r}</span>
+              <span>{t(r)}</span>
             </li>
           ))}
         </ul>

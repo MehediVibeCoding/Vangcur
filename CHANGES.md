@@ -82,16 +82,54 @@ Owner decided: yes, translate checkout's Server Action error messages now.
 
 ## What's NOT done yet
 
-- Legal/policy content (large, substantive Bengali text — a scope decision, not just wrapping):
-  - `app/terms/page.tsx`
-  - `app/privacy-policy/page.tsx`
-  - `app/refund-policy/page.tsx`
-  - `app/components/checkout/PolicyModal.tsx`
-  - `lib/warrantyData.ts` (the actual policy title/body/rules content, used by `WarrantyModal.tsx`)
-  - `app/components/checkout/PostOrderInfoModal.tsx` (verbatim legacy section-27 content)
-  - Owner deferred this decision (2026-08-22): not translating for now, revisit later — don't start on these
-    without owner's go-ahead.
+Nothing outstanding from the original i18n scope — see the session update below.
 
-With the checkout Server Action now translated too, Phase G's i18n coverage is complete across every
-component/modal/flow except the legal/policy content above, which is intentionally on hold pending the owner's
-decision.
+## Legal/policy content — done this session (owner gave go-ahead 2026-08-22)
+
+Owner gave the go-ahead to translate the previously-deferred legal/policy content.
+
+- `app/(policies)/PolicyContent.tsx` — the shared `PolicyHeader`/`PolicySection`/`PolicyNote`/`PolicyContact`
+  building blocks used by all three policy pages. Converted to `'use client'` and wrapped with `t()` (header
+  back-link, "Last updated" label + date, section titles via `title` prop, contact block).
+- `app/(policies)/terms/page.tsx`, `app/(policies)/privacy-policy/page.tsx`, `app/(policies)/refund-policy/page.tsx`
+  — these use `export const metadata`, which requires a Server Component, so each was split into a thin server
+  `page.tsx` (metadata only, left in Bengali — same precedent as `track-order/page.tsx`, metadata isn't
+  toggled) that renders a new sibling Client Component: `TermsClient.tsx`, `PrivacyPolicyClient.tsx`,
+  `RefundPolicyClient.tsx`. All body content (12 terms sections, 9 privacy sections, 6 refund sections) is
+  translated.
+- `app/components/checkout/PolicyModal.tsx` — the in-checkout policy modal (shorter, differently-numbered
+  version of similar content). Fully wrapped with `t()`.
+- `lib/warrantyData.ts` — left untouched (it's a plain data function, no JSX). Instead
+  `app/components/modals/WarrantyModal.tsx` (the consumer) now wraps `content.title`, `content.body`, and each
+  `content.rules[i]` with `t()` at the render site — all 5 tiers' worth of strings (7-day / 6-month / 1-year /
+  2-year / default) added to the dictionary. Same pattern as `ORDER_TRACK_STEPS` from a previous session.
+- `app/components/checkout/PostOrderInfoModal.tsx` — "What's next?" modal, `STEPS` array (icon/title/desc) wrapped
+  with `t()` at the render site, plus the header and footer note.
+
+### New pattern notes from this session
+
+9. **Prose-heavy legal content with inline `<strong>`/`<em>`/`<Link>` where English word order needs to differ
+   from Bengali** (e.g. "Pay the delivery person the **remaining amount** first" vs "ডেলিভারিম্যানকে আগে
+   **অবশিষ্ট টাকা পরিশোধ করুন**") doesn't fit the flat-dictionary model — you'd have to fragment one sentence
+   into 3+ dictionary keys and the emphasis would land in the wrong place after `.replace()`. For this batch,
+   used pattern #2's `lang === 'en' ? <>...</> : <>...</>` escape hatch at the whole-paragraph/list-item level
+   instead of the dictionary, for any block containing inline markup. Plain, unmarked-up sentences and all
+   section titles still went through the normal `t()` dictionary — only markup-bearing prose bypassed it.
+2. **`export const metadata` pages that also need translated body content** must be split into a thin server
+   `page.tsx` (metadata block, stays Bengali per existing precedent) + a `'use client'` sibling component for
+   the actual translated JSX — this is the established pattern (`track-order/page.tsx` / `TrackOrderClient.tsx`),
+   applied here rather than anything new.
+10. Identical sentences repeated verbatim across `terms/TermsClient.tsx` and `PolicyModal.tsx` (e.g. the order-info
+   confirmation bullet, the closed-box-delivery paragraph, the unboxing-video-must-be-continuous bullet) reuse the
+   same dictionary key rather than being duplicated — checked for exact string matches before adding new entries.
+   Near-identical sentences with a numbering or wording difference (e.g. terms' "🛡️ ৬. ওয়ারেন্টি সংক্রান্ত" vs
+   PolicyModal's "🛡️ ৪. ওয়ারেন্টি সংক্রান্ত") got separate keys since the literal Bengali strings differ.
+
+Verified: `npx tsc --noEmit` (whole project) — zero errors. Full `next build` — succeeded, all 15 routes
+compiled including `/terms`, `/privacy-policy`, `/refund-policy` as static, `/` still `ƒ Dynamic` (same temporary
+env/font stub approach as prior sessions, reverted immediately after). Dictionary now has 410 entries total, no
+duplicate keys.
+
+With this, Phase G's i18n coverage is complete across every component/modal/flow/page in the site, including the
+legal/policy content that was previously deferred.
+
