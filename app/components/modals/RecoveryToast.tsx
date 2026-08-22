@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getDraft } from '@/lib/draftRecovery';
 import type { CheckoutDraft } from '@/lib/draftRecovery';
+import { useT } from '@/lib/i18n/useT';
 
 const DISMISS_KEY = 'vc_recovery_dismissed';
 const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
 export default function RecoveryToast() {
+  const { t, lang } = useT();
   const pathname = usePathname();
   const router = useRouter();
   const [draft, setDraft] = useState<CheckoutDraft | null>(null);
@@ -44,8 +46,8 @@ export default function RecoveryToast() {
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-lg">🛒</div>
           <div className="min-w-0 flex-1">
-            <div className="font-body text-[13px] font-bold text-ink">আপনার একটা অসম্পূর্ণ অর্ডার আছে</div>
-            <div className="font-body text-[11.5px] text-muted">{itemCount}টি পণ্য অপেক্ষা করছে — চালিয়ে যেতে চান?</div>
+            <div className="font-body text-[13px] font-bold text-ink">{t('আপনার একটা অসম্পূর্ণ অর্ডার আছে')}</div>
+            <div className="font-body text-[11.5px] text-muted">{lang === 'en' ? `${itemCount} item(s) waiting — want to continue?` : `${itemCount}টি পণ্য অপেক্ষা করছে — চালিয়ে যেতে চান?`}</div>
           </div>
           <button onClick={dismiss} className="shrink-0 text-muted hover:text-ink">✕</button>
         </div>
@@ -53,7 +55,7 @@ export default function RecoveryToast() {
           onClick={resume}
           className="mt-2.5 w-full rounded-full bg-brand-light py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:bg-brand-light-hover"
         >
-          চেকআউট চালিয়ে যান
+          {t('চেকআউট চালিয়ে যান')}
         </button>
       </div>
     </div>

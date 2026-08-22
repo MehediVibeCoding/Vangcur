@@ -8,6 +8,7 @@ import {
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
 function prefersReducedMotion(): boolean {
@@ -99,6 +100,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
+  const { t } = useT();
   const router = useRouter();
   const wished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [heartBeat, setHeartBeat] = useState(false);
@@ -193,13 +195,13 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
                 ))}
               >
-                🔔 স্টকে আসলে জানান
+                🔔 {t('স্টকে আসলে জানান')}
               </button>
             ) : (
               <>
                 <button
                   className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/30 sm:h-9 lg:h-10"
-                  title="কার্টে যোগ করুন"
+                  title={t('কার্টে যোগ করুন')}
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
                 >
                   <CartIcon />
@@ -213,7 +215,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                     new CustomEvent(QUICK_ORDER_EVENT, { detail: { id: p.id } }),
                   ))}
                 >
-                  অর্ডার করুন
+                  {t('অর্ডার করুন')}
                 </button>
               </>
             )}

@@ -8,6 +8,7 @@ import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
 import { useCartStore, cartTotal, clearCartOnRealPagehide } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
+import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
 function CartImg({ emoji }: { emoji?: string }) {
@@ -99,6 +100,7 @@ interface CartSidebarProps {
 }
 
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
+  const { t, lang } = useT();
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const cart = useCartStore((s) => s.cart);
@@ -122,12 +124,12 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       const id = (e as CustomEvent).detail?.id;
       if (id === undefined) return;
       const res = useCartStore.getState().addToCart(prodsRef.current, id, 1);
-      if (res.ok) showToast('কার্টে যোগ হয়েছে');
-      else if (res.reason === 'stock') showToast('স্টক শেষ!');
+      if (res.ok) showToast(t('কার্টে যোগ হয়েছে'));
+      else if (res.reason === 'stock') showToast(t('স্টক শেষ!'));
     };
     window.addEventListener(QUICK_CART_EVENT, onQuickCart);
     return () => window.removeEventListener(QUICK_CART_EVENT, onQuickCart);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (isOpen) lockBody();
@@ -137,7 +139,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const handleQty = (id: number | string, delta: number) => {
     const res = useCartStore.getState().updateQty(prodsRef.current, id, delta);
     if (!res.ok && res.reason === 'stock') {
-      showToast(`সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে (${res.maxStock}টি)`);
+      showToast(t(`সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে ({count}টি)`).replace('{count}', String(res.maxStock)));
     }
   };
 
@@ -146,7 +148,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   };
 
   const handleCheckout = () => {
-    if (!cart.length) { showToast('কার্ট খালি!'); return; }
+    if (!cart.length) { showToast(t('কার্ট খালি!')); return; }
     onClose();
     router.push('/checkout');
   };
@@ -175,16 +177,16 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 <IconBag />
               </span>
               <div>
-                <h3 className="font-display text-base font-bold leading-tight text-ink">আপনার কার্ট</h3>
+                <h3 className="font-display text-base font-bold leading-tight text-ink">{t('আপনার কার্ট')}</h3>
                 {cart.length > 0 && (
-                  <p className="font-body text-[11.5px] font-semibold text-muted">{cart.length} টি পণ্য</p>
+                  <p className="font-body text-[11.5px] font-semibold text-muted">{cart.length} {t('টি পণ্য')}</p>
                 )}
               </div>
             </div>
             <button
               className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-muted transition-brand duration-brand hover:bg-surface-muted hover:text-ink"
               onClick={onClose}
-              aria-label="বন্ধ করুন"
+              aria-label={t('বন্ধ করুন')}
             >
               <IconClose />
             </button>
@@ -198,13 +200,13 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
                 <IconCartEmpty />
               </div>
-              <p className="mb-1 font-body text-sm font-bold text-ink">আপনার কার্ট খালি</p>
-              <p className="mb-5 font-body text-[12.5px] text-muted">পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন</p>
+              <p className="mb-1 font-body text-sm font-bold text-ink">{t('আপনার কার্ট খালি')}</p>
+              <p className="mb-5 font-body text-[12.5px] text-muted">{t('পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন')}</p>
               <button
                 onClick={goToProducts}
                 className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               >
-                প্রোডাক্ট দেখুন <IconArrowRight />
+                {t('প্রোডাক্ট দেখুন')} <IconArrowRight />
               </button>
             </div>
           ) : (
@@ -223,8 +225,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                       <button
                         className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-muted/70 transition-brand duration-brand hover:bg-red-50 hover:text-red-500"
                         onClick={() => handleRemove(item.id)}
-                        aria-label="সরান"
-                        title="সরান"
+                        aria-label={t('সরান')}
+                        title={t('সরান')}
                       >
                         <IconTrash />
                       </button>
@@ -257,17 +259,17 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         {cart.length > 0 && (
           <div className="shrink-0 border-t border-border-base bg-gradient-to-b from-white to-brand-bg/15 px-5 py-4 sm:rounded-b-[20px]">
             <div className="mb-3 flex items-center justify-between">
-              <span className="font-body text-[13px] font-semibold text-muted">সর্বমোট</span>
+              <span className="font-body text-[13px] font-semibold text-muted">{t('সর্বমোট')}</span>
               <span className="font-body text-lg font-extrabold text-ink">৳{total.toLocaleString('en-US')}</span>
             </div>
             <button
               className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               onClick={handleCheckout}
             >
-              চেকআউট করুন <IconArrowRight />
+              {t('চেকআউট করুন')} <IconArrowRight />
             </button>
             <div className="mt-2.5 flex items-center justify-center gap-1.5 font-body text-[11px] font-medium text-muted">
-              <IconLock /> ১০০% নিরাপদ ও সুরক্ষিত চেকআউট
+              <IconLock /> {lang === 'en' ? '100% Safe & Secure Checkout' : '১০০% নিরাপদ ও সুরক্ষিত চেকআউট'}
             </div>
           </div>
         )}

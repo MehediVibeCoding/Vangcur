@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { CATEGORY_FILTER_EVENT, makeCatSlug } from '@/lib/categoryData';
 import { prodInCat, subscribeCustomProducts } from '@/lib/productData';
+import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 import ProductCard from './ProductCard';
 
@@ -42,6 +43,7 @@ interface ProductGridProps {
 }
 
 export default function ProductGrid({ initialProducts, initialCategory, categoryName }: ProductGridProps) {
+  const { t, lang } = useT();
   const supabase = useRef(createClient()).current;
   const searchParams = useSearchParams();
   const [prods, setProds] = useState<Product[]>(initialProducts);
@@ -233,10 +235,10 @@ export default function ProductGrid({ initialProducts, initialCategory, category
           {categoryName && activeCat !== 'all' ? (
             categoryName
           ) : (
-            <>সকল <span className="text-brand-light">প্রোডাক্ট</span></>
+            <>{t('সকল')} <span className="text-brand-light">{t('প্রোডাক্ট')}</span></>
           )}
         </h2>
-        <span className="text-[13px] text-muted">{list.length}টি প্রোডাক্ট</span>
+        <span className="text-[13px] text-muted">{lang === 'en' ? `${list.length} Products` : `${list.length}টি প্রোডাক্ট`}</span>
       </div>
 
       {list.length === 0 ? (
@@ -244,9 +246,9 @@ export default function ProductGrid({ initialProducts, initialCategory, category
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
             <EmptyBoxIcon />
           </div>
-          <p className="text-sm text-muted">এই ক্যাটাগরিতে এখন কোনো পণ্য নেই</p>
+          <p className="text-sm text-muted">{t('এই ক্যাটাগরিতে এখন কোনো পণ্য নেই')}</p>
           <button onClick={handleShowAll} className={brandCtaBtnClass}>
-            সব পণ্য দেখুন <ArrowRightIcon />
+            {t('সব পণ্য দেখুন')} <ArrowRightIcon />
           </button>
         </div>
       ) : (
@@ -257,10 +259,10 @@ export default function ProductGrid({ initialProducts, initialCategory, category
           {showCategoryEndBtn && (
             <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">
               <p className="font-body text-[13.5px] font-medium text-muted">
-                এই ক্যাটাগরিতে আর কোনো প্রোডাক্ট নেই
+                {t('এই ক্যাটাগরিতে আর কোনো প্রোডাক্ট নেই')}
               </p>
               <button onClick={handleShowAll} className={brandCtaBtnClass}>
-                ওয়েবসাইটের সকল প্রোডাক্ট দেখুন <ArrowRightIcon />
+                {t('ওয়েবসাইটের সকল প্রোডাক্ট দেখুন')} <ArrowRightIcon />
               </button>
             </div>
           )}
@@ -273,7 +275,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
             </svg>
-            লোড হচ্ছে...
+            {t('লোড হচ্ছে...')}
           </div>
         )}
         {showLoadMoreBtn && (
@@ -282,7 +284,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
             className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
           >
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-            আরো প্রোডাক্ট দেখুন
+            {t('আরো প্রোডাক্ট দেখুন')}
           </button>
         )}
       </div>

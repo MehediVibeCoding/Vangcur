@@ -7,6 +7,7 @@ import { fetchCustomProducts, productHref } from '@/lib/productData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
 function discountPct(p: Product): number {
@@ -14,6 +15,7 @@ function discountPct(p: Product): number {
 }
 
 export default function OfferPopup() {
+  const { t } = useT();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -57,12 +59,12 @@ export default function OfferPopup() {
       <div className={`fixed inset-0 z-[75] flex items-center justify-center p-4 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}>
         <div className="max-h-[85vh] w-full max-w-[480px] overflow-y-auto rounded-brand bg-white shadow-sh3">
           <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
-            <h3 className="font-display text-base font-bold text-ink">📢 চলতি অফারসমূহ</h3>
+            <h3 className="font-display text-base font-bold text-ink">{t('📢 চলতি অফারসমূহ')}</h3>
             <button className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted hover:bg-surface-muted" onClick={close}>✕</button>
           </div>
           <div className="px-5 py-4">
-            {loading && <div className="py-8 text-center font-body text-[13px] text-muted">লোড হচ্ছে...</div>}
-            {!loading && items.length === 0 && <div className="py-8 text-center font-body text-[13px] text-muted">এই মুহূর্তে কোনো অফার নেই</div>}
+            {loading && <div className="py-8 text-center font-body text-[13px] text-muted">{t('লোড হচ্ছে...')}</div>}
+            {!loading && items.length === 0 && <div className="py-8 text-center font-body text-[13px] text-muted">{t('এই মুহূর্তে কোনো অফার নেই')}</div>}
             <div className="flex flex-col gap-2.5">
               {items.map((p) => (
                 <button

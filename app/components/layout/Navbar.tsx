@@ -13,6 +13,7 @@ import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/se
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { useT } from '@/lib/i18n/useT';
 import type { Product, Category, CurrentUser } from '@/types';
 
 interface NavbarProps {
@@ -106,13 +107,14 @@ function SearchDefaultPanel({
   onClearRecent: () => void;
   onGoToCat: (id: string) => void;
 }) {
+  const { t } = useT();
   return (
     <div className="py-1.5">
       {recentSearches.length > 0 ? (
         <>
           <div className="flex items-center justify-between px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
-            <span>সাম্প্রতিক অনুসন্ধান</span>
-            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={(e) => { e.stopPropagation(); onClearRecent(); }}>সব মুছুন</a>
+            <span>{t('সাম্প্রতিক অনুসন্ধান')}</span>
+            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={(e) => { e.stopPropagation(); onClearRecent(); }}>{t('সব মুছুন')}</a>
           </div>
           <div className="flex flex-wrap gap-2 px-3.5 pb-2.5">
             {recentSearches.map((term) => (
@@ -137,7 +139,7 @@ function SearchDefaultPanel({
                   type="button"
                   className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-light"
                   onClick={(e) => { e.stopPropagation(); onRemoveRecent(term); }}
-                  aria-label="মুছুন"
+                  aria-label={t('মুছুন')}
                 >
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                 </button>
@@ -152,7 +154,7 @@ function SearchDefaultPanel({
         // এখন এগুলো হার্ডকোড করা, পরে অ্যাডমিন প্যানেল থেকে এডিটযোগ্য করা হবে।
         <>
           <div className="px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
-            জনপ্রিয় সার্চ
+            {t('জনপ্রিয় সার্চ')}
           </div>
           <div className="flex flex-wrap gap-2 px-3.5 pb-2.5">
             {popularSearches.map((term) => (
@@ -175,8 +177,8 @@ function SearchDefaultPanel({
       {popularCategories.length > 0 && (
         <>
           <div className="flex items-center justify-between px-3.5 pb-2 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
-            <span>জনপ্রিয় ক্যাটাগরি</span>
-            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={() => onGoToCat('all')}>সব দেখুন →</a>
+            <span>{t('জনপ্রিয় ক্যাটাগরি')}</span>
+            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={() => onGoToCat('all')}>{t('সব দেখুন →')}</a>
           </div>
           <div className="grid grid-cols-4 gap-2 px-3.5 pb-3">
             {popularCategories.map((c) => (
@@ -218,6 +220,7 @@ function SearchDropdown({
   onRemoveRecent?: (term: string) => void;
   onClearRecent?: () => void;
 }) {
+  const { t, lang } = useT();
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
@@ -239,16 +242,20 @@ function SearchDropdown({
       ) : searchResults.length === 0 ? (
         <div className="flex flex-col items-center gap-2 px-3.5 py-5 text-center text-[13px] text-muted">
           <SearchIcon className="text-muted/60" />
-          <span>&quot;<strong className="text-ink">{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</span>
+          <span>
+            {lang === 'en'
+              ? <>No products found for &quot;<strong className="text-ink">{searchQuery}</strong>&quot;</>
+              : <>&quot;<strong className="text-ink">{searchQuery}</strong>&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</>}
+          </span>
         </div>
       ) : (
         <>
           <div className="flex-1 overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border-base px-3.5 pb-1.5 pt-2 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
-              <span>{searchResults.length}টি পণ্য পাওয়া গেছে</span>
-              <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={onGoToSearch}>সব দেখুন →</a>
+              <span>{lang === 'en' ? `${searchResults.length} products found` : `${searchResults.length}টি পণ্য পাওয়া গেছে`}</span>
+              <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={onGoToSearch}>{t('সব দেখুন →')}</a>
             </div>
-            <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">পণ্য</div>
+            <div className="px-3.5 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">{t('পণ্য')}</div>
             {searchResults.map((p) => (
               <Link
                 key={p.id}
@@ -260,7 +267,7 @@ function SearchDropdown({
                 <div className="min-w-0 flex-1">
                   <div className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-semibold">{highlightMatch(p.name, searchQuery)}</div>
                   <div className="mt-0.5 text-[11px] text-muted">
-                    {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-light">স্টক শেষ</span></>}
+                    {catName(p.cat)}{p.stock <= 0 && <> · <span className="text-brand-light">{t('স্টক শেষ')}</span></>}
                   </div>
                 </div>
                 <div className="shrink-0 text-[13px] font-bold">৳{Number(p.price).toLocaleString('en-US')}</div>
@@ -269,13 +276,13 @@ function SearchDropdown({
             {catResults.length > 0 && (
               <>
                 <div className="mx-3.5 my-1 h-px bg-border-base" />
-                <div className="px-3.5 pb-1 pt-2 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">ক্যাটাগরি</div>
+                <div className="px-3.5 pb-1 pt-2 text-[10.5px] font-bold uppercase tracking-[.7px] text-muted">{t('ক্যাটাগরি')}</div>
                 {catResults.map((c) => (
                   <div key={c.id} className="flex cursor-pointer items-center gap-3 px-3.5 py-[9px] transition-colors hover:bg-surface-muted" onClick={() => onGoToCat(c.id)}>
                     <CategoryIcon icon={c.icon} />
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-semibold">{c.name}</div>
-                      <div className="mt-0.5 text-[11px] text-muted">ক্যাটাগরি দেখুন →</div>
+                      <div className="mt-0.5 text-[11px] text-muted">{t('ক্যাটাগরি দেখুন →')}</div>
                     </div>
                   </div>
                 ))}
@@ -290,7 +297,7 @@ function SearchDropdown({
               onClick={onGoToSearch}
             >
               <SearchIcon />
-              &quot;{searchQuery}&quot; এর সব ফলাফল দেখুন
+              {lang === 'en' ? <>See all results for &quot;{searchQuery}&quot;</> : <>&quot;{searchQuery}&quot; এর সব ফলাফল দেখুন</>}
             </button>
           </div>
         </>
@@ -303,6 +310,7 @@ export default function Navbar({
   cartCount = 0, wishCount = 0, onCartClick, onWishClick, onLoginClick, onTrackClick, currentUser, onAccountClick,
   sticky = true, showHomeButton = false,
 }: NavbarProps) {
+  const { t } = useT();
   const supabase = useMemo(() => createClient(), []);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -674,14 +682,14 @@ export default function Navbar({
             {showHomeButton ? (
               <Link
                 href="/"
-                aria-label="হোম পেইজে যান"
+                aria-label={t('হোম পেইজে যান')}
                 className="flex shrink-0 items-center gap-1.5 text-brand-light no-underline transition-brand duration-brand hover:text-brand-light-hover"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 11.5 12 4l8 7.5" />
                   <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
                 </svg>
-                <span className="font-body text-[15px] font-bold">হোম</span>
+                <span className="font-body text-[15px] font-bold">{t('হোম')}</span>
               </Link>
             ) : (
               <Link className="flex shrink-0 items-center no-underline" href="/">
@@ -719,7 +727,7 @@ export default function Navbar({
                   </svg>
                   <input
                     type="search"
-                    placeholder="প্রোডাক্ট খুঁজুন..."
+                    placeholder={t('প্রোডাক্ট খুঁজুন...')}
                     value={searchQuery}
                     onChange={(e) => handleSearchInput(e.target.value)}
                     onKeyDown={handleSearchKey}
@@ -734,8 +742,8 @@ export default function Navbar({
                       type="button"
                       onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                       className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
-                      title="মুছুন"
-                      aria-label="মুছুন"
+                      title={t('মুছুন')}
+                      aria-label={t('মুছুন')}
                     >
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                     </button>
@@ -772,7 +780,7 @@ export default function Navbar({
                   className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
                   ref={cartBtnRef}
                   onClick={onCartClick}
-                  title="কার্ট"
+                  title={t('কার্ট')}
                 >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
@@ -786,15 +794,15 @@ export default function Navbar({
                     <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-white">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
-                    <span className="truncate">{currentUser.name || 'আমার অ্যাকাউন্ট'}</span>
+                    <span className="truncate">{currentUser.name || t('আমার অ্যাকাউন্ট')}</span>
                   </button>
                 ) : (
                   <button className="shrink-0 rounded-full bg-brand-light px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
-                    লগইন করুন
+                    {t('লগইন করুন')}
                   </button>
                 )}
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onTrackClick} title="অর্ডার ট্র্যাক করুন">
+                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onTrackClick} title={t('অর্ডার ট্র্যাক করুন')}>
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
@@ -842,7 +850,7 @@ export default function Navbar({
                 </svg>
                 <input
                   type="search"
-                  placeholder="প্রোডাক্ট খুঁজুন..."
+                  placeholder={t('প্রোডাক্ট খুঁজুন...')}
                   value={searchQuery}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   onKeyDown={handleSearchKey}
@@ -855,8 +863,8 @@ export default function Navbar({
                   <button
                     className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
                     onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                    title="মুছুন"
-                    aria-label="মুছুন"
+                    title={t('মুছুন')}
+                    aria-label={t('মুছুন')}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
                   </button>

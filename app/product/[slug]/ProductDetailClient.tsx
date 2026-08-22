@@ -24,6 +24,7 @@ import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
 import LoginModal from '@/app/components/auth/LoginModal';
 import AccountPage from '@/app/components/auth/AccountPage';
+import { useT } from '@/lib/i18n/useT';
 import type { Product, ProductSpecs } from '@/types';
 
 /* ---------- ছোট, একরঙা line-icon সেট (DESIGN_SYSTEM-এর Icon System অনুযায়ী —
@@ -227,6 +228,7 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({ slug, initialId, initialProduct }: ProductDetailClientProps) {
+  const { t, lang } = useT();
   const supabase = useRef(createClient()).current;
 
   // app/product/[slug]/page.tsx (Server Component) সরাসরি সার্ভারেই এই
@@ -419,7 +421,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const addCartFromPP = () => {
     if (!prod || prod.stock <= 0) return;
     window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
-    showToast('কার্টে যোগ হয়েছে');
+    showToast(t('কার্টে যোগ হয়েছে'));
   };
 
   const orderNow = () => {
@@ -438,6 +440,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     if (!prod) return '';
     const pageUrl = window.location.href.split('?')[0].split('#')[0];
     const productRef = `${pageUrl}#prod-${prod.id}`;
+    if (lang === 'en') {
+      return `Hello Vangcur! I want to order:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 Quantity: ${qty}\n🛡️ Warranty: ${prod.warranty}\n\n🔗 Product Ref: ${productRef}\n\nPlease share the details.`;
+    }
     return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 পরিমাণ: ${qty}\n🛡️ ওয়ারেন্টি: ${prod.warranty}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
   }
   const waOrder = () => { if (prod) window.open(`${waLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
@@ -507,7 +512,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <Navbar {...navbarProps} />
           <div className="flex min-h-[50vh] items-center justify-center gap-2.5 text-sm text-muted">
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-light/25 border-t-brand-light" />
-            লোড হচ্ছে...
+            {t('লোড হচ্ছে...')}
           </div>
           <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
           <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
@@ -525,12 +530,12 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <path d="M12 13v7" />
             </svg>
           </div>
-          <p className="text-sm text-muted">এই প্রোডাক্টটি খুঁজে পাওয়া যায়নি</p>
+          <p className="text-sm text-muted">{t('এই প্রোডাক্টটি খুঁজে পাওয়া যায়নি')}</p>
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full bg-brand-light px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3"
           >
-            হোমে ফিরে যান
+            {t('হোমে ফিরে যান')}
             <ArrowIcon dir="right" className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -567,7 +572,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           >
             {sold ? (
               <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-ink/85 px-3 py-1 text-[11px] font-bold text-white backdrop-blur">
-                স্টক আউট
+                {t('স্টক আউট')}
               </div>
             ) : prod.badge && (
               <div className="absolute left-3.5 top-3.5 z-10 animate-badge-hot-glow rounded-full bg-brand-light px-3 py-1 text-[11px] font-bold text-white">
@@ -587,7 +592,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 {imgs.map((_, i) => (
                   <button
                     key={i}
-                    aria-label={`ছবি ${i + 1}`}
+                    aria-label={lang === 'en' ? `Image ${i + 1}` : `ছবি ${i + 1}`}
                     className={`h-1.5 rounded-full transition-brand duration-brand ${i === curImgIdx ? 'w-6 bg-brand-light' : 'w-1.5 bg-border-base hover:bg-brand-light/40'}`}
                     onClick={() => goImg(i)}
                   />
@@ -598,7 +603,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                   <button
                     type="button"
                     key={i}
-                    aria-label={`ছবি ${i + 1} দেখুন`}
+                    aria-label={lang === 'en' ? `View image ${i + 1}` : `ছবি ${i + 1} দেখুন`}
                     className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-light shadow-[0_0_0_3px_rgba(0,88,199,.12)]' : 'border-border-base hover:border-brand-light/40'}`}
                     onClick={() => goImg(i)}
                   >
@@ -619,7 +624,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <>
                 <span className="text-[15px] text-muted line-through">৳{prod.old.toLocaleString('en-US')}</span>
                 {discountPct > 0 && (
-                  <span className="text-[13px] font-bold text-success">{discountPct}% ছাড়</span>
+                  <span className="text-[13px] font-bold text-success">{lang === 'en' ? `${discountPct}% Off` : `${discountPct}% ছাড়`}</span>
                 )}
               </>
             )}
@@ -635,7 +640,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             </span>
             <span
               className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-base text-[10.5px] font-bold text-muted"
-              title="ওয়ারেন্টি বিস্তারিত"
+              title={t('ওয়ারেন্টি বিস্তারিত')}
             >
               ?
             </span>
@@ -644,7 +649,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           {quickSpecs.length > 0 && (
             <div className="mb-5 rounded-brand border border-border-base bg-white p-4 shadow-sh1">
               <div className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">
-                স্পেসিফিকেশন এক নজরে
+                {t('স্পেসিফিকেশন এক নজরে')}
               </div>
               <div className="flex flex-wrap gap-2">
                 {quickSpecs.map(([k, v]) => (
@@ -657,13 +662,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
 
           <div className="mb-5 flex flex-wrap items-center gap-3">
-            <span className="text-[13px] font-semibold text-ink">পরিমাণ</span>
+            <span className="text-[13px] font-semibold text-ink">{t('পরিমাণ')}</span>
             <div className="flex items-center overflow-hidden rounded-[10px] border-[1.5px] border-border-base bg-white">
               <button
                 className="flex h-10 w-10 items-center justify-center text-lg font-bold text-ink transition-brand duration-brand hover:bg-surface-muted disabled:opacity-30"
                 onClick={() => chgQty(-1)}
                 disabled={qty <= 1}
-                aria-label="কমান"
+                aria-label={t('কমান')}
               >
                 −
               </button>
@@ -672,20 +677,20 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 className="flex h-10 w-10 items-center justify-center text-lg font-bold text-ink transition-brand duration-brand hover:bg-surface-muted disabled:opacity-30"
                 onClick={() => chgQty(1)}
                 disabled={qty >= maxQty}
-                aria-label="বাড়ান"
+                aria-label={t('বাড়ান')}
               >
                 +
               </button>
             </div>
             {qty > 1 && (
               <div className="rounded-[10px] border-[1.5px] border-brand-light/20 bg-brand-bg/25 px-3 py-2 text-[13px] font-bold text-brand-light">
-                মোট: ৳{(prod.price * qty).toLocaleString('en-US')}
+                {t('মোট:')} ৳{(prod.price * qty).toLocaleString('en-US')}
               </div>
             )}
             <div className="ml-auto flex gap-2">
               <button
                 onClick={toggleWishFromPP}
-                title="Wishlist এ যোগ করুন"
+                title={t('Wishlist এ যোগ করুন')}
                 className={`flex h-10 w-10 items-center justify-center rounded-[10px] border-[1.5px] transition-brand duration-brand ${wished ? 'border-brand-light bg-brand-bg/40 text-brand-light' : 'border-border-base bg-white text-muted hover:border-brand-light/40 hover:text-brand-light'}`}
               >
                 <HeartIcon filled={wished} />
@@ -693,7 +698,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               {!sold && (
                 <button
                   onClick={waOrder}
-                  title="WhatsApp এ অর্ডার করুন"
+                  title={t('WhatsApp এ অর্ডার করুন')}
                   className="flex h-10 w-10 items-center justify-center rounded-[10px] border-none bg-[#25D366] shadow-sh1 transition-brand duration-brand hover:brightness-95"
                 >
                   <svg width="20" height="20" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
@@ -705,20 +710,20 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <div className="flex flex-col gap-2.5">
             {sold ? (
               <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-gold py-3.5 text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
-                <BellIcon /> স্টকে আসলে আমাকে জানান
+                <BellIcon /> {t('স্টকে আসলে আমাকে জানান')}
               </button>
             ) : (
               <>
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
-                  <BoltIcon /> এখনই অর্ডার করুন
+                  <BoltIcon /> {t('এখনই অর্ডার করুন')}
                 </button>
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-border-base bg-white py-3.5 text-sm font-bold text-ink transition-brand duration-brand hover:border-brand-light/30 hover:bg-surface-muted" onClick={addCartFromPP}>
-                  <CartIcon /> কার্টে যোগ করুন
+                  <CartIcon /> {t('কার্টে যোগ করুন')}
                 </button>
                 {msgLink && (
                   <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-[#0084FF] py-3.5 text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={msgOrder}>
                     <svg width="17" height="17" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.9 1.19 5.44 3.14 7.17.16.14.26.35.27.57l.05 1.78c.02.57.61.94 1.13.7l1.98-.87c.17-.08.36-.09.54-.04.9.25 1.87.38 2.89.38C17.64 21.4 22 17.27 22 11.7 22 6.13 17.64 2 12 2zm6.11 7.37l-2.96 4.7c-.47.74-1.47.93-2.17.41l-2.36-1.76c-.22-.16-.51-.16-.72 0l-3.18 2.41c-.42.32-.97-.16-.69-.62l2.96-4.7c.47-.74 1.47-.93 2.17-.41l2.36 1.76c.22.16.51.16.72 0l3.18-2.41c.43-.32.97.17.69.62z" /></svg>
-                    Messenger এ অর্ডার করুন
+                    {t('Messenger এ অর্ডার করুন')}
                   </button>
                 )}
               </>
@@ -729,13 +734,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
       <div className="sticky top-0 z-10 border-b border-border-base bg-white/95 backdrop-blur" ref={tabsWrapRef}>
         <div className="mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 md:px-8">
-          {TABS.map((t) => (
+          {TABS.map((tab) => (
             <button
-              key={t.id}
-              className={`whitespace-nowrap border-b-2 px-3.5 py-3.5 text-[13px] font-semibold transition-brand duration-brand ${activeTab === t.id ? 'border-brand-light text-brand-light' : 'border-transparent text-muted hover:text-ink'}`}
-              onClick={() => scrollToSection(t.id)}
+              key={tab.id}
+              className={`whitespace-nowrap border-b-2 px-3.5 py-3.5 text-[13px] font-semibold transition-brand duration-brand ${activeTab === tab.id ? 'border-brand-light text-brand-light' : 'border-transparent text-muted hover:text-ink'}`}
+              onClick={() => scrollToSection(tab.id)}
             >
-              {t.label}
+              {t(tab.label)}
             </button>
           ))}
         </div>
@@ -743,7 +748,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
       <div className="mx-auto max-w-[1100px] px-4 md:px-8">
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
-          <SectionHeading icon={<DocIcon />}>প্রোডাক্টের <span className="text-brand-light">বিস্তারিত বিবরণ</span></SectionHeading>
+          <SectionHeading icon={<DocIcon />}>{t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span></SectionHeading>
           <div className="text-[14px] leading-[1.85] text-ink/80">
             {(prod.longDesc || prod.desc) ? (
               (prod.longDesc || prod.desc)!.split('\n\n').map((p, i) => (
@@ -752,35 +757,35 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 </p>
               ))
             ) : (
-              <p className="text-muted">এই প্রোডাক্টের বিস্তারিত বিবরণ শীঘ্রই যোগ করা হবে।</p>
+              <p className="text-muted">{t('এই প্রোডাক্টের বিস্তারিত বিবরণ শীঘ্রই যোগ করা হবে।')}</p>
             )}
           </div>
         </div>
 
         <div className="border-b border-border-base py-8" id="ppSecFeatures" ref={(el) => { sectionRefs.current.ppSecFeatures = el; }}>
-          <SectionHeading icon={<SparkIcon />}>প্রধান <span className="text-brand-light">ফিচারস</span></SectionHeading>
+          <SectionHeading icon={<SparkIcon />}>{t('প্রধান')} <span className="text-brand-light">{t('ফিচারস')}</span></SectionHeading>
           {features.length ? (
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {features.map((f, i) => <FeatureItem key={i} text={f} />)}
             </div>
           ) : (
-            <div className="text-[13px] text-muted">এই প্রোডাক্টের features এখনো যোগ হয়নি।</div>
+            <div className="text-[13px] text-muted">{t('এই প্রোডাক্টের features এখনো যোগ হয়নি।')}</div>
           )}
         </div>
 
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
-          <SectionHeading icon={<WrenchIcon />}>কারিগরি <span className="text-brand-light">স্পেসিফিকেশন</span></SectionHeading>
+          <SectionHeading icon={<WrenchIcon />}>{t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span></SectionHeading>
           <div className="overflow-x-auto rounded-brand border border-border-base">
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr className="bg-surface-muted">
-                  <th className="w-[38%] px-4 py-3 text-left font-semibold text-ink sm:w-[32%]">বিবরণ</th>
-                  <th className="px-4 py-3 text-left font-semibold text-ink">তথ্য</th>
+                  <th className="w-[38%] px-4 py-3 text-left font-semibold text-ink sm:w-[32%]">{t('বিবরণ')}</th>
+                  <th className="px-4 py-3 text-left font-semibold text-ink">{t('তথ্য')}</th>
                 </tr>
               </thead>
               <tbody>
                 {techRows.length === 0 && !pkg ? (
-                  <tr><td colSpan={2} className="p-4 text-center text-muted">স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।</td></tr>
+                  <tr><td colSpan={2} className="p-4 text-center text-muted">{t('স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।')}</td></tr>
                 ) : (
                   <>
                     {techRows.map(([k, v], i) => (
@@ -805,7 +810,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
 
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
-          <SectionHeading icon={<QuestionIcon />}>কমন <span className="text-brand-light">প্রশ্নোত্তর (FAQ)</span></SectionHeading>
+          <SectionHeading icon={<QuestionIcon />}>{t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর (FAQ)')}</span></SectionHeading>
           {faqs.length ? faqs.map((f, i) => (
             <div className="border-b border-border-base last:border-0" key={i}>
               <button
@@ -819,7 +824,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               {openFaqIdx === i && <div className="pb-4 text-[13px] leading-[1.7] text-muted">{f.a}</div>}
             </div>
           )) : (
-            <div className="text-[13px] text-muted">কোনো FAQ নেই।</div>
+            <div className="text-[13px] text-muted">{t('কোনো FAQ নেই।')}</div>
           )}
         </div>
 
@@ -830,7 +835,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <div className="flex gap-0.5 text-gold">
                 {[0, 1, 2, 3, 4].map((i) => <StarFillIcon key={i} className={i < Math.round(rating) ? '' : 'opacity-25'} />)}
               </div>
-              <div className="text-[12px] text-muted">বেশিরভাগ কাস্টমার সন্তুষ্ট</div>
+              <div className="text-[12px] text-muted">{t('বেশিরভাগ কাস্টমার সন্তুষ্ট')}</div>
             </div>
             <div className="flex flex-1 flex-col gap-2">
               {[[5, 65], [4, 22], [3, 8], [2, 3], [1, 2]].map(([star, pct]) => (
@@ -851,7 +856,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         <div className="mx-auto max-w-[1100px] px-4 pb-10 md:px-8">
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-base" />
-            <div className="whitespace-nowrap font-display text-lg font-bold text-ink">একই ক্যাটাগরির <span className="text-brand-light">আরও পণ্য</span></div>
+            <div className="whitespace-nowrap font-display text-lg font-bold text-ink">{t('একই ক্যাটাগরির')} <span className="text-brand-light">{t('আরও পণ্য')}</span></div>
             <div className="h-px flex-1 bg-border-base" />
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4" ref={relatedGridRef}>
@@ -882,15 +887,15 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           </div>
           {sold ? (
             <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-gold px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
-              <BellIcon /> জানান
+              <BellIcon /> {t('জানান')}
             </button>
           ) : (
             <>
               <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
-                <BoltIcon /> অর্ডার করুন
+                <BoltIcon /> {t('অর্ডার করুন')}
               </button>
               <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-[1.5px] border-border-base bg-white px-4 py-2.5 text-[13px] font-bold text-ink transition-brand duration-brand hover:bg-surface-muted" onClick={addCartFromPP}>
-                <CartIcon /> কার্ট
+                <CartIcon /> {t('কার্ট')}
               </button>
             </>
           )}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { lookupOrderByNumberAndPhone, ORDER_TRACK_STEPS } from '@/lib/orderStatus';
+import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
 
 interface TrackOrderModalProps {
@@ -12,6 +13,7 @@ interface TrackOrderModalProps {
 }
 
 export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProps) {
+  const { t } = useT();
   const supabase = useRef(createClient()).current;
   const [orderNum, setOrderNum] = useState('');
   const [phone, setPhone] = useState('');
@@ -64,7 +66,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
       >
         <div className="max-h-[90vh] w-full max-w-[420px] overflow-y-auto rounded-brand bg-white shadow-sh3">
           <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
-            <h3 className="font-display text-base font-bold text-ink">📦 অর্ডার ট্র্যাক করুন</h3>
+            <h3 className="font-display text-base font-bold text-ink">{t('📦 অর্ডার ট্র্যাক করুন')}</h3>
             <button className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted hover:bg-surface-muted" onClick={onClose}>✕</button>
           </div>
 
@@ -72,29 +74,29 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
             {!order ? (
               <>
                 <div className="mb-3">
-                  <label className="mb-1.5 block font-body text-[12.5px] font-bold text-ink">অর্ডার নম্বর</label>
+                  <label className="mb-1.5 block font-body text-[12.5px] font-bold text-ink">{t('অর্ডার নম্বর')}</label>
                   <input
-                    type="text" placeholder="যেমন: VC-1082" value={orderNum}
+                    type="text" placeholder={t('যেমন: VC-1082')} value={orderNum}
                     onChange={(e) => setOrderNum(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
                     className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-light/40 focus:bg-white"
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="mb-1.5 block font-body text-[12.5px] font-bold text-ink">মোবাইল নম্বর</label>
+                  <label className="mb-1.5 block font-body text-[12.5px] font-bold text-ink">{t('মোবাইল নম্বর')}</label>
                   <input
-                    type="tel" placeholder="যে নম্বরে অর্ডার করেছিলেন" value={phone}
+                    type="tel" placeholder={t('যে নম্বরে অর্ডার করেছিলেন')} value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
                     className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-light/40 focus:bg-white"
                   />
                 </div>
-                {err && <div className="mb-3 text-center font-body text-[12px] font-semibold text-[#DC2626]">{err}</div>}
+                {err && <div className="mb-3 text-center font-body text-[12px] font-semibold text-[#DC2626]">{t(err)}</div>}
                 <button
                   onClick={handleSearch} disabled={loading}
                   className="w-full rounded-full bg-ink py-[13px] font-body text-[15px] font-bold text-white transition-brand duration-brand hover:bg-brand-light disabled:opacity-70"
                 >
-                  {loading ? '⏳ খোঁজা হচ্ছে...' : 'ট্র্যাক করুন'}
+                  {loading ? t('⏳ খোঁজা হচ্ছে...') : t('ট্র্যাক করুন')}
                 </button>
               </>
             ) : (
@@ -104,14 +106,14 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                     <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
                     <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                   </div>
-                  <button onClick={reset} className="font-body text-[12px] font-semibold text-brand-light hover:underline">অন্য অর্ডার</button>
+                  <button onClick={reset} className="font-body text-[12px] font-semibold text-brand-light hover:underline">{t('অন্য অর্ডার')}</button>
                 </div>
 
                 {isCancelled ? (
                   <div className="mb-4 rounded-[12px] bg-[#FEE2E2] px-4 py-4 text-center">
                     <div className="mb-1 text-2xl">❌</div>
                     <div className="font-body text-sm font-bold text-[#991B1B]">
-                      {order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে'}
+                      {t(order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে')}
                     </div>
                   </div>
                 ) : (
@@ -128,7 +130,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                             {!isLast && <div className={`w-[2px] flex-1 ${idx < currentStepIdx ? 'bg-brand-light' : 'bg-border-base'}`} style={{ minHeight: 24 }} />}
                           </div>
                           <div className={`pb-6 pt-1 font-body text-[13px] font-semibold ${done ? 'text-ink' : 'text-muted'}`}>
-                            {step.label}
+                            {t(step.label)}
                           </div>
                         </div>
                       );
@@ -137,7 +139,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                 )}
 
                 <div className="rounded-[12px] border border-border-base p-3">
-                  <div className="mb-2 font-body text-[12px] font-bold text-ink">অর্ডার সারমর্ম</div>
+                  <div className="mb-2 font-body text-[12px] font-bold text-ink">{t('অর্ডার সারমর্ম')}</div>
                   <div className="flex flex-col gap-1.5">
                     {(order.items || []).map((i, idx) => (
                       <div key={idx} className="flex items-center justify-between font-body text-[12.5px] text-ink">
@@ -147,7 +149,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                     ))}
                   </div>
                   <div className="mt-2 flex items-center justify-between border-t border-border-base pt-2 font-body text-[13px] font-bold text-ink">
-                    <span>মোট (শিপিং সহ):</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
+                    <span>{t('মোট (শিপিং সহ):')}</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
                   </div>
                 </div>
               </>

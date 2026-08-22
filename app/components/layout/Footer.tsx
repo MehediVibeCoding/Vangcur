@@ -11,6 +11,7 @@ import {
   OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
 } from '@/lib/uiEvents';
 import { sanitizeHref } from '@/lib/security';
+import { useT } from '@/lib/i18n/useT';
 import type { FooterContact, FooterExtras, FooterLogo, ServiceLink } from '@/types';
 
 function computeLogo(raw: FooterLogo | null | undefined): FooterLogo {
@@ -54,6 +55,7 @@ function computeFooterExtras(raw: { desc?: string; copy?: string; fb?: string; i
 const colLinkClass = 'block bg-transparent border-0 p-0 text-left font-body text-[12.5px] text-white/70 no-underline transition-colors hover:text-white cursor-pointer';
 
 export default function Footer() {
+  const { t } = useT();
   const supabase = useMemo(() => createClient(), []);
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
   const [contact, setContact] = useState<FooterContact>(DEFAULT_FOOTER.contact);
@@ -162,12 +164,12 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-[13px] text-[11.5px] font-bold uppercase tracking-[.6px] text-white/60">কুইক লিঙ্কস</h4>
-          <button className={colLinkClass + ' mb-[9px]'} onClick={openAccount}>মাই প্রোফাইল</button>
-          <button className={colLinkClass + ' mb-[9px]'} onClick={openTrackOrder}>ট্র্যাক অর্ডার</button>
-          <button className={colLinkClass + ' mb-[9px]'} onClick={scrollTop}>হোম</button>
-          <button className={colLinkClass + ' mb-[9px]'} onClick={scrollToCategories}>ক্যাটাগরি</button>
-          <button className={colLinkClass + ' mb-[9px] text-gold hover:text-gold'} onClick={openOfferPage}>📢 চলতি অফারসমূহ</button>
+          <h4 className="mb-[13px] text-[11.5px] font-bold uppercase tracking-[.6px] text-white/60">{t('কুইক লিঙ্কস')}</h4>
+          <button className={colLinkClass + ' mb-[9px]'} onClick={openAccount}>{t('মাই প্রোফাইল')}</button>
+          <button className={colLinkClass + ' mb-[9px]'} onClick={openTrackOrder}>{t('ট্র্যাক অর্ডার')}</button>
+          <button className={colLinkClass + ' mb-[9px]'} onClick={scrollTop}>{t('হোম')}</button>
+          <button className={colLinkClass + ' mb-[9px]'} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button>
+          <button className={colLinkClass + ' mb-[9px] text-gold hover:text-gold'} onClick={openOfferPage}>{t('📢 চলতি অফারসমূহ')}</button>
         </div>
 
         <div>

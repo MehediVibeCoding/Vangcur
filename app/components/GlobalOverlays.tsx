@@ -8,6 +8,7 @@ import FloatWishBadge from './cart/FloatWishBadge';
 import FloatContactButtons from './layout/FloatContactButtons';
 import BackToTopButton from './layout/BackToTopButton';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
+import { useLanguageStore } from '@/lib/store/languageStore';
 
 // CartSidebar/WishlistDrawer/TrackOrderModal প্রথম রেন্ডারে দরকার নেই, তাই আলাদা
 // চাংকে রাখা হয়েছে (মূল বান্ডেল ছোট রাখতে) — এই তিনটা তুলনামূলক বড় ও প্রায়ই
@@ -28,6 +29,11 @@ export default function GlobalOverlays() {
   const [wishOpen, setWishOpen] = useState(false);
   const [trackOpen, setTrackOpen] = useState(false);
   const pathname = usePathname();
+  const lang = useLanguageStore((s) => s.lang);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
   // চেকআউট পেজে কোনো ফ্লোটিং কার্ট/উইশলিস্ট বাটন দেখানো উচিত না — এখানে সেগুলো শুধু
   // বিভ্রান্তিকর, কারণ চেকআউট নিজেই একটা ফোকাসড ফ্লো।
   const hideFloatingBadges = pathname?.startsWith('/checkout') ?? false;

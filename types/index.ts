@@ -216,6 +216,7 @@ export interface OrderPayload {
   paymentTxn: string;
   paymentLast4: string;
   fingerprintId: string;
+  lang?: 'bn' | 'en';
 }
 
 export interface CreateOrderResult {

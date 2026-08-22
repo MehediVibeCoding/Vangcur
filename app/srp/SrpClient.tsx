@@ -10,6 +10,7 @@ import { searchProducts, matchCategories } from '@/lib/searchData';
 import { subscribeCustomProducts } from '@/lib/productData';
 import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 
 const PRODS_PER_PAGE = 20;
@@ -20,6 +21,7 @@ const PRODS_AUTO_THRESHOLD = 2;
 // হয়েছে — শুধু ভিতরের আইটেম কমিয়ে হোম বাটন আর সার্চ বক্সে নামিয়ে আনা হয়েছে,
 // আগের ওয়েবসাইটের মতো।)
 function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v: string) => void }) {
+  const { t } = useT();
   const [value, setValue] = useState(query);
 
   useEffect(() => { setValue(query); }, [query]);
@@ -30,7 +32,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
         <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-2.5 px-3 sm:gap-3 sm:px-5">
           <Link
             href="/"
-            aria-label="হোম পেইজে যান"
+            aria-label={t('হোম পেইজে যান')}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-light shadow-sm transition-brand duration-brand hover:bg-brand-light hover:text-white"
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -46,7 +48,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
             <input
               type="search"
               value={value}
-              placeholder="পুনরায় সার্চ করুন..."
+              placeholder={t('পুনরায় সার্চ করুন...')}
               onChange={(e) => { setValue(e.target.value); onQueryChange(e.target.value); }}
               autoComplete="off"
               className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none transition-brand duration-brand focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
@@ -55,7 +57,7 @@ function SrpHeader({ query, onQueryChange }: { query: string; onQueryChange: (v:
               <button
                 type="button"
                 onClick={() => { setValue(''); onQueryChange(''); }}
-                aria-label="মুছুন"
+                aria-label={t('মুছুন')}
                 className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -109,17 +111,18 @@ function CategoryIcon({ icon }: { icon?: string }) {
 }
 
 function NoQueryState() {
+  const { t } = useT();
   return (
     <div className="flex flex-col items-center gap-3 px-5 py-20 text-center">
       <SearchGlyph />
-      <p className="text-[15px] font-bold text-ink">কিছু লিখে সার্চ করুন</p>
+      <p className="text-[15px] font-bold text-ink">{t('কিছু লিখে সার্চ করুন')}</p>
       <div className="my-1 flex w-full max-w-xs items-center gap-3 text-[12px] text-muted">
         <span className="h-px flex-1 bg-border-base" />
-        অথবা
+        {t('অথবা')}
         <span className="h-px flex-1 bg-border-base" />
       </div>
       <Link href="/" className={brandCtaBtnClass}>
-        ওয়েবসাইটের হোম পেইজে ফিরে যান <ArrowRightIcon />
+        {t('ওয়েবসাইটের হোম পেইজে ফিরে যান')} <ArrowRightIcon />
       </Link>
     </div>
   );
@@ -130,13 +133,16 @@ function NoQueryState() {
 // (query prop খালি না হলেও hasCategoryMatch false হলে) নিচের সাজেশন-লাইন ও
 // বাটন-টেক্সট "হোম পেইজে ফিরে যান"-এ নেমে আসে (আগে "সব প্রোডাক্ট দেখুন" ছিল)। ----------
 function ZeroResultsState({ query }: { query: string }) {
+  const { t, lang } = useT();
   return (
     <div className="flex flex-col items-center gap-3 px-5 py-16 text-center">
       <SearchGlyph />
-      <p className="text-[15px] font-bold text-ink">&quot;{query}&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</p>
-      <p className="max-w-sm text-[13px] text-muted">অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে ওয়েবসাইটের হোম পেইজে ফিরে যান।</p>
+      <p className="text-[15px] font-bold text-ink">
+        {lang === 'en' ? <>No products found for &quot;{query}&quot;</> : <>&quot;{query}&quot; এর জন্য কোনো পণ্য পাওয়া যায়নি</>}
+      </p>
+      <p className="max-w-sm text-[13px] text-muted">{t('অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে ওয়েবসাইটের হোম পেইজে ফিরে যান।')}</p>
       <Link href="/" className={`mt-1 ${brandCtaBtnClass}`}>
-        ওয়েবসাইটের হোম পেইজে ফিরে যান <ArrowRightIcon />
+        {t('ওয়েবসাইটের হোম পেইজে ফিরে যান')} <ArrowRightIcon />
       </Link>
     </div>
   );
@@ -147,11 +153,12 @@ function ZeroResultsState({ query }: { query: string }) {
 // বাটন দেখানো হয় — হোমপেজের ProductGrid-এর ক্যাটাগরি-শেষ বাটনের ঠিক same প্যাটার্ন,
 // শুধু SRP-তে "সব প্রোডাক্ট দেখুন" এর বদলে সরাসরি হোমপেইজে ফেরত পাঠানো হয়। ----------
 function EndOfResults() {
+  const { t } = useT();
   return (
     <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">
-      <p className="font-body text-[13.5px] font-medium text-muted">আর কোনো প্রোডাক্ট নেই</p>
+      <p className="font-body text-[13.5px] font-medium text-muted">{t('আর কোনো প্রোডাক্ট নেই')}</p>
       <Link href="/" className={brandCtaBtnClass}>
-        ওয়েবসাইটের হোম পেইজে ফিরে যান <ArrowRightIcon />
+        {t('ওয়েবসাইটের হোম পেইজে ফিরে যান')} <ArrowRightIcon />
       </Link>
     </div>
   );
@@ -162,6 +169,7 @@ interface SrpClientProps {
 }
 
 export default function SrpClient({ initialProducts }: SrpClientProps) {
+  const { t, lang } = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = (searchParams.get('q') || '').trim();
@@ -311,7 +319,7 @@ export default function SrpClient({ initialProducts }: SrpClientProps) {
           <>
             {showCategorySection && (
               <div className="mb-4">
-                <h2 className="mb-2.5 text-[13px] font-bold text-ink">ক্যাটাগরি</h2>
+                <h2 className="mb-2.5 text-[13px] font-bold text-ink">{t('ক্যাটাগরি')}</h2>
                 <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {matchedCats.map((c) => (
                     <button
@@ -329,7 +337,7 @@ export default function SrpClient({ initialProducts }: SrpClientProps) {
             )}
 
             {showCountLine && (
-              <p className="mb-4 text-[13px] text-muted">{results.length}টি পণ্য পাওয়া গেছে</p>
+              <p className="mb-4 text-[13px] text-muted">{lang === 'en' ? `${results.length} products found` : `${results.length}টি পণ্য পাওয়া গেছে`}</p>
             )}
 
             {results.length === 0 ? (
@@ -348,7 +356,7 @@ export default function SrpClient({ initialProducts }: SrpClientProps) {
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
                         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                       </svg>
-                      লোড হচ্ছে...
+                      {t('লোড হচ্ছে...')}
                     </div>
                   )}
                   {showLoadMoreBtn && (
@@ -357,7 +365,7 @@ export default function SrpClient({ initialProducts }: SrpClientProps) {
                       className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                      আরো প্রোডাক্ট দেখুন
+                      {t('আরো প্রোডাক্ট দেখুন')}
                     </button>
                   )}
                 </div>

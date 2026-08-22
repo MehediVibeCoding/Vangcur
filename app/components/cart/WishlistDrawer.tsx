@@ -10,6 +10,7 @@ import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { useT } from '@/lib/i18n/useT';
 import type { WishlistItem } from '@/types';
 
 function WishImg({ emoji }: { emoji?: string }) {
@@ -91,6 +92,7 @@ interface WishlistDrawerProps {
 }
 
 export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
+  const { t } = useT();
   const router = useRouter();
   const items = useWishlistStore((s) => s.wishlist);
 
@@ -111,7 +113,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
 
   const addToCart = (id: number | string) => {
     window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id } }));
-    showToast('কার্টে যোগ হয়েছে');
+    showToast(t('কার্টে যোগ হয়েছে'));
   };
 
   const orderNow = (id: number | string) => {
@@ -121,7 +123,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
 
   const removeItem = (id: number | string) => {
     useWishlistStore.getState().removeItem(id);
-    showToast('Wishlist থেকে সরানো হয়েছে');
+    showToast(t('Wishlist থেকে সরানো হয়েছে'));
   };
 
   return (
@@ -141,16 +143,16 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                 <IconHeart />
               </span>
               <div>
-                <h3 className="font-display text-base font-bold leading-tight text-ink">আমার Wishlist</h3>
+                <h3 className="font-display text-base font-bold leading-tight text-ink">{t('আমার Wishlist')}</h3>
                 {items.length > 0 && (
-                  <p className="font-body text-[11.5px] font-semibold text-muted">{items.length} টি পছন্দের পণ্য</p>
+                  <p className="font-body text-[11.5px] font-semibold text-muted">{items.length} {t('টি পছন্দের পণ্য')}</p>
                 )}
               </div>
             </div>
             <button
               className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-muted transition-brand duration-brand hover:bg-surface-muted hover:text-ink"
               onClick={onClose}
-              aria-label="বন্ধ করুন"
+              aria-label={t('বন্ধ করুন')}
             >
               <IconClose />
             </button>
@@ -164,13 +166,13 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
               <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-rose-50 to-surface-muted text-rose-300">
                 <IconHeartEmpty />
               </div>
-              <p className="mb-1 font-body text-sm font-bold text-ink">আপনার Wishlist খালি</p>
-              <p className="mb-5 font-body text-[12.5px] text-muted">পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন</p>
+              <p className="mb-1 font-body text-sm font-bold text-ink">{t('আপনার Wishlist খালি')}</p>
+              <p className="mb-5 font-body text-[12.5px] text-muted">{t('পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন')}</p>
               <button
                 onClick={goToProducts}
                 className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               >
-                প্রোডাক্ট দেখুন <IconArrowRight />
+                {t('প্রোডাক্ট দেখুন')} <IconArrowRight />
               </button>
             </div>
           ) : (
@@ -191,14 +193,14 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                       <div
                         className="cursor-pointer truncate font-body text-[13px] font-semibold text-ink"
                         onClick={() => openProduct(item)}
-                        title="প্রোডাক্ট দেখুন"
+                        title={t('প্রোডাক্ট দেখুন')}
                       >
                         {item.name}
                       </div>
                       <button
                         className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-muted/70 transition-brand duration-brand hover:bg-red-50 hover:text-red-500"
                         onClick={() => removeItem(item.id)}
-                        title="Wishlist থেকে সরান"
+                        title={t('Wishlist থেকে সরান')}
                       >
                         <IconTrash />
                       </button>
@@ -211,13 +213,13 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                         className="flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] border-brand-light/25 bg-white px-2.5 py-1.5 font-body text-[11px] font-bold text-brand-light transition-brand duration-brand hover:bg-info/10"
                         onClick={() => addToCart(item.id)}
                       >
-                        <IconBag /> কার্টে যোগ
+                        <IconBag /> {t('কার্টে যোগ')}
                       </button>
                       <button
                         className="flex items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-r from-info to-brand-light px-2.5 py-1.5 font-body text-[11px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-[1.03]"
                         onClick={() => orderNow(item.id)}
                       >
-                        <IconBolt /> অর্ডার করুন
+                        <IconBolt /> {t('অর্ডার করুন')}
                       </button>
                     </div>
                   </div>

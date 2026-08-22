@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { getWarrantyModalContent } from '@/lib/warrantyData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
+import { useT } from '@/lib/i18n/useT';
 
 interface WarrantyModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface WarrantyModalProps {
 }
 
 export default function WarrantyModal({ isOpen, onClose, warrantyText }: WarrantyModalProps) {
+  const { t } = useT();
   const content = useMemo(() => getWarrantyModalContent(warrantyText), [warrantyText]);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
       >
         <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border-base" />
         <div className="mb-2.5 inline-block rounded-full bg-brand-bg px-2.5 py-1 text-[11px] font-bold text-brand-light">
-          🛡️ ওয়ারেন্টি তথ্য
+          🛡️ {t('ওয়ারেন্টি তথ্য')}
         </div>
         <div className="mb-2 font-display text-[17px] font-bold text-ink">{content.title}</div>
         <p className="mb-4 text-[13px] leading-[1.7] text-muted">{content.body}</p>
@@ -47,7 +49,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
           className="w-full rounded-[9px] border-none bg-ink py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-brand-light"
           onClick={onClose}
         >
-          বুঝেছি
+          {t('বুঝেছি')}
         </button>
       </div>
     </div>

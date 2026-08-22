@@ -13,11 +13,13 @@ import { DEFAULT_FOOTER } from '@/lib/footerData';
 import {
   OPEN_WAIT_OVERLAY_EVENT, OPEN_TRACK_ORDER_EVENT, SHOW_BG_CONFIRM_EVENT, SHOW_POST_ORDER_INFO_EVENT,
 } from '@/lib/uiEvents';
+import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 
 const socialIconClass = 'flex h-[35px] w-[35px] items-center justify-center rounded-[9px] bg-surface-muted text-ink transition-brand duration-brand hover:bg-brand-primary hover:text-white [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-current';
 
 export default function WaitingOverlay() {
+  const { t, lang } = useT();
   const router = useRouter();
   const pathname = usePathname();
   const supabase = useRef(createClient()).current;
@@ -26,7 +28,7 @@ export default function WaitingOverlay() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<OrderStatus>('pending');
-  const [copyLabel, setCopyLabel] = useState('📋 কপি');
+  const [copyLabel, setCopyLabel] = useState(() => t('📋 কপি'));
   const currentUser = useAuthStore((s) => s.currentUser);
   const minimizedRef = useRef(false);
   const orderRef = useRef<Order | null>(null);
@@ -118,8 +120,8 @@ export default function WaitingOverlay() {
     } catch {
       // clipboard may be unavailable
     }
-    setCopyLabel('✅ কপি হয়েছে!');
-    setTimeout(() => setCopyLabel('📋 কপি'), 2000);
+    setCopyLabel(t('✅ কপি হয়েছে!'));
+    setTimeout(() => setCopyLabel(t('📋 কপি')), 2000);
   };
 
   if (minimized) {
@@ -129,7 +131,7 @@ export default function WaitingOverlay() {
         className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 font-body text-[12.5px] font-semibold text-white shadow-sh3 transition-brand duration-brand hover:bg-brand-primary"
       >
         <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#F59E0B]" />
-        {order.orderNum} প্রসেস হচ্ছে...
+        {lang === 'en' ? `${order.orderNum} processing...` : `${order.orderNum} প্রসেস হচ্ছে...`}
       </button>
     );
   }
@@ -138,11 +140,11 @@ export default function WaitingOverlay() {
     <div className="fixed inset-0 z-[90] overflow-y-auto bg-white">
       <div className="mx-auto min-h-screen w-full max-w-[480px] px-7 pb-12 pt-6 text-center">
         <div className="mb-6 flex items-center justify-between border-b border-border-base pb-3.5">
-          <h2 className="flex-1 font-body text-[15px] font-bold text-ink">অর্ডার স্ট্যাটাস</h2>
+          <h2 className="flex-1 font-body text-[15px] font-bold text-ink">{t('অর্ডার স্ট্যাটাস')}</h2>
           <button
             className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted hover:bg-surface-muted"
             onClick={() => (isPending ? setMinimized(true) : dismiss())}
-            title={isPending ? 'মিনিমাইজ করুন' : 'বন্ধ করুন'}
+            title={isPending ? t('মিনিমাইজ করুন') : t('বন্ধ করুন')}
           >
             {isPending ? '—' : '✕'}
           </button>
@@ -153,13 +155,17 @@ export default function WaitingOverlay() {
             <div className="mx-auto mb-5 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#FEF3C7] text-[34px] animate-pulse">
               ⏳
             </div>
-            <h3 className="mb-2 font-body text-xl font-bold text-ink">ধন্যবাদ!</h3>
+            <h3 className="mb-2 font-body text-xl font-bold text-ink">{t('ধন্যবাদ!')}</h3>
             <p className="mb-[18px] font-body text-[13px] leading-[1.7] text-muted">
-              আপনার অর্ডারটি পেন্ডিং অবস্থায় আছে। আপনার ২০০ টাকার পেমেন্ট আমরা যাচাই করছি। সাধারণত <strong className="text-ink">৫–১০ মিনিটের মধ্যে</strong> কনফার্মেশন পাবেন (সর্বোচ্চ ৩০ মিনিট)।
+              {lang === 'en' ? (
+                <>Your order is pending. We are verifying your 200 Taka payment. You will usually get confirmation <strong className="text-ink">within 5–10 minutes</strong> (maximum 30 minutes).</>
+              ) : (
+                <>আপনার অর্ডারটি পেন্ডিং অবস্থায় আছে। আপনার ২০০ টাকার পেমেন্ট আমরা যাচাই করছি। সাধারণত <strong className="text-ink">৫–১০ মিনিটের মধ্যে</strong> কনফার্মেশন পাবেন (সর্বোচ্চ ৩০ মিনিট)।</>
+              )}
             </p>
 
             <div className="mb-4 flex items-center justify-center gap-2 font-body text-[13.5px] font-semibold text-ink">
-              অর্ডার নম্বর: <strong>{order.orderNum}</strong>
+              {t('অর্ডার নম্বর:')} <strong>{order.orderNum}</strong>
               <button
                 onClick={copyOrderNum}
                 className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
@@ -170,8 +176,11 @@ export default function WaitingOverlay() {
 
             {isGuest && (
               <div className="mb-3.5 rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] px-3.5 py-[11px] font-body text-[12.5px] leading-[1.7] text-[#92400E]">
-                ⚠️ আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />
-                ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।
+                {lang === 'en' ? (
+                  <>⚠️ You are currently <strong>not logged in</strong>.<br />To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
+                ) : (
+                  <>⚠️ আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
+                )}
               </div>
             )}
 
@@ -179,28 +188,32 @@ export default function WaitingOverlay() {
               <div className="flex items-center gap-3 border-b border-border-base py-2.5">
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#D1FAE5] text-[13px] text-[#065F46]">✓</div>
                 <div>
-                  <strong className="block font-body text-[12.5px] font-semibold text-ink">অর্ডার রিসিভড</strong>
-                  <span className="font-body text-[11px] text-muted">সিস্টেমে সফলভাবে জমা হয়েছে</span>
+                  <strong className="block font-body text-[12.5px] font-semibold text-ink">{t('অর্ডার রিসিভড')}</strong>
+                  <span className="font-body text-[11px] text-muted">{t('সিস্টেমে সফলভাবে জমা হয়েছে')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3 border-b border-border-base py-2.5">
                 <div className="flex h-7 w-7 flex-shrink-0 animate-pulse items-center justify-center rounded-full bg-[#FEF3C7] text-[13px] text-[#92400E]">🔍</div>
                 <div>
-                  <strong className="block font-body text-[12.5px] font-semibold text-ink">পেমেন্ট ভেরিফিকেশন</strong>
-                  <span className="font-body text-[11px] text-muted">বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে</span>
+                  <strong className="block font-body text-[12.5px] font-semibold text-ink">{t('পেমেন্ট ভেরিফিকেশন')}</strong>
+                  <span className="font-body text-[11px] text-muted">{t('বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3 py-2.5">
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-border-base text-[13px] text-muted">⭕</div>
                 <div>
-                  <strong className="block font-body text-[12.5px] font-semibold text-ink">অর্ডার কনফার্ম</strong>
-                  <span className="font-body text-[11px] text-muted">পেমেন্ট সঠিক হলে কনফার্ম হবে</span>
+                  <strong className="block font-body text-[12.5px] font-semibold text-ink">{t('অর্ডার কনফার্ম')}</strong>
+                  <span className="font-body text-[11px] text-muted">{t('পেমেন্ট সঠিক হলে কনফার্ম হবে')}</span>
                 </div>
               </div>
             </div>
 
             <div className="mb-5 rounded-xl bg-surface-muted p-3 font-body text-xs leading-[1.7] text-muted">
-              💡 আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।<br />অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।
+              {lang === 'en' ? (
+                <>💡 You can browse the website now if you&apos;d like.<br />An automatic notification will show once your order is confirmed.</>
+              ) : (
+                <>💡 আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।<br />অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।</>
+              )}
             </div>
 
             <div className="mb-5 flex gap-[9px]">
@@ -208,18 +221,18 @@ export default function WaitingOverlay() {
                 onClick={() => window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT))}
                 className="flex-1 rounded-[10px] bg-surface-muted px-4 py-2.5 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
               >
-                এরপর কী হবে?
+                {t('এরপর কী হবে?')}
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
                 className="flex-1 rounded-[10px] bg-ink px-4 py-2.5 font-body text-[12.5px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
               >
-                বিস্তারিত ট্র্যাক করুন
+                {t('বিস্তারিত ট্র্যাক করুন')}
               </button>
             </div>
 
             <div className="mb-6">
-              <div className="mb-2.5 font-body text-[11px] font-bold uppercase tracking-wide text-muted">আমাদের ফলো করুন</div>
+              <div className="mb-2.5 font-body text-[11px] font-bold uppercase tracking-wide text-muted">{t('আমাদের ফলো করুন')}</div>
               <div className="flex justify-center gap-2.5">
                 <a className={socialIconClass} href={DEFAULT_FOOTER.social.fb} target="_blank" rel="noopener noreferrer" title="Facebook">
                   <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
@@ -243,7 +256,7 @@ export default function WaitingOverlay() {
               onClick={() => setMinimized(true)}
               className="w-full rounded-xl border-[1.5px] border-border-base bg-surface-muted px-4 py-3 font-body text-[13.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
             >
-              🏠 ওয়েবসাইটে ফিরে যান
+              🏠 {t('ওয়েবসাইটে ফিরে যান')}
             </button>
           </>
         )}
@@ -255,12 +268,12 @@ export default function WaitingOverlay() {
             >
               🎉
             </div>
-            <h3 className="mb-2 font-body text-xl font-bold text-success">অর্ডার কনফার্ম হয়েছে!</h3>
+            <h3 className="mb-2 font-body text-xl font-bold text-success">{t('অর্ডার কনফার্ম হয়েছে!')}</h3>
             <p className="mb-[18px] font-body text-[13px] leading-[1.7] text-muted">
-              আপনাদের পেমেন্ট যাচাই করা হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।
+              {t('আপনাদের পেমেন্ট যাচাই করা হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।')}
             </p>
             <div className="mb-5 flex items-center justify-center gap-2 font-body text-[13.5px] font-bold text-ink">
-              অর্ডার নম্বর: <span>{order.orderNum}</span>
+              {t('অর্ডার নম্বর:')} <span>{order.orderNum}</span>
               <button
                 onClick={copyOrderNum}
                 className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
@@ -268,23 +281,29 @@ export default function WaitingOverlay() {
                 {copyLabel}
               </button>
             </div>
-            <p className="mb-5 font-body text-xs text-muted">🔍 অর্ডার ট্র্যাক করতে &quot;বিস্তারিত ট্র্যাক করুন&quot; বাটন ব্যবহার করুন।</p>
+            <p className="mb-5 font-body text-xs text-muted">
+              {lang === 'en' ? (
+                <>🔍 To track your order, use the &quot;Track in Detail&quot; button.</>
+              ) : (
+                <>🔍 অর্ডার ট্র্যাক করতে &quot;বিস্তারিত ট্র্যাক করুন&quot; বাটন ব্যবহার করুন।</>
+              )}
+            </p>
             <div className="mb-2.5 flex gap-[9px]">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT))}
                 className="flex-1 rounded-[10px] bg-surface-muted px-4 py-2.5 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
               >
-                এরপর কী হবে?
+                {t('এরপর কী হবে?')}
               </button>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
                 className="flex-1 rounded-[10px] bg-ink px-4 py-2.5 font-body text-[12.5px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
               >
-                বিস্তারিত ট্র্যাক করুন
+                {t('বিস্তারিত ট্র্যাক করুন')}
               </button>
             </div>
             <button onClick={dismiss} className="w-full rounded-[10px] px-4 py-2 font-body text-[12.5px] font-semibold text-muted hover:underline">
-              বন্ধ করুন
+              {t('বন্ধ করুন')}
             </button>
           </>
         )}
@@ -296,9 +315,9 @@ export default function WaitingOverlay() {
             >
               ❌
             </div>
-            <h3 className="mb-2.5 font-body text-xl font-bold text-brand-primary">দুঃখিত!</h3>
+            <h3 className="mb-2.5 font-body text-xl font-bold text-brand-primary">{t('দুঃখিত!')}</h3>
             <p className="mb-5 font-body text-[13px] leading-[1.7] text-muted">
-              আপনার পেমেন্ট তথ্যটি সঠিক নয়। সঠিক তথ্য দিয়ে আবার চেষ্টা করুন অথবা সরাসরি WhatsApp-এ যোগাযোগ করুন।
+              {t('আপনার পেমেন্ট তথ্যটি সঠিক নয়। সঠিক তথ্য দিয়ে আবার চেষ্টা করুন অথবা সরাসরি WhatsApp-এ যোগাযোগ করুন।')}
             </p>
             <div className="flex flex-col gap-2.5">
               <a
@@ -307,13 +326,13 @@ export default function WaitingOverlay() {
                 rel="noopener noreferrer"
                 className="block w-full rounded-xl bg-[#25D366] px-4 py-3 text-center font-body text-sm font-bold text-white shadow-[0_4px_12px_rgba(37,211,102,0.15)] transition-brand duration-brand hover:bg-[#20ba5a]"
               >
-                WhatsApp এ যোগাযোগ করুন
+                {t('WhatsApp এ যোগাযোগ করুন')}
               </a>
               <button
                 onClick={retryOrder}
                 className="w-full rounded-xl border-[1.5px] border-border-base bg-surface-muted px-4 py-3 font-body text-[13.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
               >
-                আবার চেষ্টা করুন
+                {t('আবার চেষ্টা করুন')}
               </button>
             </div>
           </>

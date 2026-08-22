@@ -12,6 +12,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { makeCatSlug } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 
 // লগইন মোডাল আর অ্যাকাউন্ট পেজ — ClientHome.tsx/ProductDetailClient.tsx-এর
@@ -47,6 +48,7 @@ interface CategoryClientProps {
 // breadcrumb/ক্যাটাগরি হেডার + অন্যান্য ক্যাটাগরিতে যাওয়ার কুইক-লিংক
 // (internal linking-এর জন্যও ভালো) + ফিল্টার করা প্রোডাক্ট গ্রিড + Footer।
 export default function CategoryClient({ initialProducts, category, siblingCategories }: CategoryClientProps) {
+  const { t } = useT();
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -80,7 +82,7 @@ export default function CategoryClient({ initialProducts, category, siblingCateg
 
       <div className="mx-auto max-w-[1300px] px-5 pt-6">
         <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-[13px] text-muted">
-          <Link href="/" className="transition-brand duration-brand hover:text-brand-light">হোম</Link>
+          <Link href="/" className="transition-brand duration-brand hover:text-brand-light">{t('হোম')}</Link>
           <span>/</span>
           <span className="font-semibold text-ink">{category.name}</span>
         </nav>

@@ -34,6 +34,7 @@ import {
 } from '@/lib/security';
 import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
+import { useT } from '@/lib/i18n/useT';
 import type { CartItem, CurrentUser } from '@/types';
 
 interface CheckoutErrors {
@@ -288,6 +289,7 @@ function DesktopSideDecor() {
 }
 
 export default function CheckoutPage() {
+  const { t, lang } = useT();
   const router = useRouter();
   const supabase = useRef(createClient()).current;
 
@@ -349,7 +351,7 @@ export default function CheckoutPage() {
       hasItems = false;
     }
     if (!hasItems) {
-      showToast('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।');
+      showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       router.replace('/');
       return;
     }
@@ -418,7 +420,7 @@ export default function CheckoutPage() {
         if (pending.ship) setSelectedShip(pending.ship as string);
       }
 
-      showToast('লগইন সফল — অর্ডার সম্পন্ন হচ্ছে...');
+      showToast(t('লগইন সফল — অর্ডার সম্পন্ন হচ্ছে...'));
       setTimeout(() => submitOrderNowRef.current && submitOrderNowRef.current(), 350);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -498,17 +500,17 @@ export default function CheckoutPage() {
 
   const goToStep2 = () => {
     if (cartItems.length === 0) {
-      showToast('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।');
+      showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       router.replace('/');
       return;
     }
     const nextErrors: CheckoutErrors = {};
-    if (!validateName(name)) nextErrors.eN = name.trim() ? 'নাম কমপক্ষে ৩ অক্ষরের হতে হবে' : 'নাম দিন';
-    if (!validatePhone(phone.trim())) nextErrors.eP = 'দয়া করে সঠিক মোবাইল নম্বর দিন';
-    if (!dist) nextErrors.eD = 'জেলা সিলেক্ট করুন';
-    if (!validateAddress(addr.trim())) nextErrors.eA = 'দয়া করে বিস্তারিত ঠিকানা দিন (যেমন: রোড বা বাসা নম্বর)';
-    if (email.trim() && !validateEmail(email.trim())) nextErrors.eEmail = 'সঠিক ইমেইল লিখুন (যেমন: name@gmail.com)';
-    if (!selectedShip) nextErrors.eShip = 'শিপিং অপশন সিলেক্ট করুন';
+    if (!validateName(name)) nextErrors.eN = name.trim() ? t('নাম কমপক্ষে ৩ অক্ষরের হতে হবে') : t('নাম দিন');
+    if (!validatePhone(phone.trim())) nextErrors.eP = t('দয়া করে সঠিক মোবাইল নম্বর দিন');
+    if (!dist) nextErrors.eD = t('জেলা সিলেক্ট করুন');
+    if (!validateAddress(addr.trim())) nextErrors.eA = t('দয়া করে বিস্তারিত ঠিকানা দিন (যেমন: রোড বা বাসা নম্বর)');
+    if (email.trim() && !validateEmail(email.trim())) nextErrors.eEmail = t('সঠিক ইমেইল লিখুন (যেমন: name@gmail.com)');
+    if (!selectedShip) nextErrors.eShip = t('শিপিং অপশন সিলেক্ট করুন');
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length === 0) {
       setStep(2);
@@ -519,18 +521,18 @@ export default function CheckoutPage() {
     const txnUpper = txn.trim().toUpperCase();
     const l4 = last4.trim();
     if (!txnUpper && !l4) {
-      setErrors((e) => ({ ...e, eTxn: 'ট্রানজেকশন আইডি অবশ্যই ১০ ক্যারেক্টার হতে হবে', eL4: 'Transaction ID অথবা শেষ ৪ ডিজিট দিন' }));
+      setErrors((e) => ({ ...e, eTxn: t('ট্রানজেকশন আইডি অবশ্যই ১০ ক্যারেক্টার হতে হবে'), eL4: t('Transaction ID অথবা শেষ ৪ ডিজিট দিন') }));
       return;
     }
     if (txnUpper) {
       if (!validateTxnId(txnUpper)) {
-        setErrors((e) => ({ ...e, eTxn: 'দয়া করে সঠিক ১০ সংখ্যার বিকাশ ট্রানজেকশন আইডি দিন' }));
+        setErrors((e) => ({ ...e, eTxn: t('দয়া করে সঠিক ১০ সংখ্যার বিকাশ ট্রানজেকশন আইডি দিন') }));
         return;
       }
       setTxn(txnUpper);
     }
     if (l4 && l4.length !== 4) {
-      setErrors((e) => ({ ...e, eL4: 'Transaction ID অথবা শেষ ৪ ডিজিট দিন' }));
+      setErrors((e) => ({ ...e, eL4: t('Transaction ID অথবা শেষ ৪ ডিজিট দিন') }));
       return;
     }
     setErrors((e) => ({ ...e, eTxn: undefined, eL4: undefined }));
@@ -561,7 +563,7 @@ export default function CheckoutPage() {
     } catch {
       // clipboard may be unavailable
     }
-    setCopyLabel('কপি হয়েছে!');
+    setCopyLabel(t('কপি হয়েছে!'));
     setTimeout(() => setCopyLabel('Copy'), 2000);
   };
 
@@ -601,12 +603,13 @@ export default function CheckoutPage() {
         paymentTxn: txn.trim(),
         paymentLast4: last4.trim(),
         fingerprintId: fingerprintIdRef.current,
+        lang,
       });
 
       if (!result.ok || !result.data) {
         setSubmitting(false);
         confirmLockRef.current = false;
-        showToast(result.error || 'দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।');
+        showToast(result.error || t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
         return;
       }
 
@@ -641,7 +644,7 @@ export default function CheckoutPage() {
     } catch {
       setSubmitting(false);
       confirmLockRef.current = false;
-      showToast('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      showToast(t('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।'));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4]);
@@ -675,7 +678,7 @@ export default function CheckoutPage() {
     setShowPreConfirm(false);
     const { error } = await signInWithGoogle(supabase, '/checkout');
     if (error) {
-      showToast('Google লগইন ব্যর্থ হয়েছে');
+      showToast(t('Google লগইন ব্যর্থ হয়েছে'));
       try {
         localStorage.removeItem('vc_pending_order_data');
         localStorage.removeItem('vc_post_login_action');
@@ -699,14 +702,14 @@ export default function CheckoutPage() {
                     <IconLock />
                   </span>
                   <h2 className="font-body text-[15px] font-bold text-white">
-                    {step === 1 ? 'নিরাপদ চেকআউট' : step === 2 ? 'নিরাপদ পেমেন্ট' : 'নিরাপদ নিশ্চিতকরণ'}
+                    {step === 1 ? t('নিরাপদ চেকআউট') : step === 2 ? t('নিরাপদ পেমেন্ট') : t('নিরাপদ নিশ্চিতকরণ')}
                   </h2>
                 </div>
                 {step === 1 ? (
                   <button
                     onClick={closeCheckout}
-                    aria-label="বন্ধ করুন"
-                    title="বন্ধ করুন"
+                    aria-label={t('বন্ধ করুন')}
+                    title={t('বন্ধ করুন')}
                     className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
                   >
                     <IconClose />
@@ -714,8 +717,8 @@ export default function CheckoutPage() {
                 ) : (
                   <button
                     onClick={() => goBack(step - 1)}
-                    aria-label="আগের ধাপে যান"
-                    title="আগের ধাপে যান"
+                    aria-label={t('আগের ধাপে যান')}
+                    title={t('আগের ধাপে যান')}
                     className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
                   >
                     <IconArrowLeft />
@@ -741,7 +744,7 @@ export default function CheckoutPage() {
             )}
 
             <div className="flex px-6 pb-2.5 pt-[13px]">
-              {[{ n: 1, label: 'তথ্য' }, { n: 2, label: 'পেমেন্ট' }, { n: 3, label: 'নিশ্চিত' }].map((s) => {
+              {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
                 const isDone = step > s.n;
                 const isActive = step === s.n;
                 return (
@@ -767,14 +770,14 @@ export default function CheckoutPage() {
                 />
               </div>
               <div className="text-right font-body text-[11px] font-semibold text-info">
-                {step === 3 ? 'প্রায় সম্পন্ন!' : step === 2 ? 'আর মাত্র ১ ধাপ!' : 'আর মাত্র ২ ধাপ!'}
+                {step === 3 ? t('প্রায় সম্পন্ন!') : step === 2 ? t('আর মাত্র ১ ধাপ!') : t('আর মাত্র ২ ধাপ!')}
               </div>
             </div>
 
           {step === 1 && (
             <div className="px-6 py-5">
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>পূর্ণ নাম</label>
+                <label className={fieldLabelClass}>{t('পূর্ণ নাম')}</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconUser /></span>
                   <input
@@ -782,13 +785,13 @@ export default function CheckoutPage() {
                     value={name}
                     maxLength={MAX_NAME_LEN}
                     onChange={(e) => setName(sanitizePlainName(e.target.value))}
-                    placeholder="আপনার পূর্ণ নাম"
+                    placeholder={t('আপনার পূর্ণ নাম')}
                   />
                 </div>
                 {errors.eN && <div className={fieldErrClass}><IconWarning />{errors.eN}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>ফোন নম্বর <span className={optionalTagClass}>(বাংলাদেশি নম্বর)</span></label>
+                <label className={fieldLabelClass}>{t('ফোন নম্বর')} <span className={optionalTagClass}>{t('(বাংলাদেশি নম্বর)')}</span></label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPhone /></span>
                   <input
@@ -802,7 +805,7 @@ export default function CheckoutPage() {
                 {errors.eP && <div className={fieldErrClass}><IconWarning />{errors.eP}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>জেলা</label>
+                <label className={fieldLabelClass}>{t('জেলা')}</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPin /></span>
                   <select
@@ -810,7 +813,7 @@ export default function CheckoutPage() {
                     value={dist}
                     onChange={(e) => setDist(e.target.value)}
                   >
-                    <option value="">জেলা সিলেক্ট করুন</option>
+                    <option value="">{t('জেলা সিলেক্ট করুন')}</option>
                     {DISTRICTS.map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
@@ -824,7 +827,7 @@ export default function CheckoutPage() {
                 {errors.eD && <div className={fieldErrClass}><IconWarning />{errors.eD}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>সম্পূর্ণ ডেলিভারি ঠিকানা</label>
+                <label className={fieldLabelClass}>{t('সম্পূর্ণ ডেলিভারি ঠিকানা')}</label>
                 <div className="relative">
                   <span className={`${fieldIconClass} top-[15px] translate-y-0`}><IconHome /></span>
                   <textarea
@@ -833,13 +836,13 @@ export default function CheckoutPage() {
                     value={addr}
                     maxLength={MAX_ADDR_LEN}
                     onChange={(e) => setAddr(sanitizeAddressInput(e.target.value))}
-                    placeholder="গ্রাম/মহল্লা, রোড, বাসা নম্বর সহ বিস্তারিত লিখুন"
+                    placeholder={t('গ্রাম/মহল্লা, রোড, বাসা নম্বর সহ বিস্তারিত লিখুন')}
                   />
                 </div>
                 {errors.eA && <div className={`${fieldErrClass} -mt-1`}><IconWarning />{errors.eA}</div>}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>ইমেইল <span className={optionalTagClass}>(ঐচ্ছিক — ইনভয়েস পাঠানো হবে)</span></label>
+                <label className={fieldLabelClass}>{t('ইমেইল')} <span className={optionalTagClass}>{t('(ঐচ্ছিক — ইনভয়েস পাঠানো হবে)')}</span></label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconMail /></span>
                   <input
@@ -855,7 +858,7 @@ export default function CheckoutPage() {
               </div>
               {shipOptions.length > 0 && (
                 <div className="mb-[15px]">
-                  <label className={fieldLabelClass}>শিপিং</label>
+                  <label className={fieldLabelClass}>{t('শিপিং')}</label>
                   <div className="flex flex-col gap-[9px]">
                     {shipOptions.map((opt) => (
                       <label
@@ -876,7 +879,7 @@ export default function CheckoutPage() {
                 </div>
               )}
               <div className="flex gap-[9px] pt-3.5">
-                <button className={`${btnNextClass} flex flex-1 items-center justify-center gap-1.5`} onClick={goToStep2}>পরবর্তী ধাপ: পেমেন্ট <IconArrowRight /></button>
+                <button className={`${btnNextClass} flex flex-1 items-center justify-center gap-1.5`} onClick={goToStep2}>{t('পরবর্তী ধাপ: পেমেন্ট')} <IconArrowRight /></button>
               </div>
             </div>
           )}
@@ -886,9 +889,9 @@ export default function CheckoutPage() {
               <div className="mb-4 rounded-[16px] border border-border-base bg-white p-5 shadow-sh2">
                 <div className="mb-3.5 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
                   <span className="text-info"><IconCard /></span>
-                  এডভান্স পেমেন্ট <span className="font-body text-base font-extrabold text-info">৳২০০</span>
+                  {t('এডভান্স পেমেন্ট')} <span className="font-body text-base font-extrabold text-info">৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
-                <p className="mb-3.5 font-body text-[13px] leading-[1.6] text-muted">অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।</p>
+                <p className="mb-3.5 font-body text-[13px] leading-[1.6] text-muted">{t('অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।')}</p>
                 <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border-[1.5px] border-info/25 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -916,7 +919,7 @@ export default function CheckoutPage() {
                   </div>
                   <button className="mt-2.5 flex items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-info/30 bg-white/40 px-3.5 py-2.5 font-body text-[12.5px] text-brand-primary transition-colors duration-200 hover:bg-white/70" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
-                    <span>{qrOpen ? 'QR কোড বন্ধ করুন' : 'QR কোড দিয়ে পেমেন্ট করুন'}</span>
+                    <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
                     <IconChevronDown open={qrOpen} />
                   </button>
                   <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-2.5 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -924,42 +927,46 @@ export default function CheckoutPage() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-payment-qr_zmr6dz.jpg" alt="bKash QR" className="h-[140px] w-[140px] flex-shrink-0 rounded-md object-cover" />
                       <div className="pt-0.5">
-                        <div className="mb-2 font-body text-[12.5px] font-semibold text-[#1F6B3A]">বিকাশ অ্যাপ দিয়ে স্ক্যান করুন</div>
+                        <div className="mb-2 font-body text-[12.5px] font-semibold text-[#1F6B3A]">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
                         <div className="font-body text-[11.5px] leading-[1.9] text-[#374151]">
-                          ১. বিকাশ অ্যাপ খুলুন<br />২. QR স্ক্যান বাটনে ক্লিক করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ২০০ টাকা দিন<br />৫. পেমেন্ট সম্পন্ন করুন
+                          {lang === 'en' ? (
+                            <>1. Open the bKash app<br />2. Click the QR scan button<br />3. Scan this QR code<br />4. Enter the amount 200 Taka<br />5. Complete the payment</>
+                          ) : (
+                            <>১. বিকাশ অ্যাপ খুলুন<br />২. QR স্ক্যান বাটনে ক্লিক করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ২০০ টাকা দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <p className="mb-0 font-body text-[11.5px] text-muted">Personal নম্বরে Send Money করুন (Payment নয়)</p>
+                <p className="mb-0 font-body text-[11.5px] text-muted">{t('Personal নম্বরে Send Money করুন (Payment নয়)')}</p>
                 <div className="mt-3.5 flex items-start gap-2.5 rounded-r-lg border-l-[3px] border-info bg-info/10 px-[13px] py-2.5 font-body text-xs leading-[1.6] text-ink">
                   <span className="mt-0.5 text-info"><IconInfo /></span>
-                  <span>ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।</span>
+                  <span>{t('ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।')}</span>
                 </div>
               </div>
               <div className="mb-3 text-center font-body text-[13px] font-bold text-ink">
-                নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক
+                {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
               </div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>ট্রানজেকশন আইডি <span className={optionalTagClass}>(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)</span></label>
+                <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>{t('(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)')}</span></label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconDoc /></span>
                   <input className={fieldInputClass(!!errors.eTxn)} value={txn} maxLength={10} onChange={(e) => setTxn(e.target.value)} placeholder="bKash Transaction ID" />
                 </div>
                 {errors.eTxn && <div className={fieldErrClass}><IconWarning />{errors.eTxn}</div>}
               </div>
-              <div className="my-4 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">অথবা</div>
+              <div className="my-4 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">{t('অথবা')}</div>
               <div className="mb-[15px]">
-                <label className={fieldLabelClass}>Send Money করা bKash নম্বরের শেষ ৪ ডিজিট</label>
+                <label className={fieldLabelClass}>{t('Send Money করা bKash নম্বরের শেষ ৪ ডিজিট')}</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPhone /></span>
-                  <input className={fieldInputClass(!!errors.eL4)} value={last4} maxLength={4} onChange={(e) => setLast4(e.target.value.replace(/\D/g, ''))} placeholder="যেমন: 5504" />
+                  <input className={fieldInputClass(!!errors.eL4)} value={last4} maxLength={4} onChange={(e) => setLast4(e.target.value.replace(/\D/g, ''))} placeholder={t('যেমন: 5504')} />
                 </div>
                 {errors.eL4 && <div className={fieldErrClass}><IconWarning />{errors.eL4}</div>}
               </div>
               <div className="flex gap-[9px] pt-3.5">
-                <button className={`${btnNextClass} flex flex-1 items-center justify-center gap-1.5`} onClick={goToStep3}>পরবর্তী ধাপ: নিশ্চিত করুন <IconArrowRight /></button>
+                <button className={`${btnNextClass} flex flex-1 items-center justify-center gap-1.5`} onClick={goToStep3}>{t('পরবর্তী ধাপ: নিশ্চিত করুন')} <IconArrowRight /></button>
               </div>
             </div>
           )}
@@ -967,7 +974,7 @@ export default function CheckoutPage() {
           {step === 3 && (
             <div className="px-6 py-5">
               <div className="relative mb-5 rounded-[16px] border border-border-base bg-white p-[18px] shadow-sh2">
-                <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">অর্ডার মেমো (Invoice)</span>
+                <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">{t('অর্ডার মেমো (Invoice)')}</span>
                 <div>
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/80">
@@ -977,18 +984,18 @@ export default function CheckoutPage() {
                   ))}
                 </div>
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>Subtotal</span><span>৳{sub.toLocaleString()}</span></div>
-                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>ডেলিভারি চার্জ (Shipping)</span><span>৳{sc}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{t('ডেলিভারি চার্জ (Shipping)')}</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
-                <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>সর্বমোট বিল (Total)</span><span>৳{total.toLocaleString()}</span></div>
+                <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>{t('সর্বমোট বিল (Total)')}</span><span>৳{total.toLocaleString()}</span></div>
                 <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-ink">
                   <span className="flex items-center gap-1.5 text-info"><IconCheck /> Paid (bKash Advance)</span>
-                  <span>- ৳২০০</span>
+                  <span>- ৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>বাকি বিল (Cash on Delivery)</span><span className="text-info">৳{balance.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-info">৳{balance.toLocaleString()}</span></div>
 
                 <div className="my-4 h-px bg-border-base" />
 
-                <span className="mb-2.5 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">ডেলিভারি লেবেল (Shipping Label)</span>
+                <span className="mb-2.5 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">{t('ডেলিভারি লেবেল (Shipping Label)')}</span>
                 <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 flex-shrink-0 justify-center text-info"><IconUser /></div><div>{name}</div></div>
                 <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 flex-shrink-0 justify-center text-info"><IconPhone /></div><div>{phone}</div></div>
                 <div className="flex items-start gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80">
@@ -1005,25 +1012,39 @@ export default function CheckoutPage() {
                   {termsChecked && <span className="text-white"><IconCheck /></span>}
                 </div>
                 <div className="font-body text-xs leading-[1.6] text-ink">
-                  আমি ভাঙচুরের সকল{' '}
-                  <span
-                    onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
-                    className="cursor-pointer font-semibold text-info underline"
-                  >
-                    নীতিমালা ও শর্তাবলী
-                  </span>{' '}
-                  পড়েছি এবং মেনে নিচ্ছি।
+                  {lang === 'en' ? (
+                    <>
+                      I have read and agree to Vangcur&apos;s{' '}
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
+                        className="cursor-pointer font-semibold text-info underline"
+                      >
+                        Terms &amp; Conditions
+                      </span>.
+                    </>
+                  ) : (
+                    <>
+                      আমি ভাঙচুরের সকল{' '}
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
+                        className="cursor-pointer font-semibold text-info underline"
+                      >
+                        নীতিমালা ও শর্তাবলী
+                      </span>{' '}
+                      পড়েছি এবং মেনে নিচ্ছি।
+                    </>
+                  )}
                 </div>
               </div>
               {termsError && (
                 <div className={`${fieldErrClass} ml-3.5 mt-1.5`}>
-                  <IconWarning />অর্ডার কনফার্ম করতে শর্তাবলী মেনে নেওয়া আবশ্যক
+                  <IconWarning />{t('অর্ডার কনফার্ম করতে শর্তাবলী মেনে নেওয়া আবশ্যক')}
                 </div>
               )}
 
               <div className="flex gap-[9px] pt-3.5">
                 <button className={`${btnNextClass} flex flex-1 items-center justify-center gap-2`} onClick={handleConfirmClick} disabled={submitting}>
-                  {submitting ? (<><IconSpinner /> প্রক্রিয়া হচ্ছে...</>) : 'অর্ডার কনফার্ম করুন'}
+                  {submitting ? (<><IconSpinner /> {t('প্রক্রিয়া হচ্ছে...')}</>) : t('অর্ডার কনফার্ম করুন')}
                 </button>
               </div>
             </div>

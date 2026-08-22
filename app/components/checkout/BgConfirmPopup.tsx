@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { OPEN_WAIT_OVERLAY_EVENT, SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
+import { useT } from '@/lib/i18n/useT';
 
 export default function BgConfirmPopup() {
+  const { t } = useT();
   const [visible, setVisible] = useState(false);
   const [orderNum, setOrderNum] = useState('');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,14 +38,14 @@ export default function BgConfirmPopup() {
     >
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#D1FAE5] text-lg">🎉</div>
       <div className="min-w-0 flex-1">
-        <div className="font-body text-[12.5px] font-bold text-ink">অর্ডার কনফার্ম হয়েছে!</div>
+        <div className="font-body text-[12.5px] font-bold text-ink">{t('অর্ডার কনফার্ম হয়েছে!')}</div>
         <div className="truncate font-body text-[11.5px] text-muted">{orderNum}</div>
       </div>
       <button
         onClick={openDetails}
         className="flex-shrink-0 rounded-full bg-ink px-3 py-1.5 font-body text-[11px] font-semibold text-white hover:bg-brand-primary"
       >
-        দেখুন
+        {t('দেখুন')}
       </button>
     </div>
   );

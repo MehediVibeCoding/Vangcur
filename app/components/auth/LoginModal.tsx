@@ -17,6 +17,7 @@ import {
 } from '@/lib/security';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { checkPasswordResetLimit } from '@/lib/rateLimit';
+import { useT } from '@/lib/i18n/useT';
 import TurnstileWidget, { type TurnstileHandle } from './TurnstileWidget';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
@@ -195,6 +196,7 @@ const rememberLabelClass = 'flex items-center gap-1.5 text-ink';
 export default function LoginModal({
   isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
 }: LoginModalProps) {
+  const { t, lang } = useT();
   const supabase = useRef(createClient()).current;
   const turnstileRef = useRef<TurnstileHandle>(null);
   const turnstileEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -254,7 +256,7 @@ export default function LoginModal({
       useAuthStore.getState().setCurrentUser(safeUser);
       await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
       await applyWishlistSync(safeUser.id || '');
-      showToast('Google দিয়ে লগইন সফল হয়েছে');
+      showToast(t('Google দিয়ে লগইন সফল হয়েছে'));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -286,13 +288,13 @@ export default function LoginModal({
 
   const handleForgotSubmit = async () => {
     const em = sanitizeInput(forgotEmail.trim());
-    if (!em || !validateEmail(em)) { setForgotEmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
+    if (!em || !validateEmail(em)) { setForgotEmailErr(t('সঠিক ইমেইল ঠিকানা দিন')); return; }
     setForgotEmailErr('');
     setForgotLoading(true);
     const limit = await checkPasswordResetLimit(supabase, em);
     if (!limit.allowed) {
       setForgotLoading(false);
-      setForgotEmailErr('আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।');
+      setForgotEmailErr(t('আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'));
       return;
     }
     await requestPasswordReset(supabase, em);
@@ -326,14 +328,14 @@ export default function LoginModal({
     setLPassErr('');
 
     let blocked = false;
-    if (!em) { setLEmailErr('ইমেইল দিন'); blocked = true; }
-    else if (!validateEmail(em)) { setLEmailErr('সঠিক ইমেইল ঠিকানা দিন'); blocked = true; }
-    if (!pw) { setLPassErr('পাসওয়ার্ড দিন'); blocked = true; }
+    if (!em) { setLEmailErr(t('ইমেইল দিন')); blocked = true; }
+    else if (!validateEmail(em)) { setLEmailErr(t('সঠিক ইমেইল ঠিকানা দিন')); blocked = true; }
+    if (!pw) { setLPassErr(t('পাসওয়ার্ড দিন')); blocked = true; }
     if (blocked) return;
 
     const verified = await runTurnstileCheck();
     if (!verified) {
-      setLEmailErr('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন');
+      setLEmailErr(t('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন'));
       return;
     }
 
@@ -343,19 +345,19 @@ export default function LoginModal({
       if (msg.includes('invalid login')) {
         // Supabase দেখায় না ইমেইল না পাসওয়ার্ড ভুল — একসাথে দেখানো হলে অ্যাকাউন্ট
         // enumeration ঠেকানো যায় (কেউ ইমেইল খাতায় আছে কিনা বুঝতে পারবে না)
-        setLEmailErr('ইমেইল বা পাসওয়ার্ড ভুল');
-        setLPassErr('ইমেইল বা পাসওয়ার্ড ভুল');
+        setLEmailErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
+        setLPassErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
       } else if (msg.includes('email')) {
-        setLEmailErr('ইমেইল ঠিকানা ভুল');
+        setLEmailErr(t('ইমেইল ঠিকানা ভুল'));
       } else {
-        setLEmailErr('ইমেইল বা পাসওয়ার্ড ভুল');
-        setLPassErr('ইমেইল বা পাসওয়ার্ড ভুল');
+        setLEmailErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
+        setLPassErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
       }
       return;
     }
     if (!data.user) {
-      setLEmailErr('ইমেইল বা পাসওয়ার্ড ভুল');
-      setLPassErr('ইমেইল বা পাসওয়ার্ড ভুল');
+      setLEmailErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
+      setLPassErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
       return;
     }
 
@@ -365,7 +367,7 @@ export default function LoginModal({
       name: data.user.user_metadata?.name || 'Customer',
       phone: data.user.user_metadata?.phone || '',
     };
-    await finishAuthSuccess(safeUser, 'লগইন সফল হয়েছে');
+    await finishAuthSuccess(safeUser, t('লগইন সফল হয়েছে'));
   };
 
   const doRegister = async () => {
@@ -380,52 +382,57 @@ export default function LoginModal({
     setREmailErr('');
     setRPassErr(false);
 
-    if (!validateName(nm)) { setRErr(`৩-${MAX_NAME_LEN} অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)`); return; }
-    if (!ph || !validatePhone(ph)) { setRErr('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)'); return; }
-    if (!em || !validateEmail(em)) { setREmailErr('সঠিক ইমেইল ঠিকানা দিন'); return; }
+    if (!validateName(nm)) {
+      setRErr(lang === 'en'
+        ? `Enter a plain name of 3-${MAX_NAME_LEN} characters (no symbols/emoji)`
+        : `৩-${MAX_NAME_LEN} অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)`);
+      return;
+    }
+    if (!ph || !validatePhone(ph)) { setRErr(t('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)')); return; }
+    if (!em || !validateEmail(em)) { setREmailErr(t('সঠিক ইমেইল ঠিকানা দিন')); return; }
     const strength = await checkPasswordStrength(pw);
     if (!strength.minLenOk || !strength.ok) { setRPassErr(true); return; }
 
     const verified = await runTurnstileCheck();
-    if (!verified) { setRErr('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন'); return; }
+    if (!verified) { setRErr(t('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন')); return; }
 
     const { data, error } = await signUp(supabase, { name: nm, phone: ph, email: em, password: pw });
     if (error) {
       if (error.message?.includes('already registered')) {
-        setREmailErr('এই ইমেইল ইতিমধ্যে নিবন্ধিত');
+        setREmailErr(t('এই ইমেইল ইতিমধ্যে নিবন্ধিত'));
       } else {
-        setRErr('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে');
+        setRErr(t('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে'));
       }
       return;
     }
-    if (!data.user) { setRErr('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে'); return; }
+    if (!data.user) { setRErr(t('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে')); return; }
 
     // Supabase কোনো error না দিয়েই একটা phantom user ফেরত দেয় (identities খালি array)
     // যখন ইমেইলটা ইতিমধ্যে নিবন্ধিত থাকে — email enumeration ঠেকানোর জন্যই এই আচরণ।
     // এটা ধরা না হলে ডুপ্লিকেট ইমেইল দিয়ে register করলে কোনো error ছাড়াই মোডাল
     // বন্ধ হয়ে যায় এবং কিছুই হয়নি এমন মনে হয়।
     if (data.user.identities && data.user.identities.length === 0) {
-      setREmailErr('এই ইমেইল ইতিমধ্যে নিবন্ধিত, লগইন করুন');
+      setREmailErr(t('এই ইমেইল ইতিমধ্যে নিবন্ধিত, লগইন করুন'));
       return;
     }
 
     if (!data.session) {
       onClose();
-      showToast('ইমেইল ভেরিফাই করুন — একটি লিংক পাঠানো হয়েছে');
+      showToast(t('ইমেইল ভেরিফাই করুন — একটি লিংক পাঠানো হয়েছে'));
       return;
     }
 
     const safeUser: CurrentUser = { id: data.user.id, email: data.user.email, name: nm, phone: ph, createdAt: new Date().toISOString() };
-    await finishAuthSuccess(safeUser, 'অ্যাকাউন্ট তৈরি হয়েছে');
+    await finishAuthSuccess(safeUser, t('অ্যাকাউন্ট তৈরি হয়েছে'));
   };
 
   const loginWithGoogle = async () => {
     setGoogleLoading(true);
     try {
       const { error } = await signInWithGoogle(supabase);
-      if (error) { showToast('Google লগইন ব্যর্থ হয়েছে'); setGoogleLoading(false); }
+      if (error) { showToast(t('Google লগইন ব্যর্থ হয়েছে')); setGoogleLoading(false); }
     } catch {
-      showToast('কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন');
+      showToast(t('কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন'));
       setGoogleLoading(false);
     }
   };
@@ -439,22 +446,22 @@ export default function LoginModal({
     if (onBackFromOrder) onBackFromOrder();
   };
 
-  const showLoginTitle = 'স্বাগতম!';
-  const showLoginSub = 'আপনার একাউন্টে প্রবেশ করুন।';
+  const showLoginTitle = t('স্বাগতম!');
+  const showLoginSub = t('আপনার একাউন্টে প্রবেশ করুন।');
   const title = mode === 'login'
     ? showLoginTitle
     : mode === 'register'
-    ? 'অ্যাকাউন্ট তৈরি করুন'
+    ? t('অ্যাকাউন্ট তৈরি করুন')
     : forgotSubmitted
-    ? 'ইমেইল চেক করুন'
-    : 'পাসওয়ার্ড রিসেট করুন';
+    ? t('ইমেইল চেক করুন')
+    : t('পাসওয়ার্ড রিসেট করুন');
   const sub = mode === 'login'
     ? showLoginSub
     : mode === 'register'
-    ? 'মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন'
+    ? t('মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন')
     : forgotSubmitted
-    ? 'রিসেট লিংক পাঠানো হয়েছে'
-    : 'আপনার ইমেইল দিন, আমরা লিংক পাঠাব';
+    ? t('রিসেট লিংক পাঠানো হয়েছে')
+    : t('আপনার ইমেইল দিন, আমরা লিংক পাঠাব');
 
   return (
     <div
@@ -468,7 +475,7 @@ export default function LoginModal({
           <HeaderDecor />
           <button
             onClick={onClose}
-            title="বন্ধ করুন"
+            title={t('বন্ধ করুন')}
             className="absolute right-3.5 top-3.5 z-[1] flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50"
           >
             <IconClose />
@@ -482,7 +489,7 @@ export default function LoginModal({
           {mode === 'login' ? (
             <div className="flex flex-col gap-3.5">
               <div>
-                <label className={fieldLabelClass}>ইমেইল</label>
+                <label className={fieldLabelClass}>{t('ইমেইল')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
@@ -494,18 +501,18 @@ export default function LoginModal({
                 <FieldError text={lEmailErr} />
               </div>
               <div>
-                <label className={fieldLabelClass}>পাসওয়ার্ড</label>
+                <label className={fieldLabelClass}>{t('পাসওয়ার্ড')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconLock /></span>
                   <input
-                    type={showLPass ? 'text' : 'password'} placeholder="আপনার পাসওয়ার্ড দিন"
+                    type={showLPass ? 'text' : 'password'} placeholder={t('আপনার পাসওয়ার্ড দিন')}
                     autoComplete="current-password" value={lPass} maxLength={MAX_PASS_LEN}
                     onChange={(e) => { setLPass(e.target.value); if (lPassErr) setLPassErr(''); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') doLogin(); }}
                     className={`${fieldClass(!!lPassErr)} pr-11`}
                   />
                   <button
-                    type="button" title={showLPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowLPass((v) => !v)}
+                    type="button" title={showLPass ? t('পাসওয়ার্ড লুকান') : t('পাসওয়ার্ড দেখুন')} onClick={() => setShowLPass((v) => !v)}
                     className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showLPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showLPass} />
@@ -516,15 +523,15 @@ export default function LoginModal({
               <div className="flex items-center justify-between font-body text-[12.5px]">
                 <label className={rememberLabelClass}>
                   <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 cursor-pointer rounded border-[1.5px] border-border-base accent-brand-light transition-brand duration-brand hover:border-brand-light/50" />
-                  মনে রাখুন
+                  {t('মনে রাখুন')}
                 </label>
-                <button onClick={switchToForgot} className={linkChipClass}>পাসওয়ার্ড ভুলে গেছেন?</button>
+                <button onClick={switchToForgot} className={linkChipClass}>{t('পাসওয়ার্ড ভুলে গেছেন?')}</button>
               </div>
-              <button className={primaryBtnClass} onClick={doLogin}>লগইন করুন</button>
+              <button className={primaryBtnClass} onClick={doLogin}>{t('লগইন করুন')}</button>
 
               {!orderMode && (
                 <>
-                  <div className="relative my-1 text-center font-body text-[12px] text-muted before:absolute before:left-0 before:top-1/2 before:h-px before:w-[42%] before:bg-border-base after:absolute after:right-0 after:top-1/2 after:h-px after:w-[42%] after:bg-border-base">অথবা</div>
+                  <div className="relative my-1 text-center font-body text-[12px] text-muted before:absolute before:left-0 before:top-1/2 before:h-px before:w-[42%] before:bg-border-base after:absolute after:right-0 after:top-1/2 after:h-px after:w-[42%] after:bg-border-base">{t('অথবা')}</div>
                   <button
                     className="flex w-full items-center justify-center gap-2.5 rounded-full border-[1.5px] border-brand-bg bg-brand-bg/70 py-3 font-body text-[13.5px] font-bold text-ink backdrop-blur-sm transition-brand duration-brand hover:border-brand-light/25 hover:bg-brand-bg disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/40"
                     onClick={loginWithGoogle} disabled={googleLoading}
@@ -535,16 +542,16 @@ export default function LoginModal({
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
-                    Google দিয়ে লগইন করুন
+                    {t('Google দিয়ে লগইন করুন')}
                   </button>
                   <div className="mt-1 text-center font-body text-[12.5px] text-muted">
-                    অ্যাকাউন্ট নেই? <button onClick={switchToRegister} className={linkChipClass}>রেজিস্ট্রেশন করুন</button>
+                    {t('অ্যাকাউন্ট নেই?')} <button onClick={switchToRegister} className={linkChipClass}>{t('রেজিস্ট্রেশন করুন')}</button>
                   </div>
                 </>
               )}
 
               {orderMode && (
-                <button onClick={handleOrderBack} className={backBtnClass}>← ফিরে যান</button>
+                <button onClick={handleOrderBack} className={backBtnClass}>{t('← ফিরে যান')}</button>
               )}
             </div>
           ) : mode === 'register' ? (
@@ -558,14 +565,14 @@ export default function LoginModal({
                 />
               </div>
               <div>
-                <label className={fieldLabelClass}>পূর্ণ নাম</label>
+                <label className={fieldLabelClass}>{t('পূর্ণ নাম')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconUser /></span>
-                  <input placeholder="আপনার পূর্ণ নাম লিখুন" maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(sanitizePlainName(e.target.value))} className={fieldClass(false)} />
+                  <input placeholder={t('আপনার পূর্ণ নাম লিখুন')} maxLength={MAX_NAME_LEN} value={rName} onChange={(e) => setRName(sanitizePlainName(e.target.value))} className={fieldClass(false)} />
                 </div>
               </div>
               <div>
-                <label className={fieldLabelClass}>মোবাইল নম্বর</label>
+                <label className={fieldLabelClass}>{t('মোবাইল নম্বর')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconPhone /></span>
                   <input
@@ -576,7 +583,7 @@ export default function LoginModal({
                 </div>
               </div>
               <div>
-                <label className={fieldLabelClass}>ইমেইল</label>
+                <label className={fieldLabelClass}>{t('ইমেইল')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconMail /></span>
                   <input
@@ -588,17 +595,17 @@ export default function LoginModal({
                 <FieldError text={rEmailErr} />
               </div>
               <div>
-                <label className={fieldLabelClass}>পাসওয়ার্ড</label>
+                <label className={fieldLabelClass}>{t('পাসওয়ার্ড')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconLock /></span>
                   <input
-                    type={showRPass ? 'text' : 'password'} placeholder="কমপক্ষে ৮ অক্ষর, শক্তিশালী পাসওয়ার্ড"
+                    type={showRPass ? 'text' : 'password'} placeholder={t('কমপক্ষে ৮ অক্ষর, শক্তিশালী পাসওয়ার্ড')}
                     value={rPass} maxLength={MAX_PASS_LEN}
                     onChange={(e) => { setRPass(e.target.value); if (rPassErr) setRPassErr(false); }}
                     className={`${fieldClass(rPassErr)} pr-11`}
                   />
                   <button
-                    type="button" title={showRPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowRPass((v) => !v)}
+                    type="button" title={showRPass ? t('পাসওয়ার্ড লুকান') : t('পাসওয়ার্ড দেখুন')} onClick={() => setShowRPass((v) => !v)}
                     className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showRPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showRPass} />
@@ -607,15 +614,15 @@ export default function LoginModal({
                 <PasswordStrengthMeter password={rPass} />
               </div>
               {rErr && <ErrMsg text={rErr} />}
-              <button className={`${primaryBtnClass} mt-1`} onClick={doRegister}>অ্যাকাউন্ট তৈরি করুন</button>
+              <button className={`${primaryBtnClass} mt-1`} onClick={doRegister}>{t('অ্যাকাউন্ট তৈরি করুন')}</button>
 
               {!orderMode && (
                 <div className="mt-1 text-center font-body text-[12.5px] text-muted">
-                  ইতিমধ্যে অ্যাকাউন্ট আছে? <button onClick={switchToLogin} className={linkChipClass}>লগইন করুন</button>
+                  {t('ইতিমধ্যে অ্যাকাউন্ট আছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
                 </div>
               )}
               {orderMode && (
-                <button onClick={handleOrderBack} className={backBtnClass}>← ফিরে যান</button>
+                <button onClick={handleOrderBack} className={backBtnClass}>{t('← ফিরে যান')}</button>
               )}
             </div>
           ) : (
@@ -626,14 +633,16 @@ export default function LoginModal({
                     <IconMailCheck />
                   </div>
                   <p className="font-body text-[14px] leading-relaxed text-ink">
-                    Supabase Auth থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। অনুগ্রহ করে ইমেইল চেক করুন।
+                    {lang === 'en'
+                      ? <>A password reset link has been sent to your <strong>{forgotEmail.trim()}</strong> email from Supabase Auth. Please check your email.</>
+                      : <>Supabase Auth থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। অনুগ্রহ করে ইমেইল চেক করুন।</>}
                   </p>
-                  <button className={`${primaryBtnClass} mt-5`} onClick={switchToLogin}>লগইনে ফিরে যান</button>
+                  <button className={`${primaryBtnClass} mt-5`} onClick={switchToLogin}>{t('লগইনে ফিরে যান')}</button>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className={fieldLabelClass}>ইমেইল</label>
+                    <label className={fieldLabelClass}>{t('ইমেইল')}</label>
                     <div className="relative">
                       <span className={fieldIconWrapClass}><IconMail /></span>
                       <input
@@ -646,10 +655,10 @@ export default function LoginModal({
                     <FieldError text={forgotEmailErr} />
                   </div>
                   <button className={primaryBtnClass} onClick={handleForgotSubmit} disabled={forgotLoading}>
-                    রিসেট লিংক পাঠান
+                    {t('রিসেট লিংক পাঠান')}
                   </button>
                   <div className="mt-1 text-center font-body text-[12.5px] text-muted">
-                    মনে পড়েছে? <button onClick={switchToLogin} className={linkChipClass}>লগইন করুন</button>
+                    {t('মনে পড়েছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
                   </div>
                 </>
 

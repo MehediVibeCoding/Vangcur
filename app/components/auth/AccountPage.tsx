@@ -11,6 +11,8 @@ import { checkNameChangeLimit } from '@/lib/rateLimit';
 import { productHref } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
+import { useLanguageStore, type Language } from '@/lib/store/languageStore';
+import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
@@ -62,6 +64,9 @@ interface AccountPageProps {
 }
 
 export default function AccountPage({ isOpen, onClose, currentUser }: AccountPageProps) {
+  const { t } = useT();
+  const lang = useLanguageStore((s) => s.lang);
+  const setLanguage = useLanguageStore((s) => s.setLanguage);
   const supabase = useRef(createClient()).current;
   const [now, setNow] = useState(() => new Date());
   const [isRaining, setIsRaining] = useState(false);
@@ -412,6 +417,25 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                   {currentTier.bn}
                 </div>
                 <div className="font-body text-[8.5px] text-muted">মেম্বারশিপ</div>
+              </div>
+            </div>
+
+            <div className="rounded-brand border border-border-base bg-white p-3.5 shadow-sh1">
+              <div className="font-body text-[13px] font-bold text-ink">{t('ভাষা')}</div>
+              <div className="mt-0.5 font-body text-[11px] text-muted">{t('ওয়েবসাইটের ভাষা পরিবর্তন করুন')}</div>
+              <div className="mt-2.5 flex gap-2">
+                <button
+                  onClick={() => setLanguage('bn' as Language)}
+                  className={`flex-1 rounded-[10px] border py-2 font-body text-[12.5px] font-semibold transition-colors ${lang === 'bn' ? 'border-brand-light bg-brand-bg text-brand-light' : 'border-border-base text-muted hover:bg-surface-muted'}`}
+                >
+                  {t('বাংলা')}
+                </button>
+                <button
+                  onClick={() => setLanguage('en' as Language)}
+                  className={`flex-1 rounded-[10px] border py-2 font-body text-[12.5px] font-semibold transition-colors ${lang === 'en' ? 'border-brand-light bg-brand-bg text-brand-light' : 'border-border-base text-muted hover:bg-surface-muted'}`}
+                >
+                  English
+                </button>
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { STOCK_NOTIFY_EVENT } from '@/lib/productData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
+import { useT } from '@/lib/i18n/useT';
 
 interface NotifyDetail {
   id: number | string;
@@ -11,6 +12,7 @@ interface NotifyDetail {
 }
 
 export default function StockNotifyModal() {
+  const { t } = useT();
   const [detail, setDetail] = useState<NotifyDetail | null>(null);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function StockNotifyModal() {
     } catch {
       // localStorage unavailable — silently skip
     }
-    showToast('🔔 স্টকে এলে জানিয়ে দেওয়া হবে');
+    showToast(t('🔔 স্টকে এলে জানিয়ে দেওয়া হবে'));
     close();
   };
 
@@ -55,18 +57,18 @@ export default function StockNotifyModal() {
         <div className="mb-3 flex justify-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FEF3C7] text-2xl">🔔</div>
         </div>
-        <div className="mb-1.5 text-center font-display text-[16px] font-bold text-ink">স্টক নোটিফিকেশন</div>
+        <div className="mb-1.5 text-center font-display text-[16px] font-bold text-ink">{t('স্টক নোটিফিকেশন')}</div>
         <p className="mb-4 text-center font-body text-[13px] leading-[1.6] text-muted">
-          <span className="font-semibold text-ink">{detail?.name}</span> স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে &ldquo;স্টক নোটিফিকেশন&rdquo;-এ পাবেন।
+          <span className="font-semibold text-ink">{detail?.name}</span> {t('স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে "স্টক নোটিফিকেশন"-এ পাবেন।')}
         </p>
         <button
           onClick={confirm}
           className="mb-2 w-full rounded-[9px] border-none bg-brand-light py-3 font-body text-sm font-bold text-white transition-brand duration-brand hover:bg-brand-light-hover"
         >
-          🔔 জানিয়ে দিন
+          🔔 {t('জানিয়ে দিন')}
         </button>
         <button onClick={close} className="w-full rounded-[9px] border-none bg-transparent py-2.5 font-body text-[13px] font-semibold text-muted hover:text-ink">
-          বাতিল
+          {t('বাতিল')}
         </button>
       </div>
     </div>
