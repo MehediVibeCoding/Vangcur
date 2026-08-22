@@ -91,6 +91,30 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
 const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
 const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing`;
 
+// ⚠️ sync-gap ফিক্স — admin panel-এর প্রোডাক্ট পেজে drag করে সাজানো অর্ডার
+// store_settings key 'vc_prod_order'-এ (product id-র একটা JSON অ্যারে,
+// ক্রম অনুযায়ী) সেভ হয়। applyProdOrder() ফাংশন আগে থেকেই এখানে ছিল কিন্তু
+// কোথাও কল হতো না — admin যতই রিঅর্ডার করুক, storefront সবসময় শুধু
+// `id ascending`-এই দেখাত। এখন fetchCustomProducts()-এর ভেতরেই এই order
+// fetch করে apply করা হয়, তাই home/category/search — যেখানেই
+// fetchCustomProducts() ব্যবহার হয় সবখানে স্বয়ংক্রিয়ভাবে সঠিক অর্ডার আসবে,
+// আলাদা করে প্রতিটা call site বদলাতে হয়নি।
+async function fetchProdOrder(supabase: SupabaseClient): Promise<unknown> {
+  try {
+    const { data } = await supabase
+      .from('store_settings')
+      .select('setting_value')
+      .eq('setting_key', 'vc_prod_order')
+      .maybeSingle();
+    return data?.setting_value ?? null;
+  } catch {
+    // order fetch ব্যর্থ হলেও প্রোডাক্ট লিস্ট দেখানো বন্ধ হবে না, শুধু
+    // ডিফল্ট (id ascending) অর্ডারে থাকবে — applyProdOrder()-ও একই আচরণ করে
+    // (খালি/অবৈধ order পেলে ইনপুট অপরিবর্তিত রেখে দেয়)
+    return null;
+  }
+}
+
 export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Product[]> {
   let attempt = 0;
   const MAX_ATTEMPTS = 3;
@@ -115,7 +139,9 @@ export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Pro
         return [];
       }
       if (!sbProds || !sbProds.length) return [];
-      return (sbProds as unknown as RawCustomProduct[]).map(mapCustomProduct);
+      const mapped = (sbProds as unknown as RawCustomProduct[]).map(mapCustomProduct);
+      const orderArr = await fetchProdOrder(supabase);
+      return applyProdOrder(mapped, orderArr);
     } catch (e) {
       logWarn('[Vangcur] custom_products exception (attempt ' + attempt + '):', e);
       if (attempt < MAX_ATTEMPTS) {
