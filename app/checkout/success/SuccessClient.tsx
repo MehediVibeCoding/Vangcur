@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/app/components/layout/Navbar';
 import Footer from '@/app/components/layout/Footer';
 import {
-  fetchFullOrder, subscribeOrderRealtime, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
+  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
 } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
@@ -47,6 +47,7 @@ export default function SuccessClient() {
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<OrderStatus>('pending');
   const [copyLabel, setCopyLabel] = useState(() => t('📋 কপি'));
+  const phoneRef = useRef<string>('');
 
   useEffect(() => {
     const onOpenAccount = () => {
@@ -63,9 +64,11 @@ export default function SuccessClient() {
       router.replace('/');
       return;
     }
+    phoneRef.current = pending.phone;
     setOrderId(pending.id);
     (async () => {
-      const data = await fetchFullOrder(supabase, pending.id);
+      const isGuest = !currentUser;
+      const data = await fetchFullOrder(supabase, pending.id, isGuest ? pending.phone : undefined);
       if (data) {
         const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
         setOrder(mapped);
@@ -82,13 +85,14 @@ export default function SuccessClient() {
 
   useEffect(() => {
     if (!orderId) return undefined;
-    const unsubscribe = subscribeOrderRealtime(supabase, orderId, (newStatus) => {
+    const isGuest = !currentUser;
+    const stop = watchOrderStatus(supabase, orderId, isGuest ? phoneRef.current : undefined, (newStatus) => {
       setStatus(newStatus);
       setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
       if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') clearPendingOrder();
     });
-    return unsubscribe;
-  }, [orderId, supabase]);
+    return stop;
+  }, [orderId, supabase, currentUser]);
 
   const copyOrderNum = useCallback(async () => {
     if (!order) return;

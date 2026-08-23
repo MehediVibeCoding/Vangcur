@@ -267,13 +267,13 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
     // profiles table may not be reachable yet — auth metadata update above already applied
   }
   try {
-    const { data: userOrders } = await supabase.from('orders').select('id,customer').eq('user_id', currentUser.id);
-    if (userOrders && userOrders.length) {
-      for (const ord of userOrders) {
-        const updCustomer = { ...ord.customer, name: newName };
-        await supabase.from('orders').update({ customer: updCustomer }).eq('id', ord.id);
-      }
-    }
+    // অডিট ফিক্স — আগে এখানে orders.customer নামে একটা jsonb কলাম আছে ধরে
+    // নিয়ে কোড লেখা হয়েছিল, কিন্তু আসলে সেই কলামই নেই (flat customer_name
+    // কলাম আছে) — তাই এই cascade এতদিন silently fail করছিল। এখন সঠিক
+    // কলামে সরাসরি bulk update করা হচ্ছে; RLS policy (orders_update_own +
+    // column-scoped GRANT UPDATE(customer_name)) অনুযায়ী এটা শুধু নিজের
+    // orders-এই কাজ করবে।
+    await supabase.from('orders').update({ customer_name: newName }).eq('user_id', currentUser.id);
   } catch {
     // order rows may not exist yet — profile name is still updated above
   }

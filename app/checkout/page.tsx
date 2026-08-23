@@ -625,6 +625,7 @@ export default function CheckoutPage() {
         sessionStorage.removeItem('vc_lead_id');
         localStorage.setItem('vc_pending_ls', String(orderId));
         localStorage.setItem('vc_pending_num_ls', num);
+        localStorage.setItem('vc_pending_phone_ls', phone.trim());
         localStorage.setItem('vc_pending_ts', String(Date.now()));
         localStorage.setItem('vc_last_order_time', String(Date.now()));
       } catch {
@@ -633,7 +634,7 @@ export default function CheckoutPage() {
       if (!currentUserId) {
         try {
           const guestOrders = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
-          guestOrders.push({ id: orderId, orderNum: num });
+          guestOrders.push({ id: orderId, orderNum: num, phone: phone.trim() });
           localStorage.setItem('vc_guest_orders', JSON.stringify(guestOrders));
         } catch {
           // ignore

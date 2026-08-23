@@ -94,30 +94,37 @@ export async function saveWishlistToSupabase(
 
 export async function mergeGuestOrdersToUser(
   supabase: SupabaseClient,
-  userEmail: string,
-  userId: string
+  _userEmail: string,
+  _userId: string
 ): Promise<void> {
+  // অডিট ফিক্স — আগে এখানে সরাসরি .update({user_id, customer_email})
+  // .in('order_num', orderNums) কল হতো, যেটা localStorage থেকে আসা
+  // orderNums-কে কোনো ownership/phone যাচাই ছাড়াই বিশ্বাস করত (console থেকে
+  // localStorage বদলে অন্যের অর্ডার claim করা সম্ভব ছিল)। এখন claim_guest_order
+  // নামে একটা SECURITY DEFINER RPC ব্যবহার করা হচ্ছে, যেটা order_num + phone
+  // দুটো মিললে তবেই merge করে, আর user_id নেয় server-side auth.uid() থেকে
+  // (client থেকে পাঠানো userId/userEmail বিশ্বাস করে না)।
   try {
-    const guestOrders = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
+    const guestOrders: { id?: string; orderNum?: string; phone?: string }[] =
+      JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
     if (!guestOrders.length) return;
-    const tagged = guestOrders.map((o: Record<string, unknown>) => ({
-      ...o,
-      userId,
-      userEmail,
-      mergedFromGuest: true,
-    }));
-    const mainOrders = JSON.parse(localStorage.getItem('vc_orders') || '[]');
-    const existingIds = new Set(mainOrders.map((o: { id: unknown }) => o.id));
-    const newOnes = tagged.filter((o: { id: unknown }) => !existingIds.has(o.id));
-    if (newOnes.length) {
-      localStorage.setItem('vc_orders', JSON.stringify([...mainOrders, ...newOnes]));
-      localStorage.removeItem('vc_guest_orders');
+
+    let anyMerged = false;
+    for (const o of guestOrders) {
+      // পুরনো এন্ট্রি (phone সেভ করার আগের) — RPC ছাড়া নিরাপদে merge করা
+      // সম্ভব না, তাই স্কিপ করা হচ্ছে।
+      if (!o.orderNum || !o.phone) continue;
+      try {
+        const { data, error } = await supabase.rpc('claim_guest_order', {
+          p_order_num: o.orderNum,
+          p_phone: o.phone,
+        });
+        if (!error && data === true) anyMerged = true;
+      } catch (e) {
+        logWarn('[Vangcur] claim_guest_order RPC failed:', e);
+      }
     }
-    const orderNums = guestOrders.map((o: { orderNum?: string }) => o.orderNum).filter(Boolean);
-    if (orderNums.length) {
-      const { error } = await supabase.from('orders').update({ user_id: userId, customer_email: userEmail }).in('order_num', orderNums);
-      if (error) logWarn('[Vangcur] guest order merge error:', error);
-    }
+    if (anyMerged) localStorage.removeItem('vc_guest_orders');
   } catch (e) {
     logWarn('[Vangcur] mergeGuestOrdersToUser exception:', e);
   }

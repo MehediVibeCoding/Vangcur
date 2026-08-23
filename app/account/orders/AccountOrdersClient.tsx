@@ -29,6 +29,7 @@ export default function AccountOrdersClient() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const onOpenAccount = () => {
@@ -49,6 +50,16 @@ export default function AccountOrdersClient() {
   }, [currentUser, supabase]);
 
   const stats = useMemo(() => orderStats(orders), [orders]);
+
+  // শুধু order number দিয়ে সার্চ — client-side filter, নতুন কোনো query না;
+  // orders আগে থেকেই RLS দিয়ে শুধু নিজের rows-এ scoped, তাই phone-verify
+  // করার কোনো দরকার নেই এখানে। phone দিয়ে সার্চ করার অপশন ইচ্ছাকৃতভাবে নেই।
+  const filteredOrders = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return orders;
+    return orders.filter((o) => String(o.orderNum).toLowerCase().includes(q));
+  }, [orders, query]);
+
   const openInvoice = (orderId: string | number) => window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, { detail: { orderId, ctx: 'acc-orders' } }));
 
   return (
@@ -91,6 +102,18 @@ export default function AccountOrdersClient() {
               )}
             </div>
 
+            {!loading && orders.length > 0 && (
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="অর্ডার নম্বর দিয়ে খুঁজুন (যেমন: VC-1082)"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[10px] font-body text-[13px] text-ink outline-none focus:border-brand-light/40 focus:bg-white"
+                />
+              </div>
+            )}
+
             {loading ? (
               <div className="flex flex-col gap-3.5">
                 {[0, 1].map((k) => (
@@ -104,9 +127,14 @@ export default function AccountOrdersClient() {
                 <div className="mb-5 font-body text-xs text-muted">অর্ডার করলে এখানে দেখাবে</div>
                 <a href="/" className="inline-block rounded-full bg-ink px-6 py-2.5 font-body text-[13px] font-bold text-white transition-brand duration-brand hover:bg-brand-light">কেনাকাটা শুরু করুন</a>
               </div>
+            ) : filteredOrders.length === 0 ? (
+              <div className="rounded-brand border border-dashed border-border-base py-10 text-center">
+                <div className="mb-2 text-3xl">🔍</div>
+                <div className="font-body text-sm font-bold text-ink">এই নম্বরে কোনো অর্ডার পাওয়া যায়নি</div>
+              </div>
             ) : (
               <div className="flex flex-col gap-3.5">
-                {orders.map((o) => <OrderCard key={o.id} order={o} onInvoice={openInvoice} />)}
+                {filteredOrders.map((o) => <OrderCard key={o.id} order={o} onInvoice={openInvoice} />)}
               </div>
             )}
           </>

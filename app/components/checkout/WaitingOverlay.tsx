@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
-  fetchFullOrder, subscribeOrderRealtime, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
+  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
 } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -32,16 +32,21 @@ export default function WaitingOverlay() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const minimizedRef = useRef(false);
   const orderRef = useRef<Order | null>(null);
+  const phoneRef = useRef<string>('');
 
   useEffect(() => { minimizedRef.current = minimized; }, [minimized]);
   useEffect(() => { orderRef.current = order; }, [order]);
 
-  const openForPending = useCallback(async (id: string, orderNum: string) => {
+  const openForPending = useCallback(async (id: string, orderNum: string, phone: string) => {
+    phoneRef.current = phone;
     setOrderId(id);
     setVisible(true);
     setMinimized(false);
     setStatus('pending');
-    const data = await fetchFullOrder(supabase, id);
+    // এই মুহূর্তে লগইন থাকলে নিজের RLS-scoped select ব্যবহার হবে (phone
+    // লাগবে না); guest হলে phone-verified secure RPC ব্যবহার হবে।
+    const isGuest = !currentUser;
+    const data = await fetchFullOrder(supabase, id, isGuest ? phone : undefined);
     if (data) {
       const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
       setOrder(mapped);
@@ -51,7 +56,7 @@ export default function WaitingOverlay() {
         id, orderNum, date: new Date().toISOString(), status: 'pending', total: 0, items: [], customer: {},
       });
     }
-  }, [supabase]);
+  }, [supabase, currentUser]);
 
   useEffect(() => {
     // /checkout/success নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated
@@ -60,7 +65,7 @@ export default function WaitingOverlay() {
     // অ্যাপ-লোডেই একবার চেক করা হয় (আগের মতোই), পাথ পাল্টালে না।
     if (pathname?.startsWith('/checkout/success')) return;
     const pending = readPendingOrder();
-    if (pending) openForPending(pending.id, pending.orderNum);
+    if (pending) openForPending(pending.id, pending.orderNum, pending.phone);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -77,7 +82,8 @@ export default function WaitingOverlay() {
 
   useEffect(() => {
     if (!orderId) return undefined;
-    const unsubscribe = subscribeOrderRealtime(supabase, orderId, (newStatus) => {
+    const isGuest = !currentUser;
+    const stop = watchOrderStatus(supabase, orderId, isGuest ? phoneRef.current : undefined, (newStatus) => {
       setStatus(newStatus);
       setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
       if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') {
@@ -88,8 +94,8 @@ export default function WaitingOverlay() {
         window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, { detail: { orderNum: num } }));
       }
     });
-    return unsubscribe;
-  }, [orderId, supabase]);
+    return stop;
+  }, [orderId, supabase, currentUser]);
 
   useEffect(() => {
     if (visible && !minimized) lockBody();

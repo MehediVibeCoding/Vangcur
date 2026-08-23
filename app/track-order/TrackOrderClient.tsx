@@ -1,24 +1,29 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/app/components/layout/Navbar';
 import Footer from '@/app/components/layout/Footer';
-import { lookupOrderByNumberAndPhone, ORDER_TRACK_STEPS } from '@/lib/orderStatus';
+import { fetchFullOrder, readPendingOrder, readLatestGuestOrder, ORDER_TRACK_STEPS } from '@/lib/orderStatus';
+import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
 import type { Order } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
+// এই পেজও TrackOrderModal-এর মতো একই ৪-স্টেট লজিক অনুসরণ করে — লগইন থাকলে
+// /account/orders এ পাঠিয়ে দেয় (state ৩/৪), না থাকলে এই ব্রাউজারে
+// সেভ থাকা সাম্প্রতিক guest অর্ডার automatic দেখায় (state ১/২)। এখানেও
+// ইচ্ছাকৃতভাবে কোনো phone-সার্চ ইনপুট নেই।
 export default function TrackOrderClient() {
+  const router = useRouter();
   const supabase = useRef(createClient()).current;
-  const searchParams = useSearchParams();
 
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
@@ -26,11 +31,9 @@ export default function TrackOrderClient() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
 
-  const [orderNum, setOrderNum] = useState('');
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<Order | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     const onOpenAccount = () => {
@@ -41,30 +44,48 @@ export default function TrackOrderClient() {
     return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
   }, []);
 
-  // সাপোর্ট থেকে সরাসরি লিংক দেওয়া যায়: /track-order?order=VC-1082
   useEffect(() => {
-    const q = searchParams.get('order');
-    if (q) setOrderNum(q);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleSearch = async () => {
-    setErr('');
-    setLoading(true);
-    setOrder(null);
-    const result = await lookupOrderByNumberAndPhone(supabase, orderNum, phone.trim());
-    if (!result.ok || !result.order) {
-      setErr(result.error || 'কিছু একটা সমস্যা হয়েছে, একটু পরে আবার চেষ্টা করুন।');
-      setLoading(false);
+    if (currentUser) {
+      router.replace('/account/orders');
       return;
     }
-    setOrder(result.order);
-    setLoading(false);
-  };
+    setLoading(true);
+    setNotFound(false);
+    setOrder(null);
+
+    const guest = readLatestGuestOrder() || (() => {
+      const p = readPendingOrder();
+      return p && p.phone ? { id: p.id, orderNum: p.orderNum, phone: p.phone } : null;
+    })();
+
+    if (!guest) {
+      setLoading(false);
+      setNotFound(true);
+      return;
+    }
+
+    fetchFullOrder(supabase, guest.id, guest.phone).then((data) => {
+      if (data) {
+        setOrder(mapSupabaseOrderRow(data as Record<string, unknown>));
+      } else {
+        setNotFound(true);
+      }
+      setLoading(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   const isCancelled = order && (order.status === 'cancelled' || order.status === 'rejected');
   const currentStepIdx = order ? ORDER_TRACK_STEPS.findIndex((s) => s.key === order.status) : -1;
-  const reset = () => { setOrder(null); setOrderNum(''); setPhone(''); setErr(''); };
+
+  const openInvoice = () => {
+    if (!order) return;
+    window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
+      detail: { orderId: order.id, phone: order.customer?.phone, ctx: 'guest-track' },
+    }));
+  };
+
+  if (currentUser) return null;
 
   return (
     <>
@@ -82,46 +103,43 @@ export default function TrackOrderClient() {
       <div className="mx-auto w-full max-w-[480px] px-5 pb-16 pt-8">
         <h1 className="mb-1.5 text-center font-display text-xl font-bold text-ink">📦 অর্ডার ট্র্যাক করুন</h1>
         <p className="mb-6 text-center font-body text-[13px] text-muted">
-          অর্ডার নম্বর ও যে মোবাইল নম্বরে অর্ডার করেছিলেন তা দিন — লগইন করার দরকার নেই।
+          আপনি এই ব্রাউজারে যে অর্ডার করেছেন সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।
         </p>
 
         <div className="rounded-brand border border-border-base bg-white p-5 shadow-sh1">
-          {!order ? (
-            <>
-              <div className="mb-3">
-                <label className="mb-1.5 block font-body text-[12.5px] font-bold text-ink">অর্ডার নম্বর</label>
-                <input
-                  type="text" placeholder="যেমন: VC-1082" value={orderNum}
-                  onChange={(e) => setOrderNum(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                  className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-light/40 focus:bg-white"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="mb-1.5 block font-body text-[12.5px] font-bold text-ink">মোবাইল নম্বর</label>
-                <input
-                  type="tel" placeholder="যে নম্বরে অর্ডার করেছিলেন" value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                  className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[12px] font-body text-sm text-ink outline-none focus:border-brand-light/40 focus:bg-white"
-                />
-              </div>
-              {err && <div className="mb-3 text-center font-body text-[12px] font-semibold text-[#DC2626]">{err}</div>}
+          {loading && (
+            <div className="py-8 text-center font-body text-[13px] text-muted">⏳ লোড হচ্ছে...</div>
+          )}
+
+          {!loading && notFound && (
+            <div className="py-6 text-center">
+              <div className="mb-2 text-3xl">🧾</div>
+              <div className="mb-2 font-body text-sm font-bold text-ink">এখনো কোনো অর্ডার করেননি</div>
+              <p className="font-body text-[12.5px] leading-[1.7] text-muted">
+                অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।<br />
+                ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে <strong>লগইন</strong> করে রাখুন।
+              </p>
               <button
-                onClick={handleSearch} disabled={loading}
-                className="w-full rounded-full bg-ink py-[13px] font-body text-[15px] font-bold text-white transition-brand duration-brand hover:bg-brand-light disabled:opacity-70"
+                onClick={() => setLoginOpen(true)}
+                className="mt-4 rounded-full bg-ink px-5 py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-light"
               >
-                {loading ? '⏳ খোঁজা হচ্ছে...' : 'ট্র্যাক করুন'}
+                লগইন করুন
               </button>
-            </>
-          ) : (
+            </div>
+          )}
+
+          {!loading && order && (
             <>
+              <div className="mb-3.5 rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] px-3.5 py-[10px] font-body text-[11.5px] leading-[1.6] text-[#92400E]">
+                ⚠️ এই অর্ডারের তথ্য শুধু এই ব্রাউজারে সংরক্ষিত আছে। অন্য ডিভাইসে ট্র্যাক করতে লগইন করুন, অথবা WhatsApp-এ যোগাযোগ করুন।
+              </div>
+
               <div className="mb-4 flex items-center justify-between rounded-[12px] bg-surface-muted px-4 py-3">
                 <div>
                   <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
                   <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                 </div>
-                <button onClick={reset} className="font-body text-[12px] font-semibold text-brand-light hover:underline">অন্য অর্ডার</button>
+                <button onClick={openInvoice} className="font-body text-[12px] font-semibold text-brand-light hover:underline">ইনভয়েস</button>
               </div>
 
               {isCancelled ? (

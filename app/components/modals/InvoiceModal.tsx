@@ -24,10 +24,15 @@ export default function InvoiceModal() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [orderPhone, setOrderPhone] = useState<string | undefined>(undefined);
+
   useEffect(() => {
     const onOpen = (e: Event) => {
-      const d = (e as CustomEvent<{ orderId: string | number }>).detail;
-      if (d?.orderId !== undefined) setOrderId(d.orderId);
+      const d = (e as CustomEvent<{ orderId: string | number; phone?: string }>).detail;
+      if (d?.orderId !== undefined) {
+        setOrderId(d.orderId);
+        setOrderPhone(d.phone);
+      }
     };
     window.addEventListener(GENERATE_INVOICE_EVENT, onOpen);
     return () => window.removeEventListener(GENERATE_INVOICE_EVENT, onOpen);
@@ -37,11 +42,14 @@ export default function InvoiceModal() {
     if (orderId === null) { setOrder(null); return; }
     setLoading(true);
     const supabase = createClient();
-    fetchFullOrder(supabase, orderId).then((row) => {
+    // logged-in (acc/acc-orders) context হলে phone undefined থাকে — RLS-scoped
+    // সরাসরি select() ব্যবহার হয়। guest-track context হলে phone দেওয়া থাকে —
+    // secure RPC ব্যবহার হয়।
+    fetchFullOrder(supabase, String(orderId), orderPhone).then((row) => {
       setOrder(row ? mapSupabaseOrderRow(row as Record<string, unknown>) : null);
       setLoading(false);
     });
-  }, [orderId]);
+  }, [orderId, orderPhone]);
 
   useEffect(() => {
     if (orderId !== null) lockBody();
