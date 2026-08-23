@@ -453,4 +453,11 @@ export const staticDictionary: Record<string, string> = {
   'আনবক্সিং ভিডিও রাখার পরামর্শ দেওয়া হচ্ছে।': 'We recommend keeping an unboxing video.',
   'ইনভয়েস পেপার ও মূল বক্স সংরক্ষণ করুন।': 'Please keep the invoice paper and original box.',
   'সমস্যার জন্য আমাদের সাথে যোগাযোগ করুন।': 'Contact us if you have any issues.',
+
+  // Invoice modal (full-screen PNG download)
+  '❌ অর্ডার তথ্য পাওয়া যাচ্ছে না': '❌ Could not find the order details',
+  '❌ ডাউনলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।': '❌ Download failed. Please try again.',
+  '⏳ তৈরি হচ্ছে...': '⏳ Preparing...',
+  '🖼️ ছবি ডাউনলোড': '🖼️ Download Image',
+  '⬇️ ইনভয়েস ডাউনলোড করুন (বাধ্যতামূলক)': '⬇️ Download Invoice (Mandatory)',
 };
