@@ -216,8 +216,6 @@ export const staticDictionary: Record<string, string> = {
   'বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে': 'Verifying bKash transaction',
   'অর্ডার কনফার্ম': 'Order Confirmation',
   'পেমেন্ট সঠিক হলে কনফার্ম হবে': 'Will be confirmed once payment is verified',
-  'এরপর কী হবে?': "What's Next?",
-  'বিস্তারিত ট্র্যাক করুন': 'Track in Detail',
   'আমাদের ফলো করুন': 'Follow Us',
   'ওয়েবসাইটে ফিরে যান': 'Back to Website',
   'অর্ডার কনফার্ম হয়েছে!': 'Order Confirmed!',
@@ -416,16 +414,17 @@ export const staticDictionary: Record<string, string> = {
   '⚠️ ভাঙচুর কর্তৃপক্ষ যেকোনো সময় এই নীতিমালা পরিবর্তন অথবা আপডেট করার অধিকার রাখে।': '⚠️ Vangcur reserves the right to change or update this policy at any time.',
   '✅ ঠিক আছে, অর্ডার কনফার্ম করুন': '✅ OK, Confirm My Order',
 
-  // app/components/checkout/PostOrderInfoModal.tsx
-  'অর্ডার যাচাই': 'Order Verification',
-  'আপনার পেমেন্ট তথ্য যাচাই করে অর্ডারটি কনফার্ম করা হবে (সাধারণত কয়েক ঘণ্টার মধ্যে)।': 'Your payment information will be verified and the order confirmed (usually within a few hours).',
-  'প্যাকেজিং': 'Packaging',
-  'কনফার্ম হওয়ার পর পণ্যটি সতর্কতার সাথে প্যাক করে কুরিয়ারে পাঠানো হবে।': 'Once confirmed, the product will be carefully packed and handed over to the courier.',
-  'ডেলিভারি': 'Delivery',
-  'ঢাকার ভেতরে সাধারণত ১-২ দিন, ঢাকার বাইরে ২-৪ দিন সময় লাগতে পারে।': 'Usually takes 1-2 days within Dhaka, and 2-4 days outside Dhaka.',
-  'বাকি বিল পরিশোধ': 'Pay Remaining Bill',
-  'পণ্য হাতে পাওয়ার সময় বাকি বিল ক্যাশ অন ডেলিভারিতে পরিশোধ করবেন।': 'You will pay the remaining bill as cash on delivery when you receive the product.',
-  'কোনো প্রশ্ন থাকলে ফুটারে দেওয়া নাম্বারে কল বা WhatsApp করুন — আমরা সবসময় পাশে আছি।': "If you have any questions, call or WhatsApp the number in the footer — we're always here to help.",
+  // app/components/checkout/PostReceiveInfoModal.tsx
+  '📦 প্রোডাক্ট পাওয়ার পর করণীয়': '📦 What To Do After Receiving Your Product',
+  '📹 আনবক্সিং ভিডিও করুন': '📹 Record An Unboxing Video',
+  'প্রোডাক্ট পাওয়ার সাথে সাথে উপর থেকে একটানা আনবক্সিং ভিডিও করুন': 'As soon as you receive the product, record a continuous unboxing video from the top',
+  'ভিডিওতে কোনো কাট বা পজ দেওয়া যাবে না': 'No cuts or pauses are allowed in the video',
+  'কুরিয়ারে প্রোডাক্ট ভাঙলে বা ত্রুটি থাকলে এই ভিডিও দিয়ে ওয়ারেন্টি ক্লেইম করুন': 'If the product arrives broken or defective, use this video to file a warranty claim',
+  'প্রোডাক্ট মিসিং বা ভুল গেলে সম্পূর্ণ দায়ভার আমাদের': "If the product is missing or wrong, it's entirely our responsibility",
+  '⚠️ গুরুত্বপূর্ণ': '⚠️ Important',
+  'আনবক্সিং প্রমাণ ছাড়া কোনো ওয়ারেন্টি ক্লেইম গ্রহণযোগ্য নয়': 'No warranty claim is accepted without unboxing proof',
+  '৬ মাসের ওয়ারেন্টিযুক্ত প্রোডাক্টের বক্স ও কাগজপত্র সংরক্ষণ করুন': 'Keep the box and papers for products with 6 months of warranty',
+  'বুঝেছি ✓': 'Got It ✓',
 
   // lib/warrantyData.ts (via app/components/modals/WarrantyModal.tsx)
   '১ সপ্তাহ (৭ দিন) রিপ্লেসমেন্ট ওয়ারেন্টি পলিসি': '1 Week (7 Days) Replacement Warranty Policy',

@@ -16,7 +16,7 @@ import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import {
-  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT, SHOW_POST_ORDER_INFO_EVENT,
+  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT,
 } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
@@ -24,7 +24,6 @@ import type { Order, OrderStatus } from '@/types';
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
-const ctaClass = 'flex-1 rounded-[10px] px-4 py-2.5 font-body text-[12.5px] font-bold transition-brand duration-brand';
 const socialIconClass = 'flex h-[35px] w-[35px] items-center justify-center rounded-[9px] bg-surface-muted text-ink transition-brand duration-brand hover:bg-brand-primary hover:text-white [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-current';
 
 // এই পেজে সরাসরি URL দিয়ে ঢোকা যায় (অর্ডার সম্পন্ন করার পর `/checkout/success`-এ
@@ -219,20 +218,6 @@ export default function SuccessClient() {
               )}
             </div>
 
-            <div className="mb-2.5 flex gap-[9px]">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT))}
-                className={`${ctaClass} bg-surface-muted text-ink hover:bg-border-base`}
-              >
-                {t('এরপর কী হবে?')}
-              </button>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
-                className={`${ctaClass} bg-ink text-white hover:bg-brand-primary`}
-              >
-                {t('বিস্তারিত ট্র্যাক করুন')}
-              </button>
-            </div>
             <Link
               href="/"
               className="block w-full rounded-xl border-[1.5px] border-border-base bg-surface-muted px-4 py-3 font-body text-[13.5px] font-semibold text-ink no-underline transition-brand duration-brand hover:bg-border-base"
@@ -258,27 +243,6 @@ export default function SuccessClient() {
                 className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
               >
                 {copyLabel}
-              </button>
-            </div>
-            <p className="mb-5 font-body text-xs text-muted">
-              {lang === 'en' ? (
-                <>🔍 To track your order, use the &quot;Track in Detail&quot; button.</>
-              ) : (
-                <>🔍 অর্ডার ট্র্যাক করতে &quot;বিস্তারিত ট্র্যাক করুন&quot; বাটন ব্যবহার করুন।</>
-              )}
-            </p>
-            <div className="mb-2.5 flex gap-[9px]">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT))}
-                className={`${ctaClass} bg-surface-muted text-ink hover:bg-border-base`}
-              >
-                {t('এরপর কী হবে?')}
-              </button>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
-                className={`${ctaClass} bg-ink text-white hover:bg-brand-primary`}
-              >
-                {t('বিস্তারিত ট্র্যাক করুন')}
               </button>
             </div>
             <Link href="/" className="block w-full rounded-[10px] px-4 py-2 font-body text-[12.5px] font-semibold text-muted no-underline hover:underline">

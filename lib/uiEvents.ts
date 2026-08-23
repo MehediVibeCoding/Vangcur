@@ -11,4 +11,4 @@ export const SHOW_BG_CONFIRM_EVENT = 'vc:showBgConfirmPopup';
 export const GENERATE_INVOICE_EVENT = 'vc:generateInvoice';
 export const OPEN_MEMBERSHIP_EVENT = 'vc:openMembership';
 export const OPEN_ORDER_FORM_EVENT = 'vc:openOrderForm';
-export const SHOW_POST_ORDER_INFO_EVENT = 'vc:showPostOrderInfo';
+export const SHOW_POST_RECEIVE_INFO_EVENT = 'vc:showPostReceiveInfo';

@@ -28,7 +28,11 @@
 //   (the standalone /account/orders page — nothing to reopen, closing just reveals
 //   the page underneath), 'guest-track' (TrackOrderModal), or no ctx at all (the
 //   checkout-success flow in StatusClient.tsx) — mapped below to the equivalent
-//   OPEN_ACCOUNT_EVENT / OPEN_TRACK_ORDER_EVENT / (nothing) / SHOW_POST_ORDER_INFO_EVENT.
+//   OPEN_ACCOUNT_EVENT / OPEN_TRACK_ORDER_EVENT / (nothing) / SHOW_POST_RECEIVE_INFO_EVENT.
+//   (Note: the no-ctx branch originally reopened SHOW_POST_ORDER_INFO_EVENT — the
+//   pre-delivery "what happens next?" steps — which didn't fit right after closing an
+//   invoice, since by then the order is already confirmed. It now opens
+//   PostReceiveInfoModal, the unboxing-video/warranty reminder, instead.)
 // - Deliberately NOT ported: legacy's `localStorage.removeItem('vc_pending_confirm')`
 //   calls. That key doesn't exist anywhere in this repo — pending-order state here
 //   is tracked via vc_pending_ls/vc_pending_num_ls/vc_pending_ts/vc_pending_phone_ls
@@ -44,7 +48,7 @@ import { parseSupabaseVal } from '@/lib/categoryData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import {
-  GENERATE_INVOICE_EVENT, OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, SHOW_POST_ORDER_INFO_EVENT,
+  GENERATE_INVOICE_EVENT, OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, SHOW_POST_RECEIVE_INFO_EVENT,
 } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
@@ -183,7 +187,7 @@ export default function InvoiceModal() {
     } else if (ctx === 'guest-track') {
       window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
     } else if (ctx !== 'acc-orders') {
-      window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT));
+      window.dispatchEvent(new CustomEvent(SHOW_POST_RECEIVE_INFO_EVENT));
     }
   };
 

@@ -1,7 +1,7 @@
 import QuickOrderBridge from './checkout/QuickOrderBridge';
 import WaitingOverlay from './checkout/WaitingOverlay';
 import BgConfirmPopup from './checkout/BgConfirmPopup';
-import PostOrderInfoModal from './checkout/PostOrderInfoModal';
+import PostReceiveInfoModal from './checkout/PostReceiveInfoModal';
 import StockNotifyModal from './modals/StockNotifyModal';
 import BackInStockToast from './modals/BackInStockToast';
 import MembershipModal from './modals/MembershipModal';
@@ -15,7 +15,7 @@ export default function RareOverlays() {
       <QuickOrderBridge />
       <WaitingOverlay />
       <BgConfirmPopup />
-      <PostOrderInfoModal />
+      <PostReceiveInfoModal />
       <StockNotifyModal />
       <BackInStockToast />
       <MembershipModal />

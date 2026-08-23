@@ -11,7 +11,7 @@ import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import {
-  OPEN_WAIT_OVERLAY_EVENT, OPEN_TRACK_ORDER_EVENT, SHOW_BG_CONFIRM_EVENT, SHOW_POST_ORDER_INFO_EVENT,
+  OPEN_WAIT_OVERLAY_EVENT, SHOW_BG_CONFIRM_EVENT,
 } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
@@ -222,21 +222,6 @@ export default function WaitingOverlay() {
               )}
             </div>
 
-            <div className="mb-5 flex gap-[9px]">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT))}
-                className="flex-1 rounded-[10px] bg-surface-muted px-4 py-2.5 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
-              >
-                {t('এরপর কী হবে?')}
-              </button>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
-                className="flex-1 rounded-[10px] bg-ink px-4 py-2.5 font-body text-[12.5px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
-              >
-                {t('বিস্তারিত ট্র্যাক করুন')}
-              </button>
-            </div>
-
             <div className="mb-6">
               <div className="mb-2.5 font-body text-[11px] font-bold uppercase tracking-wide text-muted">{t('আমাদের ফলো করুন')}</div>
               <div className="flex justify-center gap-2.5">
@@ -285,27 +270,6 @@ export default function WaitingOverlay() {
                 className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
               >
                 {copyLabel}
-              </button>
-            </div>
-            <p className="mb-5 font-body text-xs text-muted">
-              {lang === 'en' ? (
-                <>🔍 To track your order, use the &quot;Track in Detail&quot; button.</>
-              ) : (
-                <>🔍 অর্ডার ট্র্যাক করতে &quot;বিস্তারিত ট্র্যাক করুন&quot; বাটন ব্যবহার করুন।</>
-              )}
-            </p>
-            <div className="mb-2.5 flex gap-[9px]">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(SHOW_POST_ORDER_INFO_EVENT))}
-                className="flex-1 rounded-[10px] bg-surface-muted px-4 py-2.5 font-body text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
-              >
-                {t('এরপর কী হবে?')}
-              </button>
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
-                className="flex-1 rounded-[10px] bg-ink px-4 py-2.5 font-body text-[12.5px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
-              >
-                {t('বিস্তারিত ট্র্যাক করুন')}
               </button>
             </div>
             <button onClick={dismiss} className="w-full rounded-[10px] px-4 py-2 font-body text-[12.5px] font-semibold text-muted hover:underline">
