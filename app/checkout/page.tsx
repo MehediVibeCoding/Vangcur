@@ -641,7 +641,7 @@ export default function CheckoutPage() {
         }
       }
 
-      router.push('/checkout/success');
+      router.push('/checkout/status');
     } catch {
       setSubmitting(false);
       confirmLockRef.current = false;

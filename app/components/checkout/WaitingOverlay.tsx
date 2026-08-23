@@ -59,11 +59,11 @@ export default function WaitingOverlay() {
   }, [supabase, currentUser]);
 
   useEffect(() => {
-    // /checkout/success নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated
+    // /checkout/status নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated
     // পেজ হিসেবে) — সরাসরি ওই পেজে ঢুকলে (ফ্রেশ লোড) এই গ্লোবাল ওভারলে একই
     // তথ্য দ্বিতীয়বার না দেখাক তাই এখানে বাদ দেওয়া হচ্ছে। শুধু প্রথম
     // অ্যাপ-লোডেই একবার চেক করা হয় (আগের মতোই), পাথ পাল্টালে না।
-    if (pathname?.startsWith('/checkout/success')) return;
+    if (pathname?.startsWith('/checkout/status')) return;
     const pending = readPendingOrder();
     if (pending) openForPending(pending.id, pending.orderNum, pending.phone);
     // eslint-disable-next-line react-hooks/exhaustive-deps
