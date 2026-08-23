@@ -30,44 +30,58 @@ export default function WaitingOverlay() {
   const [status, setStatus] = useState<OrderStatus>('pending');
   const [copyLabel, setCopyLabel] = useState(() => t('📋 কপি'));
   const currentUser = useAuthStore((s) => s.currentUser);
-  const minimizedRef = useRef(false);
   const orderRef = useRef<Order | null>(null);
   const phoneRef = useRef<string>('');
 
-  useEffect(() => { minimizedRef.current = minimized; }, [minimized]);
   useEffect(() => { orderRef.current = order; }, [order]);
 
-  const openForPending = useCallback(async (id: string, orderNum: string, phone: string) => {
+  const openForPending = useCallback(async (id: string, orderNum: string, phone: string, opts?: { startMinimized?: boolean }) => {
     phoneRef.current = phone;
     setOrderId(id);
-    setVisible(true);
-    setMinimized(false);
     setStatus('pending');
     // এই মুহূর্তে লগইন থাকলে নিজের RLS-scoped select ব্যবহার হবে (phone
     // লাগবে না); guest হলে phone-verified secure RPC ব্যবহার হবে।
     const isGuest = !currentUser;
     const data = await fetchFullOrder(supabase, id, isGuest ? phone : undefined);
-    if (data) {
-      const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
-      setOrder(mapped);
-      setStatus(mapped.status);
-    } else {
-      setOrder({
+    const mapped: Order = data
+      ? mapSupabaseOrderRow(data as Record<string, unknown>)
+      : {
         id, orderNum, date: new Date().toISOString(), status: 'pending', total: 0, items: [], customer: {},
-      });
+      };
+    // রিফ্রেশ/নতুন ট্যাবে ঢোকার সময় অর্ডারটা যদি ইতিমধ্যে কনফার্ম/শিপড/ডেলিভারড
+    // হয়ে গিয়ে থাকে, তাহলে "ওয়েটিং" প্যানেল না দেখিয়ে সরাসরি BgConfirmPopup-এ
+    // পাঠানো হচ্ছে — লেগেসির showBgConfirmPopup() persistent-check লজিকের মতোই।
+    if (['confirmed', 'shipped', 'delivered'].includes(mapped.status)) {
+      clearPendingOrder();
+      window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
+        detail: { order: mapped, phone: isGuest ? phone : undefined },
+      }));
+      return;
     }
+    setOrder(mapped);
+    setStatus(mapped.status);
+    setVisible(true);
+    setMinimized(!!opts?.startMinimized);
   }, [supabase, currentUser]);
 
   useEffect(() => {
-    // /checkout/status নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated
-    // পেজ হিসেবে) — সরাসরি ওই পেজে ঢুকলে (ফ্রেশ লোড) এই গ্লোবাল ওভারলে একই
-    // তথ্য দ্বিতীয়বার না দেখাক তাই এখানে বাদ দেওয়া হচ্ছে। শুধু প্রথম
-    // অ্যাপ-লোডেই একবার চেক করা হয় (আগের মতোই), পাথ পাল্টালে না।
+    // /checkout/status নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated পেজ),
+    // তাই ওই পেজে থাকা অবস্থায় এখানে কিছু দেখানো হয় না — ডুপ্লিকেট এড়াতে।
+    // এই কম্পোনেন্ট গ্লোবাল ও সাইটে একবারই মাউন্ট হয়, তাই path পরিবর্তনের সাথে
+    // সাথে পুনরায় চেক করা জরুরি — নাহলে অর্ডার সাবমিট করে status পেজে যাওয়ার
+    // পর অন্য পেজে (যেমন হোম) ফিরে এলেও এই কম্পোনেন্ট নতুন অর্ডারটার কথা কখনো
+    // জানতে পারত না (আগে শুধু প্রথম মাউন্টেই একবার চেক হতো)।
+    if (orderId) return; // ইতিমধ্যে একটা অর্ডার ট্র্যাক করা হচ্ছে
     if (pathname?.startsWith('/checkout/status')) return;
     const pending = readPendingOrder();
-    if (pending) openForPending(pending.id, pending.orderNum, pending.phone);
+    if (pending) {
+      // status পেজ থেকে অন্য কোথাও গিয়ে (বা নতুন ট্যাবে/রিফ্রেশে স্টেল পেন্ডিং
+      // অর্ডার পেয়ে) পিক-আপ হলে সরাসরি কর্নার-badge আকারে দেখানো হচ্ছে, পুরো
+      // প্যানেল জোর করে খুলে ইউজারকে বিরক্ত না করে।
+      openForPending(pending.id, pending.orderNum, pending.phone, { startMinimized: true });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pathname, orderId]);
 
   useEffect(() => {
     const onOpen = () => {
@@ -84,14 +98,22 @@ export default function WaitingOverlay() {
     if (!orderId) return undefined;
     const isGuest = !currentUser;
     const stop = watchOrderStatus(supabase, orderId, isGuest ? phoneRef.current : undefined, (newStatus) => {
-      setStatus(newStatus);
-      setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
       if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') {
         clearPendingOrder();
       }
-      if (minimizedRef.current && newStatus === 'confirmed') {
-        const num = orderRef.current?.orderNum;
-        window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, { detail: { orderNum: num } }));
+      if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
+        // লেগেসির handleOrderStatusUpdate()-এর মতোই: কনফার্ম হলে ওয়েটিং প্যানেল
+        // সবসময় সম্পূর্ণ বন্ধ হয়ে সরাসরি BgConfirmPopup-এ হ্যান্ডঅফ হয় —
+        // মিনিমাইজড থাকুক বা ফুল-স্ক্রিন খোলা থাকুক, দুই অবস্থাতেই একই আচরণ।
+        const updatedOrder = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
+        setVisible(false);
+        setMinimized(false);
+        window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
+          detail: { order: updatedOrder, phone: isGuest ? phoneRef.current : undefined },
+        }));
+      } else {
+        setStatus(newStatus);
+        setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
       }
     });
     return stop;
@@ -106,7 +128,6 @@ export default function WaitingOverlay() {
 
   const isPending = status === 'pending';
   const isRejected = status === 'cancelled' || status === 'rejected';
-  const isResolvedPositive = status === 'confirmed' || status === 'shipped' || status === 'delivered';
   const isGuest = !currentUser;
 
   const dismiss = () => {
@@ -143,7 +164,7 @@ export default function WaitingOverlay() {
   }
 
   return (
-    <div className="fixed inset-0 z-[90] overflow-y-auto bg-white">
+    <div className="fixed inset-0 z-[1000] overflow-y-auto bg-white">
       <div className="mx-auto min-h-screen w-full max-w-[480px] px-7 pb-12 pt-6 text-center">
         <div className="mb-6 flex items-center justify-between border-b border-border-base pb-3.5">
           <h2 className="flex-1 font-body text-[15px] font-bold text-ink">{t('অর্ডার স্ট্যাটাস')}</h2>
@@ -248,32 +269,6 @@ export default function WaitingOverlay() {
               className="w-full rounded-xl border-[1.5px] border-border-base bg-surface-muted px-4 py-3 font-body text-[13.5px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base"
             >
               🏠 {t('ওয়েবসাইটে ফিরে যান')}
-            </button>
-          </>
-        )}
-
-        {isResolvedPositive && (
-          <>
-            <div
-              className="mx-auto mb-[18px] flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#D1FAE5] text-[34px] shadow-[0_6px_20px_rgba(16,185,129,0.2)]"
-            >
-              🎉
-            </div>
-            <h3 className="mb-2 font-body text-xl font-bold text-success">{t('অর্ডার কনফার্ম হয়েছে!')}</h3>
-            <p className="mb-[18px] font-body text-[13px] leading-[1.7] text-muted">
-              {t('আপনাদের পেমেন্ট যাচাই করা হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।')}
-            </p>
-            <div className="mb-5 flex items-center justify-center gap-2 font-body text-[13.5px] font-bold text-ink">
-              {t('অর্ডার নম্বর:')} <span>{order.orderNum}</span>
-              <button
-                onClick={copyOrderNum}
-                className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
-              >
-                {copyLabel}
-              </button>
-            </div>
-            <button onClick={dismiss} className="w-full rounded-[10px] px-4 py-2 font-body text-[12.5px] font-semibold text-muted hover:underline">
-              {t('বন্ধ করুন')}
             </button>
           </>
         )}

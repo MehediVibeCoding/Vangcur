@@ -33,10 +33,10 @@
 //   pre-delivery "what happens next?" steps — which didn't fit right after closing an
 //   invoice, since by then the order is already confirmed. It now opens
 //   PostReceiveInfoModal, the unboxing-video/warranty reminder, instead.)
-// - Deliberately NOT ported: legacy's `localStorage.removeItem('vc_pending_confirm')`
-//   calls. That key doesn't exist anywhere in this repo — pending-order state here
-//   is tracked via vc_pending_ls/vc_pending_num_ls/vc_pending_ts/vc_pending_phone_ls
-//   (lib/orderStatus.ts), already cleared elsewhere when an order resolves.
+// - Mandatory-until-downloaded flow: this modal now persists across refresh via
+//   vc_pending_invoice (localStorage), and the back button stays disabled until
+//   downloadPNG() actually succeeds — matching BgConfirmPopup.tsx's own
+//   vc_pending_confirm persistence for the confirmation step before this one.
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -83,13 +83,16 @@ function ItemThumb({ imgs }: { imgs?: string[] }) {
   );
 }
 
+const PENDING_INVOICE_KEY = 'vc_pending_invoice';
+
 export default function InvoiceModal() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const supabase = useRef(createClient()).current;
 
   const [isOpen, setIsOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [ctx, setCtx] = useState<string | undefined>(undefined);
+  const [hasDownloaded, setHasDownloaded] = useState(false);
   const [contact, setContact] = useState<InvoiceContact>({
     phoneLabel: DEFAULT_FOOTER.contact.phoneLabel,
     email: DEFAULT_FOOTER.contact.email,
@@ -98,20 +101,49 @@ export default function InvoiceModal() {
   const [downloading, setDownloading] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
 
+  const openInvoice = async (orderId: string | number, phone?: string, callerCtx?: string) => {
+    const row = await fetchFullOrder(supabase, String(orderId), phone);
+    if (!row) { showToast(t('❌ অর্ডার তথ্য পাওয়া যাচ্ছে না')); return; }
+    setOrder(mapSupabaseOrderRow(row));
+    setCtx(callerCtx);
+    setHasDownloaded(false);
+    setIsOpen(true);
+    try {
+      localStorage.setItem(PENDING_INVOICE_KEY, JSON.stringify({ orderId, phone, ctx: callerCtx }));
+    } catch {
+      // localStorage অনুপলব্ধ হলে persistence স্কিপ, এই সেশনে ঠিকই দেখাবে
+    }
+  };
+
   useEffect(() => {
     const onGenerate = (e: Event) => {
       const detail = (e as CustomEvent<{ orderId: string | number; phone?: string; ctx?: string }>).detail;
       if (!detail?.orderId) return;
-      (async () => {
-        const row = await fetchFullOrder(supabase, String(detail.orderId), detail.phone);
-        if (!row) { showToast(t('❌ অর্ডার তথ্য পাওয়া যাচ্ছে না')); return; }
-        setOrder(mapSupabaseOrderRow(row));
-        setCtx(detail.ctx);
-        setIsOpen(true);
-      })();
+      openInvoice(detail.orderId, detail.phone, detail.ctx);
     };
     window.addEventListener(GENERATE_INVOICE_EVENT, onGenerate);
     return () => window.removeEventListener(GENERATE_INVOICE_EVENT, onGenerate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // পেজ রিফ্রেশ / নতুন ট্যাবে ঢোকার সময় ইনভয়েস মডেল খোলা অবস্থায় ছিল কিনা
+  // localStorage-এ চেক করা হচ্ছে — থাকলে সেই একই ইনভয়েস পেজটাই আবার সরাসরি
+  // দেখানো হয় ("← ফিরে যান" ক্লিক করার আগ পর্যন্ত ধাপটা বাধ্যতামূলক থাকে)।
+  useEffect(() => {
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(PENDING_INVOICE_KEY);
+    } catch {
+      raw = null;
+    }
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw) as { orderId?: string | number; phone?: string; ctx?: string };
+      if (saved?.orderId) openInvoice(saved.orderId, saved.phone, saved.ctx);
+      else localStorage.removeItem(PENDING_INVOICE_KEY);
+    } catch {
+      try { localStorage.removeItem(PENDING_INVOICE_KEY); } catch { /* ignore */ }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -162,6 +194,7 @@ export default function InvoiceModal() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setHasDownloaded(true);
     } catch {
       showToast(t('❌ ডাউনলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।'));
     } finally {
@@ -181,6 +214,8 @@ export default function InvoiceModal() {
   // this repo's actual ctx values ('acc' / 'acc-orders' / 'guest-track' / none) map
   // onto legacy's 'acc' / 'track' / default branches.
   const close = () => {
+    if (!hasDownloaded) return; // ডাউনলোড সম্পন্ন না হওয়া পর্যন্ত বের হওয়া যাবে না
+    try { localStorage.removeItem(PENDING_INVOICE_KEY); } catch { /* ignore */ }
     setIsOpen(false);
     if (ctx === 'acc') {
       window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
@@ -213,8 +248,10 @@ export default function InvoiceModal() {
       >
         <button
           onClick={close}
+          disabled={!hasDownloaded}
+          title={hasDownloaded ? undefined : (lang === 'en' ? 'Downloading your invoice first…' : 'আগে ইনভয়েসটা ডাউনলোড হচ্ছে…')}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.12)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
+            display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.12)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: hasDownloaded ? 'pointer' : 'default', opacity: hasDownloaded ? 1 : 0.4, fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
           }}
         >
           {t('← ফিরে যান')}

@@ -36,8 +36,8 @@ export default function PostReceiveInfoModal() {
 
   return (
     <>
-      <div className="fixed inset-0 z-[95] bg-black/55" onClick={() => setOpen(false)} />
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[1000] bg-black/55" onClick={() => setOpen(false)} />
+      <div className="fixed inset-0 z-[1001] flex items-center justify-center p-4">
         <div className="max-h-[85vh] w-full max-w-[420px] overflow-y-auto rounded-brand bg-white shadow-sh3">
           <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
             <h3 className="font-display text-base font-bold text-ink">{t('📦 প্রোডাক্ট পাওয়ার পর করণীয়')}</h3>

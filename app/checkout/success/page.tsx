@@ -1,11 +1,9 @@
-import type { Metadata } from 'next';
-import SuccessClient from './SuccessClient';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'অর্ডার স্ট্যাটাস - Vangcur',
-  robots: { index: false, follow: true },
-};
-
+// এই ডুপ্লিকেট পেজটা বাস্তব চেকআউট ফ্লো ব্যবহার করে না (submitOrderNow() সরাসরি
+// /checkout/status-এ router.push করে) — কেউ পুরনো লিংক/বুকমার্ক দিয়ে এখানে ঢুকলে
+// আসল, ঠিক করা পেজে (navbar/footer ছাড়া, কাজ করা ইনভয়েস বাটনসহ) পাঠানো হচ্ছে,
+// যাতে এই বাগযুক্ত কপিটা আর কখনো দেখা না যায়।
 export default function CheckoutSuccessPage() {
-  return <SuccessClient />;
+  redirect('/checkout/status');
 }
