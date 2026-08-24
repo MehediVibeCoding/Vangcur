@@ -416,12 +416,15 @@ export const staticDictionary: Record<string, string> = {
 
   // app/components/checkout/PostReceiveInfoModal.tsx
   '📦 প্রোডাক্ট পাওয়ার পর করণীয়': '📦 What To Do After Receiving Your Product',
+  'প্রোডাক্ট পাওয়ার পর করণীয়': 'What To Do After Receiving Your Product',
   '📹 আনবক্সিং ভিডিও করুন': '📹 Record An Unboxing Video',
+  'আনবক্সিং ভিডিও করুন': 'Record An Unboxing Video',
   'প্রোডাক্ট পাওয়ার সাথে সাথে উপর থেকে একটানা আনবক্সিং ভিডিও করুন': 'As soon as you receive the product, record a continuous unboxing video from the top',
   'ভিডিওতে কোনো কাট বা পজ দেওয়া যাবে না': 'No cuts or pauses are allowed in the video',
   'কুরিয়ারে প্রোডাক্ট ভাঙলে বা ত্রুটি থাকলে এই ভিডিও দিয়ে ওয়ারেন্টি ক্লেইম করুন': 'If the product arrives broken or defective, use this video to file a warranty claim',
   'প্রোডাক্ট মিসিং বা ভুল গেলে সম্পূর্ণ দায়ভার আমাদের': "If the product is missing or wrong, it's entirely our responsibility",
   '⚠️ গুরুত্বপূর্ণ': '⚠️ Important',
+  'গুরুত্বপূর্ণ': 'Important',
   'আনবক্সিং প্রমাণ ছাড়া কোনো ওয়ারেন্টি ক্লেইম গ্রহণযোগ্য নয়': 'No warranty claim is accepted without unboxing proof',
   '৬ মাসের ওয়ারেন্টিযুক্ত প্রোডাক্টের বক্স ও কাগজপত্র সংরক্ষণ করুন': 'Keep the box and papers for products with 6 months of warranty',
   'বুঝেছি ✓': 'Got It ✓',
