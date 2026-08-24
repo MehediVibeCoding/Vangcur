@@ -67,6 +67,7 @@ function ItemThumb({ imgs }: { imgs?: string[] }) {
       <img
         src={optimizeCloudinaryUrl(url, 120)}
         alt=""
+        crossOrigin="anonymous"
         style={{
           width: 26, height: 26, objectFit: 'cover', borderRadius: 6, flexShrink: 0,
         }}
@@ -185,9 +186,18 @@ export default function InvoiceModal() {
     setDownloading(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+      // মোবাইলে মাঝেমধ্যে প্রোডাক্ট ছবি (Cloudinary) লোড হতে দেরি হলে বা CORS
+      // সমস্যা হলে html2canvas চিরকালের জন্য আটকে যেতে পারত (না error, না
+      // সফল) — imageTimeout দিয়ে ধীর ছবি স্কিপ করা হচ্ছে, আর বাইরের একটা হার্ড
+      // টাইমআউট দিয়ে নিশ্চিত করা হচ্ছে এই বাধ্যতামূলক ধাপে কেউ চিরকালের জন্য
+      // আটকে না থাকে — টাইমআউট হলে এরর দেখিয়ে আবার চেষ্টা করার সুযোগ থাকবে।
+      const renderPromise = html2canvas(invoiceRef.current, {
+        scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, imageTimeout: 8000,
       });
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('invoice-render-timeout')), 15000);
+      });
+      const canvas = await Promise.race([renderPromise, timeoutPromise]);
       const link = document.createElement('a');
       link.download = `Vangcur_Invoice_${String(order?.orderNum || '').replace('#', '')}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
