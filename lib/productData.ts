@@ -57,6 +57,8 @@ interface RawCustomProduct {
   features?: string[];
   faqs?: { q: string; a: string }[];
   closing?: string;
+  power_info?: string | null;
+  info_boxes?: unknown;
 }
 
 export function mapCustomProduct(p: RawCustomProduct): Product {
@@ -84,12 +86,14 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
     features: Array.isArray(p.features) ? p.features : [],
     faqs: Array.isArray(p.faqs) ? p.faqs : [],
     closing: p.closing || '',
+    powerInfo: p.power_info || '',
+    infoBoxes: Array.isArray(p.info_boxes) ? (p.info_boxes as { title: string; body: string }[]) : parseJsonish(p.info_boxes, []),
     _detailLoaded: !!(p.long_desc || p.features || p.faqs),
   };
 }
 
 const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
-const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing`;
+const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,power_info,info_boxes`;
 
 // ⚠️ sync-gap ফিক্স — admin panel-এর প্রোডাক্ট পেজে drag করে সাজানো অর্ডার
 // store_settings key 'vc_prod_order'-এ (product id-র একটা JSON অ্যারে,

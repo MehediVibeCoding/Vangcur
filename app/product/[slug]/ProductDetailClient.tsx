@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -217,9 +217,27 @@ const TABS = [
   { id: 'ppSecDesc', label: 'বিবরণ' },
   { id: 'ppSecFeatures', label: 'ফিচারস' },
   { id: 'ppSecSpecs', label: 'স্পেসিফিকেশন' },
+  { id: 'ppSecExtra', label: 'অতিরিক্ত তথ্য' },
   { id: 'ppSecFaq', label: 'প্রশ্নোত্তর' },
   { id: 'ppSecReviews', label: 'রিভিউ' },
 ];
+
+// 🆕 Specification ট্যাবে টেবিলের নিচে বসা ছোট, distinct callout box — Power
+// Info আর Packaging Content দুটোই একই স্টাইল শেয়ার করে যাতে চোখে গুলিয়ে না
+// যায় description-এর সাথে, কিন্তু নিজেরাও আলাদা রঙ দিয়ে আলাদা বোঝা যায়।
+function SpecCalloutBox({ icon, title, children, tone }: { icon: string; title: string; children: ReactNode; tone: 'amber' | 'blue' }) {
+  const toneClasses = tone === 'amber'
+    ? 'border-[#FDE0B0] bg-[#FFF7ED]'
+    : 'border-[#BAE0FD] bg-[#F0F9FF]';
+  return (
+    <div className={`mt-4 rounded-brand border p-4 ${toneClasses}`}>
+      <div className="mb-2 flex items-center gap-2 text-[13px] font-bold text-ink">
+        <span>{icon}</span>{title}
+      </div>
+      <div className="text-[13px] leading-[1.7] text-ink/80">{children}</div>
+    </div>
+  );
+}
 
 interface ProductDetailClientProps {
   slug: string;
@@ -784,29 +802,54 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 </tr>
               </thead>
               <tbody>
-                {techRows.length === 0 && !pkg ? (
+                {techRows.length === 0 ? (
                   <tr><td colSpan={2} className="p-4 text-center text-muted">{t('স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।')}</td></tr>
                 ) : (
-                  <>
-                    {techRows.map(([k, v], i) => (
-                      <tr key={k} className={`border-t border-border-base transition-brand duration-brand hover:bg-surface-muted/60 ${i % 2 === 1 ? 'bg-surface-muted/30' : ''}`}>
-                        <td className="px-4 py-3 font-medium text-ink">{k}</td>
-                        <td className="px-4 py-3 text-ink/80">{v}</td>
-                      </tr>
-                    ))}
-                    {pkg && (
-                      <tr className="border-t border-border-base">
-                        <td className="px-4 py-3 align-top font-semibold text-ink">Packaging Content</td>
-                        <td className="px-4 py-3 align-top text-ink/80">
-                          {pkg.split('\n').filter((l) => l.trim()).map((l, i) => (i === 0 ? l.trim() : [<br key={i} />, l.trim()]))}
-                        </td>
-                      </tr>
-                    )}
-                  </>
+                  techRows.map(([k, v], i) => (
+                    <tr key={k} className={`border-t border-border-base transition-brand duration-brand hover:bg-surface-muted/60 ${i % 2 === 1 ? 'bg-surface-muted/30' : ''}`}>
+                      <td className="px-4 py-3 font-medium text-ink">{k}</td>
+                      <td className="px-4 py-3 text-ink/80">{v}</td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* 🆕 Power Info — সম্পূর্ণ ঐচ্ছিক, admin-এ খালি থাকলে কিছুই দেখাবে না */}
+          {prod.powerInfo && (
+            <SpecCalloutBox icon="🔌" title={t('পাওয়ার / কানেকশন তথ্য')} tone="amber">
+              {prod.powerInfo.split('\n').filter((l) => l.trim()).map((l, i) => (
+                <div key={i}>{l.trim()}</div>
+              ))}
+            </SpecCalloutBox>
+          )}
+
+          {/* Packaging Content — আগে টেবিলের ভিতরে row হিসেবে ছিল, এখন টেবিলের বাইরে
+              নিজস্ব আলাদা বক্সে, যাতে বাকি স্পেক-লিস্টের সাথে মিশে না যায়। */}
+          {pkg && (
+            <SpecCalloutBox icon="📦" title={t('Packaging Content')} tone="blue">
+              {pkg.split('\n').filter((l) => l.trim()).map((l, i) => (
+                <div key={i}>{l.trim()}</div>
+              ))}
+            </SpecCalloutBox>
+          )}
+        </div>
+
+        <div className="border-b border-border-base py-8" id="ppSecExtra" ref={(el) => { sectionRefs.current.ppSecExtra = el; }}>
+          <SectionHeading icon={<DocIcon />}>{t('অতিরিক্ত')} <span className="text-brand-light">{t('তথ্য')}</span></SectionHeading>
+          {(prod.infoBoxes && prod.infoBoxes.length) ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {prod.infoBoxes.map((box, i) => (
+                <div key={i} className="rounded-brand border border-border-base bg-white p-4 shadow-sh1">
+                  <div className="mb-1.5 text-[13.5px] font-bold text-ink">{box.title}</div>
+                  <div className="text-[13px] leading-[1.7] text-ink/80">{box.body}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-[13px] text-muted">{t('এই প্রোডাক্টের জন্য অতিরিক্ত তথ্য এখনো যোগ হয়নি।')}</div>
+          )}
         </div>
 
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>

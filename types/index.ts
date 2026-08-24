@@ -2,6 +2,11 @@ export interface ProductSpecs {
   [label: string]: string;
 }
 
+export interface ProductInfoBox {
+  title: string;
+  body: string;
+}
+
 export interface Product {
   id: number | string;
   cat: string;
@@ -23,6 +28,8 @@ export interface Product {
   closing?: string;
   nameBn?: string;
   tags?: string;
+  powerInfo?: string; // 🆕 ঐচ্ছিক — থাকলে Specification ট্যাবে টেবিলের নিচে আলাদা বক্সে দেখায়
+  infoBoxes?: ProductInfoBox[]; // 🆕 ঐচ্ছিক — "অতিরিক্ত তথ্য" ট্যাবে আলাদা কার্ড হিসেবে
   _detailLoaded: boolean;
 }
 

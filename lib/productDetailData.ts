@@ -8,6 +8,8 @@ export interface ProductDetailFields {
   faqs: { q: string; a: string }[];
   closing: string;
   specs: Record<string, string>;
+  powerInfo: string;
+  infoBoxes: { title: string; body: string }[];
 }
 
 function parseJsonish<T>(val: unknown, fallback: T): T {
@@ -27,7 +29,7 @@ export async function fetchProductDetail(
   try {
     const { data, error } = await supabase
       .from('custom_products')
-      .select('id,desc_text,long_desc,features,faqs,closing,specs')
+      .select('id,desc_text,long_desc,features,faqs,closing,specs,power_info,info_boxes')
       .eq('id', id)
       .single();
 
@@ -40,6 +42,8 @@ export async function fetchProductDetail(
       faqs: Array.isArray(data.faqs) ? data.faqs : parseJsonish<{ q: string; a: string }[]>(data.faqs, []),
       closing: data.closing || '',
       specs: parseJsonish<Record<string, string>>(data.specs, data.specs || {}),
+      powerInfo: data.power_info || '',
+      infoBoxes: Array.isArray(data.info_boxes) ? data.info_boxes : parseJsonish<{ title: string; body: string }[]>(data.info_boxes, []),
     };
   } catch (e) {
     logWarn('[Vangcur] fetchProductDetail failed:', e);
