@@ -628,6 +628,11 @@ export default function CheckoutPage() {
         localStorage.setItem('vc_pending_phone_ls', phone.trim());
         localStorage.setItem('vc_pending_ts', String(Date.now()));
         localStorage.setItem('vc_last_order_time', String(Date.now()));
+        // /checkout/status পেজকে জানানো হচ্ছে এটা সাবমিট করার পরে সরাসরি প্রথমবার
+        // আসা — তাই পুরো "ওয়েটিং" UI দেখাবে। এই মার্কার consume হয়ে যায় প্রথম
+        // রিডেই (StatusClient.tsx), তাই পরে রিফ্রেশ/নতুন ট্যাবে এই মার্কার আর
+        // থাকবে না এবং সরাসরি হোমে + কর্নার badge-এ পাঠানো হবে।
+        sessionStorage.setItem('vc_just_submitted', '1');
       } catch {
         // ignore
       }

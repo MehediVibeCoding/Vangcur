@@ -11,7 +11,7 @@ import {
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import { useAuthStore } from '@/lib/store/authStore';
-import { GENERATE_INVOICE_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { OPEN_ACCOUNT_EVENT, SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 
@@ -39,6 +39,9 @@ export default function StatusClient() {
   const [status, setStatus] = useState<OrderStatus>('pending');
   const [copyLabel, setCopyLabel] = useState(() => t('📋 কপি'));
   const phoneRef = useRef<string>('');
+  const orderRef = useRef<Order | null>(null);
+
+  useEffect(() => { orderRef.current = order; }, [order]);
 
   useEffect(() => {
     const onOpenAccount = () => {
@@ -55,6 +58,23 @@ export default function StatusClient() {
       router.replace('/');
       return;
     }
+    // এই পেজটা শুধু অর্ডার সাবমিট করার পরে সরাসরি প্রথমবার আসার সময়ই পুরো
+    // "ওয়েটিং" UI দেখাবে (checkout/page.tsx-এর submitOrderNow() একটা
+    // sessionStorage মার্কার সেট করে দেয়)। এই মার্কার না থাকলে বোঝা যায় এটা
+    // রিফ্রেশ / ট্যাব বন্ধ করে আবার খোলা / নতুন ট্যাব — তখন এই পুরো পেজ আর
+    // দেখানো হয় না, বরং হোমে পাঠিয়ে দেওয়া হয় যাতে কর্নারের ছোট্ট
+    // "প্রসেস হচ্ছে..." badge-টা (WaitingOverlay) দেখায়, যেটা কম বিরক্তিকর।
+    let justSubmitted = false;
+    try {
+      justSubmitted = sessionStorage.getItem('vc_just_submitted') === '1';
+      sessionStorage.removeItem('vc_just_submitted');
+    } catch {
+      justSubmitted = false;
+    }
+    if (!justSubmitted) {
+      router.replace('/');
+      return;
+    }
     phoneRef.current = pending.phone;
     setOrderId(pending.id);
     (async () => {
@@ -62,6 +82,18 @@ export default function StatusClient() {
       const data = await fetchFullOrder(supabase, pending.id, isGuest ? pending.phone : undefined);
       if (data) {
         const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
+        // অতি দ্রুত (কয়েক মিলিসেকেন্ডের মধ্যে) অ্যাডমিন যদি ইতিমধ্যে
+        // কনফার্ম/শিপড/ডেলিভারড করে ফেলে থাকে — পুরনো নিজস্ব প্যানেল না দেখিয়ে
+        // সরাসরি একই বাধ্যতামূলক BgConfirmPopup-এ পাঠানো হচ্ছে (একটাই
+        // consistent confirm UI, WaitingOverlay-এর মতোই)।
+        if (mapped.status === 'confirmed' || mapped.status === 'shipped' || mapped.status === 'delivered') {
+          clearPendingOrder();
+          window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
+            detail: { order: mapped, phone: isGuest ? pending.phone : undefined },
+          }));
+          router.replace('/');
+          return;
+        }
         setOrder(mapped);
         setStatus(mapped.status);
       } else {
@@ -78,12 +110,24 @@ export default function StatusClient() {
     if (!orderId) return undefined;
     const isGuest = !currentUser;
     const stop = watchOrderStatus(supabase, orderId, isGuest ? phoneRef.current : undefined, (newStatus) => {
+      if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
+        // WaitingOverlay-এর handleOrderStatusUpdate()-এর মতোই: এখানেও আলাদা
+        // কোনো confirm প্যানেল না রেখে সরাসরি একই বাধ্যতামূলক BgConfirmPopup-এ
+        // হ্যান্ডঅফ করা হচ্ছে — পুরো সাইটে confirm-এর UI একটাই জায়গায়।
+        clearPendingOrder();
+        const updated = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
+        window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
+          detail: { order: updated, phone: isGuest ? phoneRef.current : undefined },
+        }));
+        router.replace('/');
+        return;
+      }
       setStatus(newStatus);
       setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
       if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') clearPendingOrder();
     });
     return stop;
-  }, [orderId, supabase, currentUser]);
+  }, [orderId, supabase, currentUser, router]);
 
   const copyOrderNum = useCallback(async () => {
     if (!order) return;
@@ -101,13 +145,6 @@ export default function StatusClient() {
     router.push('/checkout');
   };
 
-  const downloadInvoice = () => {
-    if (!order) return;
-    window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
-      detail: { orderId: order.id, phone: isGuest ? phoneRef.current : undefined },
-    }));
-  };
-
   if (!checked || !order) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -120,7 +157,6 @@ export default function StatusClient() {
 
   const isPending = status === 'pending';
   const isRejected = status === 'cancelled' || status === 'rejected';
-  const isResolvedPositive = status === 'confirmed' || status === 'shipped' || status === 'delivered';
   const isGuest = !currentUser;
 
   return (
@@ -219,44 +255,6 @@ export default function StatusClient() {
             >
               🏠 {t('ওয়েবসাইটে ফিরে যান')}
             </Link>
-          </>
-        )}
-
-        {isResolvedPositive && (
-          <>
-            <div className="mx-auto mb-[18px] flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#D1FAE5] text-[34px] shadow-[0_6px_20px_rgba(16,185,129,0.2)]">
-              🎉
-            </div>
-            <h1 className="mb-2 font-body text-xl font-bold text-success">{t('অর্ডার কনফার্ম হয়েছে!')}</h1>
-            <p className="mb-1.5 font-body text-[13px] leading-[1.7] text-muted">
-              {lang === 'en' ? (
-                <>Your payment has been verified and the order has been successfully confirmed.</>
-              ) : (
-                <>আপনার পেমেন্ট যাচাই হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।</>
-              )}
-            </p>
-            <div className="mb-5 flex items-center justify-center gap-2 font-body text-[13.5px] font-bold text-ink">
-              {t('অর্ডার নম্বর:')} <span>{order.orderNum}</span>
-              <button
-                onClick={copyOrderNum}
-                className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
-              >
-                {copyLabel}
-              </button>
-            </div>
-            <p className="mb-5 font-body text-xs text-muted">
-              {lang === 'en' ? (
-                <>🔍 To track your order, use the website&apos;s &quot;Track Order&quot; option.</>
-              ) : (
-                <>🔍 অর্ডার ট্র্যাক করতে ওয়েবসাইটের &quot;অর্ডার ট্র্যাক&quot; অপশন ব্যবহার করুন।</>
-              )}
-            </p>
-            <button
-              onClick={downloadInvoice}
-              className="block w-full rounded-xl bg-ink px-4 py-3 font-body text-[13.5px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
-            >
-              {t('⬇️ ইনভয়েস ডাউনলোড করুন (বাধ্যতামূলক)')}
-            </button>
           </>
         )}
 

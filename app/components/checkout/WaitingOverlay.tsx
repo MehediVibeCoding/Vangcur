@@ -112,8 +112,15 @@ export default function WaitingOverlay() {
           detail: { order: updatedOrder, phone: isGuest ? phoneRef.current : undefined },
         }));
       } else {
+        // রিজেক্ট/বাতিল হলে (বা অন্য কোনো ইন্টারমিডিয়েট স্ট্যাটাসে) — মিনিমাইজড
+        // badge-এ আটকে না রেখে পুরো প্যানেল খুলে ফলাফলটা দেখানো হচ্ছে, নাহলে
+        // badge-টা শুধু "প্রসেস হচ্ছে..." লেখাই ধরে রাখত, স্ট্যাটাস বদলে গেলেও।
         setStatus(newStatus);
         setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
+        if (newStatus === 'cancelled' || newStatus === 'rejected') {
+          setVisible(true);
+          setMinimized(false);
+        }
       }
     });
     return stop;
@@ -164,7 +171,7 @@ export default function WaitingOverlay() {
   }
 
   return (
-    <div className="fixed inset-0 z-[1000] overflow-y-auto bg-white">
+    <div className="fixed inset-0 z-[1000] overflow-y-auto bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
       <div className="mx-auto min-h-screen w-full max-w-[480px] px-7 pb-12 pt-6 text-center">
         <div className="mb-6 flex items-center justify-between border-b border-border-base pb-3.5">
           <h2 className="flex-1 font-body text-[15px] font-bold text-ink">{t('অর্ডার স্ট্যাটাস')}</h2>
