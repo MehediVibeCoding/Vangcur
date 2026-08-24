@@ -39,25 +39,31 @@ export default function PostReceiveInfoModal() {
       <div className="fixed inset-0 z-[1000] bg-black/55" onClick={() => setOpen(false)} />
       <div className="fixed inset-0 z-[1001] flex items-center justify-center p-4">
         <div className="max-h-[85vh] w-full max-w-[420px] overflow-y-auto rounded-brand bg-white shadow-sh3">
-          <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
-            <h3 className="font-display text-base font-bold text-ink">{t('📦 প্রোডাক্ট পাওয়ার পর করণীয়')}</h3>
-            <button className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted hover:bg-surface-muted" onClick={() => setOpen(false)}>✕</button>
+          {/* ব্র্যান্ড অ্যাক্সেন্ট বার — কোনো ইমোজি বা ক্রস বাটন ছাড়া, শুধু রঙ দিয়ে identity */}
+          <div className="h-[5px] w-full bg-gradient-to-r from-brand-primary via-brand-accent to-brand-light" />
+          <div className="border-b border-border-base px-5 pb-4 pt-4">
+            <h3 className="font-body text-[16px] font-bold text-ink">{t('প্রোডাক্ট পাওয়ার পর করণীয়')}</h3>
           </div>
           <div className="px-5 py-4">
-            <h4 className="mb-2.5 font-body text-[13px] font-bold text-ink">{t('📹 আনবক্সিং ভিডিও করুন')}</h4>
-            <ul className="mb-4 list-none space-y-2">
+            <h4 className="mb-3 font-body text-[12.5px] font-bold uppercase tracking-wide text-brand-primary">
+              {t('আনবক্সিং ভিডিও করুন')}
+            </h4>
+            <ul className="mb-4 list-none space-y-2.5">
               {CHECKLIST.map((item) => (
-                <li key={item} className="flex gap-2 font-body text-[12.5px] leading-[1.6] text-muted">
-                  <span className="mt-0.5 shrink-0 text-success">✓</span>
+                <li key={item} className="flex gap-2.5 font-body text-[12.5px] leading-[1.6] text-ink/80">
+                  <span className="mt-[5px] block h-[9px] w-[9px] shrink-0 rounded-full bg-success" />
                   <span>{t(item)}</span>
                 </li>
               ))}
             </ul>
             <div className="rounded-[10px] border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-3">
-              <div className="mb-1.5 font-body text-[12.5px] font-bold text-ink">{t('⚠️ গুরুত্বপূর্ণ')}</div>
+              <div className="mb-1.5 font-body text-[12.5px] font-bold text-ink">{t('গুরুত্বপূর্ণ')}</div>
               <ul className="list-none space-y-1.5">
                 {IMPORTANT_NOTES.map((item) => (
-                  <li key={item} className="font-body text-[12px] leading-[1.6] text-[#92400E]">• {t(item)}</li>
+                  <li key={item} className="flex gap-2 font-body text-[12px] leading-[1.6] text-[#92400E]">
+                    <span className="mt-[5px] block h-[6px] w-[6px] shrink-0 rounded-full bg-[#92400E]" />
+                    <span>{t(item)}</span>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -65,7 +71,7 @@ export default function PostReceiveInfoModal() {
               onClick={() => setOpen(false)}
               className="mt-4 w-full rounded-[10px] bg-ink px-4 py-2.5 font-body text-[13px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
             >
-              {t('বুঝেছি ✓')}
+              {t('বুঝেছি')}
             </button>
           </div>
         </div>
