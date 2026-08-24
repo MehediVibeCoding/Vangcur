@@ -821,7 +821,7 @@ export default function CheckoutPage() {
                   >
                     <option value="">{t('জেলা সিলেক্ট করুন')}</option>
                     {DISTRICTS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
+                      <option key={d} value={d}>{t(d)}</option>
                     ))}
                   </select>
                   <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">

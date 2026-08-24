@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { checkPasswordStrength, type PasswordStrength } from '@/lib/passwordStrength';
+import { useT } from '@/lib/i18n/useT';
 
 interface PasswordStrengthMeterProps {
   password: string;
 }
 
 export default function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) {
+  const { t } = useT();
   const [strength, setStrength] = useState<PasswordStrength | null>(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function PasswordStrengthMeter({ password }: PasswordStrengthMete
         />
       </div>
       <div className="mt-[3px] font-body text-[11px] font-semibold" style={{ color: strength.color }}>
-        {strength.hint}
+        {t(strength.hint)}
       </div>
     </div>
   );

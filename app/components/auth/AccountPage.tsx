@@ -135,15 +135,15 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
   const closeNameEdit = () => { setNameEditOpen(false); setNameEditErr(''); };
   const saveNameEdit = async () => {
     const nm = nameEditValue.trim();
-    if (!validateName(nm)) { setNameEditErr('অন্তত ২ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'); return; }
+    if (!validateName(nm)) { setNameEditErr(t('অন্তত ২ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)')); return; }
     if (currentUser.id) {
       const limit = await checkNameChangeLimit(supabase, currentUser.id);
-      if (!limit.allowed) { setNameEditErr('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'); return; }
+      if (!limit.allowed) { setNameEditErr(t('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।')); return; }
     }
     await updateProfileName(supabase, currentUser, nm);
     useAuthStore.getState().setCurrentUser({ ...currentUser, name: nm });
     closeNameEdit();
-    showToast('নাম পরিবর্তন হয়েছে');
+    showToast(t('নাম পরিবর্তন হয়েছে'));
   };
 
   const doLogout = async () => {
@@ -151,7 +151,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
     await logout(supabase);
     useWishlistStore.getState().clearWishlist();
     onClose();
-    showToast('লগআউট হয়েছে');
+    showToast(t('লগআউট হয়েছে'));
   };
 
   const handleRemoveStockNotif = (key: string) => {
@@ -221,34 +221,34 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
           </button>
 
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))} title="উইশলিস্ট"
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))} title={t('উইশলিস্ট')}
             className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
-            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">উইশলিস্ট</span>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">{t('উইশলিস্ট')}</span>
           </button>
 
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))} title="ট্র্যাক"
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))} title={t('ট্র্যাক')}
             className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
               <line x1="8" y1="12" x2="16" y2="12" />
             </svg>
-            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">ট্র্যাক</span>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">{t('ট্র্যাক')}</span>
           </button>
 
           <button
-            onClick={openMembership} title="মেম্বারশিপ"
+            onClick={openMembership} title={t('মেম্বারশিপ')}
             className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <path d="M4 22V4a1 1 0 011-1h11.38a1 1 0 01.8 1.6l-2.9 3.87a1 1 0 000 1.2l2.9 3.86a1 1 0 01-.8 1.6H5" />
             </svg>
-            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">মেম্বারশিপ</span>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">{t('মেম্বারশিপ')}</span>
           </button>
 
           <button
@@ -369,27 +369,27 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                   <div className="min-w-0 flex-1 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.65)' }}>
                     <div className="truncate font-body text-sm font-bold">{currentUser.name || '-'}</div>
                     <div className="truncate font-body text-[11.5px] text-white/75">{currentUser.email || '-'}</div>
-                    {createdStr && <div className="mt-0.5 font-body text-[10.5px] text-white/60">📅 অ্যাকাউন্ট তৈরি: {createdStr}</div>}
+                    {createdStr && <div className="mt-0.5 font-body text-[10.5px] text-white/60">📅 {t('অ্যাকাউন্ট তৈরি')}: {createdStr}</div>}
                   </div>
                 </div>
 
                 <div>
                   <div className="flex gap-2 border-t border-white/[0.12] pt-3">
-                    <button onClick={openNameEdit} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">✏️ এডিট</button>
-                    <button onClick={() => setShowLogoutConfirm(true)} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">↩ লগআউট</button>
+                    <button onClick={openNameEdit} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">✏️ {t('এডিট')}</button>
+                    <button onClick={() => setShowLogoutConfirm(true)} className="flex flex-1 items-center justify-center gap-1 rounded-[10px] border border-white/20 bg-white/10 py-2 font-body text-[11px] font-semibold text-white backdrop-blur-sm hover:bg-white/20">↩ {t('লগআউট')}</button>
                   </div>
 
                   {nameEditOpen && (
                     <div className="mt-3 rounded-[12px] bg-white/10 p-3 backdrop-blur-sm">
-                      <div className="mb-1.5 font-body text-[11px] font-semibold text-white/70">নতুন নাম লিখুন</div>
+                      <div className="mb-1.5 font-body text-[11px] font-semibold text-white/70">{t('নতুন নাম লিখুন')}</div>
                       <div className="flex gap-1.5">
                         <input
-                          type="text" placeholder="আপনার নাম" value={nameEditValue} maxLength={MAX_NAME_LEN}
+                          type="text" placeholder={t('আপনার নাম')} value={nameEditValue} maxLength={MAX_NAME_LEN}
                           onChange={(e) => setNameEditValue(sanitizePlainName(e.target.value))}
                           onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
                           className="flex-1 rounded-[8px] border border-white/15 bg-white/10 px-3 py-2 font-body text-[13.5px] text-white outline-none placeholder:text-white/50"
                         />
-                        <button onClick={saveNameEdit} className="rounded-[8px] bg-gold px-3.5 font-body text-xs font-bold text-ink">সেভ</button>
+                        <button onClick={saveNameEdit} className="rounded-[8px] bg-gold px-3.5 font-body text-xs font-bold text-ink">{t('সেভ')}</button>
                         <button onClick={closeNameEdit} className="rounded-[8px] bg-white/15 px-2.5 font-body text-xs text-white">✕</button>
                       </div>
                       {nameEditErr && <div className="mt-1.5 font-body text-[11px] text-[#FCA5A5]">{nameEditErr}</div>}
@@ -401,12 +401,12 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
 
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">
-                <div className="font-body text-base font-extrabold text-ink">{stats.total}টি</div>
-                <div className="font-body text-[10px] text-muted">মোট অর্ডার</div>
+                <div className="font-body text-base font-extrabold text-ink">{stats.total}{lang === 'en' ? '' : 'টি'}</div>
+                <div className="font-body text-[10px] text-muted">{t('মোট অর্ডার')}</div>
               </div>
               <div className="rounded-[12px] border border-border-base bg-white py-2.5 text-center shadow-sh1">
-                <div className="font-body text-base font-extrabold text-ink">{stats.running}টি</div>
-                <div className="font-body text-[10px] text-muted">রানিং অর্ডার</div>
+                <div className="font-body text-base font-extrabold text-ink">{stats.running}{lang === 'en' ? '' : 'টি'}</div>
+                <div className="font-body text-[10px] text-muted">{t('রানিং অর্ডার')}</div>
               </div>
               <div
                 onClick={openMembership}
@@ -414,9 +414,9 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
               >
                 <div className="h-7 w-7" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(tierIconSVG(currentTier.key)) }} />
                 <div className="font-body text-[10px] font-extrabold" style={{ color: currentTier.key === 'silver' ? '#475569' : currentTier.key === 'gold' ? '#92400E' : currentTier.key === 'diamond' ? '#1E40AF' : '#78350F' }}>
-                  {currentTier.bn}
+                  {lang === 'en' ? currentTier.en : currentTier.bn}
                 </div>
-                <div className="font-body text-[8.5px] text-muted">মেম্বারশিপ</div>
+                <div className="font-body text-[8.5px] text-muted">{t('মেম্বারশিপ')}</div>
               </div>
             </div>
 
@@ -442,8 +442,8 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
             {drafts.length > 0 && (
               <div className="rounded-brand border border-border-base bg-white p-3.5 shadow-sh1">
                 <div className="mb-2.5 flex items-center justify-between">
-                  <div className="font-body text-[13px] font-bold text-ink">🛒 অর্ডার করতে চেয়েছিলেন</div>
-                  <button onClick={handleClearAllDrafts} className="font-body text-[11px] text-muted hover:text-ink">🗑️ সব মুছুন</button>
+                  <div className="font-body text-[13px] font-bold text-ink">🛒 {t('অর্ডার করতে চেয়েছিলেন')}</div>
+                  <button onClick={handleClearAllDrafts} className="font-body text-[11px] text-muted hover:text-ink">🗑️ {t('সব মুছুন')}</button>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {drafts.map((draft) => {
@@ -452,11 +452,11 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                     const d = new Date(draft.createdAt);
                     const dateStr = d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
                     const timeStr = d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
-                    const prodName = firstItem ? firstItem.name : 'প্রোডাক্ট';
+                    const prodName = firstItem ? firstItem.name : t('প্রোডাক্ট');
                     const tot = items.reduce((s, i) => s + i.price * i.qty, 0);
                     return (
                       <div key={draft.id} className="rounded-[10px] border border-border-base p-2.5">
-                        <div className="font-body text-[10.5px] text-muted">📅 {dateStr} · ⏰ {timeStr} · {items.length} আইটেম</div>
+                        <div className="font-body text-[10.5px] text-muted">📅 {dateStr} · ⏰ {timeStr} · {items.length} {t('আইটেম')}</div>
                         <div className="mt-1.5 flex items-center gap-2">
                           {firstItem ? <ItemThumb imgVal={(firstItem.imgs || ['📦'])[0]} /> : <ItemThumb />}
                           <div className="min-w-0 flex-1 truncate font-body text-xs font-semibold text-ink">
@@ -465,8 +465,8 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                           <div className="whitespace-nowrap font-body text-xs font-bold text-ink">৳{tot.toLocaleString('en-US')}</div>
                         </div>
                         <div className="mt-2 flex gap-1.5">
-                          <button onClick={() => handleDeleteDraft(draft.id, draft._sbId)} className="flex-1 rounded-[8px] border border-border-base py-1.5 font-body text-[11px] font-semibold text-muted hover:bg-surface-muted">🗑️ সরান</button>
-                          <button onClick={() => continueFromDraft(draft)} className="flex-1 rounded-[8px] bg-brand-light py-1.5 font-body text-[11px] font-bold text-white hover:bg-brand-light-hover">⚡ চালিয়ে যান</button>
+                          <button onClick={() => handleDeleteDraft(draft.id, draft._sbId)} className="flex-1 rounded-[8px] border border-border-base py-1.5 font-body text-[11px] font-semibold text-muted hover:bg-surface-muted">🗑️ {t('সরান')}</button>
+                          <button onClick={() => continueFromDraft(draft)} className="flex-1 rounded-[8px] bg-brand-light py-1.5 font-body text-[11px] font-bold text-white hover:bg-brand-light-hover">⚡ {t('চালিয়ে যান')}</button>
                         </div>
                       </div>
                     );
@@ -478,8 +478,8 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
             {stockNotifs.length > 0 && (
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <div className="font-body text-[13px] font-bold text-ink">🔔 স্টকে আসলে জানানো</div>
-                  <button onClick={handleClearStockNotifs} className="font-body text-[11px] text-muted hover:text-ink">সব মুছুন</button>
+                  <div className="font-body text-[13px] font-bold text-ink">🔔 {t('স্টকে আসলে জানানো')}</div>
+                  <button onClick={handleClearStockNotifs} className="font-body text-[11px] text-muted hover:text-ink">{t('সব মুছুন')}</button>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {stockNotifs.map((item) => {
@@ -488,11 +488,11 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                       <div key={item.key} className="flex items-center gap-2.5 rounded-[10px] border border-border-base bg-surface-muted px-2.5 py-2">
                         <div className="shrink-0 text-xl">📦</div>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate font-body text-xs font-bold text-ink">{item.prodName || 'প্রোডাক্ট'}</div>
-                          <div className="font-body text-[11px] text-muted">⏳ স্টক নেই · {dateStr}</div>
+                          <div className="truncate font-body text-xs font-bold text-ink">{item.prodName || t('প্রোডাক্ট')}</div>
+                          <div className="font-body text-[11px] text-muted">⏳ {t('স্টক নেই')} · {dateStr}</div>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1">
-                          <button onClick={() => viewNotifiedProduct(item)} className="rounded-[7px] bg-ink px-2.5 py-1 font-body text-[11px] font-bold text-white">দেখুন</button>
+                          <button onClick={() => viewNotifiedProduct(item)} className="rounded-[7px] bg-ink px-2.5 py-1 font-body text-[11px] font-bold text-white">{t('দেখুন')}</button>
                           <button onClick={() => handleRemoveStockNotif(item.key)} className="font-body text-xs text-muted hover:text-ink">✕</button>
                         </div>
                       </div>
@@ -506,13 +506,13 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
           {/* COLUMN 2: ORDERS */}
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <span className="font-body text-[15px] font-bold text-ink">📦 আমার অর্ডার সমূহ</span>
+              <span className="font-body text-[15px] font-bold text-ink">📦 {t('আমার অর্ডার সমূহ')}</span>
               {orders.length > 0 && (
                 <button
                   onClick={() => { onClose(); router.push('/account/orders'); }}
                   className="font-body text-[12px] font-semibold text-brand-light hover:underline"
                 >
-                  সব দেখুন →
+                  {t('সব দেখুন')} →
                 </button>
               )}
             </div>
@@ -520,8 +520,8 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
               {orders.length === 0 ? (
                 <div className="rounded-brand border border-dashed border-border-base py-9 text-center">
                   <div className="mb-2.5 text-[38px]">📦</div>
-                  <div className="mb-1 font-body text-sm font-bold text-ink">এখনো কোনো অর্ডার নেই</div>
-                  <div className="font-body text-xs text-muted">অর্ডার করলে এখানে দেখাবে</div>
+                  <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
+                  <div className="font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
                 </div>
               ) : (
                 orders.map((o) => <OrderCard key={o.id} order={o} onInvoice={openInvoice} />)
@@ -538,10 +538,10 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
         >
           <div className="w-full max-w-[320px] rounded-brand bg-white p-6 text-center shadow-sh3">
             <div className="mb-2.5 text-[38px]">👋</div>
-            <div className="mb-4 font-body text-sm font-semibold text-ink">আপনি কি নিশ্চিতভাবে লগআউট করতে চান?</div>
+            <div className="mb-4 font-body text-sm font-semibold text-ink">{t('আপনি কি নিশ্চিতভাবে লগআউট করতে চান?')}</div>
             <div className="flex gap-2.5">
-              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 rounded-full border border-border-base py-2.5 font-body text-[13px] font-semibold text-ink hover:bg-surface-muted">না</button>
-              <button onClick={doLogout} className="flex-1 rounded-full bg-brand-light py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-light-hover">লগআউট</button>
+              <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 rounded-full border border-border-base py-2.5 font-body text-[13px] font-semibold text-ink hover:bg-surface-muted">{t('না')}</button>
+              <button onClick={doLogout} className="flex-1 rounded-full bg-brand-light py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-light-hover">{t('লগআউট')}</button>
             </div>
           </div>
         </div>

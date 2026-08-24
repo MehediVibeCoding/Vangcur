@@ -1,5 +1,7 @@
 'use client';
 
+import { useT } from '@/lib/i18n/useT';
+
 interface TrustItem {
   label: string;
   sub: string;
@@ -81,6 +83,7 @@ const TRUST_ITEMS: TrustItem[] = [
 ];
 
 export default function TrustStrip() {
+  const { t } = useT();
   return (
     <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
       <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/60 bg-white/80 px-4 py-3 shadow-sh2 backdrop-blur-[8px] md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
@@ -93,8 +96,8 @@ export default function TrustStrip() {
               {item.icon}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[11px] font-bold text-ink md:text-[12.5px]">{item.label}</div>
-              <div className="truncate text-[10px] text-muted md:text-[11px]">{item.sub}</div>
+              <div className="truncate text-[11px] font-bold text-ink md:text-[12.5px]">{t(item.label)}</div>
+              <div className="truncate text-[10px] text-muted md:text-[11px]">{t(item.sub)}</div>
             </div>
           </div>
         ))}

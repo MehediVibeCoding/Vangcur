@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { useT } from '@/lib/i18n/useT';
 
 interface Review {
   id: number | string;
@@ -24,6 +25,7 @@ function getVisibleIndices(activeIdx: number, n: number): number[] {
 }
 
 export default function CustomerGallery() {
+  const { t } = useT();
   const supabase = useRef(createClient()).current;
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -190,9 +192,9 @@ export default function CustomerGallery() {
         ❤️ Customer Love
       </div>
       <h2 className="mb-1.5 font-display text-[28px] font-extrabold leading-tight text-ink">
-        Unboxing <span className="text-brand-light">গ্যালারি</span>
+        Unboxing <span className="text-brand-light">{t('গ্যালারি')}</span>
       </h2>
-      <p className="text-[13.5px] text-muted">আমাদের কাস্টমারদের আনন্দময় মুহূর্ত</p>
+      <p className="text-[13.5px] text-muted">{t('আমাদের কাস্টমারদের আনন্দময় মুহূর্ত')}</p>
     </div>
   );
 
@@ -201,7 +203,7 @@ export default function CustomerGallery() {
       <section className="overflow-hidden bg-brand-bg py-12">
         {headerBlock}
         <div className="px-6 py-6 text-center text-sm text-muted">
-          <p>এখনো কোনো রিভিউ নেই।</p>
+          <p>{t('এখনো কোনো রিভিউ নেই।')}</p>
         </div>
       </section>
     );
@@ -262,7 +264,7 @@ export default function CustomerGallery() {
                       <button
                         className={`absolute bottom-2.5 right-2.5 z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black/35 text-base backdrop-blur-[4px] transition-transform duration-200 [-webkit-tap-highlight-color:transparent] active:scale-90 ${beatId === r.id ? 'animate-heartbeat' : ''}`}
                         onClick={(e) => handleHeart(e, r)}
-                        aria-label="লাইক"
+                        aria-label={t('লাইক')}
                       >
                         {r.liked ? '❤️' : '🤍'}
                       </button>
@@ -275,14 +277,14 @@ export default function CustomerGallery() {
           <button
             className="absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-xl leading-none text-white shadow-[0_4px_14px_rgba(0,0,0,.2)] transition-brand duration-brand hover:bg-brand-light sm:flex"
             onClick={() => slide(-1)}
-            aria-label="আগের"
+            aria-label={t('আগের')}
           >
             ‹
           </button>
           <button
             className="absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-xl leading-none text-white shadow-[0_4px_14px_rgba(0,0,0,.2)] transition-brand duration-brand hover:bg-brand-light sm:flex"
             onClick={() => slide(1)}
-            aria-label="পরের"
+            aria-label={t('পরের')}
           >
             ›
           </button>
@@ -296,7 +298,7 @@ export default function CustomerGallery() {
               key={r.id}
               className={`h-2 w-2 rounded-full transition-brand duration-brand ${i === activeIdx ? 'scale-[1.25] bg-brand-light' : 'bg-border-base'}`}
               onClick={() => goTo(i)}
-              aria-label={`রিভিউ ${i + 1}`}
+              aria-label={`${t('রিভিউ')} ${i + 1}`}
             />
           ))}
         </div>

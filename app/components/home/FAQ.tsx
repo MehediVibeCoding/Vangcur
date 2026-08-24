@@ -4,8 +4,10 @@ import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { DEFAULT_FAQS, fetchFAQs } from '@/lib/faqData';
 import type { Faq } from '@/lib/faqData';
+import { useT } from '@/lib/i18n/useT';
 
 export default function FAQ() {
+  const { t } = useT();
   const supabase = useRef(createClient()).current;
   const [faqs, setFaqs] = useState<Faq[]>(DEFAULT_FAQS);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -50,8 +52,8 @@ export default function FAQ() {
   return (
     <div className="mx-auto mb-12 max-w-[1300px] px-5" id="faqSec">
       <div className="mb-[30px] text-center">
-        <h2 className="mb-1.5 text-[26px] font-bold">à¦¯à¦¾ à¦œà¦¾à¦¨à¦¤à§‡ à¦šà¦¾à¦¨</h2>
-        <p className="text-[13.5px] text-muted">Vangcur à¦¥à§‡à¦•à§‡ à¦•à§‡à¦¨à¦¾à¦•à¦¾à¦Ÿà¦¾ à¦¸à¦®à§à¦ªà¦°à§à¦•à§‡ à¦¸à¦•à¦² à¦ªà§à¦°à¦¶à§à¦¨à§‡à¦° à¦‰à¦¤à§à¦¤à¦°</p>
+        <h2 className="mb-1.5 text-[26px] font-bold">{t('যা জানতে চান')}</h2>
+        <p className="text-[13.5px] text-muted">{t('Vangcur থেকে কেনাকাটা সম্পর্কে সকল প্রশ্নের উত্তর')}</p>
       </div>
       <div className="mx-auto max-w-[760px]">
         {faqs.map((f, i) => {
@@ -62,14 +64,14 @@ export default function FAQ() {
                 className="flex cursor-pointer select-none items-center justify-between bg-white px-[17px] py-3.5 text-[13.5px] font-semibold transition-brand duration-brand hover:bg-surface-muted"
                 onClick={() => toggleFAQ(i)}
               >
-                <span>{f.q}</span>
-                <span className={`shrink-0 text-[11px] text-muted transition-transform duration-[250ms] ${open ? 'rotate-180' : ''}`}>â–¼</span>
+                <span>{t(f.q)}</span>
+                <span className={`shrink-0 text-[11px] text-muted transition-transform duration-[250ms] ${open ? 'rotate-180' : ''}`}>▼</span>
               </div>
               <div
                 className="overflow-hidden px-[17px] text-[13px] leading-[1.8] text-muted transition-[max-height,padding] duration-[320ms] ease-in-out"
                 style={open ? { maxHeight: '300px', padding: '10px 17px 16px' } : { maxHeight: 0, padding: '0 17px' }}
               >
-                {f.a}
+                {t(f.a)}
               </div>
             </div>
           );

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchCustomProducts } from '@/lib/productData';
 import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import CategoryClient from './CategoryClient';
+import { getServerLang } from '@/lib/i18n/serverLang';
 
 const SITE_URL = 'https://vangcur.com';
 
@@ -25,11 +26,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const cats = await getCategories();
   const cat = cats.find((c) => c.id !== 'all' && makeCatSlug(c.id) === slug) || null;
+  const lang = await getServerLang();
   if (!cat) {
-    return { title: 'ক্যাটাগরি পাওয়া যায়নি - Vangcur', robots: { index: false, follow: true } };
+    return {
+      title: lang === 'en' ? 'Category Not Found - Vangcur' : 'ক্যাটাগরি পাওয়া যায়নি - Vangcur',
+      robots: { index: false, follow: true },
+    };
   }
   const title = `${cat.name} - Vangcur`;
-  const description = `Vangcur-এ ${cat.name} ক্যাটাগরির সেরা প্রোডাক্টগুলো দেখুন — সেরা দামে, দ্রুত হোম ডেলিভারিতে।`;
+  const description = lang === 'en'
+    ? `Browse the best ${cat.name} products at Vangcur — best prices, fast home delivery.`
+    : `Vangcur-এ ${cat.name} ক্যাটাগরির সেরা প্রোডাক্টগুলো দেখুন — সেরা দামে, দ্রুত হোম ডেলিভারিতে।`;
   return {
     title,
     description,
@@ -39,7 +46,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url: `${SITE_URL}/category/${makeCatSlug(cat.id)}`,
       title,
       description,
-      locale: 'bn_BD',
+      locale: lang === 'en' ? 'en_US' : 'bn_BD',
       siteName: 'Vangcur',
     },
   };

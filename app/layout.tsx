@@ -2,11 +2,14 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
+import { getServerLang, serverT } from '@/lib/i18n/serverLang';
 
-export const metadata: Metadata = {
-  title: 'Vangcur',
-  description: 'ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Vangcur',
+    description: await serverT('ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ'),
+  };
+}
 
 // মোবাইলে pinch-zoom-OUT করার সময় (100%-এর নিচে স্কেল হলে) যে background
 // flash / step-by-step repaint হচ্ছিল, শুধু সেটাই আটকানোর জন্য ন্যূনতম স্কেল
@@ -25,13 +28,14 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const lang = await getServerLang();
   return (
-    <html lang="bn" className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}>
+    <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}>
       <body className="min-h-screen bg-white font-body text-ink antialiased">
         {/*
           আগে এই gradient-টা body-তে সরাসরি `bg-fixed` (background-attachment: fixed)

@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { idFromSlug, makeSlug, fetchProductById } from '@/lib/productData';
 import ProductDetailClient from './ProductDetailClient';
+import { getServerLang } from '@/lib/i18n/serverLang';
 
 const SITE_URL = 'https://vangcur.com';
 
@@ -17,10 +18,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const id = idFromSlug(slug);
   const p = id ? await getProduct(id) : null;
+  const lang = await getServerLang();
 
   if (!p) {
     return {
-      title: 'প্রোডাক্ট পাওয়া যায়নি - Vangcur',
+      title: lang === 'en' ? 'Product Not Found - Vangcur' : 'প্রোডাক্ট পাওয়া যায়নি - Vangcur',
       robots: { index: false, follow: true },
     };
   }
@@ -29,7 +31,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const rawDesc = p.desc || '';
   const description = rawDesc
     ? (rawDesc.length > 160 ? rawDesc.slice(0, 157) + '...' : rawDesc)
-    : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`;
+    : lang === 'en'
+      ? `${p.name} for just ৳${Number(p.price).toLocaleString('en-US')} at Vangcur. Fast delivery, best price.`
+      : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`;
   const firstImg = p.imgs.find((im) => typeof im === 'string' && im.startsWith('http'));
   const canonicalSlug = `${makeSlug(p.name)}-${p.id}`;
 
@@ -43,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title,
       description,
       images: firstImg ? [{ url: firstImg, width: 800, height: 800, alt: p.name }] : undefined,
-      locale: 'bn_BD',
+      locale: lang === 'en' ? 'en_US' : 'bn_BD',
       siteName: 'Vangcur',
     },
     twitter: {

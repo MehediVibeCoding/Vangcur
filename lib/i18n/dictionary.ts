@@ -1,3 +1,20 @@
+export type DictLanguage = 'bn' | 'en';
+
+/**
+ * Plain (non-hook) translation helper. Safe to call from anywhere —
+ * React components, Zustand stores, plain utility/data files, or
+ * server code — since it doesn't depend on React context.
+ *
+ * Components should prefer the `useT()` hook (lib/i18n/useT.ts), which
+ * wraps this function and re-renders automatically when the language
+ * changes. Use `translate()` directly only where a hook can't be used
+ * (e.g. inside a Zustand store action or a plain data/util function).
+ */
+export function translate(text: string, lang: DictLanguage): string {
+  if (lang !== 'en') return text;
+  return staticDictionary[text] ?? text;
+}
+
 export const staticDictionary: Record<string, string> = {
   'কুইক লিঙ্কস': 'Quick Links',
   'মাই প্রোফাইল': 'My Profile',
