@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import StatusClient from './StatusClient';
-import { serverT } from '@/lib/i18n/serverLang';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getServerLang();
   return {
-    title: await serverT('অর্ডার স্ট্যাটাস - Vangcur'),
+    title: lang === 'en' ? 'Order Status - Vangcur' : 'অর্ডার স্ট্যাটাস - Vangcur',
     robots: { index: false, follow: true },
   };
 }

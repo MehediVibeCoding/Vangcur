@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import AccountOrdersClient from './AccountOrdersClient';
-import { serverT } from '@/lib/i18n/serverLang';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getServerLang();
   return {
-    title: await serverT('আমার অর্ডার সমূহ - Vangcur'),
+    title: lang === 'en' ? 'My Orders - Vangcur' : 'আমার অর্ডার সমূহ - Vangcur',
     robots: { index: false, follow: false },
   };
 }

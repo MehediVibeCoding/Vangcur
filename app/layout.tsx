@@ -2,12 +2,15 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
-import { getServerLang, serverT } from '@/lib/i18n/serverLang';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getServerLang();
   return {
     title: 'Vangcur',
-    description: await serverT('ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ'),
+    description: lang === 'en'
+      ? 'Vangcur — Gadgets, RGB Lights, Crystal Items & Accessories'
+      : 'ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ',
   };
 }
 

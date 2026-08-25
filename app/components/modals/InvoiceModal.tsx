@@ -281,7 +281,7 @@ export default function InvoiceModal() {
         <div className="invoice-wrap" ref={invoiceRef}>
           <div className="inv-body">
             <div className="hdr">
-              <div className="brand-name">Vangcur — ভাঙচুর</div>
+              <div className="brand-name">{lang === 'en' ? 'Vangcur' : 'Vangcur — ভাঙচুর'}</div>
               <div className="brand-sub">Your First Choice for Gadgets</div>
               <div className="badge">INVOICE</div>
               <div className="order-meta" style={{ marginTop: 10 }}>Order No: <strong>{order.orderNum}</strong> &nbsp;|&nbsp; Date: {ds}</div>

@@ -65,7 +65,7 @@ export default function FAQ() {
                 onClick={() => toggleFAQ(i)}
               >
                 <span>{t(f.q)}</span>
-                <span className={`shrink-0 text-[11px] text-muted transition-transform duration-[250ms] ${open ? 'rotate-180' : ''}`}>▼</span>
+                <span className={`shrink-0 text-[11px] text-muted transition-transform duration-[250ms] ${open ? 'rotate-180' : ''}`}>â–¼</span>
               </div>
               <div
                 className="overflow-hidden px-[17px] text-[13px] leading-[1.8] text-muted transition-[max-height,padding] duration-[320ms] ease-in-out"

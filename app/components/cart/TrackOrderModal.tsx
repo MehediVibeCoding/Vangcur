@@ -26,7 +26,7 @@ interface TrackOrderModalProps {
 // শনাক্ত হয় (checkout করার সময় স্থানীয়ভাবে সেভ হওয়া phone দিয়ে, একটা
 // SECURITY DEFINER RPC-এর মাধ্যমে), ইউজারকে টাইপ করতে হয় না।
 export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProps) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -127,7 +127,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                 <div className="mb-4 flex items-center justify-between rounded-[12px] bg-surface-muted px-4 py-3">
                   <div>
                     <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
-                    <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                   </div>
                   <button onClick={openInvoice} className="font-body text-[12px] font-semibold text-brand-light hover:underline">{t('ইনভয়েস')}</button>
                 </div>

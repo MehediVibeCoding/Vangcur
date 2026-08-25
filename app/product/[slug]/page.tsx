@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { idFromSlug, makeSlug, fetchProductById } from '@/lib/productData';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 import ProductDetailClient from './ProductDetailClient';
-import { getServerLang } from '@/lib/i18n/serverLang';
 
 const SITE_URL = 'https://vangcur.com';
 
@@ -17,8 +17,7 @@ const getProduct = cache(async (id: string) => {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const id = idFromSlug(slug);
-  const p = id ? await getProduct(id) : null;
-  const lang = await getServerLang();
+  const [p, lang] = await Promise.all([id ? getProduct(id) : Promise.resolve(null), getServerLang()]);
 
   if (!p) {
     return {
@@ -31,9 +30,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const rawDesc = p.desc || '';
   const description = rawDesc
     ? (rawDesc.length > 160 ? rawDesc.slice(0, 157) + '...' : rawDesc)
-    : lang === 'en'
+    : (lang === 'en'
       ? `${p.name} for just ৳${Number(p.price).toLocaleString('en-US')} at Vangcur. Fast delivery, best price.`
-      : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`;
+      : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`);
   const firstImg = p.imgs.find((im) => typeof im === 'string' && im.startsWith('http'));
   const canonicalSlug = `${makeSlug(p.name)}-${p.id}`;
 

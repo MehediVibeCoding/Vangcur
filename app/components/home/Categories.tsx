@@ -6,6 +6,7 @@ import {
   DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { useT } from '@/lib/i18n/useT';
 import type { Category } from '@/types';
 
 function getCatPerPage(): number {
@@ -29,6 +30,7 @@ function CatIcon({ icon }: { icon?: string }) {
 }
 
 export default function Categories() {
+  const { lang } = useT();
   const supabase = useMemo(() => createClient(), []);
   const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [catPage, setCatPage] = useState(0);
@@ -143,7 +145,9 @@ export default function Categories() {
     <div className="mx-auto mb-11 max-w-[1300px] px-5">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
-          ক্যাটাগরি <span className="text-brand-light">সমূহ</span>
+          {lang === 'en'
+            ? <>All <span className="text-brand-light">Categories</span></>
+            : <>ক্যাটাগরি <span className="text-brand-light">সমূহ</span></>}
         </h2>
       </div>
 

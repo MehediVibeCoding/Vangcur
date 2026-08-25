@@ -12,6 +12,7 @@ import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
+import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
@@ -22,6 +23,7 @@ const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 // সেভ থাকা সাম্প্রতিক guest অর্ডার automatic দেখায় (state ১/২)। এখানেও
 // ইচ্ছাকৃতভাবে কোনো phone-সার্চ ইনপুট নেই।
 export default function TrackOrderClient() {
+  const { t, lang } = useT();
   const router = useRouter();
   const supabase = useRef(createClient()).current;
 
@@ -101,29 +103,29 @@ export default function TrackOrderClient() {
       />
 
       <div className="mx-auto w-full max-w-[480px] px-5 pb-16 pt-8">
-        <h1 className="mb-1.5 text-center font-display text-xl font-bold text-ink">📦 অর্ডার ট্র্যাক করুন</h1>
+        <h1 className="mb-1.5 text-center font-display text-xl font-bold text-ink">{t('📦 অর্ডার ট্র্যাক করুন')}</h1>
         <p className="mb-6 text-center font-body text-[13px] text-muted">
-          আপনি এই ব্রাউজারে যে অর্ডার করেছেন সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।
+          {t('আপনি এই ব্রাউজারে যে অর্ডার করেছেন সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।')}
         </p>
 
         <div className="rounded-brand border border-border-base bg-white p-5 shadow-sh1">
           {loading && (
-            <div className="py-8 text-center font-body text-[13px] text-muted">⏳ লোড হচ্ছে...</div>
+            <div className="py-8 text-center font-body text-[13px] text-muted">{t('⏳ লোড হচ্ছে...')}</div>
           )}
 
           {!loading && notFound && (
             <div className="py-6 text-center">
               <div className="mb-2 text-3xl">🧾</div>
-              <div className="mb-2 font-body text-sm font-bold text-ink">এখনো কোনো অর্ডার করেননি</div>
+              <div className="mb-2 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার করেননি')}</div>
               <p className="font-body text-[12.5px] leading-[1.7] text-muted">
-                অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।<br />
-                ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে <strong>লগইন</strong> করে রাখুন।
+                {t('অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।')}<br />
+                {t('ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে')} <strong>{t('লগইন')}</strong> {t('করে রাখুন।')}
               </p>
               <button
                 onClick={() => setLoginOpen(true)}
                 className="mt-4 rounded-full bg-ink px-5 py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-light"
               >
-                লগইন করুন
+                {t('লগইন করুন')}
               </button>
             </div>
           )}
@@ -131,22 +133,22 @@ export default function TrackOrderClient() {
           {!loading && order && (
             <>
               <div className="mb-3.5 rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] px-3.5 py-[10px] font-body text-[11.5px] leading-[1.6] text-[#92400E]">
-                ⚠️ এই অর্ডারের তথ্য শুধু এই ব্রাউজারে সংরক্ষিত আছে। অন্য ডিভাইসে ট্র্যাক করতে লগইন করুন, অথবা WhatsApp-এ যোগাযোগ করুন।
+                {t('⚠️ এই অর্ডারের তথ্য শুধু এই ব্রাউজারে সংরক্ষিত আছে। অন্য ডিভাইসে ট্র্যাক করতে লগইন করুন, অথবা WhatsApp-এ যোগাযোগ করুন।')}
               </div>
 
               <div className="mb-4 flex items-center justify-between rounded-[12px] bg-surface-muted px-4 py-3">
                 <div>
                   <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
-                  <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                  <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                 </div>
-                <button onClick={openInvoice} className="font-body text-[12px] font-semibold text-brand-light hover:underline">ইনভয়েস</button>
+                <button onClick={openInvoice} className="font-body text-[12px] font-semibold text-brand-light hover:underline">{t('ইনভয়েস')}</button>
               </div>
 
               {isCancelled ? (
                 <div className="mb-4 rounded-[12px] bg-[#FEE2E2] px-4 py-4 text-center">
                   <div className="mb-1 text-2xl">❌</div>
                   <div className="font-body text-sm font-bold text-[#991B1B]">
-                    {order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে'}
+                    {t(order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে')}
                   </div>
                 </div>
               ) : (
@@ -163,7 +165,7 @@ export default function TrackOrderClient() {
                           {!isLast && <div className={`w-[2px] flex-1 ${idx < currentStepIdx ? 'bg-brand-light' : 'bg-border-base'}`} style={{ minHeight: 24 }} />}
                         </div>
                         <div className={`pb-6 pt-1 font-body text-[13px] font-semibold ${done ? 'text-ink' : 'text-muted'}`}>
-                          {step.label}
+                          {t(step.label)}
                         </div>
                       </div>
                     );
@@ -172,7 +174,7 @@ export default function TrackOrderClient() {
               )}
 
               <div className="rounded-[12px] border border-border-base p-3">
-                <div className="mb-2 font-body text-[12px] font-bold text-ink">অর্ডার সারমর্ম</div>
+                <div className="mb-2 font-body text-[12px] font-bold text-ink">{t('অর্ডার সারমর্ম')}</div>
                 <div className="flex flex-col gap-1.5">
                   {(order.items || []).map((i, idx) => (
                     <div key={idx} className="flex items-center justify-between font-body text-[12.5px] text-ink">
@@ -182,7 +184,7 @@ export default function TrackOrderClient() {
                   ))}
                 </div>
                 <div className="mt-2 flex items-center justify-between border-t border-border-base pt-2 font-body text-[13px] font-bold text-ink">
-                  <span>মোট (শিপিং সহ):</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
+                  <span>{t('মোট (শিপিং সহ):')}</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
                 </div>
               </div>
             </>

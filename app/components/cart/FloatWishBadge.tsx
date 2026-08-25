@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { OPEN_WISHLIST_EVENT } from '@/lib/uiEvents';
+import { useT } from '@/lib/i18n/useT';
 
 // How long it stays fully visible before fading out, and how long the fade itself takes.
 const VISIBLE_MS = 4500;
 const FADE_MS = 300;
 
 export default function FloatWishBadge() {
+  const { t } = useT();
   const addedTick = useWishlistStore((s) => s.addedTick);
   const prevTick = useRef(addedTick);
   const [mounted, setMounted] = useState(false);
@@ -62,7 +64,7 @@ export default function FloatWishBadge() {
         show ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
       }`}
       onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
-      title="উইশলিস্ট"
+      title={t('উইশলিস্ট')}
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-brand-light">
         <path

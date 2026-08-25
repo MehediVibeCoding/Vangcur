@@ -2,20 +2,19 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { fetchCustomProducts } from '@/lib/productData';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 import SearchClient from './SearchClient';
-import { getServerLang } from '@/lib/i18n/serverLang';
 
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }): Promise<Metadata> {
-  const { q } = await searchParams;
+  const [{ q }, lang] = await Promise.all([searchParams, getServerLang()]);
   const query = (q || '').trim();
-  const lang = await getServerLang();
-  const title = query
-    ? (lang === 'en' ? `"${query}" search results - Vangcur` : `"${query}" এর সার্চ ফলাফল - Vangcur`)
-    : (lang === 'en' ? 'Search Results - Vangcur' : 'সার্চ ফলাফল - Vangcur');
+  const title = lang === 'en'
+    ? (query ? `Search results for "${query}" - Vangcur` : 'Search Results - Vangcur')
+    : (query ? `"${query}" এর সার্চ ফলাফল - Vangcur` : 'সার্চ ফলাফল - Vangcur');
   return {
     title,
     robots: { index: false, follow: true },

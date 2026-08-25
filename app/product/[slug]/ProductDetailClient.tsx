@@ -654,7 +654,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             className="mb-5 flex w-full items-center justify-between gap-2 rounded-[10px] border border-border-base bg-surface-muted px-3.5 py-2.5 text-left transition-brand duration-brand hover:border-brand-light/40"
           >
             <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
-              <ShieldIcon className="text-brand-light" /> {prod.warranty}
+              <ShieldIcon className="text-brand-light" /> {t(prod.warranty)}
             </span>
             <span
               className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-base text-[10.5px] font-bold text-muted"

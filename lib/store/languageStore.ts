@@ -13,25 +13,21 @@ function loadLanguage(): Language {
   }
 }
 
-// Cookie mirror of the language preference. localStorage alone can't be
-// read by server components/route handlers (title tags, <html lang>,
-// generateMetadata, etc.), so we also mirror the choice into a cookie —
-// this is what lib/i18n/serverLang.ts reads on the server.
-function persistCookie(lang: Language): void {
-  try {
-    document.cookie = `${LANG_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
-  } catch {
-    // cookies unavailable, ignore
-  }
-}
-
 function persist(lang: Language): void {
   try {
     localStorage.setItem(LANG_KEY, lang);
   } catch {
     // storage unavailable, ignore
   }
-  persistCookie(lang);
+  try {
+    // Mirrored into a cookie (1 year) so server components / generateMetadata
+    // can read the same preference via lib/i18n/getServerLang.ts — the
+    // page title, meta description, and <html lang> need this on the very
+    // first server-rendered response, before any client JS has run.
+    document.cookie = `${LANG_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
+  } catch {
+    // cookies unavailable, ignore — client-side language switching still works
+  }
 }
 
 interface LanguageState {
@@ -39,15 +35,8 @@ interface LanguageState {
   setLanguage: (lang: Language) => void;
 }
 
-const initialLang = loadLanguage();
-if (typeof window !== 'undefined') {
-  // Keep the cookie in sync even for returning visitors who already had a
-  // localStorage preference from before the cookie mirror existed.
-  persistCookie(initialLang);
-}
-
 export const useLanguageStore = create<LanguageState>((set) => ({
-  lang: initialLang,
+  lang: loadLanguage(),
   setLanguage: (lang) => {
     persist(lang);
     set({ lang });

@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { fetchCustomProducts } from '@/lib/productData';
 import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 import CategoryClient from './CategoryClient';
-import { getServerLang } from '@/lib/i18n/serverLang';
 
 const SITE_URL = 'https://vangcur.com';
 
@@ -24,9 +24,8 @@ const getCategories = cache(async () => {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const cats = await getCategories();
+  const [cats, lang] = await Promise.all([getCategories(), getServerLang()]);
   const cat = cats.find((c) => c.id !== 'all' && makeCatSlug(c.id) === slug) || null;
-  const lang = await getServerLang();
   if (!cat) {
     return {
       title: lang === 'en' ? 'Category Not Found - Vangcur' : 'ক্যাটাগরি পাওয়া যায়নি - Vangcur',
@@ -35,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
   const title = `${cat.name} - Vangcur`;
   const description = lang === 'en'
-    ? `Browse the best ${cat.name} products at Vangcur — best prices, fast home delivery.`
+    ? `Browse the best products in the ${cat.name} category on Vangcur — best prices, fast home delivery.`
     : `Vangcur-এ ${cat.name} ক্যাটাগরির সেরা প্রোডাক্টগুলো দেখুন — সেরা দামে, দ্রুত হোম ডেলিভারিতে।`;
   return {
     title,

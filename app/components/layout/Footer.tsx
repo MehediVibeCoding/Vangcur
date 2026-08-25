@@ -139,11 +139,11 @@ export default function Footer() {
             ) : (
               <>
                 <div className="font-display text-[22px] text-white">{logo.main}</div>
-                <div className="mt-0.5 text-[9px] uppercase tracking-[2px] text-brand-light">{logo.sub}</div>
+                <div className="mt-0.5 text-[9px] uppercase tracking-[2px] text-brand-light">{t(logo.sub || '')}</div>
               </>
             )}
           </div>
-          <p className="mt-2.5 max-w-[280px] text-[12.5px] leading-[1.75] text-white/50">{extras.desc}</p>
+          <p className="mt-2.5 max-w-[280px] text-[12.5px] leading-[1.75] text-white/50">{t(extras.desc)}</p>
           <div className="mt-4 flex gap-[9px]">
             <a className="flex h-[35px] w-[35px] items-center justify-center rounded-[9px] border-0 bg-white/[.08] text-white no-underline transition-brand duration-brand hover:bg-brand-light [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white" href={extras.social.fb} target="_blank" rel="noopener noreferrer" title="Facebook">
               <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
@@ -189,7 +189,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-white/[.08] px-5 py-[18px] text-center">
-        <div className="text-[13px] font-medium text-brand-light">{extras.copy}</div>
+        <div className="text-[13px] font-medium text-brand-light">{t(extras.copy)}</div>
       </div>
     </footer>
   );

@@ -874,7 +874,7 @@ export default function CheckoutPage() {
                       >
                         <input type="radio" name="ship" checked={selectedShip === opt.key} readOnly className="accent-info" />
                         <div>
-                          <div className="font-body text-[13px] font-semibold text-ink">{opt.name}</div>
+                          <div className="font-body text-[13px] font-semibold text-ink">{t(opt.name)}</div>
                           <div className="font-body text-[11px] text-muted">{opt.sub}</div>
                         </div>
                         <div className="ml-auto font-body text-sm font-bold text-ink">৳{shipPrice(opt.key, shipCfg)}</div>

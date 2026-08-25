@@ -13,12 +13,14 @@ import { useAuthStore } from '@/lib/store/authStore';
 import {
   OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT, GENERATE_INVOICE_EVENT,
 } from '@/lib/uiEvents';
+import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
 export default function AccountOrdersClient() {
+  const { t } = useT();
   const supabase = useRef(createClient()).current;
 
   const cartQty = useCartStore((s) => cartCount(s.cart));
@@ -80,24 +82,24 @@ export default function AccountOrdersClient() {
         {!currentUser ? (
           <div className="mx-auto max-w-[380px] rounded-brand border border-dashed border-border-base py-12 text-center">
             <div className="mb-3 text-[42px]">🔒</div>
-            <div className="mb-1.5 font-body text-[15px] font-bold text-ink">অর্ডার দেখতে লগইন করুন</div>
-            <div className="mb-5 font-body text-[13px] text-muted">আপনার অর্ডার ইতিহাস দেখতে অ্যাকাউন্টে লগইন করা প্রয়োজন।</div>
+            <div className="mb-1.5 font-body text-[15px] font-bold text-ink">{t('অর্ডার দেখতে লগইন করুন')}</div>
+            <div className="mb-5 font-body text-[13px] text-muted">{t('আপনার অর্ডার ইতিহাস দেখতে অ্যাকাউন্টে লগইন করা প্রয়োজন।')}</div>
             <button
               onClick={() => setLoginOpen(true)}
               className="rounded-full bg-ink px-6 py-2.5 font-body text-[13.5px] font-bold text-white transition-brand duration-brand hover:bg-brand-light"
             >
-              লগইন করুন
+              {t('লগইন করুন')}
             </button>
           </div>
         ) : (
           <>
             <div className="mb-5 flex items-center justify-between">
-              <h1 className="font-display text-xl font-bold text-ink">📦 আমার অর্ডার সমূহ</h1>
+              <h1 className="font-display text-xl font-bold text-ink">📦 {t('আমার অর্ডার সমূহ')}</h1>
               {!loading && orders.length > 0 && (
                 <div className="flex gap-2 font-body text-[11.5px] font-semibold text-muted">
-                  <span className="rounded-full bg-surface-muted px-2.5 py-1">মোট: {stats.total}</span>
-                  <span className="rounded-full bg-surface-muted px-2.5 py-1">চলমান: {stats.running}</span>
-                  <span className="rounded-full bg-surface-muted px-2.5 py-1">সম্পন্ন: {stats.completed}</span>
+                  <span className="rounded-full bg-surface-muted px-2.5 py-1">{t('মোট:')} {stats.total}</span>
+                  <span className="rounded-full bg-surface-muted px-2.5 py-1">{t('চলমান:')} {stats.running}</span>
+                  <span className="rounded-full bg-surface-muted px-2.5 py-1">{t('সম্পন্ন:')} {stats.completed}</span>
                 </div>
               )}
             </div>
@@ -106,7 +108,7 @@ export default function AccountOrdersClient() {
               <div className="mb-4">
                 <input
                   type="text"
-                  placeholder="অর্ডার নম্বর দিয়ে খুঁজুন (যেমন: VC-1082)"
+                  placeholder={t('অর্ডার নম্বর দিয়ে খুঁজুন (যেমন: VC-1082)')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="w-full rounded-full border border-ink/[0.08] bg-surface-muted px-[18px] py-[10px] font-body text-[13px] text-ink outline-none focus:border-brand-light/40 focus:bg-white"
@@ -123,14 +125,14 @@ export default function AccountOrdersClient() {
             ) : orders.length === 0 ? (
               <div className="rounded-brand border border-dashed border-border-base py-14 text-center">
                 <div className="mb-3 text-[42px]">📦</div>
-                <div className="mb-1 font-body text-sm font-bold text-ink">এখনো কোনো অর্ডার নেই</div>
-                <div className="mb-5 font-body text-xs text-muted">অর্ডার করলে এখানে দেখাবে</div>
-                <a href="/" className="inline-block rounded-full bg-ink px-6 py-2.5 font-body text-[13px] font-bold text-white transition-brand duration-brand hover:bg-brand-light">কেনাকাটা শুরু করুন</a>
+                <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
+                <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
+                <a href="/" className="inline-block rounded-full bg-ink px-6 py-2.5 font-body text-[13px] font-bold text-white transition-brand duration-brand hover:bg-brand-light">{t('কেনাকাটা শুরু করুন')}</a>
               </div>
             ) : filteredOrders.length === 0 ? (
               <div className="rounded-brand border border-dashed border-border-base py-10 text-center">
                 <div className="mb-2 text-3xl">🔍</div>
-                <div className="font-body text-sm font-bold text-ink">এই নম্বরে কোনো অর্ডার পাওয়া যায়নি</div>
+                <div className="font-body text-sm font-bold text-ink">{t('এই নম্বরে কোনো অর্ডার পাওয়া যায়নি')}</div>
               </div>
             ) : (
               <div className="flex flex-col gap-3.5">

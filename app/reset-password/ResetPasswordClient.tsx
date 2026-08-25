@@ -8,6 +8,7 @@ import { updatePassword } from '@/lib/authData';
 import { useAuthStore } from '@/lib/store/authStore';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import PasswordStrengthMeter from '@/app/components/auth/PasswordStrengthMeter';
+import { useT } from '@/lib/i18n/useT';
 
 type Status = 'checking' | 'ready' | 'invalid' | 'done';
 
@@ -100,6 +101,7 @@ const primaryBtnClass =
   'w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:shadow-[0_2px_10px_rgba(0,88,199,.28)] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50 focus-visible:ring-offset-2';
 
 export default function ResetPasswordClient() {
+  const { t } = useT();
   const supabase = useRef(createClient()).current;
   const [status, setStatus] = useState<Status>('checking');
   const [pass, setPass] = useState('');
@@ -133,13 +135,13 @@ export default function ResetPasswordClient() {
 
     const strength = await checkPasswordStrength(pass);
     if (!strength.minLenOk || !strength.ok) { setPassErr(true); return; }
-    if (pass !== confirmPass) { setConfirmErr('দুটো পাসওয়ার্ড মিলছে না'); return; }
+    if (pass !== confirmPass) { setConfirmErr(t('দুটো পাসওয়ার্ড মিলছে না')); return; }
 
     setLoading(true);
     const { error } = await updatePassword(supabase, pass);
     if (error) {
       setLoading(false);
-      setGenErr('পাসওয়ার্ড পরিবর্তন করা যায়নি, লিংকের মেয়াদ শেষ হয়ে থাকতে পারে');
+      setGenErr(t('পাসওয়ার্ড পরিবর্তন করা যায়নি, লিংকের মেয়াদ শেষ হয়ে থাকতে পারে'));
       return;
     }
 
@@ -150,7 +152,7 @@ export default function ResetPasswordClient() {
     useAuthStore.getState().setCurrentUser(null);
     setLoading(false);
     setStatus('done');
-    showToast('পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন');
+    showToast(t('পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন'));
     setTimeout(() => router.push('/'), 1500);
   };
 
@@ -160,18 +162,18 @@ export default function ResetPasswordClient() {
         <div className={`relative overflow-hidden px-7 text-center ${status === 'done' ? 'pb-2 pt-6' : 'pb-5 pt-8'}`}>
           <HeaderDecor />
           {status !== 'done' && (
-            <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">নতুন পাসওয়ার্ড সেট করুন</h2>
+            <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{t('নতুন পাসওয়ার্ড সেট করুন')}</h2>
           )}
           {status === 'ready' && (
             <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">
-              আপনার অ্যাকাউন্টের জন্য একটি নতুন, শক্তিশালী পাসওয়ার্ড দিন
+              {t('আপনার অ্যাকাউন্টের জন্য একটি নতুন, শক্তিশালী পাসওয়ার্ড দিন')}
             </p>
           )}
         </div>
 
         <div className="px-7 pb-8 pt-2">
           {status === 'checking' && (
-            <p className="py-4 text-center font-body text-[13.5px] text-muted">লিংক যাচাই করা হচ্ছে...</p>
+            <p className="py-4 text-center font-body text-[13.5px] text-muted">{t('লিংক যাচাই করা হচ্ছে...')}</p>
           )}
 
           {status === 'invalid' && (
@@ -180,26 +182,26 @@ export default function ResetPasswordClient() {
                 <IconAlert />
               </div>
               <p className="mb-4 font-body text-[13.5px] leading-relaxed text-ink">
-                এই লিংকের মেয়াদ শেষ হয়ে গেছে বা এটি অবৈধ। আবার পাসওয়ার্ড রিসেট রিকোয়েস্ট করুন।
+                {t('এই লিংকের মেয়াদ শেষ হয়ে গেছে বা এটি অবৈধ। আবার পাসওয়ার্ড রিসেট রিকোয়েস্ট করুন।')}
               </p>
-              <button onClick={() => router.push('/')} className={primaryBtnClass}>হোমপেজে ফিরে যান</button>
+              <button onClick={() => router.push('/')} className={primaryBtnClass}>{t('হোমপেজে ফিরে যান')}</button>
             </div>
           )}
 
           {status === 'ready' && (
             <div className="flex flex-col gap-3.5">
               <div>
-                <label className={fieldLabelClass}>নতুন পাসওয়ার্ড</label>
+                <label className={fieldLabelClass}>{t('নতুন পাসওয়ার্ড')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconLock /></span>
                   <input
                     type={showPass ? 'text' : 'password'} value={pass} maxLength={MAX_PASS_LEN}
                     onChange={(e) => { setPass(e.target.value); if (passErr) setPassErr(false); }}
-                    placeholder="কমপক্ষে ৮ অক্ষর, শক্তিশালী পাসওয়ার্ড"
+                    placeholder={t('কমপক্ষে ৮ অক্ষর, শক্তিশালী পাসওয়ার্ড')}
                     className={`${fieldClass(passErr)} pr-11`}
                   />
                   <button
-                    type="button" title={showPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowPass((v) => !v)}
+                    type="button" title={showPass ? t('পাসওয়ার্ড লুকান') : t('পাসওয়ার্ড দেখুন')} onClick={() => setShowPass((v) => !v)}
                     className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showPass} />
@@ -208,18 +210,18 @@ export default function ResetPasswordClient() {
                 <PasswordStrengthMeter password={pass} />
               </div>
               <div>
-                <label className={fieldLabelClass}>পাসওয়ার্ড আবার লিখুন</label>
+                <label className={fieldLabelClass}>{t('পাসওয়ার্ড আবার লিখুন')}</label>
                 <div className="relative">
                   <span className={fieldIconWrapClass}><IconLock /></span>
                   <input
                     type={showConfirmPass ? 'text' : 'password'} value={confirmPass} maxLength={MAX_PASS_LEN}
                     onChange={(e) => { setConfirmPass(e.target.value); if (confirmErr) setConfirmErr(''); }}
-                    placeholder="পাসওয়ার্ড আবার লিখুন"
+                    placeholder={t('পাসওয়ার্ড আবার লিখুন')}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
                     className={`${fieldClass(!!confirmErr)} pr-11`}
                   />
                   <button
-                    type="button" title={showConfirmPass ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'} onClick={() => setShowConfirmPass((v) => !v)}
+                    type="button" title={showConfirmPass ? t('পাসওয়ার্ড লুকান') : t('পাসওয়ার্ড দেখুন')} onClick={() => setShowConfirmPass((v) => !v)}
                     className={`absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center p-1 text-muted transition-brand ${showConfirmPass ? 'text-brand-light' : ''}`}
                   >
                     <IconEye off={showConfirmPass} />
@@ -234,7 +236,7 @@ export default function ResetPasswordClient() {
                 </div>
               )}
               <button onClick={handleSubmit} disabled={loading} className={`${primaryBtnClass} mt-1`}>
-                পাসওয়ার্ড সেভ করুন
+                {t('পাসওয়ার্ড সেভ করুন')}
               </button>
             </div>
           )}
@@ -245,7 +247,7 @@ export default function ResetPasswordClient() {
                 <IconCheck />
               </div>
               <p className="font-body text-[14px] font-bold leading-relaxed text-ink">
-                পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করতে হোমপেজে নিয়ে যাওয়া হচ্ছে...
+                {t('পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করতে হোমপেজে নিয়ে যাওয়া হচ্ছে...')}
               </p>
             </div>
           )}

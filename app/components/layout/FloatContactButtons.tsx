@@ -9,8 +9,10 @@ import {
   subscribeContactSettings,
   type ContactSettings,
 } from '@/lib/floatButtonsData';
+import { useT } from '@/lib/i18n/useT';
 
 export default function FloatContactButtons() {
+  const { t } = useT();
   // If Supabase env vars are missing/misconfigured, createClient() throws.
   // This component renders on every page, so an unguarded throw here used to
   // take down the entire app. Fall back to the default WA/Messenger links
@@ -47,7 +49,7 @@ export default function FloatContactButtons() {
         href={msgLink}
         target="_blank"
         rel="noopener noreferrer"
-        title="Messenger এ মেসেজ করুন"
+        title={t('Messenger এ মেসেজ করুন')}
         className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#0084FF] shadow-sh3 transition-brand duration-brand hover:scale-105"
       >
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
@@ -58,7 +60,7 @@ export default function FloatContactButtons() {
         href={waLink}
         target="_blank"
         rel="noopener noreferrer"
-        title="WhatsApp এ মেসেজ করুন"
+        title={t('WhatsApp এ মেসেজ করুন')}
         className="fixed bottom-[86px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-sh3 transition-brand duration-brand hover:scale-105"
       >
         <svg width="24" height="24" fill="white" viewBox="0 0 24 24">

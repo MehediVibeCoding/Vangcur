@@ -1,4 +1,5 @@
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 
 export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
@@ -39,7 +40,8 @@ interface OrderCardProps {
 }
 
 export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
-  const dateStr = new Date(o.date).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+  const { t, lang } = useT();
+  const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
   return (
     <div className="rounded-brand border border-border-base bg-white shadow-sh1">
       <div className="flex items-center justify-between border-b border-border-base px-4 py-2.5">
@@ -58,8 +60,8 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
           ))}
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-border-base pt-3">
-          <div className="font-body text-[13px] font-bold text-ink">মোট: ৳{(o.total || 0).toLocaleString('en-US')} (শিপিং সহ)</div>
-          <button onClick={() => onInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 ইনভয়েস</button>
+          <div className="font-body text-[13px] font-bold text-ink">{t('মোট:')} ৳{(o.total || 0).toLocaleString('en-US')} ({t('শিপিং সহ')})</div>
+          <button onClick={() => onInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 {t('ইনভয়েস')}</button>
         </div>
       </div>
     </div>

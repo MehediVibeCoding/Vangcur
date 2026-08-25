@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Product, WishlistItem } from '@/types';
 import { showToast } from '@/lib/toast';
+import { translate } from '@/lib/i18n/translate';
 
 const WISH_KEY = 'vc_wish';
 
@@ -47,12 +48,12 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     const already = w.some((x) => String(x.id) === String(prod.id));
     if (already) {
       w = w.filter((x) => String(x.id) !== String(prod.id));
-      showToast('Wishlist থেকে সরানো হয়েছে');
+      showToast(translate('Wishlist থেকে সরানো হয়েছে'));
       persist(w);
       set({ wishlist: w });
     } else {
       w = [...w, { id: prod.id, name: prod.name, emoji: prod.imgs[0], price: prod.price, cat: prod.cat }];
-      showToast('❤️ Wishlist এ যোগ হয়েছে!');
+      showToast(translate('❤️ Wishlist এ যোগ হয়েছে!'));
       persist(w);
       set((s) => ({ wishlist: w, addedTick: s.addedTick + 1 }));
     }

@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
 import TermsClient from './TermsClient';
-import { serverT } from '@/lib/i18n/serverLang';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: await serverT('শর্তাবলী (Terms & Conditions) - Vangcur'),
-    description: await serverT('Vangcur (ভাঙচুর) থেকে কেনাকাটার আগে আমাদের অর্ডার, ডেলিভারি, আনবক্সিং ভিডিও, ওয়ারেন্টি ও ব্যবহারের শর্তাবলী পড়ে নিন।'),
-  };
+  const lang = await getServerLang();
+  return lang === 'en'
+    ? {
+      title: 'Terms & Conditions - Vangcur',
+      description: "Read Vangcur's order, delivery, unboxing video, warranty, and usage terms before shopping with us.",
+    }
+    : {
+      title: 'শর্তাবলী (Terms & Conditions) - Vangcur',
+      description: 'Vangcur (ভাঙচুর) থেকে কেনাকাটার আগে আমাদের অর্ডার, ডেলিভারি, আনবক্সিং ভিডিও, ওয়ারেন্টি ও ব্যবহারের শর্তাবলী পড়ে নিন।',
+    };
 }
 
 export default function TermsPage() {

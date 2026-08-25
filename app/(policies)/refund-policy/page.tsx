@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
 import RefundPolicyClient from './RefundPolicyClient';
-import { serverT } from '@/lib/i18n/serverLang';
+import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: await serverT('রিটার্ন ও রিফান্ড পলিসি - Vangcur'),
-    description: await serverT('Vangcur (ভাঙচুর)-এর প্রোডাক্ট রিটার্ন, এক্সচেঞ্জ, রিপ্লেসমেন্ট ও রিফান্ড সংক্রান্ত পূর্ণাঙ্গ নীতিমালা।'),
-  };
+  const lang = await getServerLang();
+  return lang === 'en'
+    ? {
+      title: 'Return & Refund Policy - Vangcur',
+      description: "Vangcur's full policy on product returns, exchanges, replacements, and refunds.",
+    }
+    : {
+      title: 'রিটার্ন ও রিফান্ড পলিসি - Vangcur',
+      description: 'Vangcur (ভাঙচুর)-এর প্রোডাক্ট রিটার্ন, এক্সচেঞ্জ, রিপ্লেসমেন্ট ও রিফান্ড সংক্রান্ত পূর্ণাঙ্গ নীতিমালা।',
+    };
 }
 
 export default function RefundPolicyPage() {

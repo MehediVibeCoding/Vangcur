@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '@/lib/i18n/useT';
 
 const SHOW_AFTER_PX = 400;
 const HIDE_BELOW_PX = 320; // শো/হাইড থ্রেশহোল্ডে সামান্য gap (hysteresis) রাখা হলো —
@@ -9,6 +10,7 @@ const HIDE_BELOW_PX = 320; // শো/হাইড থ্রেশহোল্ড
 // রিপ্লে হতো, "আবার লোড হওয়ার" মতো দেখাতো)।
 
 export default function BackToTopButton() {
+  const { t } = useT();
   const [visible, setVisible] = useState(false);
   const tickingRef = useRef(false);
 
@@ -38,7 +40,7 @@ export default function BackToTopButton() {
     <button
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      title="উপরে যান"
+      title={t('উপরে যান')}
       className="fixed bottom-[284px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand-light shadow-sh3 animate-section-reveal transition-brand duration-brand hover:bg-brand-light hover:text-white"
     >
       <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">

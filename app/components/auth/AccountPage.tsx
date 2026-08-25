@@ -128,7 +128,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
 
   const initials = (currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
   const createdStr = currentUser.createdAt
-    ? new Date(currentUser.createdAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })
+    ? new Date(currentUser.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })
     : '';
 
   const openNameEdit = () => { setNameEditValue(sanitizePlainName(currentUser.name || '')); setNameEditErr(''); setNameEditOpen(true); };
@@ -200,7 +200,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
     >
       <div className="sticky top-[14px] z-10 mx-3 mb-1.5 mt-[14px] flex items-center gap-1.5 overflow-hidden rounded-[35px] border border-white/60 bg-white/80 px-3 py-2 shadow-sh2 backdrop-blur-[8px] md:gap-2 md:px-4">
         <button
-          onClick={() => { onClose(); router.push('/'); }} aria-label="হোম" title="হোম"
+          onClick={() => { onClose(); router.push('/'); }} aria-label={t('হোম')} title={t('হোম')}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink transition-brand duration-brand hover:bg-surface-muted"
         >
           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -210,14 +210,14 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
 
         <div className="flex flex-1 items-center justify-end gap-0.5 overflow-x-auto md:gap-1.5">
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))} title="কার্ট"
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))} title={t('কার্ট')}
             className="flex shrink-0 items-center gap-1.5 rounded-full px-2 py-2 text-ink transition-brand duration-brand hover:bg-surface-muted md:px-2.5"
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
               <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
             </svg>
-            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">কার্ট</span>
+            <span className="hidden font-body text-[12.5px] font-semibold sm:inline">{t('কার্ট')}</span>
           </button>
 
           <button
@@ -255,7 +255,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
             onClick={() => { onClose(); router.push('/'); }}
             className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-brand-light px-3 py-2 font-body text-[12.5px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover md:px-4"
           >
-            ব্যাক টু হোম
+            {t('ব্যাক টু হোম')}
           </button>
         </div>
       </div>
@@ -369,7 +369,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                   <div className="min-w-0 flex-1 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.65)' }}>
                     <div className="truncate font-body text-sm font-bold">{currentUser.name || '-'}</div>
                     <div className="truncate font-body text-[11.5px] text-white/75">{currentUser.email || '-'}</div>
-                    {createdStr && <div className="mt-0.5 font-body text-[10.5px] text-white/60">📅 {t('অ্যাকাউন্ট তৈরি')}: {createdStr}</div>}
+                    {createdStr && <div className="mt-0.5 font-body text-[10.5px] text-white/60">📅 {t('অ্যাকাউন্ট তৈরি:')} {createdStr}</div>}
                   </div>
                 </div>
 
@@ -450,8 +450,8 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                     const items = Array.isArray(draft.items) ? draft.items : [];
                     const firstItem = items[0] || null;
                     const d = new Date(draft.createdAt);
-                    const dateStr = d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
-                    const timeStr = d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = d.toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const timeStr = d.toLocaleTimeString(lang === 'en' ? 'en-US' : 'bn-BD', { hour: '2-digit', minute: '2-digit' });
                     const prodName = firstItem ? firstItem.name : t('প্রোডাক্ট');
                     const tot = items.reduce((s, i) => s + i.price * i.qty, 0);
                     return (
@@ -483,7 +483,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {stockNotifs.map((item) => {
-                    const dateStr = item.ts ? new Date(item.ts).toLocaleDateString('bn-BD', { month: 'short', day: 'numeric' }) : '';
+                    const dateStr = item.ts ? new Date(item.ts).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { month: 'short', day: 'numeric' }) : '';
                     return (
                       <div key={item.key} className="flex items-center gap-2.5 rounded-[10px] border border-border-base bg-surface-muted px-2.5 py-2">
                         <div className="shrink-0 text-xl">📦</div>
@@ -512,7 +512,7 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
                   onClick={() => { onClose(); router.push('/account/orders'); }}
                   className="font-body text-[12px] font-semibold text-brand-light hover:underline"
                 >
-                  {t('সব দেখুন')} →
+                  {t('সব দেখুন →')}
                 </button>
               )}
             </div>
