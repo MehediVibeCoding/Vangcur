@@ -1,3 +1,17 @@
+export type DictLanguage = 'bn' | 'en';
+
+/**
+ * Shared translate function — used by both the client hook (lib/i18n/useT.ts)
+ * and the server helper (lib/i18n/serverLang.ts) so bn→en lookup logic lives
+ * in exactly one place. Returns the original text unchanged when lang is
+ * 'bn', or the English lookup from staticDictionary (falling back to the
+ * original text if no entry exists) when lang is 'en'.
+ */
+export function translate(text: string, lang: DictLanguage): string {
+  if (lang !== 'en') return text;
+  return staticDictionary[text] ?? text;
+}
+
 export const staticDictionary: Record<string, string> = {
   'কুইক লিঙ্কস': 'Quick Links',
   'মাই প্রোফাইল': 'My Profile',
