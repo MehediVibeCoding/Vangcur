@@ -140,32 +140,41 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
   );
 }
 
-function getQuickSpecs(specs?: ProductSpecs & { _quick_keys?: string[] }): [string, string][] {
+// 🆕 "স্পেসিফিকেশন এক নজরে" এখন থেকে মূলত quickSpecsText (ফ্রি-ফ্লো, "•"
+// দিয়ে ভাগ করা) থেকে আসে। পুরনো প্রোডাক্ট, যেগুলোতে এখনো নতুন কলামটা খালি
+// কিন্তু specs._quick_keys-এ পুরনো key:value ডেটা আছে, তাদের জন্য আগের
+// pill রেন্ডারিং fallback হিসেবে রয়ে গেছে — কোনো পুরনো প্রোডাক্টের
+// এক নজরে বক্স হঠাৎ খালি হয়ে যাবে না।
+function getQuickSpecPills(quickSpecsText: string | undefined, specs?: ProductSpecs & { _quick_keys?: string[] }): string[] {
+  if (quickSpecsText && quickSpecsText.trim()) {
+    return quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
+  }
   const s = specs || {};
   const quickKeys = s._quick_keys;
-  let entries: [string, string][] = [];
-  if (Array.isArray(quickKeys)) {
-    quickKeys.forEach((k) => { if (s[k] !== undefined) entries.push([k, s[k]]); });
-  } else {
-    entries = Object.entries(s).filter(([k]) => !k.startsWith('_')) as [string, string][];
+  if (Array.isArray(quickKeys) && quickKeys.length) {
+    return quickKeys.filter((k) => s[k] !== undefined).slice(0, 6).map((k) => `${k}: ${s[k]}`);
   }
-  return entries.slice(0, 6);
+  return [];
 }
 
-const EXCLUDE_FROM_TABLE = new Set(['Packaging Content', 'packaging_content']);
-
-function getTechSpecRows(specs?: ProductSpecs & { _quick_keys?: string[] }): { rows: [string, string][]; pkg: string } {
+function getTechSpecRows(specs?: ProductSpecs & { _quick_keys?: string[] }): [string, string][] {
   const s = specs || {};
   const quickKeys = s._quick_keys;
   const quickKeySet = Array.isArray(quickKeys) ? new Set(quickKeys) : new Set<string>();
-  let rows: [string, string][];
-  if (Array.isArray(quickKeys)) {
-    rows = Object.entries(s).filter(([k]) => !k.startsWith('_') && !quickKeySet.has(k) && !EXCLUDE_FROM_TABLE.has(k)) as [string, string][];
-  } else {
-    rows = Object.entries(s).filter(([k]) => !k.startsWith('_') && !EXCLUDE_FROM_TABLE.has(k)) as [string, string][];
-  }
-  const pkg = s['Packaging Content'] || s['packaging_content'] || '';
-  return { rows, pkg };
+  // পুরনো প্রোডাক্টে Packaging Content এখনো specs-এর ভেতরে এই দুই key-এর
+  // একটায় গুঁজে থাকতে পারে (নতুন dedicated packaging_content কলামের আগে
+  // থেকে) — টেবিলে যাতে অন্য স্পেকের সাথে মিশে না যায়, তাই বাদ দেওয়া হলো;
+  // getPackagingContent() নিচে এটাকেই fallback হিসেবে ব্যবহার করে।
+  const EXCLUDE_FROM_TABLE = new Set(['Packaging Content', 'packaging_content']);
+  return Object.entries(s).filter(
+    ([k]) => !k.startsWith('_') && !quickKeySet.has(k) && !EXCLUDE_FROM_TABLE.has(k),
+  ) as [string, string][];
+}
+
+function getPackagingContent(packagingContent: string | undefined, specs?: ProductSpecs): string {
+  if (packagingContent && packagingContent.trim()) return packagingContent;
+  const s = specs || {};
+  return s['Packaging Content'] || s['packaging_content'] || '';
 }
 
 function FeatureItem({ text }: { text: string }) {
@@ -565,8 +574,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
   const sold = prod.stock <= 0;
   const imgs = prod.imgs && prod.imgs.length ? prod.imgs : ['📦'];
-  const quickSpecs = getQuickSpecs(prod.specs);
-  const { rows: techRows, pkg } = getTechSpecRows(prod.specs);
+  const quickSpecPills = getQuickSpecPills(prod.quickSpecsText, prod.specs);
+  const techRows = getTechSpecRows(prod.specs);
+  const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
   const faqs = Array.isArray(prod.faqs) ? prod.faqs : [];
   const rating = prod.rating || 4.5;
@@ -634,7 +644,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
 
         <div>
-          <h1 className="mb-3 font-display text-[21px] font-bold leading-snug text-ink sm:text-2xl">{prod.name}</h1>
+          <h1 className="mb-3 font-display text-[21px] font-bold leading-snug text-ink sm:text-2xl">{prod.seoH1 || prod.name}</h1>
 
           <div className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
             <span className="font-display text-[28px] font-bold text-brand-light sm:text-[32px]">৳{prod.price.toLocaleString('en-US')}</span>
@@ -679,15 +689,15 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             </span>
           </button>
 
-          {quickSpecs.length > 0 && (
+          {quickSpecPills.length > 0 && (
             <div className="mb-5 rounded-brand border border-border-base bg-white p-4 shadow-sh1">
               <div className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">
                 {t('স্পেসিফিকেশন এক নজরে')}
               </div>
               <div className="flex flex-wrap gap-2">
-                {quickSpecs.map(([k, v]) => (
-                  <div key={k} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[12.5px] text-ink">
-                    <span className="mr-1 font-semibold text-brand-light">{k}:</span>{v}
+                {quickSpecPills.map((pill, i) => (
+                  <div key={i} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[12.5px] text-ink">
+                    {pill}
                   </div>
                 ))}
               </div>

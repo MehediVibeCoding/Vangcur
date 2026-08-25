@@ -59,6 +59,12 @@ interface RawCustomProduct {
   closing?: string;
   power_info?: string | null;
   info_boxes?: unknown;
+  seo_h1?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  og_description?: string | null;
+  quick_specs_text?: string | null;
+  packaging_content?: string | null;
 }
 
 export function mapCustomProduct(p: RawCustomProduct): Product {
@@ -88,12 +94,22 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
     closing: p.closing || '',
     powerInfo: p.power_info || '',
     infoBoxes: Array.isArray(p.info_boxes) ? (p.info_boxes as { title: string; body: string }[]) : parseJsonish(p.info_boxes, []),
+    seoH1: p.seo_h1 || '',
+    metaTitle: p.meta_title || '',
+    metaDescription: p.meta_description || '',
+    ogDescription: p.og_description || '',
+    quickSpecsText: p.quick_specs_text || '',
+    packagingContent: p.packaging_content || '',
     _detailLoaded: !!(p.long_desc || p.features || p.faqs),
   };
 }
 
 const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
-const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,power_info,info_boxes`;
+// 🆕 SEO মেটা ফিল্ড + quick_specs_text + packaging_content শুধু detail
+// (single product) query-তে লাগে — grid লিস্টিং-এ না, তাই বাকি bandwidth-
+// optimization নীতির (lib/productData.ts-এর ওপরের নোট) সাথে মিলিয়ে শুধু
+// DETAIL_COLS-এ যোগ করা হলো।
+const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,power_info,info_boxes,seo_h1,meta_title,meta_description,og_description,quick_specs_text,packaging_content`;
 
 // ⚠️ sync-gap ফিক্স — admin panel-এর প্রোডাক্ট পেজে drag করে সাজানো অর্ডার
 // store_settings key 'vc_prod_order'-এ (product id-র একটা JSON অ্যারে,

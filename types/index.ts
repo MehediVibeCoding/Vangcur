@@ -30,6 +30,15 @@ export interface Product {
   tags?: string;
   powerInfo?: string; // 🆕 ঐচ্ছিক — থাকলে Specification ট্যাবে টেবিলের নিচে আলাদা বক্সে দেখায়
   infoBoxes?: ProductInfoBox[]; // 🆕 ঐচ্ছিক — "অতিরিক্ত তথ্য" ট্যাবে আলাদা কার্ড হিসেবে
+  // 🆕 (AI Planner + SEO ফিল্ড ওভারহল, ২০২৬-০৮): সবগুলো ঐচ্ছিক — খালি হলে
+  // fallback ব্যবহার হয় (নিচে ব্যবহারের জায়গায় দ্রষ্টব্য), পুরনো প্রোডাক্টে
+  // কোনো পরিবর্তন দেখাবে না।
+  seoH1?: string; // খালি হলে <h1>-এ prod.name দেখাবে
+  metaTitle?: string; // খালি হলে generateMetadata আগের মতোই "নাম - ৳দাম | Vangcur" অটো বানাবে
+  metaDescription?: string; // খালি হলে desc থেকে auto-truncate হবে (আগের আচরণ)
+  ogDescription?: string; // খালি হলে metaDescription (বা তার fallback) ব্যবহার হবে
+  quickSpecsText?: string; // 🆕 "স্পেসিফিকেশন এক নজরে" ফ্রি-ফ্লো টেক্সট — "•" দিয়ে ভাগ করে পিল হিসেবে দেখায়; খালি হলে পুরনো specs._quick_keys সিস্টেমে fallback করে
+  packagingContent?: string; // 🆕 Packaging Content — Power Info-এর ঠিক পরে (Power Info না থাকলে স্পেসিফিকেশন টেবিলের পরে) আলাদা বক্সে দেখায়
   _detailLoaded: boolean;
 }
 

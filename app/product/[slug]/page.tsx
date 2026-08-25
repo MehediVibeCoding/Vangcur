@@ -26,13 +26,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  const title = `${p.name} - ৳${Number(p.price).toLocaleString('en-US')} | Vangcur`;
+  // 🆕 AI Planner/SEO ফিল্ড ওভারহল (২০২৬-০৮): অ্যাডমিনে H1/Meta Title/Meta
+  // Description/OG Description ভরা থাকলে সেগুলোই ব্যবহার হয়, খালি থাকলে
+  // (পুরনো প্রোডাক্ট, বা যেগুলোতে ইচ্ছাকৃতভাবে বসানো হয়নি) আগের মতোই
+  // নাম/দাম/desc থেকে অটো-জেনারেট হয় — কোনো প্রোডাক্টের আচরণ ভাঙে না।
+  const autoTitle = `${p.name} - ৳${Number(p.price).toLocaleString('en-US')} | Vangcur`;
+  const title = p.metaTitle || autoTitle;
+
   const rawDesc = p.desc || '';
-  const description = rawDesc
+  const autoDescription = rawDesc
     ? (rawDesc.length > 160 ? rawDesc.slice(0, 157) + '...' : rawDesc)
     : (lang === 'en'
       ? `${p.name} for just ৳${Number(p.price).toLocaleString('en-US')} at Vangcur. Fast delivery, best price.`
       : `${p.name} মাত্র ৳${Number(p.price).toLocaleString('en-US')} টাকায়, Vangcur-এ। দ্রুত ডেলিভারি, সেরা দাম।`);
+  const description = p.metaDescription || autoDescription;
+  const ogDescription = p.ogDescription || description;
+
   const firstImg = p.imgs.find((im) => typeof im === 'string' && im.startsWith('http'));
   const canonicalSlug = `${makeSlug(p.name)}-${p.id}`;
 
@@ -44,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: 'website',
       url: `${SITE_URL}/product/${canonicalSlug}`,
       title,
-      description,
+      description: ogDescription,
       images: firstImg ? [{ url: firstImg, width: 800, height: 800, alt: p.name }] : undefined,
       locale: lang === 'en' ? 'en_US' : 'bn_BD',
       siteName: 'Vangcur',
@@ -52,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     twitter: {
       card: 'summary_large_image',
       title,
-      description,
+      description: ogDescription,
       images: firstImg ? [firstImg] : undefined,
     },
   };
