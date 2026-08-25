@@ -648,6 +648,21 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             )}
           </div>
 
+          {/* 🆕 Stock status — এতদিন prod.stock শুধু কোয়ান্টিটি-লিমিট আর
+              সোল্ড-আউট badge নিয়ন্ত্রণে ব্যবহার হতো, কিন্তু আসল সংখ্যাটা customer-কে
+              কোথাও দেখানো হতো না। ১০ বা তার কম হলে urgency-স্টাইলে, বেশি হলে
+              সাধারণ "স্টকে আছে" — sold-out অবস্থায় গ্যালারির badge-ই যথেষ্ট, তাই
+              এখানে আলাদা করে কিছু দেখানো হচ্ছে না। */}
+          {!sold && (
+            <div className="mb-3 flex items-center gap-1.5 text-[12.5px] font-semibold">
+              {prod.stock <= 10 ? (
+                <span className="text-brand-light">⚡ {t('মাত্র')} {prod.stock}{t('টি বাকি — দ্রুত অর্ডার করুন')}</span>
+              ) : (
+                <span className="text-success">✓ {t('স্টকে আছে')} ({prod.stock}{t('টি')})</span>
+              )}
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setWarrantyOpen(true)}
@@ -751,7 +766,10 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       </div>
 
       <div className="sticky top-0 z-10 border-b border-border-base bg-white/95 backdrop-blur" ref={tabsWrapRef}>
-        <div className="mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 md:px-8">
+        <div
+          className="mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {TABS.map((tab) => (
             <button
               key={tab.id}
