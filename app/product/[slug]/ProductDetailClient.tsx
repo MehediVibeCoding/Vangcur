@@ -747,7 +747,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               {prod.stock <= 10 ? (
                 <span className="text-brand-light">⚡ {t('মাত্র')} {prod.stock}{t('টি বাকি — দ্রুত অর্ডার করুন')}</span>
               ) : (
-                <span className="text-success">✓ {t('স্টকে আছে')} ({prod.stock}{t('টি')})</span>
+                <span className="text-brand-light">{t('স্টকে আছে')} ({prod.stock}{t('টি')})</span>
               )}
             </div>
           )}
@@ -773,8 +773,15 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <div className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">
                 {t('স্পেসিফিকেশন এক নজরে')}
               </div>
-              <div ref={specPillsRef} className="relative">
-                {/* আসল পিক্সেল-প্রস্থ মাপার জন্য অদৃশ্য কপি — কখনো দেখা যায় না */}
+              <div ref={specPillsRef} className="relative overflow-hidden">
+                {/* আসল পিক্সেল-প্রস্থ মাপার জন্য অদৃশ্য কপি — কখনো দেখা যায় না।
+                    🩹 আগে এই প্যারেন্টে overflow-hidden ছিল না, তাই সবগুলো পিল
+                    এক লাইনে (wrap ছাড়া) পাশাপাশি বসানো এই absolute ডিভটা
+                    ভিউপোর্টের চেয়ে চওড়া হয়ে পুরো পেজকেই হরাইজন্টালি স্ক্রলযোগ্য
+                    করে ফেলছিল — মোবাইলে বাম-থেকে-ডানে সোয়াইপ করলে তখন পিছনের
+                    ব্যাকগ্রাউন্ড দেখা যেত (native swipe/rubber-band)। এখানে
+                    overflow-hidden যোগ করলে getBoundingClientRect()-এর মাপ
+                    ঠিকই থাকে, শুধু ভিজ্যুয়ালি ক্লিপ হয়ে যায়। */}
                 <div ref={specPillsMeasureRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex gap-2 opacity-0">
                   {quickSpecPills.map((pill, i) => (
                     <div key={i} className="whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
@@ -808,24 +815,27 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
 
           <div className="mb-5 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1 rounded-full bg-surface-muted p-1">
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-ink transition-brand duration-brand hover:bg-white disabled:opacity-30"
-                onClick={() => chgQty(-1)}
-                disabled={qty <= 1}
-                aria-label={t('কমান')}
-              >
-                −
-              </button>
-              <span className="min-w-[26px] text-center text-[14px] font-bold text-ink">{qty}</span>
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-ink transition-brand duration-brand hover:bg-white disabled:opacity-30"
-                onClick={() => chgQty(1)}
-                disabled={qty >= maxQty}
-                aria-label={t('বাড়ান')}
-              >
-                +
-              </button>
+            <div className="inline-flex items-center gap-2.5 rounded-full bg-brand-bg/35 py-1 pl-3.5 pr-1">
+              <span className="text-[13px] font-semibold text-ink">{t('পরিমাণ')}</span>
+              <div className="flex items-center gap-1">
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-ink transition-brand duration-brand hover:bg-white disabled:opacity-30"
+                  onClick={() => chgQty(-1)}
+                  disabled={qty <= 1}
+                  aria-label={t('কমান')}
+                >
+                  −
+                </button>
+                <span className="min-w-[26px] text-center text-[14px] font-bold text-ink">{qty}</span>
+                <button
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-ink transition-brand duration-brand hover:bg-white disabled:opacity-30"
+                  onClick={() => chgQty(1)}
+                  disabled={qty >= maxQty}
+                  aria-label={t('বাড়ান')}
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             {qty > 1 && (
@@ -835,10 +845,15 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             )}
 
             <div className="ml-auto flex items-center gap-1">
+              {/* 🩹 আগে এই বাটনে কোনো ব্যাকগ্রাউন্ড ছিল না (শুধু hover-এ ধূসর),
+                  এখন স্পেসিফিকেশন পিলের সেই একই হালকা নীল ব্যাকগ্রাউন্ড
+                  সবসময় দৃশ্যমান থাকবে — ক্লিক করলে (wishlist-এ যোগ হলে)
+                  শুধু ভিতরের হার্ট আইকনটাই নীল রঙে ফিল হবে, ব্যাকগ্রাউন্ড
+                  অপরিবর্তিত থাকবে। */}
               <button
                 onClick={toggleWishFromPP}
                 title={t('Wishlist এ যোগ করুন')}
-                className={`flex h-9 w-9 items-center justify-center rounded-full transition-brand duration-brand ${wished ? 'text-rose-500' : 'text-muted hover:bg-surface-muted hover:text-rose-500'}`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full bg-brand-bg/35 transition-brand duration-brand ${wished ? 'text-brand-light' : 'text-ink/60 hover:text-brand-light'}`}
               >
                 <HeartIcon filled={wished} />
               </button>
@@ -861,7 +876,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               </button>
             ) : (
               <>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-border-base bg-white py-3.5 text-sm font-bold text-ink transition-brand duration-brand hover:border-brand-light/30 hover:bg-surface-muted" onClick={addCartFromPP}>
+                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-bg/35 py-3.5 text-sm font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
                   <CartIcon /> {t('কার্টে যোগ করুন')}
                 </button>
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
@@ -1063,7 +1078,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
                 <BoltIcon /> {t('অর্ডার করুন')}
               </button>
-              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-[1.5px] border-border-base bg-white px-4 py-2.5 text-[13px] font-bold text-ink transition-brand duration-brand hover:bg-surface-muted" onClick={addCartFromPP}>
+              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-bg/35 px-4 py-2.5 text-[13px] font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
                 <CartIcon /> {t('কার্ট')}
               </button>
             </>
