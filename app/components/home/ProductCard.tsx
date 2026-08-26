@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   productHref,
   QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
@@ -85,13 +85,11 @@ interface ProductCardProps {
 
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const { t } = useT();
-  const router = useRouter();
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
   const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
 
-  // React 19 Hydration mismatch ফিক্স
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
@@ -100,12 +98,11 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
   const showDiscBadge = discPct >= 5 && !sold;
   const reviewCount = Math.floor((Number(p.id) || 1) * 37 + p.stock * 13) % 80 + 20;
+  const href = productHref(p);
 
-  const openProduct = () => {
-    router.push(productHref(p));
-  };
-
-  const handleWish = () => {
+  const handleWish = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     const added = useWishlistStore.getState().toggleWish(p);
     if (!prefersReducedMotion()) {
       setHeartBeat(false);
@@ -120,6 +117,8 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   };
 
   const handleCtaClick = (e: React.MouseEvent<HTMLButtonElement>, action: () => void) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!prefersReducedMotion()) {
       const btn = e.currentTarget;
       const r = document.createElement('span');
@@ -134,11 +133,12 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   };
 
   return (
-    <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
+    <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand md:hover:-translate-y-1 md:hover:shadow-sh3 active:scale-[.98] [transform:translateZ(0)]">
       <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
-        <div className="absolute inset-0 cursor-pointer" onClick={openProduct}>
+        {/* অপটিমাইজড লিংক: ক্লিক করার সাথে সাথে ইনস্ট্যান্ট প্রি-ফেচ লোড */}
+        <Link href={href} prefetch={true} className="absolute inset-0 block cursor-pointer">
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
-        </div>
+        </Link>
 
         <div
           className="pointer-events-none absolute inset-0"
@@ -165,12 +165,13 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         </button>
 
         <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
-          <div
-            className="line-clamp-1 cursor-pointer text-[11px] font-extrabold leading-tight text-white sm:text-sm xl:text-xs"
-            onClick={openProduct}
+          <Link
+            href={href}
+            prefetch={true}
+            className="line-clamp-1 block cursor-pointer text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
           >
             {p.name}
-          </div>
+          </Link>
           <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
             <span className="text-white/70">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
@@ -202,7 +203,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
                   aria-label={t('কার্টে যোগ করুন')}
-                  onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
+                  onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } })))}
                 >
                   <CartIcon />
                 </button>
