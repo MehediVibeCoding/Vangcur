@@ -2,11 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import {
-  CATEGORY_FILTER_EVENT, makeCatSlug, DEFAULT_CATEGORIES, fetchCategories, subscribeCategories,
+  CATEGORY_FILTER_EVENT, makeCatSlug, DEFAULT_CATEGORIES,
 } from '@/lib/categoryData';
-import { prodInCat, subscribeCustomProducts } from '@/lib/productData';
+import { prodInCat } from '@/lib/productData';
 import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 import ProductCard from './ProductCard';
@@ -14,10 +13,6 @@ import ProductCard from './ProductCard';
 const PRODS_PER_PAGE = 20;
 const PRODS_AUTO_THRESHOLD = 2;
 
-// ---------- CartSidebar-এর খালি-কার্ট স্টেটের ঠিক same ভিজ্যুয়াল ভাষা —
-// gradient circle ব্যাজে প্রফেশনাল স্ট্রোক আইকন (📦 ইমোজির বদলে), আর
-// rounded-full gradient (info -> brand-light) pill বাটন (আগের কালো
-// rounded-xl বাটনের বদলে) — চেকআউট/কার্ট বাটনের সাথে মিলিয়ে। ----------
 function EmptyBoxIcon() {
   return (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -46,36 +41,24 @@ interface ProductGridProps {
 
 export default function ProductGrid({ initialProducts, initialCategory, categoryName }: ProductGridProps) {
   const { t, lang } = useT();
-  const supabase = useRef(createClient()).current;
   const searchParams = useSearchParams();
-  const [prods, setProds] = useState<Product[]>(initialProducts);
+  const [prods] = useState<Product[]>(initialProducts);
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
-  // categoryName prop টা শুধু /category/[slug] (Server Component)-এ পাওয়া
-  // যায়। হোমপেজে ক্যাটাগরি carousel থেকে ক্লিক করলে বা সার্চ পেজ থেকে
-  // ?cat=<id> নিয়ে এলে সেই prop থাকে না — তখন এই লিস্ট থেকে activeCat-এর
-  // নাম খুঁজে নেওয়া হয় যাতে হেডিং সবসময় সঠিক ক্যাটাগরি-নাম দেখায়।
-  const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
-  // /category/[slug] (Server Component)-এ initialCategory pass হলে প্রথম
-  // ব্যাচের সাইজ ওই ক্যাটাগরিতে ফিল্টার করা কাউন্ট অনুযায়ী হিসাব হয়, পুরো
-  // unfiltered লিস্টের length অনুযায়ী না।
+  const [cats] = useState<Category[]>(DEFAULT_CATEGORIES);
+
   const initialFilteredCount = initialCategory && initialCategory !== 'all'
     ? initialProducts.filter((p) => prodInCat(p, initialCategory)).length
     : initialProducts.length;
-  // প্রোডাক্ট লিস্ট এখন app/page.tsx (Server Component)-এ সার্ভারেই Supabase
-  // থেকে fetch হয়ে initialProducts prop হিসেবে এখানে আসে — তাই প্রথম পেইন্টেই
-  // (সার্ভার-রেন্ডারড HTML-এই) আসল প্রোডাক্ট কার্ড ও প্রথম প্রোডাক্ট ছবি (LCP
-  // element) থাকে, ব্রাউজার প্রিলোড স্ক্যানার সেটা আগে থেকেই ফেচ শুরু করতে পারে,
-  // আর CLS/স্টেল-ডেটা কোনোটাই হয় না।
-  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, initialFilteredCount));
+
+  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, initialFilteredCount || PRODS_PER_PAGE));
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const batchCountRef = useRef(1);
   const loadMorePausedRef = useRef(false);
-  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, initialFilteredCount));
+  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, initialFilteredCount || PRODS_PER_PAGE));
   const listRef = useRef<Product[]>([]);
-  const didInitRef = useRef(false);
   const prevCatRef = useRef(activeCat);
 
   const list = useMemo(() => {
@@ -111,16 +94,8 @@ export default function ProductGrid({ initialProducts, initialCategory, category
   }, []);
 
   useEffect(() => {
-    const catChanged = prevCatRef.current !== activeCat;
+    if (prevCatRef.current === activeCat) return;
     prevCatRef.current = activeCat;
-
-    if (!didInitRef.current) {
-      // প্রথম মাউন্ট — প্রথম ব্যাচ ইতিমধ্যে initial state-এ রেন্ডার হয়ে আছে,
-      // তাই এখানে রিসেট করে খালি করার দরকার নেই।
-      didInitRef.current = true;
-      return;
-    }
-    if (!catChanged) return;
 
     batchCountRef.current = 0;
     loadMorePausedRef.current = false;
@@ -130,23 +105,18 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     setRenderedCount(0);
     const t = setTimeout(() => appendNextBatch(), 0);
     return () => clearTimeout(t);
-  }, [list, activeCat, appendNextBatch]);
+  }, [activeCat, appendNextBatch]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
-    // পিঞ্চ-জুমের সময় ভিজ্যুয়াল ভিউপোর্ট বদলে যাওয়ায় sentinel মুহূর্তের জন্য
-    // intersecting হয়ে যেতে পারে যদিও ব্যবহারকারী আসলে স্ক্রল করেননি — তাই
-    // সাথে সাথে ব্যাচ লোড না করে একটা ছোট delay (debounce) দেওয়া হচ্ছে, আর সেই
-    // সময়ের মধ্যে intersection চলে গেলে (transient/জুম-জনিত হলে) বাতিল হয়ে যায়।
+
     let timer: ReturnType<typeof setTimeout> | null = null;
     const obs = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
         if (timer) return;
         timer = setTimeout(() => {
           timer = null;
-          // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া state আপডেট (এবং তার ফলে
-          // re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
           if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
             return;
           }
@@ -182,11 +152,6 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     return () => window.removeEventListener(CATEGORY_FILTER_EVENT, onFilter);
   }, []);
 
-  // অন্য পেইজ থেকে (যেমন সার্চ ফলাফল পেইজ) কোনো ক্যাটাগরির বাটনে ক্লিক
-  // করলে সেটা এখানে ?cat=<id> কোয়েরি প্যারামিটার নিয়ে হোমপেইজে নিয়ে আসে —
-  // মাউন্ট হওয়ার সাথে সাথেই সেই ক্যাটাগরিটা সরাসরি ট্রিগার হয় (Categories.tsx-এর
-  // handleSelect ঠিক যা করে তারই সমতুল্য), যাতে অন্য পেইজ থেকে ক্লিক করলেও একই
-  // রকম আচরণ পাওয়া যায় — আগের ওয়েবসাইটের লজিক অনুযায়ী।
   useEffect(() => {
     const catFromUrl = searchParams.get('cat');
     if (!catFromUrl) return;
@@ -195,48 +160,19 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       const cosmeticUrl = catFromUrl === 'all' ? '/' : `/category/${makeCatSlug(catFromUrl)}`;
       window.history.replaceState({ vcStack: [], homeCurrent: true, vcCat: catFromUrl }, '', cosmeticUrl);
     } catch {
-      // history API unavailable, ignore
+      // ignore
     }
     const t = setTimeout(() => {
       document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 60);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const channel = subscribeCustomProducts(supabase, {
-      onInsert: (mapped) => setProds((prev) => (
-        prev.find((x) => String(x.id) === String(mapped.id)) ? prev : [...prev, mapped]
-      )),
-      onUpdate: (mapped) => setProds((prev) => {
-        const idx = prev.findIndex((x) => String(x.id) === String(mapped.id));
-        if (idx === -1) return prev;
-        const next = [...prev];
-        next[idx] = { ...next[idx], ...mapped };
-        return next;
-      }),
-      onDelete: (id) => setProds((prev) => prev.filter((x) => String(x.id) !== String(id))),
-    });
-
-    return () => { supabase.removeChannel(channel); };
-  }, [supabase]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchCategories(supabase).then((list) => { if (!cancelled) setCats(list); });
-    const channel = subscribeCategories(supabase, (list) => setCats(list));
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
+  }, [searchParams]);
 
   const handleShowAll = () => {
     setActiveCat('all');
     window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId: 'all' } }));
     try { window.history.replaceState({ vcStack: [], homeCurrent: true }, '', '/'); } catch {
-      // history API unavailable, ignore
+      // ignore
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -247,7 +183,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
   const activeCategoryName = categoryName || cats.find((c) => c.id === activeCat)?.name;
 
   return (
-    <div className="mx-auto mb-11 max-w-[1300px] px-5" id="prodSec">
+    <div className="mx-auto mb-11 min-h-[400px] max-w-[1300px] px-5" id="prodSec">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
           {activeCategoryName && activeCat !== 'all' ? (
