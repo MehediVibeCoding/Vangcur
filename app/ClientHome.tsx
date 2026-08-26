@@ -15,19 +15,20 @@ import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
-import type { Product } from '@/types';
+import type { Product, Category } from '@/types';
+import type { HeroCard } from '@/lib/heroSliderData';
 
-// লগইন মোডাল আর অ্যাকাউন্ট পেজ (৩৬KB + ৩৬KB) শুধু ইউজার লগইন/অ্যাকাউন্ট বাটনে
-// ক্লিক করলেই দরকার — প্রথম পেজ-লোডে না। dynamic import দিয়ে আলাদা চাংকে ভাগ করা হলো।
 const LoginModal = dynamic(() => import('./components/auth/LoginModal'));
 const AccountPage = dynamic(() => import('./components/auth/AccountPage'));
 
 interface ClientHomeProps {
   initialProducts: Product[];
+  initialCategories?: Category[];
+  initialHeroCards?: HeroCard[];
   initialCategory?: string;
 }
 
-export default function ClientHome({ initialProducts, initialCategory }: ClientHomeProps) {
+export default function ClientHome({ initialProducts, initialCategories, initialHeroCards, initialCategory }: ClientHomeProps) {
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -55,9 +56,9 @@ export default function ClientHome({ initialProducts, initialCategory }: ClientH
         onLoginClick={() => setLoginOpen(true)}
         onAccountClick={() => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT))}
       />
-      <HeroSlider />
+      <HeroSlider initialCards={initialHeroCards} />
       <TrustStrip />
-      <Categories />
+      <Categories initialCategories={initialCategories} />
       <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
       <FAQ />
       <About />
