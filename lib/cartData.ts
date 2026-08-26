@@ -28,9 +28,6 @@ export function saveCart(cart: CartItem[]): void {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 function saveCartDebounced(cart: CartItem[]): void {
-  // Notify listeners (floating cart badge, header count, etc.) immediately —
-  // only the actual localStorage write is debounced, so rapid +/- clicks
-  // don't hammer storage while the UI still stays in sync every time.
   window.dispatchEvent(new CustomEvent(CART_EVENT, { detail: { cart } }));
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => persist(cart), 300);
@@ -67,7 +64,7 @@ export function updateQty(prods: Product[], id: number | string, delta: number) 
     if (delta > 0) {
       const prod = prods.find((p) => String(p.id) === String(id));
       const maxStock = prod ? prod.stock : 9999;
-      if (i.qty >= maxStock) return { ok: false, reason: 'stock', maxStock, cart };
+      if (i.qty >= maxStock) return { ok: false, reason: 'stock', maxStock };
     }
     i.qty += delta;
     if (i.qty <= 0) cart = cart.filter((x) => String(x.id) !== String(id));
@@ -80,12 +77,4 @@ export function removeItem(id: number | string): CartItem[] {
   const cart = getCart().filter((x) => String(x.id) !== String(id));
   saveCartDebounced(cart);
   return cart;
-}
-
-export function clearCartOnRealPagehide(): () => void {
-  const handler = (e: PageTransitionEvent) => {
-    if (!e.persisted) persist([]);
-  };
-  window.addEventListener('pagehide', handler);
-  return () => window.removeEventListener('pagehide', handler);
 }
