@@ -136,50 +136,54 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.94) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.65) 80%, rgba(5,7,14,.96) 100%)' }}
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-white sm:px-2.5">Sold Out</div>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-[#374151] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">Sold Out</div>
         ) : p.badge && (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light px-2 py-1 text-[10px] font-bold text-white sm:px-2.5">
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
             {p.badge}
           </div>
         )}
 
         <button
           ref={wishBtnRef}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full backdrop-blur-[8px] transition-brand duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${wished ? 'bg-white/95' : 'border border-white/50 bg-white/40'} ${heartBeat ? 'animate-heartbeat' : ''}`}
-          style={{ color: wished ? undefined : '#fff' }}
+          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${wished ? 'bg-white text-[#FF5A6E]' : 'border border-white/50 bg-black/40 text-white'} ${heartBeat ? 'animate-heartbeat' : ''}`}
           onClick={handleWish}
           onAnimationEnd={() => setHeartBeat(false)}
           title="Wishlist"
+          aria-label="Wishlist"
         >
           <span className="flex h-full w-full items-center justify-center"><HeartIcon filled={wished} /></span>
         </button>
 
         <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
           <div
-            className="line-clamp-1 cursor-pointer text-[10px] font-extrabold leading-tight text-white sm:text-sm xl:text-xs"
+            className="line-clamp-1 cursor-pointer text-[11px] font-extrabold leading-tight text-white sm:text-sm xl:text-xs"
             onClick={openProduct}
           >
             {p.name}
           </div>
           <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/65">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            <span className="text-white/80">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
           </div>
           <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5">
             <span className="text-sm font-extrabold text-white sm:text-lg xl:text-sm">৳{p.price.toLocaleString('en-US')}</span>
-            <span className="text-[10px] text-white/50 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
-            {showDiscBadge && (
-              <span className="text-[10px] font-bold text-[#FF9142] sm:text-xs">-{discPct}%</span>
+            {p.old > p.price && (
+              <>
+                <span className="text-[10px] text-white/60 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
+                {showDiscBadge && (
+                  <span className="text-[10px] font-bold text-[#FF9142] sm:text-xs">-{discPct}%</span>
+                )}
+              </>
             )}
           </div>
           <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
               <button
-                className="relative flex h-8 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body text-[10px] font-bold text-white transition-brand duration-brand sm:h-9 sm:text-xs lg:h-10"
+                className="relative flex h-8 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#B45309] font-body text-[10.5px] font-bold text-white shadow-sm transition-colors hover:bg-[#92400E] sm:h-9 sm:text-xs lg:h-10"
                 onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                   new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
                 ))}
@@ -189,17 +193,15 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             ) : (
               <>
                 <button
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/30 sm:h-9 lg:h-10"
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-black/40 text-white transition-colors hover:bg-black/60 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
+                  aria-label={t('কার্টে যোগ করুন')}
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
                 >
                   <CartIcon />
                 </button>
                 <button
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[10px] font-bold text-brand-light backdrop-blur-[8px] transition-brand duration-brand hover:brightness-95 sm:h-9 sm:text-xs lg:h-10"
-                  style={{
-                    background: 'linear-gradient(115deg, rgba(255,255,255,.92) 0%, rgba(195,222,252,.85) 38%, rgba(255,255,255,.9) 64%, rgba(0,94,252,.35) 100%)',
-                  }}
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/80 bg-white font-body text-[11px] font-bold text-brand-primary shadow-sm transition-transform duration-brand hover:brightness-95 active:scale-95 sm:h-9 sm:text-xs lg:h-10"
                   onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                     new CustomEvent(QUICK_ORDER_EVENT, { detail: { id: p.id } }),
                   ))}
