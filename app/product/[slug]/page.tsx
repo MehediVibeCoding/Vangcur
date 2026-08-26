@@ -1,26 +1,20 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { idFromSlug, makeSlug, fetchProductById } from '@/lib/productData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 import ProductDetailClient from './ProductDetailClient';
 
 const SITE_URL = 'https://vangcur.com';
 
-// 🆕 (২০২৬-০৮, স্টেল-কনটেন্ট বাগ ফিক্স): এই route-এ কোনো cache-config না থাকায়
-// Next.js মাঝেমধ্যে পুরনো fetch রেসপন্স cache করে রাখছিল — ফলে admin-এ নতুন
-// Description/Features/FAQ/Extra Info যোগ করার পরও product page-এ পুরনো
-// (আংশিক খালি) ভার্সন দেখাচ্ছিল, অথচ Stock/Price-এর মতো field যেগুলো আগে থেকেই
-// ছিল সেগুলো ঠিক দেখাচ্ছিল — কারণ ওগুলো সেই পুরনো cache snapshot-এই ছিল।
-// `force-dynamic` প্রতিটা রিকোয়েস্টে সরাসরি Supabase থেকে fresh data আনতে বাধ্য
-// করে, কোনো cache layer বাইপাস করার সুযোগ রাখে না।
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ৫ মিনিট পর পর ব্যাকগ্রাউন্ডে ফ্রেশ ডাটা ক্যাশ আপডেট হবে (Edge ISR)
+export const revalidate = 300;
 
-// generateMetadata আর পেজ কম্পোনেন্ট দুটোই একই প্রোডাক্ট লাগবে — React-এর cache()
-// দিয়ে একই রিকোয়েস্টের মধ্যে এই ফাংশনটা একবারই চলবে, দুইবার Supabase-এ কল যাবে না।
 const getProduct = cache(async (id: string) => {
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   return fetchProductById(supabase, id);
 });
 
@@ -36,10 +30,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  // 🆕 AI Planner/SEO ফিল্ড ওভারহল (২০২৬-০৮): অ্যাডমিনে H1/Meta Title/Meta
-  // Description/OG Description ভরা থাকলে সেগুলোই ব্যবহার হয়, খালি থাকলে
-  // (পুরনো প্রোডাক্ট, বা যেগুলোতে ইচ্ছাকৃতভাবে বসানো হয়নি) আগের মতোই
-  // নাম/দাম/desc থেকে অটো-জেনারেট হয় — কোনো প্রোডাক্টের আচরণ ভাঙে না।
   const autoTitle = `${p.name} - ৳${Number(p.price).toLocaleString('en-US')} | Vangcur`;
   const title = p.metaTitle || autoTitle;
 
