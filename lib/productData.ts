@@ -187,12 +187,36 @@ export async function fetchProductById(supabase: SupabaseClient, id: number | st
   }
 }
 
+// 🆕 (২০২৬-০৮, খালি-কনটেন্ট বাগ ফিক্স): Product Detail পেজ প্রথমে সম্পূর্ণ
+// ডেটা-সহ (DETAIL_COLS) initialProduct নিয়ে render হয়, কিন্তু তারপরেই
+// fetchCustomProducts() (শুধু GRID_COLS — desc/features/faqs/power_info/
+// info_boxes নেই) চলে related/অন্যান্য প্রোডাক্ট লোড করার জন্য, আর সেই
+// ফলাফল আগে এখানে blind spread দিয়ে merge হতো — ফলে সম্পূর্ণ detail object-টা
+// একটা আংশিক (grid-only) কপি দিয়ে চাপা পড়ে যেত, description/features/FAQ/
+// power info/extra info সব খালি হয়ে যেত, অথচ specs/price/stock ঠিক থাকত
+// (কারণ ওগুলো GRID_COLS-এই আছে)। এখন detail-only ফিল্ডগুলো আলাদা করে
+// preserve করা হচ্ছে যদি আগের entry-টা আগেই পুরোপুরি লোড হয়ে থাকে।
+const DETAIL_ONLY_FIELDS = [
+  'desc', 'longDesc', 'features', 'faqs', 'closing', 'powerInfo', 'infoBoxes',
+  'seoH1', 'metaTitle', 'metaDescription', 'ogDescription', 'quickSpecsText', 'packagingContent',
+] as const;
+
 export function mergeCustomProducts(defaults: Product[], customRows: Product[]): Product[] {
   const list = [...defaults];
   customRows.forEach((mapped) => {
     const idx = list.findIndex((x) => String(x.id) === String(mapped.id));
-    if (idx > -1) list[idx] = { ...list[idx], ...mapped };
-    else list.push(mapped);
+    if (idx === -1) { list.push(mapped); return; }
+    const existing = list[idx];
+    if (existing._detailLoaded && !mapped._detailLoaded) {
+      // existing-এ আগে থেকেই পূর্ণাঙ্গ detail আছে, mapped একটা partial
+      // (grid-only) রিফ্রেশ — তাই বাকি সব ফিল্ড (price/stock/specs/imgs
+      // ইত্যাদি) mapped থেকে fresh নেওয়া হচ্ছে, কিন্তু detail-only
+      // ফিল্ডগুলো existing থেকেই রাখা হচ্ছে যাতে খালি হয়ে না যায়।
+      const preserved = Object.fromEntries(DETAIL_ONLY_FIELDS.map((k) => [k, existing[k]]));
+      list[idx] = { ...existing, ...mapped, ...preserved, _detailLoaded: true };
+    } else {
+      list[idx] = { ...existing, ...mapped };
+    }
   });
   return list;
 }
