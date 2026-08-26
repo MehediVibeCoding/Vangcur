@@ -268,6 +268,7 @@ function SearchDropdown({
               <Link
                 key={p.id}
                 href={productHref(p)}
+                prefetch={true}
                 className="flex items-center gap-3 px-3.5 py-2.5 text-inherit no-underline transition-colors hover:bg-surface-muted"
                 onClick={onPick}
               >
@@ -578,6 +579,7 @@ export default function Navbar({
             {showHomeButton ? (
               <Link
                 href="/"
+                prefetch={true}
                 aria-label={t('হোম পেইজে যান')}
                 className="group flex shrink-0 items-center gap-1.5 no-underline"
               >
@@ -588,7 +590,7 @@ export default function Navbar({
                 <span className="font-body text-[15px] font-bold text-ink">{t('হোম')}</span>
               </Link>
             ) : (
-              <Link className="flex shrink-0 items-center no-underline" href="/">
+              <Link className="flex shrink-0 items-center no-underline" href="/" prefetch={true}>
                 <Image
                   src="/vangcur-logo.png"
                   alt="Vangcur Gadgets"
