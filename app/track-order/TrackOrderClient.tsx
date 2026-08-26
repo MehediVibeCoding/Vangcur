@@ -93,6 +93,7 @@ export default function TrackOrderClient() {
     <>
       <Navbar
         showHomeButton
+        sticky={false}
         cartCount={cartQty}
         wishCount={wishQty}
         currentUser={currentUser}

@@ -114,6 +114,7 @@ export default function SuccessClient() {
       <>
         <Navbar
           showHomeButton
+          sticky={false}
           cartCount={cartQty}
           wishCount={wishQty}
           currentUser={currentUser}
@@ -141,6 +142,7 @@ export default function SuccessClient() {
     <>
       <Navbar
         showHomeButton
+        sticky={false}
         cartCount={cartQty}
         wishCount={wishQty}
         currentUser={currentUser}

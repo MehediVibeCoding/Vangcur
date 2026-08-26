@@ -34,6 +34,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
     <>
       <Navbar
         showHomeButton
+        sticky={false}
         cartCount={cartQty}
         wishCount={wishQty}
         currentUser={currentUser}

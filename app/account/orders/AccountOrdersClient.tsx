@@ -68,6 +68,7 @@ export default function AccountOrdersClient() {
     <>
       <Navbar
         showHomeButton
+        sticky={false}
         cartCount={cartQty}
         wishCount={wishQty}
         currentUser={currentUser}

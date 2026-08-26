@@ -70,6 +70,7 @@ export default function CategoryClient({ initialProducts, category, siblingCateg
     <>
       <Navbar
         showHomeButton
+        sticky={false}
         cartCount={cartQty}
         wishCount={wishQty}
         currentUser={currentUser}
