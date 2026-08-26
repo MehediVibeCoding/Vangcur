@@ -849,11 +849,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                   এখন স্পেসিফিকেশন পিলের সেই একই হালকা নীল ব্যাকগ্রাউন্ড
                   সবসময় দৃশ্যমান থাকবে — ক্লিক করলে (wishlist-এ যোগ হলে)
                   শুধু ভিতরের হার্ট আইকনটাই নীল রঙে ফিল হবে, ব্যাকগ্রাউন্ড
-                  অপরিবর্তিত থাকবে। */}
+                  অপরিবর্তিত থাকবে। শেপ rounded-full (গোল বৃত্ত) না রেখে
+                  rounded-[10px] (কর্নার-রাউন্ড করা চারকোনা) — বাকি বাটনগুলোর
+                  সাথে corner-radius মিলিয়ে রাখা হলো। */}
               <button
                 onClick={toggleWishFromPP}
                 title={t('Wishlist এ যোগ করুন')}
-                className={`flex h-9 w-9 items-center justify-center rounded-full bg-brand-bg/35 transition-brand duration-brand ${wished ? 'text-brand-light' : 'text-ink/60 hover:text-brand-light'}`}
+                className={`flex h-9 w-9 items-center justify-center rounded-[10px] bg-brand-bg/35 transition-brand duration-brand ${wished ? 'text-brand-light' : 'text-ink/60 hover:text-brand-light'}`}
               >
                 <HeartIcon filled={wished} />
               </button>
@@ -861,7 +863,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 <button
                   onClick={waOrder}
                   title={t('WhatsApp এ অর্ডার করুন')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] transition-brand duration-brand hover:brightness-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#25D366] transition-brand duration-brand hover:brightness-95"
                 >
                   <svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
                 </button>
@@ -876,7 +878,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               </button>
             ) : (
               <>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-bg/35 py-3.5 text-sm font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
+                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 py-3.5 text-sm font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
                   <CartIcon /> {t('কার্টে যোগ করুন')}
                 </button>
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
@@ -1078,7 +1080,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
                 <BoltIcon /> {t('অর্ডার করুন')}
               </button>
-              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-bg/35 px-4 py-2.5 text-[13px] font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
+              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 px-4 py-2.5 text-[13px] font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
                 <CartIcon /> {t('কার্ট')}
               </button>
             </>
