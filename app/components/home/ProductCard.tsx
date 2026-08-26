@@ -179,13 +179,13 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
             <span className="text-white/65">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
-            {showDiscBadge && (
-              <span className="font-bold text-[#FF9142]">-{discPct}%</span>
-            )}
           </div>
           <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5">
             <span className="text-sm font-extrabold text-white sm:text-lg xl:text-sm">৳{p.price.toLocaleString('en-US')}</span>
             <span className="text-[10px] text-white/50 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
+            {showDiscBadge && (
+              <span className="text-[10px] font-bold text-[#FF9142] sm:text-xs">-{discPct}%</span>
+            )}
           </div>
           <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
