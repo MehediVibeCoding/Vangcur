@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT,
+  DEFAULT_CATEGORIES, makeCatSlug, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { useT } from '@/lib/i18n/useT';
@@ -29,10 +28,13 @@ function CatIcon({ icon }: { icon?: string }) {
   return <span className="text-2xl">{icon || '📦'}</span>;
 }
 
-export default function Categories() {
+interface CategoriesProps {
+  initialCategories?: Category[];
+}
+
+export default function Categories({ initialCategories }: CategoriesProps) {
   const { lang } = useT();
-  const supabase = useMemo(() => createClient(), []);
-  const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [cats] = useState<Category[]>(initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES);
   const [catPage, setCatPage] = useState(0);
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -91,48 +93,14 @@ export default function Categories() {
       vp.removeEventListener('touchstart', onTouchStart);
       vp.removeEventListener('touchend', onTouchEnd);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxPage]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchCategories(supabase).then((list) => {
-      if (!cancelled) setCats(list);
-    });
-
-    const channel = supabase
-      .channel('categories-carousel-watch')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_categories' },
-        (payload) => {
-          const row = payload.new as { setting_value?: unknown } | null;
-          if (!row) return;
-          const raw = row.setting_value;
-          const parsed = typeof raw === 'string'
-            ? (() => { try { return JSON.parse(raw); } catch { return raw; } })()
-            : raw;
-          if (Array.isArray(parsed) && parsed.length) setCats(parsed as Category[]);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    setCatPage(0);
-  }, [cats]);
 
   const handleSelect = (catId: string) => {
     try {
       const url = catId === 'all' ? '/' : '/category/' + makeCatSlug(catId);
       window.history.replaceState({ vcStack: [], homeCurrent: true, vcCat: catId }, '', url);
     } catch {
-      // history API unavailable, ignore
+      // ignore
     }
     window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId } }));
     document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -142,7 +110,7 @@ export default function Categories() {
   const pageCount = maxPage + 1;
 
   return (
-    <div className="mx-auto mb-11 max-w-[1300px] px-5">
+    <div className="mx-auto mb-11 min-h-[140px] max-w-[1300px] px-5">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
           {lang === 'en'
@@ -156,6 +124,7 @@ export default function Categories() {
           ref={prevBtnRef}
           className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
+          aria-label="Previous Category"
         >
           &#8249;
         </button>
@@ -189,6 +158,7 @@ export default function Categories() {
           ref={nextBtnRef}
           className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
+          aria-label="Next Category"
         >
           &#8250;
         </button>
