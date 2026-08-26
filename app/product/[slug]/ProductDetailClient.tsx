@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -146,23 +146,64 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
 // pill রেন্ডারিং fallback হিসেবে রয়ে গেছে — কোনো পুরনো প্রোডাক্টের
 // এক নজরে বক্স হঠাৎ খালি হয়ে যাবে না।
 function getQuickSpecPills(quickSpecsText: string | undefined, specs?: ProductSpecs & { _quick_keys?: string[] }): string[] {
-  let pills: string[] = [];
   if (quickSpecsText && quickSpecsText.trim()) {
-    pills = quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
-  } else {
-    const s = specs || {};
-    const quickKeys = s._quick_keys;
-    if (Array.isArray(quickKeys) && quickKeys.length) {
-      pills = quickKeys.filter((k) => s[k] !== undefined).slice(0, 6).map((k) => `${k}: ${s[k]}`);
-    }
+    return quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
   }
-  // দৈর্ঘ্য অনুযায়ী বড় থেকে ছোট সাজানো হচ্ছে (একটা সাধারণ "greedy bin-packing"
-  // পদ্ধতি) — এতে flex-wrap নিজে থেকেই প্রতিটা লাইনে সবচেয়ে কম ফাঁকা জায়গা
-  // রেখে আইটেমগুলো বসায় (যেমন সবচেয়ে বড় "৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি"
-  // শুরুতে বসলে তার পাশের ছোট্ট ফাঁকা জায়গায় সবচেয়ে ছোট আইটেমটা এসে বসে
-  // লাইনটা পূর্ণ করে দেয়), র‍্যান্ডম ক্রমে রাখলে যেমন ডানপাশে বড় ফাঁকা
-  // জায়গা তৈরি হতো তা এড়ানো যায়।
-  return pills.slice().sort((a, b) => b.length - a.length);
+  const s = specs || {};
+  const quickKeys = s._quick_keys;
+  if (Array.isArray(quickKeys) && quickKeys.length) {
+    return quickKeys.filter((k) => s[k] !== undefined).slice(0, 6).map((k) => `${k}: ${s[k]}`);
+  }
+  return [];
+}
+
+const SPEC_PILL_GAP = 8; // gap-2 (0.5rem) — bin-packing হিসাবের সাথে মিলিয়ে রাখা হয়েছে
+
+// "স্পেসিফিকেশন এক নজরে"-এর পিলগুলো আসল রেন্ডার-করা পিক্সেল-প্রস্থ মেপে
+// row-ভিত্তিক bin-packing (first-fit decreasing) করে সাজায় — যাতে কোনো
+// লাইনের শেষে ফাঁকা জায়গা থাকলে সেখানে ছোট-বড় যেকোনো একটা পিল (ক্রম
+// অনুযায়ী পরেরটা না হয়েও) এসে বসে জায়গাটা পূরণ করে দেয়। প্রথম রেন্ডারে
+// (মাপ হওয়ার আগে) সাধারণ flex-wrap fallback দেখানো হয়, মাউন্টের পরপরই
+// প্যাকড লে-আউটে upgrade হয়ে যায়।
+function useSpecPillRows(pills: string[]) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [rows, setRows] = useState<string[][] | null>(null);
+
+  useLayoutEffect(() => {
+    if (!pills.length) { setRows([]); return; }
+    const recompute = () => {
+      const containerEl = containerRef.current;
+      const measureEl = measureRef.current;
+      if (!containerEl || !measureEl) return;
+      const containerWidth = containerEl.clientWidth;
+      if (!containerWidth) return;
+      const items = Array.from(measureEl.children) as HTMLElement[];
+      const widths = pills.map((_, i) => Math.ceil(items[i]?.getBoundingClientRect().width || 0));
+      const order = pills.map((_, i) => i).sort((a, b) => widths[b] - widths[a]);
+      const binRows: { idx: number[]; used: number }[] = [];
+      for (const idx of order) {
+        const w = widths[idx];
+        let placed = false;
+        for (const row of binRows) {
+          const needed = row.used + SPEC_PILL_GAP + w;
+          if (needed <= containerWidth) {
+            row.idx.push(idx);
+            row.used = needed;
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) binRows.push({ idx: [idx], used: w });
+      }
+      setRows(binRows.map((r) => r.idx.map((i) => pills[i])));
+    };
+    recompute();
+    window.addEventListener('resize', recompute);
+    return () => window.removeEventListener('resize', recompute);
+  }, [pills]);
+
+  return { containerRef, measureRef, rows };
 }
 
 function getTechSpecRows(specs?: ProductSpecs & { _quick_keys?: string[] }): [string, string][] {
@@ -583,6 +624,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const sold = prod.stock <= 0;
   const imgs = prod.imgs && prod.imgs.length ? prod.imgs : ['📦'];
   const quickSpecPills = getQuickSpecPills(prod.quickSpecsText, prod.specs);
+  const { containerRef: specPillsRef, measureRef: specPillsMeasureRef, rows: specPillRows } = useSpecPillRows(quickSpecPills);
   const techRows = getTechSpecRows(prod.specs);
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
@@ -702,30 +744,53 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               <div className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">
                 {t('স্পেসিফিকেশন এক নজরে')}
               </div>
-              <div className="flex flex-wrap gap-2">
-                {quickSpecPills.map((pill, i) => (
-                  <div key={i} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
-                    {pill}
+              <div ref={specPillsRef} className="relative">
+                {/* আসল পিক্সেল-প্রস্থ মাপার জন্য অদৃশ্য কপি — কখনো দেখা যায় না */}
+                <div ref={specPillsMeasureRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex gap-2 opacity-0">
+                  {quickSpecPills.map((pill, i) => (
+                    <div key={i} className="whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
+                      {pill}
+                    </div>
+                  ))}
+                </div>
+                {specPillRows === null ? (
+                  <div className="flex flex-wrap gap-2">
+                    {quickSpecPills.map((pill, i) => (
+                      <div key={i} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
+                        {pill}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {specPillRows.map((row, ri) => (
+                      <div key={ri} className="flex gap-2">
+                        {row.map((pill, pi) => (
+                          <div key={pi} className="whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
+                            {pill}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           <div className="mb-5 flex flex-wrap items-center gap-3">
-            <span className="text-[13px] font-semibold text-ink">{t('পরিমাণ')}</span>
-            <div className="flex items-center overflow-hidden rounded-[10px] border-[1.5px] border-border-base bg-white">
+            <div className="flex items-center gap-1 rounded-full bg-surface-muted p-1">
               <button
-                className="flex h-10 w-10 items-center justify-center text-lg font-bold text-ink transition-brand duration-brand hover:bg-surface-muted disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-ink transition-brand duration-brand hover:bg-white disabled:opacity-30"
                 onClick={() => chgQty(-1)}
                 disabled={qty <= 1}
                 aria-label={t('কমান')}
               >
                 −
               </button>
-              <span className="min-w-[32px] text-center text-[15px] font-bold text-ink">{qty}</span>
+              <span className="min-w-[26px] text-center text-[14px] font-bold text-ink">{qty}</span>
               <button
-                className="flex h-10 w-10 items-center justify-center text-lg font-bold text-ink transition-brand duration-brand hover:bg-surface-muted disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-base font-bold text-ink transition-brand duration-brand hover:bg-white disabled:opacity-30"
                 onClick={() => chgQty(1)}
                 disabled={qty >= maxQty}
                 aria-label={t('বাড়ান')}
@@ -733,16 +798,18 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 +
               </button>
             </div>
+
             {qty > 1 && (
-              <div className="rounded-[10px] border-[1.5px] border-brand-light/20 bg-brand-bg/25 px-3 py-2 text-[13px] font-bold text-brand-light">
-                {t('মোট:')} ৳{(prod.price * qty).toLocaleString('en-US')}
-              </div>
+              <span className="text-[13px] text-muted">
+                {t('মোট')} <span className="font-bold text-ink">৳{(prod.price * qty).toLocaleString('en-US')}</span>
+              </span>
             )}
-            <div className="ml-auto flex gap-2">
+
+            <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={toggleWishFromPP}
                 title={t('Wishlist এ যোগ করুন')}
-                className={`flex h-10 w-10 items-center justify-center rounded-[10px] border-[1.5px] transition-brand duration-brand ${wished ? 'border-brand-light bg-brand-bg/40 text-brand-light' : 'border-border-base bg-white text-muted hover:border-brand-light/40 hover:text-brand-light'}`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full transition-brand duration-brand ${wished ? 'text-rose-500' : 'text-muted hover:bg-surface-muted hover:text-rose-500'}`}
               >
                 <HeartIcon filled={wished} />
               </button>
@@ -750,9 +817,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 <button
                   onClick={waOrder}
                   title={t('WhatsApp এ অর্ডার করুন')}
-                  className="flex h-10 w-10 items-center justify-center rounded-[10px] border-none bg-[#25D366] shadow-sh1 transition-brand duration-brand hover:brightness-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366] transition-brand duration-brand hover:brightness-95"
                 >
-                  <svg width="20" height="20" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                  <svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
                 </button>
               )}
             </div>
@@ -765,18 +832,12 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
               </button>
             ) : (
               <>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
-                  <BoltIcon /> {t('এখনই অর্ডার করুন')}
-                </button>
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-border-base bg-white py-3.5 text-sm font-bold text-ink transition-brand duration-brand hover:border-brand-light/30 hover:bg-surface-muted" onClick={addCartFromPP}>
                   <CartIcon /> {t('কার্টে যোগ করুন')}
                 </button>
-                {msgLink && (
-                  <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-[#0084FF] py-3.5 text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={msgOrder}>
-                    <svg width="17" height="17" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.9 1.19 5.44 3.14 7.17.16.14.26.35.27.57l.05 1.78c.02.57.61.94 1.13.7l1.98-.87c.17-.08.36-.09.54-.04.9.25 1.87.38 2.89.38C17.64 21.4 22 17.27 22 11.7 22 6.13 17.64 2 12 2zm6.11 7.37l-2.96 4.7c-.47.74-1.47.93-2.17.41l-2.36-1.76c-.22-.16-.51-.16-.72 0l-3.18 2.41c-.42.32-.97-.16-.69-.62l2.96-4.7c.47-.74 1.47-.93 2.17-.41l2.36 1.76c.22.16.51.16.72 0l3.18-2.41c.43-.32.97.17.69.62z" /></svg>
-                    {t('Messenger এ অর্ডার করুন')}
-                  </button>
-                )}
+                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
+                  <BoltIcon /> {t('এখনই অর্ডার করুন')}
+                </button>
               </>
             )}
           </div>
@@ -829,7 +890,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<WrenchIcon />}>{t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span></SectionHeading>
-          <div className="mx-auto max-w-[620px] overflow-x-auto rounded-brand border border-border-base sm:translate-x-[4%]">
+          <div className="mx-auto max-w-[600px] overflow-x-auto rounded-brand border border-border-base sm:translate-x-[12%]">
             <table className="w-full border-collapse text-[14px]">
               <thead>
                 <tr className="bg-surface-muted">
