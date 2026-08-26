@@ -169,3 +169,13 @@ input[type='search']::-webkit-search-results-decoration {
 .inv-body .footer-note{margin-top:0;font-size:11.5px;color:#888;text-align:center;line-height:2;border-top:1px solid #f0f0f0;padding-top:16px}
 @media print{.invoice-wrap{box-shadow:none;border-radius:0}}
 @media(max-width:600px){.invoice-wrap{border-radius:0;box-shadow:none;max-width:100%}}
+
+/* স্ক্রলযোগ্য কিন্তু স্ক্রলবার-বিহীন (ছাই রঙের বার হাইড করার জন্য) —
+   প্রোডাক্ট পেজের ট্যাব-বার (বিবরণ/ফিচারস/স্পেসিফিকেশন...) এ ব্যবহার হয়। */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

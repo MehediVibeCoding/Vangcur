@@ -146,15 +146,23 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
 // pill রেন্ডারিং fallback হিসেবে রয়ে গেছে — কোনো পুরনো প্রোডাক্টের
 // এক নজরে বক্স হঠাৎ খালি হয়ে যাবে না।
 function getQuickSpecPills(quickSpecsText: string | undefined, specs?: ProductSpecs & { _quick_keys?: string[] }): string[] {
+  let pills: string[] = [];
   if (quickSpecsText && quickSpecsText.trim()) {
-    return quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
+    pills = quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
+  } else {
+    const s = specs || {};
+    const quickKeys = s._quick_keys;
+    if (Array.isArray(quickKeys) && quickKeys.length) {
+      pills = quickKeys.filter((k) => s[k] !== undefined).slice(0, 6).map((k) => `${k}: ${s[k]}`);
+    }
   }
-  const s = specs || {};
-  const quickKeys = s._quick_keys;
-  if (Array.isArray(quickKeys) && quickKeys.length) {
-    return quickKeys.filter((k) => s[k] !== undefined).slice(0, 6).map((k) => `${k}: ${s[k]}`);
-  }
-  return [];
+  // দৈর্ঘ্য অনুযায়ী বড় থেকে ছোট সাজানো হচ্ছে (একটা সাধারণ "greedy bin-packing"
+  // পদ্ধতি) — এতে flex-wrap নিজে থেকেই প্রতিটা লাইনে সবচেয়ে কম ফাঁকা জায়গা
+  // রেখে আইটেমগুলো বসায় (যেমন সবচেয়ে বড় "৬ মাস রিপ্লেসমেন্ট ওয়ারেন্টি"
+  // শুরুতে বসলে তার পাশের ছোট্ট ফাঁকা জায়গায় সবচেয়ে ছোট আইটেমটা এসে বসে
+  // লাইনটা পূর্ণ করে দেয়), র‍্যান্ডম ক্রমে রাখলে যেমন ডানপাশে বড় ফাঁকা
+  // জায়গা তৈরি হতো তা এড়ানো যায়।
+  return pills.slice().sort((a, b) => b.length - a.length);
 }
 
 function getTechSpecRows(specs?: ProductSpecs & { _quick_keys?: string[] }): [string, string][] {
@@ -184,7 +192,7 @@ function FeatureItem({ text }: { text: string }) {
     return (
       <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
         <div className="mt-0.5 shrink-0 text-base leading-none">{pre.trim() || <CheckBadgeIcon />}</div>
-        <div className="text-[13px] leading-[1.6] text-ink"><strong>{title}</strong>{rest}</div>
+        <div className="text-[14px] leading-[1.6] text-ink"><strong>{title}</strong>{rest}</div>
       </div>
     );
   }
@@ -193,14 +201,14 @@ function FeatureItem({ text }: { text: string }) {
     return (
       <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
         <div className="mt-0.5 shrink-0 text-base leading-none">{emojiMatch[1]}</div>
-        <div className="text-[13px] leading-[1.6] text-ink">{emojiMatch[2]}</div>
+        <div className="text-[14px] leading-[1.6] text-ink">{emojiMatch[2]}</div>
       </div>
     );
   }
   return (
     <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
       <div className="mt-0.5 shrink-0"><CheckBadgeIcon /></div>
-      <div className="text-[13px] leading-[1.6] text-ink">{text}</div>
+      <div className="text-[14px] leading-[1.6] text-ink">{text}</div>
     </div>
   );
 }
@@ -240,10 +248,10 @@ function SpecCalloutBox({ icon, title, children, tone }: { icon: string; title: 
     : 'border-[#BAE0FD] bg-[#F0F9FF]';
   return (
     <div className={`mt-4 rounded-brand border p-4 ${toneClasses}`}>
-      <div className="mb-2 flex items-center gap-2 text-[13px] font-bold text-ink">
+      <div className="mb-2 flex items-center gap-2 text-[14px] font-bold text-ink">
         <span>{icon}</span>{title}
       </div>
-      <div className="text-[13px] leading-[1.7] text-ink/80">{children}</div>
+      <div className="text-[14px] leading-[1.7] text-ink/80">{children}</div>
     </div>
   );
 }
@@ -644,10 +652,10 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
 
         <div>
-          <h1 className="mb-3 font-display text-[21px] font-bold leading-snug text-ink sm:text-2xl">{prod.seoH1 || prod.name}</h1>
+          <h1 className="mb-3 font-body text-[21px] font-bold leading-snug text-ink sm:text-2xl">{prod.seoH1 || prod.name}</h1>
 
           <div className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <span className="font-display text-[28px] font-bold text-brand-light sm:text-[32px]">৳{prod.price.toLocaleString('en-US')}</span>
+            <span className="font-body text-[28px] font-bold text-brand-light sm:text-[32px]">৳{prod.price.toLocaleString('en-US')}</span>
             {prod.old > prod.price && (
               <>
                 <span className="text-[15px] text-muted line-through">৳{prod.old.toLocaleString('en-US')}</span>
@@ -676,13 +684,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <button
             type="button"
             onClick={() => setWarrantyOpen(true)}
-            className="mb-5 flex w-full items-center justify-between gap-2 rounded-[10px] border border-border-base bg-surface-muted px-3.5 py-2.5 text-left transition-brand duration-brand hover:border-brand-light/40"
+            className="mb-5 flex w-full items-center justify-between gap-2 rounded-[10px] border border-success/30 bg-success/10 px-3.5 py-2.5 text-left transition-brand duration-brand hover:border-success/50"
           >
-            <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink">
-              <ShieldIcon className="text-brand-light" /> {t(prod.warranty)}
+            <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-success">
+              <ShieldIcon className="text-success" /> {t(prod.warranty)}
             </span>
             <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border-base text-[10.5px] font-bold text-muted"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-success/40 text-[10.5px] font-bold text-success"
               title={t('ওয়ারেন্টি বিস্তারিত')}
             >
               ?
@@ -690,13 +698,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           </button>
 
           {quickSpecPills.length > 0 && (
-            <div className="mb-5 rounded-brand border border-border-base bg-white p-4 shadow-sh1">
+            <div className="mb-5">
               <div className="mb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted">
                 {t('স্পেসিফিকেশন এক নজরে')}
               </div>
               <div className="flex flex-wrap gap-2">
                 {quickSpecPills.map((pill, i) => (
-                  <div key={i} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[12.5px] text-ink">
+                  <div key={i} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
                     {pill}
                   </div>
                 ))}
@@ -777,7 +785,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
       <div className="sticky top-0 z-10 border-b border-border-base bg-white/95 backdrop-blur" ref={tabsWrapRef}>
         <div
-          className="mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
+          className="no-scrollbar mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {TABS.map((tab) => (
@@ -795,7 +803,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       <div className="mx-auto max-w-[1100px] px-4 md:px-8">
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
           <SectionHeading icon={<DocIcon />}>{t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span></SectionHeading>
-          <div className="text-[14px] leading-[1.85] text-ink/80">
+          <div className="text-[15px] leading-[1.85] text-ink/80">
             {(prod.longDesc || prod.desc) ? (
               (prod.longDesc || prod.desc)!.split('\n\n').map((p, i) => (
                 <p key={i} className="mb-3.5">
@@ -821,11 +829,11 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<WrenchIcon />}>{t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span></SectionHeading>
-          <div className="overflow-x-auto rounded-brand border border-border-base">
-            <table className="w-full border-collapse text-[13px]">
+          <div className="mx-auto max-w-[620px] overflow-x-auto rounded-brand border border-border-base sm:translate-x-[4%]">
+            <table className="w-full border-collapse text-[14px]">
               <thead>
                 <tr className="bg-surface-muted">
-                  <th className="w-[38%] px-4 py-3 text-left font-semibold text-ink sm:w-[32%]">{t('বিবরণ')}</th>
+                  <th className="w-[42%] px-4 py-3 text-left font-semibold text-ink">{t('বিবরণ')}</th>
                   <th className="px-4 py-3 text-left font-semibold text-ink">{t('তথ্য')}</th>
                 </tr>
               </thead>
@@ -870,8 +878,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {prod.infoBoxes.map((box, i) => (
                 <div key={i} className="rounded-brand border border-border-base bg-white p-4 shadow-sh1">
-                  <div className="mb-1.5 text-[13.5px] font-bold text-ink">{box.title}</div>
-                  <div className="text-[13px] leading-[1.7] text-ink/80">{box.body}</div>
+                  <div className="mb-1.5 text-[14.5px] font-bold text-ink">{box.title}</div>
+                  <div className="text-[14px] leading-[1.7] text-ink/80">{box.body}</div>
                 </div>
               ))}
             </div>
@@ -886,13 +894,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             <div className="border-b border-border-base last:border-0" key={i}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between gap-3 py-4 text-left text-[13.5px] font-semibold text-ink transition-brand duration-brand hover:text-brand-light"
+                className="flex w-full items-center justify-between gap-3 py-4 text-left text-[14.5px] font-semibold text-ink transition-brand duration-brand hover:text-brand-light"
                 onClick={() => toggleFaq(i)}
               >
                 <span>{f.q}</span>
                 <ChevronIcon className={`shrink-0 transition-transform duration-brand ${openFaqIdx === i ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
               </button>
-              {openFaqIdx === i && <div className="pb-4 text-[13px] leading-[1.7] text-muted">{f.a}</div>}
+              {openFaqIdx === i && <div className="pb-4 text-[14px] leading-[1.7] text-muted">{f.a}</div>}
             </div>
           )) : (
             <div className="text-[13px] text-muted">{t('কোনো FAQ নেই।')}</div>

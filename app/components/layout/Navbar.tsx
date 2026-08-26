@@ -683,13 +683,13 @@ export default function Navbar({
               <Link
                 href="/"
                 aria-label={t('হোম পেইজে যান')}
-                className="flex shrink-0 items-center gap-1.5 text-brand-light no-underline transition-brand duration-brand hover:text-brand-light-hover"
+                className="group flex shrink-0 items-center gap-1.5 no-underline"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="text-brand-light transition-brand duration-brand group-hover:text-brand-light-hover" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 11.5 12 4l8 7.5" />
                   <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
                 </svg>
-                <span className="font-body text-[15px] font-bold">{t('হোম')}</span>
+                <span className="font-body text-[15px] font-bold text-ink">{t('হোম')}</span>
               </Link>
             ) : (
               <Link className="flex shrink-0 items-center no-underline" href="/">
