@@ -3,47 +3,22 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
-import { parseSupabaseVal } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import {
+  type HeroCard,
+  DUO_TOTAL,
+  DEFAULT_HERO_CARDS,
+  padCards,
+  fetchHeroCards,
+} from '@/lib/heroSliderData';
 
-interface HeroCard {
-  label: string;
-  catId: string;
-  emoji: string;
-  img: string;
-  bg: string;
-}
-
-const DUO_TOTAL = 13;
-const AUTOPLAY_MS = 3500;
-const HOVER_AUTOPLAY_MS = 7000;
+const AUTOPLAY_MS = 5500;
+const HOVER_AUTOPLAY_MS = 8000;
 const GAP = 12;
 
-const CATH_CARD_DEFAULTS: HeroCard[] = [
-  { label: 'Neon Lights', catId: 'rgb', emoji: '💡', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779333775/quality_restoration_20260521091638399_e24mi5.jpg', bg: 'linear-gradient(155deg,#0d1b0d,#1a3a1a,#0d2d1a)' },
-  { label: 'Mini Printer', catId: 'unique', emoji: '✨', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535309/Enhancer-AI_UHD-Like_20260521_213052_0000_tq4ud1.png', bg: 'linear-gradient(155deg,#0a1a0a,#1a3d1a,#0a2a0a)' },
-  { label: 'Water Bottle', catId: 'waterbottle', emoji: '🍶', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535309/Enhancer-AI_UHD-water_bottle_20260521_204516_0000_uim3et.png', bg: 'linear-gradient(155deg,#001a3d,#00285c,#003d7a)' },
-  { label: 'RC Plan', catId: 'toys', emoji: '🧸', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535315/RC_20260522_213519_0000_swwxnc.png', bg: 'linear-gradient(155deg,#1a0a00,#3d1f00,#5c2d00)' },
-  { label: 'G Lamp', catId: 'light', emoji: '🕯️', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535331/Enhancer-AI_UHD-Atmospher_20260521_200857_0000_c7ihlv.png', bg: 'linear-gradient(155deg,#1a0010,#3d0030,#1a0040)' },
-  { label: 'Humidifier', catId: 'humidifier', emoji: '💧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535308/Enhancer-AI_UHD-RC_20260522_230738_0000_uearqd.png', bg: 'linear-gradient(155deg,#001a1a,#003d3d,#005252)' },
-  { label: 'FAN', catId: 'fan', emoji: '💨', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535311/Enhancer-AI_UHD-RC_20260522_230104_0000_etqeuv.png', bg: 'linear-gradient(155deg,#001a1a,#003d3d,#005252)' },
-  { label: 'Alarm Clock', catId: 'alarmclock', emoji: '⏰', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535315/Enhancer-Ultra_HD-alarm_20260521_193333_0000_o7l1t1.png', bg: 'linear-gradient(155deg,#0a0a2a,#1a1a5c,#0a0a3d)' },
-  { label: 'Moon Lamp', catId: 'light', emoji: '🕯️', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535314/Enhancer-Ultra_HD-Untitled_design_20260521_184307_0000_oqwt8c.png', bg: 'linear-gradient(155deg,#1a1a0a,#3d3d00,#2a2a00)' },
-  { label: 'Crystal Ball', catId: 'crystalball', emoji: '🔮', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535320/Enhancer-Ultra_HD-Zone_20260521_192104_0000_bwnsxc.png', bg: 'linear-gradient(155deg,#0a0a2a,#1a1a5c,#0a0a3d)' },
-  { label: 'TWS', catId: 'tws', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535323/quality_restoration_20260522065341115_eh8yle.png', bg: 'linear-gradient(155deg,#1a0020,#3d0050,#2d0070)' },
-  { label: 'Power Bank', catId: 'powerbank', emoji: '🔋', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535311/Enhancer-AI_UHD-Power_20260523_104015_0000_aa9euv.png', bg: 'linear-gradient(155deg,#1a0a00,#3d1f00,#5c2d00)' },
-  { label: 'Headphone', catId: 'headphone', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/q_auto/f_auto/v1779535317/Enhancer-Ultra_HD-Untitled_design_20260523_080608_0000_offzxw.png', bg: 'linear-gradient(155deg,#00101a,#001f3d,#003366)' },
-];
-
-function padCards(arr: unknown): HeroCard[] {
-  const padded: HeroCard[] = Array.isArray(arr) ? arr.slice() : [];
-  while (padded.length < DUO_TOTAL) {
-    const idx = padded.length;
-    padded.push(CATH_CARD_DEFAULTS[idx] || CATH_CARD_DEFAULTS[0]);
-  }
-  return padded.slice(0, DUO_TOTAL);
-}
+// পেজ নেভিগেশনের সময় স্লাইডার যেন ১ নাম্বার কার্ডে রিসেট না হয়ে আগের কার্ডেই থাকে
+let globalSavedIndex = DUO_TOTAL;
 
 function getDuoPerPage(): number {
   if (typeof window === 'undefined') return 2;
@@ -51,34 +26,29 @@ function getDuoPerPage(): number {
 }
 
 interface HeroSliderProps {
+  initialCards?: HeroCard[];
   onCategoryClick?: (catId: string) => void;
 }
 
-export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
+export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
-  const [cards, setCards] = useState<HeroCard[]>(CATH_CARD_DEFAULTS);
+  const [cards, setCards] = useState<HeroCard[]>(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS);
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const duoIdxRef = useRef(DUO_TOTAL);
+  const duoIdxRef = useRef(globalSavedIndex);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pausedRef = useRef(false);
   const infiniteJumpRef = useRef(false);
   const dragRef = useRef({ active: false, startX: 0 });
   const touchRef = useRef({ startX: 0, startY: 0 });
-  const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isVisibleRef = useRef(true);
 
-  // Keeps duoIdxRef.current inside [DUO_TOTAL, DUO_TOTAL*2) no matter how far it has
-  // drifted. Normally onTransitionEnd corrects drift one DUO_TOTAL at a time, but that
-  // relies on the 'transitionend' event actually firing — which browsers skip for
-  // hidden/background tabs. Autoplay's setInterval keeps ticking (throttled, not
-  // stopped) while a tab is backgrounded, so duoIdxRef can drift by many multiples of
-  // DUO_TOTAL during a long background period. Modulo (not a single ± DUO_TOTAL step)
-  // is what makes this recovery work regardless of how large that drift got.
   const normalizeIdx = () => {
     const span = DUO_TOTAL;
     const idx = duoIdxRef.current;
     if (idx >= span && idx < span * 2) return;
     duoIdxRef.current = ((idx - span) % span + span) % span + span;
+    globalSavedIndex = duoIdxRef.current;
   };
 
   const setPosition = useCallback((animate: boolean) => {
@@ -96,7 +66,7 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
         : 28;
       wrapWidth = window.innerWidth - cathPad;
     }
-    if (!wrapWidth || wrapWidth < 50) { setTimeout(() => setPosition(animate), 150); return; }
+    if (!wrapWidth || wrapWidth < 50) return;
     const cardWidth = Math.floor((wrapWidth - GAP * (perPage - 1)) / perPage);
     if (!cardWidth || cardWidth < 10) return;
     allCards.forEach((c) => {
@@ -105,20 +75,21 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
       c.style.flexShrink = '0';
     });
     const offset = duoIdxRef.current * (cardWidth + GAP);
-    track.style.transition = animate ? 'transform .42s cubic-bezier(.4,0,.2,1)' : 'none';
+    track.style.transition = animate ? 'transform .48s cubic-bezier(.4,0,.2,1)' : 'none';
     track.style.transform = `translateX(-${offset}px)`;
   }, []);
 
   const duoStep = useCallback((dir: number) => {
     const perPage = getDuoPerPage();
     duoIdxRef.current += dir * perPage;
+    globalSavedIndex = duoIdxRef.current;
     setPosition(true);
   }, [setPosition]);
 
   const startAuto = useCallback(() => {
     if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     autoTimerRef.current = setInterval(() => {
-      if (!pausedRef.current) duoStep(1);
+      if (!pausedRef.current && isVisibleRef.current) duoStep(1);
     }, AUTOPLAY_MS);
   }, [duoStep]);
 
@@ -126,8 +97,25 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
     const wrap = wrapRef.current;
     const track = trackRef.current;
     if (!wrap || !track) return;
-    requestAnimationFrame(() => requestAnimationFrame(() => setPosition(false)));
+
+    requestAnimationFrame(() => setPosition(false));
     startAuto();
+
+    // স্ক্রিনের বাইরে চলে গেলে (নিচে স্ক্রল করলে) স্লাইডার অ্যানিমেশন বন্ধ থাকবে
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        isVisibleRef.current = entry.isIntersecting;
+        if (!entry.isIntersecting && autoTimerRef.current) {
+          clearInterval(autoTimerRef.current);
+          autoTimerRef.current = null;
+        } else if (entry.isIntersecting && !autoTimerRef.current) {
+          startAuto();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(wrap);
 
     const onTouchStart = (e: TouchEvent) => {
       touchRef.current.startX = e.touches[0].clientX;
@@ -146,7 +134,7 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
     const onMouseEnter = () => {
       if (window.innerWidth >= 769) {
         if (autoTimerRef.current) clearInterval(autoTimerRef.current);
-        autoTimerRef.current = setInterval(() => { if (!pausedRef.current) duoStep(1); }, HOVER_AUTOPLAY_MS);
+        autoTimerRef.current = setInterval(() => { if (!pausedRef.current && isVisibleRef.current) duoStep(1); }, HOVER_AUTOPLAY_MS);
       }
     };
     const onMouseLeaveAuto = () => { if (window.innerWidth >= 769) startAuto(); };
@@ -171,47 +159,34 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
       if (duoIdxRef.current >= DUO_TOTAL * 2) {
         infiniteJumpRef.current = true;
         duoIdxRef.current -= DUO_TOTAL;
+        globalSavedIndex = duoIdxRef.current;
         setPosition(false);
         infiniteJumpRef.current = false;
       } else if (duoIdxRef.current < DUO_TOTAL) {
         infiniteJumpRef.current = true;
         duoIdxRef.current += DUO_TOTAL;
+        globalSavedIndex = duoIdxRef.current;
         setPosition(false);
         infiniteJumpRef.current = false;
       }
     };
     const onResize = () => {
-      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া resize ইভেন্টে state আপডেট
-      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
-      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
-        return;
-      }
-      if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
-      resizeTimerRef.current = setTimeout(() => {
-        duoIdxRef.current = DUO_TOTAL;
-        requestAnimationFrame(() => requestAnimationFrame(() => setPosition(false)));
-      }, 200);
+      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) return;
+      requestAnimationFrame(() => setPosition(false));
     };
-    // Legacy bug fix (2026-08-05): while this tab is hidden, 'transitionend' never
-    // fires (browsers don't run CSS transitions on hidden tabs), so onTransitionEnd's
-    // wrap-around correction never runs — but the setInterval below keeps ticking
-    // (throttled) regardless, so duoIdxRef can drift into the thousands during a long
-    // background period. Left alone, the next paint jumps the track translateX() far
-    // outside the viewport — the whole slider goes blank until a hard refresh resets
-    // duoIdxRef via a fresh component instance. Pausing here (not just relying on
-    // normalizeIdx() as a safety net) also avoids wasting the interval/CPU while hidden.
+
     const onDocVisibility = () => {
       if (document.hidden) {
         pausedRef.current = true;
         if (autoTimerRef.current) { clearInterval(autoTimerRef.current); autoTimerRef.current = null; }
       } else {
-        setPosition(false); // instant resnap first — normalizeIdx() runs inside this
+        setPosition(false);
         pausedRef.current = false;
         startAuto();
       }
     };
-    document.addEventListener('visibilitychange', onDocVisibility);
 
+    document.addEventListener('visibilitychange', onDocVisibility);
     wrap.addEventListener('touchstart', onTouchStart, { passive: true });
     wrap.addEventListener('touchend', onTouchEnd, { passive: true });
     wrap.addEventListener('touchcancel', onTouchCancel, { passive: true });
@@ -224,8 +199,8 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
     window.addEventListener('resize', onResize);
 
     return () => {
+      observer.disconnect();
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
-      if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current);
       wrap.removeEventListener('touchstart', onTouchStart);
       wrap.removeEventListener('touchend', onTouchEnd);
       wrap.removeEventListener('touchcancel', onTouchCancel);
@@ -238,50 +213,20 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
       window.removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onDocVisibility);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [duoStep, setPosition, startAuto]);
 
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem('vc_cath_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length) setCards(padCards(parsed));
-      }
-    } catch {
-      // cache read failed, ignore
-    }
-
-    const fetchCards = async () => {
+    if (initialCards && initialCards.length) return;
+    const loadCards = async () => {
       try {
-        const { data, error } = await supabase
-          .from('store_settings')
-          .select('setting_value')
-          .eq('setting_key', 'vc_cath_cards')
-          .maybeSingle();
-        if (error || !data) return;
-        const parsedVal = parseSupabaseVal<unknown>(data.setting_value);
-        if (Array.isArray(parsedVal) && parsedVal.length) {
-          const padded = padCards(parsedVal);
-          setCards(padded);
-          try { localStorage.setItem('vc_cath_cache', JSON.stringify(padded)); } catch {
-            // storage unavailable, ignore
-          }
-        }
+        const fetched = await fetchHeroCards(supabase);
+        setCards(fetched);
       } catch (e) {
         logWarn('Hero card fetch failed:', e);
       }
     };
-    fetchCards();
-
-    const onVisible = () => { if (document.visibilityState === 'visible') fetchCards(); };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [supabase]);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setPosition(false));
-  }, [cards, setPosition]);
+    loadCards();
+  }, [supabase, initialCards]);
 
   const goCategory = (catId: string) => {
     if (typeof onCategoryClick === 'function') {
@@ -295,22 +240,14 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
   const tripled = [...cards, ...cards, ...cards];
 
   return (
-    <div className="relative bg-transparent p-3.5 pb-0">
+    <div className="relative min-h-[220px] bg-transparent p-3.5 pb-0 sm:min-h-[300px] md:min-h-[280px]">
       <div className="relative w-full touch-pan-y overflow-hidden bg-transparent" ref={wrapRef}>
-        <div className="flex gap-3 bg-transparent px-0.5" style={{ transition: 'transform .42s cubic-bezier(.4,0,.2,1)', willChange: 'transform' }} ref={trackRef}>
+        <div className="flex gap-3 bg-transparent px-0.5" style={{ willChange: 'transform' }} ref={trackRef}>
           {tripled.map((card, i) => {
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
-            // tripled অ্যারেতে ৩টা কপি আছে (infinite-loop স্লাইডারের জন্য), কিন্তু
-            // প্রথম পেইন্টে আসলে দেখা যায় শুধু মাঝের কপি থেকে duoIdxRef.current
-            // (=DUO_TOTAL) ইনডেক্স থেকে শুরু করা কার্ডগুলো (মোবাইলে ২টা, ডেস্কটপে
-            // ৬টা)। আগে প্রতিটা কপির প্রথম ২টা কার্ডকে eager+high-priority
-            // ধরা হতো (মোট ৬টা ছবি), যার মধ্যে ৪টা আসলে পর্দার বাইরে থাকা
-            // ডুপ্লিকেট কপি — এগুলো অহেতুক নেটওয়ার্ক/প্রায়োরিটি খেয়ে আসল LCP
-            // ছবিটাকে দেরি করাচ্ছিল। এখন শুধু মাঝের কপির প্রথম ৬টা কার্ডকেই
-            // eager রাখা হচ্ছে (মোবাইলে ২টা দৃশ্যমান + ডেস্কটপে বাকি ৪টা কভার করে)।
-            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 6;
+            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
             return (
               <div
@@ -321,9 +258,10 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
                 onClick={() => goCategory(catId)}
               >
                 {card.img ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-[550ms] ease-brand group-hover:scale-[1.07]"
-                    src={optimizeCloudinaryUrl(card.img)}
+                    src={optimizeCloudinaryUrl(card.img, 360)}
                     alt={label}
                     loading={isEager ? 'eager' : 'lazy'}
                     fetchPriority={isEager ? 'high' : undefined}
@@ -361,12 +299,14 @@ export default function HeroSlider({ onCategoryClick }: HeroSliderProps) {
       <button
         className="absolute left-0.5 top-[calc(50%-14px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
         onClick={() => duoStep(-1)}
+        aria-label="Previous"
       >
         &#8249;
       </button>
       <button
         className="absolute right-0.5 top-[calc(50%-14px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
         onClick={() => duoStep(1)}
+        aria-label="Next"
       >
         &#8250;
       </button>
