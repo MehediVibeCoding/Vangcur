@@ -22,26 +22,30 @@ function buildHint(password: string, score: number): string {
   return 'আরেকটু ভিন্ন ও দীর্ঘ কিছু ব্যবহার করুন';
 }
 
-let zxcvbnPromise: Promise<(password: string) => { score: number; feedback?: { warning?: string } }> | null = null;
-function loadZxcvbn() {
-  if (!zxcvbnPromise) {
-    zxcvbnPromise = import('zxcvbn').then((m) => (m.default || m) as (password: string) => { score: number; feedback?: { warning?: string } });
-  }
-  return zxcvbnPromise;
+function calculateScore(pass: string): number {
+  if (!pass) return 0;
+  let score = 0;
+  if (pass.length >= 8) score++;
+  if (pass.length >= 12) score++;
+  if (/[0-9]/.test(pass)) score++;
+  if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score++;
+  if (/[^A-Za-z0-9]/.test(pass)) score++;
+  return Math.min(4, score);
 }
 
 export async function checkPasswordStrength(password: string): Promise<PasswordStrength> {
   const minLenOk = password.length >= 8;
-  if (!password) return { score: 0, label: '', color: '#E5E7EB', ok: false, minLenOk: false, hint: '' };
-  const zxcvbn = await loadZxcvbn();
-  const result = zxcvbn(password);
+  if (!password) {
+    return { score: 0, label: '', color: '#E5E7EB', ok: false, minLenOk: false, hint: '' };
+  }
+  const score = calculateScore(password);
   return {
-    score: result.score,
-    label: LABELS[result.score],
-    color: COLORS[result.score],
-    ok: minLenOk && result.score >= MIN_SCORE,
+    score,
+    label: LABELS[score],
+    color: COLORS[score],
+    ok: minLenOk && score >= MIN_SCORE,
     minLenOk,
-    hint: buildHint(password, result.score),
-    warning: result.feedback?.warning || '',
+    hint: buildHint(password, score),
+    warning: '',
   };
 }
