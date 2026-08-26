@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   productHref,
@@ -86,9 +86,15 @@ interface ProductCardProps {
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const { t } = useT();
   const router = useRouter();
-  const wished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
+  const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
+  const [wished, setWished] = useState(false);
   const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
+
+  // React 19 Hydration mismatch ফিক্স
+  useEffect(() => {
+    setWished(rawWished);
+  }, [rawWished]);
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -128,7 +134,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   };
 
   return (
-    <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-brand duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
+    <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand hover:-translate-y-1 hover:shadow-sh3 active:scale-[.98]">
       <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
         <div className="absolute inset-0 cursor-pointer" onClick={openProduct}>
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
@@ -136,20 +142,20 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.65) 80%, rgba(5,7,14,.96) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.94) 100%)' }}
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-[#374151] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">Sold Out</div>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-white sm:px-2.5">Sold Out</div>
         ) : p.badge && (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-primary px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light px-2.5 py-1 text-[10px] font-bold text-white shadow-sh1">
             {p.badge}
           </div>
         )}
 
         <button
           ref={wishBtnRef}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${wished ? 'bg-white text-[#FF5A6E]' : 'border border-white/50 bg-black/40 text-white'} ${heartBeat ? 'animate-heartbeat' : ''}`}
+          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full backdrop-blur-[6px] transition-transform duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${wished ? 'bg-white/95 text-[#FF5A6E]' : 'border border-white/50 bg-white/40 text-white'} ${heartBeat ? 'animate-heartbeat' : ''}`}
           onClick={handleWish}
           onAnimationEnd={() => setHeartBeat(false)}
           title="Wishlist"
@@ -167,13 +173,13 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           </div>
           <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/80">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            <span className="text-white/70">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
           </div>
           <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5">
             <span className="text-sm font-extrabold text-white sm:text-lg xl:text-sm">৳{p.price.toLocaleString('en-US')}</span>
             {p.old > p.price && (
               <>
-                <span className="text-[10px] text-white/60 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
+                <span className="text-[10px] text-white/50 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
                 {showDiscBadge && (
                   <span className="text-[10px] font-bold text-[#FF9142] sm:text-xs">-{discPct}%</span>
                 )}
@@ -183,7 +189,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
               <button
-                className="relative flex h-8 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#B45309] font-body text-[10.5px] font-bold text-white shadow-sm transition-colors hover:bg-[#92400E] sm:h-9 sm:text-xs lg:h-10"
+                className="relative flex h-8 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body text-[10.5px] font-bold text-white shadow-sm transition-colors hover:brightness-95 sm:h-9 sm:text-xs lg:h-10"
                 onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                   new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
                 ))}
@@ -193,7 +199,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             ) : (
               <>
                 <button
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-black/40 text-white transition-colors hover:bg-black/60 sm:h-9 lg:h-10"
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
                   aria-label={t('কার্টে যোগ করুন')}
                   onClick={() => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }))}
@@ -201,7 +207,10 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   <CartIcon />
                 </button>
                 <button
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/80 bg-white font-body text-[11px] font-bold text-brand-primary shadow-sm transition-transform duration-brand hover:brightness-95 active:scale-95 sm:h-9 sm:text-xs lg:h-10"
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 active:scale-95 sm:h-9 sm:text-[13px] lg:h-10"
+                  style={{
+                    background: 'linear-gradient(115deg, rgba(255,255,255,.94) 0%, rgba(195,222,252,.9) 38%, rgba(255,255,255,.92) 64%, rgba(68,167,252,.35) 100%)',
+                  }}
                   onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
                     new CustomEvent(QUICK_ORDER_EVENT, { detail: { id: p.id } }),
                   ))}
