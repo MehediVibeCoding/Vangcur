@@ -1,0 +1,57 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { parseSupabaseVal } from './categoryData';
+import { logWarn } from './logger';
+
+export interface HeroCard {
+  label: string;
+  catId: string;
+  emoji: string;
+  img: string;
+  bg: string;
+}
+
+export const DUO_TOTAL = 13;
+
+export const DEFAULT_HERO_CARDS: HeroCard[] = [
+  { label: 'Neon Lights', catId: 'rgb', emoji: '💡', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779333775/quality_restoration_20260521091638399_e24mi5.jpg', bg: 'linear-gradient(155deg,#0d1b0d,#1a3a1a,#0d2d1a)' },
+  { label: 'Mini Printer', catId: 'unique', emoji: '✨', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535309/Enhancer-AI_UHD-Like_20260521_213052_0000_tq4ud1.png', bg: 'linear-gradient(155deg,#0a1a0a,#1a3d1a,#0a2a0a)' },
+  { label: 'Water Bottle', catId: 'waterbottle', emoji: '🍶', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535309/Enhancer-AI_UHD-water_bottle_20260521_204516_0000_uim3et.png', bg: 'linear-gradient(155deg,#001a3d,#00285c,#003d7a)' },
+  { label: 'RC Plan', catId: 'toys', emoji: '🧸', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535315/RC_20260522_213519_0000_swwxnc.png', bg: 'linear-gradient(155deg,#1a0a00,#3d1f00,#5c2d00)' },
+  { label: 'G Lamp', catId: 'light', emoji: '🕯️', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535331/Enhancer-AI_UHD-Atmospher_20260521_200857_0000_c7ihlv.png', bg: 'linear-gradient(155deg,#1a0010,#3d0030,#1a0040)' },
+  { label: 'Humidifier', catId: 'humidifier', emoji: '💧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535308/Enhancer-AI_UHD-RC_20260522_230738_0000_uearqd.png', bg: 'linear-gradient(155deg,#001a1a,#003d3d,#005252)' },
+  { label: 'FAN', catId: 'fan', emoji: '💨', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535311/Enhancer-AI_UHD-RC_20260522_230104_0000_etqeuv.png', bg: 'linear-gradient(155deg,#001a1a,#003d3d,#005252)' },
+  { label: 'Alarm Clock', catId: 'alarmclock', emoji: '⏰', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535315/Enhancer-Ultra_HD-alarm_20260521_193333_0000_o7l1t1.png', bg: 'linear-gradient(155deg,#0a0a2a,#1a1a5c,#0a0a3d)' },
+  { label: 'Moon Lamp', catId: 'light', emoji: '🕯️', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535314/Enhancer-Ultra_HD-Untitled_design_20260521_184307_0000_oqwt8c.png', bg: 'linear-gradient(155deg,#1a1a0a,#3d3d00,#2a2a00)' },
+  { label: 'Crystal Ball', catId: 'crystalball', emoji: '🔮', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535320/Enhancer-Ultra_HD-Zone_20260521_192104_0000_bwnsxc.png', bg: 'linear-gradient(155deg,#0a0a2a,#1a1a5c,#0a0a3d)' },
+  { label: 'TWS', catId: 'tws', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535323/quality_restoration_20260522065341115_eh8yle.png', bg: 'linear-gradient(155deg,#1a0020,#3d0050,#2d0070)' },
+  { label: 'Power Bank', catId: 'powerbank', emoji: '🔋', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535311/Enhancer-AI_UHD-Power_20260523_104015_0000_aa9euv.png', bg: 'linear-gradient(155deg,#1a0a00,#3d1f00,#5c2d00)' },
+  { label: 'Headphone', catId: 'headphone', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535317/Enhancer-Ultra_HD-Untitled_design_20260523_080608_0000_offzxw.png', bg: 'linear-gradient(155deg,#00101a,#001f3d,#003366)' },
+];
+
+export function padCards(arr: unknown): HeroCard[] {
+  const padded: HeroCard[] = Array.isArray(arr) ? arr.slice() : [];
+  while (padded.length < DUO_TOTAL) {
+    const idx = padded.length;
+    padded.push(DEFAULT_HERO_CARDS[idx] || DEFAULT_HERO_CARDS[0]);
+  }
+  return padded.slice(0, DUO_TOTAL);
+}
+
+export async function fetchHeroCards(supabase: SupabaseClient): Promise<HeroCard[]> {
+  try {
+    const { data, error } = await supabase
+      .from('store_settings')
+      .select('setting_value')
+      .eq('setting_key', 'vc_cath_cards')
+      .maybeSingle();
+    if (error || !data) return DEFAULT_HERO_CARDS;
+    const parsedVal = parseSupabaseVal<unknown>(data.setting_value);
+    if (Array.isArray(parsedVal) && parsedVal.length) {
+      return padCards(parsedVal);
+    }
+    return DEFAULT_HERO_CARDS;
+  } catch (e) {
+    logWarn('Hero card fetch failed:', e);
+    return DEFAULT_HERO_CARDS;
+  }
+      }
