@@ -188,13 +188,13 @@ export default function CustomerGallery() {
 
   const headerBlock = (
     <div className="mb-8 px-5 text-center">
-      <div className="mb-2.5 inline-block rounded-full border border-brand-primary/30 bg-brand-primary/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1px] text-brand-primary">
+      <div className="mb-2.5 inline-block rounded-full border border-brand-primary/40 bg-white/70 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1px] text-brand-primary shadow-sm">
         ❤️ Customer Love
       </div>
       <h2 className="mb-1.5 font-display text-[28px] font-extrabold leading-tight text-ink">
         Unboxing <span className="text-brand-primary">{t('গ্যালারি')}</span>
       </h2>
-      <p className="text-[13.5px] text-muted">{t('আমাদের কাস্টমারদের আনন্দময় মুহূর্ত')}</p>
+      <p className="text-[13.5px] font-medium text-slate-700">{t('আমাদের কাস্টমারদের আনন্দময় মুহূর্ত')}</p>
     </div>
   );
 
@@ -202,7 +202,7 @@ export default function CustomerGallery() {
     return (
       <section className="overflow-hidden bg-brand-bg py-12">
         {headerBlock}
-        <div className="px-6 py-6 text-center text-sm text-muted">
+        <div className="px-6 py-6 text-center text-sm font-semibold text-slate-700">
           <p>{t('এখনো কোনো রিভিউ নেই।')}</p>
         </div>
       </section>
@@ -235,7 +235,7 @@ export default function CustomerGallery() {
                 return (
                   <div
                     key={r.id}
-                    className={`relative h-[320px] w-[200px] shrink-0 select-none overflow-hidden rounded-[20px] bg-[#111] transition-[transform,opacity,box-shadow] duration-[450ms] ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[360px] sm:w-[220px] md:h-[400px] md:w-[260px] ${isActive ? 'z-[2] scale-[1.15] opacity-100 shadow-[0_16px_48px_rgba(0,0,0,.28),0_4px_12px_rgba(0,0,0,.12)]' : 'z-[1] scale-[.85] opacity-60'}`}
+                    className={`relative h-[320px] w-[200px] shrink-0 select-none overflow-hidden rounded-[20px] bg-[#111] transition-transform duration-[450ms] ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[360px] sm:w-[220px] md:h-[400px] md:w-[260px] ${isActive ? 'z-[2] scale-[1.15] opacity-100 shadow-[0_16px_48px_rgba(0,0,0,.28),0_4px_12px_rgba(0,0,0,.12)]' : 'z-[1] scale-[.85] opacity-60'}`}
                     style={{ order }}
                     onClick={() => handleCardClick(i, r)}
                   >
