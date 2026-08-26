@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import type { Category } from '@/types';
 import { logWarn } from './logger';
 
@@ -69,6 +69,31 @@ export async function fetchCategories(supabase: SupabaseClient): Promise<Categor
     logWarn('Category fetch failed:', e);
     return DEFAULT_CATEGORIES;
   }
+}
+
+export function subscribeCategories(
+  supabase: SupabaseClient,
+  onChange: (cats: Category[]) => void,
+): RealtimeChannel {
+  // Categories.tsx-এর মতোই একই টেবিল/কী শোনে, কিন্তু এই ফাংশন অন্য
+  // component (ProductGrid.tsx) থেকেও কল হয় — তাই একটা fixed channel
+  // নামের বদলে ইউনিক নাম ব্যবহার করা হচ্ছে, subscribeContactSettings-এ
+  // (lib/floatButtonsData.ts) যে একই ক্লাসের বাগের জন্য এই fix করা হয়েছিল,
+  // ঠিক সেই কারণেই।
+  const uniqueName = `categories-watch-${Math.random().toString(36).slice(2, 9)}`;
+  return supabase
+    .channel(uniqueName)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_categories' },
+      (payload) => {
+        const row = payload.new as { setting_value?: unknown } | null;
+        if (!row) return;
+        const parsed = parseSupabaseVal<Category[]>(row.setting_value);
+        if (Array.isArray(parsed) && parsed.length) onChange(parsed);
+      },
+    )
+    .subscribe();
 }
 
 export const CATEGORY_FILTER_EVENT = 'vc:categoryFilter';
