@@ -108,11 +108,3 @@ export function cartCount(cart: CartItem[]): number {
 export function cartTotal(cart: CartItem[]): number {
   return cart.reduce((s, i) => s + i.price * i.qty, 0);
 }
-
-export function clearCartOnRealPagehide(): () => void {
-  const handler = (e: PageTransitionEvent) => {
-    if (!e.persisted) persist([]);
-  };
-  window.addEventListener('pagehide', handler);
-  return () => window.removeEventListener('pagehide', handler);
-}
