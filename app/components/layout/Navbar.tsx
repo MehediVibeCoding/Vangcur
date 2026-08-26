@@ -26,12 +26,7 @@ interface NavbarProps {
   onTrackClick?: () => void;
   currentUser?: CurrentUser | null;
   onAccountClick?: () => void;
-  /** false হলে Navbar viewport-এর top-এ sticky/pinned থাকে না — স্বাভাবিক
-   * document flow-তে বসে থাকে এবং scroll করলে কনটেন্টের সাথেই উপরে সরে যায়।
-   * প্রোডাক্ট পেজের মতো নিজস্ব sticky tabs-bar থাকা পেজে ব্যবহার হয় (default: true)। */
   sticky?: boolean;
-  /** true হলে বাম পাশের Vangcur লোগোর বদলে একটা ব্র্যান্ড-কালার "হোমে যান" বাটন
-   * দেখানো হয় — প্রোডাক্ট পেজের মতো sub-page-এ ব্যবহারের জন্য (default: false)। */
   showHomeButton?: boolean;
 }
 
@@ -43,11 +38,6 @@ function SearchIcon({ className = '' }: { className?: string }) {
   );
 }
 
-// Navbar-এর wishlist আইকন — সাধারণ আউটলাইন হার্টের উপর ব্র্যান্ড-নীল রঙের একটা
-// "লিকুইড" হার্ট ওভারলে করা থাকে, যেটা clip-path দিয়ে নিচ থেকে উপরে (গ্লাসে
-// পানি ঢালার মতো) ফিল হয়ে ওঠে/নেমে যায়। liquidPhase অনুযায়ী fill-এর
-// target/duration/easing বদলায় — filling-এ সামান্য overshoot bounce (পানি
-// ঢালার সময়কার sloshing-এর অনুভূতি দিতে) আর draining-এ মসৃণ ease।
 function NavWishlistIcon({
   wrapRef, liquidPhase,
 }: {
@@ -120,16 +110,10 @@ function highlightMatch(text: string, q: string) {
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:outline-none';
 const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
 
-// যাদের সার্চ হিস্ট্রি একেবারে খালি (নতুন ইউজার বা সব মুছে ফেলেছে), তাদের জন্য
-// ডিফল্ট জনপ্রিয় সার্চ-টার্ম — আপাতত হার্ডকোড, পরে অ্যাডমিন প্যানেল থেকে
-// এডিটযোগ্য করা হবে (তখন এটা কোনো settings/API কল দিয়ে replace হবে)।
 const DEFAULT_POPULAR_SEARCHES = [
   'Neon Light', 'Smart Watch', 'Power Bank', 'TWS Earbuds', 'Headphone', 'Humidifier',
 ];
 
-// সার্চ বক্সে ক্লিক/ফোকাস করার সাথে সাথেই (কিছু না লিখেও) এই প্যানেলটা দেখানো
-// হয় — আগে খালি বক্সে ক্লিক করলে কিছুই দেখাত না। সাম্প্রতিক অনুসন্ধান আর
-// জনপ্রিয় কয়েকটা ক্যাটাগরি একসাথে দেখিয়ে ইউজারকে দ্রুত শুরু করার সুযোগ দেয়।
 function SearchDefaultPanel({
   recentSearches, popularSearches, popularCategories, onPickRecent, onRemoveRecent, onClearRecent, onGoToCat,
 }: {
@@ -159,11 +143,6 @@ function SearchDefaultPanel({
                 <button
                   type="button"
                   className="cursor-pointer"
-                  // mousedown-এ preventDefault না করলে ক্লিকের আগে সার্চ ইনপুট
-                  // blur হয়ে যায় — সেই blur-এর কারণে বক্সের expanded state
-                  // সাময়িকভাবে collapse হওয়ার race তৈরি হতো, তাই ক্লিক সম্পন্ন
-                  // হওয়ার আগেই বক্স ছোট হয়ে যাচ্ছিল। এটা দিলে input focus
-                  // থেকেই যায়, কোনো race হয় না।
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => onPickRecent(term)}
                 >
@@ -183,9 +162,6 @@ function SearchDefaultPanel({
           <div className="mx-3.5 mb-1.5 h-px bg-border-base" />
         </>
       ) : popularSearches.length > 0 && (
-        // সার্চ হিস্ট্রি একেবারে খালি (নতুন ইউজার, অথবা সব মুছে ফেলা হয়েছে) —
-        // এই ক্ষেত্রে খালি জায়গা না রেখে ডিফল্ট জনপ্রিয় সার্চ-টার্ম দেখানো হয়।
-        // এখন এগুলো হার্ডকোড করা, পরে অ্যাডমিন প্যানেল থেকে এডিটযোগ্য করা হবে।
         <>
           <div className="px-3.5 pb-1.5 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
             {t('জনপ্রিয় সার্চ')}
@@ -196,8 +172,6 @@ function SearchDefaultPanel({
                 key={term}
                 type="button"
                 className="cursor-pointer rounded-full bg-surface-muted py-1.5 px-3.5 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
-                // একই কারণে (উপরে দেখুন) — blur-race আটকাতে mousedown-এ
-                // preventDefault।
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onPickRecent(term)}
               >
@@ -323,8 +297,6 @@ function SearchDropdown({
               </>
             )}
           </div>
-          {/* বাটনটা নিচেই থাকে (আগের জায়গায়), কিন্তু এখন এই flex-item-টা fixed —
-              উপরের কনটেন্ট যত লম্বাই হোক, এটা সবসময় নিচে দৃশ্যমান থাকবে। */}
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
               className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-light-hover"
@@ -369,12 +341,7 @@ export default function Navbar({
   const router = useRouter();
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused || showDropdown;
-  // খালি বক্সে ফোকাস হলে (কিছু না লিখেই) সাম্প্রতিক অনুসন্ধান + জনপ্রিয়
-  // ক্যাটাগরির ডিফল্ট প্যানেল দেখানো হয়, সাধারণ ফলাফল/no-result state নয়।
   const isDefaultView = showDropdown && !searchQuery.trim();
-  // catsRef.current পরিবর্তন হলে re-render trigger হয় না (এটা state না, ref),
-  // তাই stale ডেটা এড়াতে এখানে সরাসরি DEFAULT_CATEGORIES থেকে প্রথম কয়েকটা
-  // (curated "জনপ্রিয়") ক্যাটাগরি নেওয়া হচ্ছে — এগুলো নিয়মিত পরিবর্তন হয় না।
   const popularCategories = useMemo(
     () => DEFAULT_CATEGORIES.filter((c) => c.id !== 'all').slice(0, 4),
     [],
@@ -403,33 +370,17 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
-    // সার্চ বক্স খোলার সাথে সাথেই showDropdown সেট করা হয় toggle বাটনের
-    // onClick-এ synchronously (নিচে দেখুন) — এখানে শুধু ইনপুটে ফোকাস দেওয়া হয়,
-    // এতে effect-এর এক-রেন্ডার-দেরির কারণে ডিফল্ট প্যানেল (জনপ্রিয় সার্চ/
-    // ক্যাটাগরি) না-খোলার race আর হয় না।
     if (mobileSearchOpen) {
       mobileSearchInputRef.current?.focus();
     }
   }, [mobileSearchOpen]);
 
-  // মোবাইলে সার্চ বক্স/ড্রপডাউন কোনো টাইম-বেসড টাইমারে অটোমেটিক বন্ধ হবে না —
-  // ইউজার ইচ্ছাকৃতভাবে কিছু না করা পর্যন্ত (চিন্তা করছে, দেখছে) খোলা থাকতে পারে,
-  // যতক্ষণ ইচ্ছা। শুধু দুইভাবে বন্ধ হবে: (১) বাইরে ক্লিক করলে (আলাদা
-  // handleClickOutside effect-এ আছে), (২) পিছনের পেজ স্ক্রল করলে — কারণ স্ক্রল
-  // করা মানে ইউজার এখন ওয়েবসাইট দেখতে চাইছে।
-  //
-  // mobile keyboard খোলার সময় ব্রাউজার নিজে থেকেই ফোকাসড ইনপুটটাকে কিবোর্ডের
-  // উপরে দেখানোর জন্য পেজ auto-scroll করে। আগে এই ব্রাউজার-চালিত auto-scroll-কেই
-  // ভুল করে "ইউজার নিজে স্ক্রল করেছে" ধরে নিয়ে সাথে সাথে বন্ধ করে দেওয়া হতো। তাই
-  // প্রথম ৫০০ms "arm" হওয়ার আগ পর্যন্ত স্ক্রল-ক্লোজ উপেক্ষা করা হচ্ছে।
   useEffect(() => {
     if (!mobileSearchOpen) return undefined;
     const startY = window.scrollY;
     let armed = false;
     const armTimer = setTimeout(() => { armed = true; }, 500);
     const onScroll = () => {
-      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া scroll ইভেন্টে state আপডেট
-      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
       if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
         return;
       }
@@ -458,9 +409,6 @@ export default function Navbar({
     window.setTimeout(() => btn.classList.remove('animate-cart-jiggle'), 750);
   }, [cartAddedTick]);
 
-  // WishlistFlyOverlay-এর উড়ন্ত হার্ট এই আইকনে "হিট" করার মুহূর্তে এই ইভেন্ট
-  // আসে — cartBtnRef-এর জিগলের মতোই সরাসরি classList দিয়ে জিগল চালানো হয়
-  // (state/re-render লাগে না), আর সাথে লিকুইড-ফিল সিকোয়েন্স শুরু হয়।
   useEffect(() => {
     const onHit = () => {
       const wrap = wishIconWrapRef.current;
@@ -476,10 +424,6 @@ export default function Navbar({
     return () => window.removeEventListener(WISHLIST_NAV_HIT_EVENT, onHit);
   }, []);
 
-  // লিকুইড-ফিল state machine: filling (নিচ থেকে উপরে ফিল হচ্ছে, bounce সহ)
-  // → full (পুরো ভর্তি অবস্থায় সংক্ষিপ্ত বিরতি) → draining (আবার খালি হয়ে
-  // যাচ্ছে) → idle (বিশ্রাম, পরের হিটের জন্য প্রস্তুত)। প্রতিটা ধাপের সময়
-  // NavWishlistIcon-এ ব্যবহৃত transition duration-এর সাথে মিলিয়ে রাখা হয়েছে।
   useEffect(() => {
     if (wishLiquidPhase === 'filling') {
       const t = window.setTimeout(() => setWishLiquidPhase('full'), 650);
@@ -496,16 +440,9 @@ export default function Navbar({
     return undefined;
   }, [wishLiquidPhase]);
 
-  // ডেক্সটপ সার্চ বক্সের এক্সপ্যান্ডেড (hover/focus) অবস্থার জন্য left/width হিসাব করা হয়
-  // এখানে, একবারই (মাউন্ট + রিসাইজে) — hover state-এর উপর নির্ভর করে না। বক্সটা সবসময়
-  // position: absolute থাকে (কখনো relative <-> absolute টগল হয় না), শুধু এই left/width
-  // ভ্যালু দুটো animate হয় — এতে করে আগে যে "ছোট হয়ে গিয়ে আবার বড় হওয়া" গ্লিচ হতো
-  // (position টাইপ পরিবর্তনের কারণে) সেটা আর হবে না।
   useEffect(() => {
     let raf = 0;
     function measure() {
-      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া resize ইভেন্টে state আপডেট
-      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
       if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
         return;
       }
@@ -528,58 +465,6 @@ export default function Navbar({
     };
   }, []);
 
-  // হোভার স্টেট এখন বক্সের নিজের onMouseEnter/onMouseLeave দিয়ে না, বরং আসল মাউস
-  // মুভমেন্টের সাথে বক্সের বর্তমান (লাইভ) bounding rect মিলিয়ে ঠিক হয়। এর মানে —
-  // মাউস পয়েন্টার যদি বক্সের ভিতরে ১০০% না থাকে (এক চুলও বাইরে থাকলে) তাহলে এক্সপ্যান্ড
-  // হবে না। আর যেহেতু এটা শুধু আসল মাউস-মুভমেন্টে রিক্যালকুলেট হয় (বক্স নিজে অ্যানিমেট
-  // হওয়ার কারণে না), তাই মাঝ-বরাবর পজিশনে বারবার বড়-ছোট হওয়ার (jumping) সমস্যাটাও হবে না।
-  useEffect(() => {
-    let raf = 0;
-    const onMove = (e: MouseEvent) => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const box = desktopSearchBoxRef.current;
-        if (!box) return;
-        const r = box.getBoundingClientRect();
-        if (r.width === 0 || r.height === 0) return;
-        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-        setDesktopSearchHovered((prev) => (prev === inside ? prev : inside));
-      });
-    };
-    window.addEventListener('mousemove', onMove);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  // আগে এখানে একটা আলাদা desktopBoxReady state দিয়ে dropdown-কে showDropdown
-  // ছাড়াও আরও একটা ৩০০ms জাভাস্ক্রিপ্ট-টাইমার-নির্ভর "ready" শর্তে গেট করা হতো
-  // (বক্সের CSS width-transition শেষ হওয়ার আগে dropdown পপ-আপ যেন না হয়, সেই
-  // কসমেটিক পলিশের জন্য)। সমস্যা হলো — showDropdown সামান্যতম কোনো কারণে (রিয়েল
-  // ব্রাউজারে focus/blur/click ইভেন্টের timing-নির্ভর কোনো সূক্ষ্ম রেসে, যেটা
-  // এই স্যান্ডবক্সে রিপ্রোডিউস করা যায়নি) এক মুহূর্তের জন্যও false হয়ে গেলে এই
-  // ready-state সাথে সাথেই false হয়ে যেত, আর আবার true হতে নতুন করে ৩০০ms
-  // অপেক্ষা করতে হতো — সেই নতুন টাইমারটা যদি কোনোভাবে শিডিউল না হয় (বা বাতিল
-  // হয়ে যায়), dropdown চিরতরের জন্য অদৃশ্য থেকে যেত, যদিও searchQuery/
-  // searchResults সব ঠিকই ছিল (ইউজার যা রিপোর্ট করেছে — বক্সে টেক্সট আছে,
-  // কিন্তু রেজাল্ট দেখাচ্ছে না — ঠিক এটাই)। এখন dropdown সরাসরি showDropdown-এর
-  // উপরেই নির্ভর করে (কোনো বাড়তি টাইমার-গেট নেই), আর visual polish (বক্স
-  // চূড়ান্ত সাইজ হওয়ার আগে পপ না করা) দেওয়া হচ্ছে বিশুদ্ধ CSS fade-animation
-  // দিয়ে (নিচে দেখুন .search-dropdown-reveal ক্লাস, globals.css-এ ডিফাইন করা) —
-  // CSS animation কখনো "আটকে" থাকতে পারে না, নিজে থেকেই শেষ হয়ে যায়।
-
-  // ডেক্সটপ সার্চ বক্স ছোট (collapsed — hover/focus কোনোটাই না) অবস্থায় যদি ভিতরে
-  // এখনো আগের কোনো টেক্সট থেকে যায় (ইউজার নিজে ক্লিয়ার করেনি, বাইরে ক্লিক করে
-  // ড্রপডাউন শুধু বন্ধ হয়েছিল), তাহলে ৭ সেকেন্ড নিষ্ক্রিয় থাকলে অটোমেটিক ক্লিয়ার
-  // হয়ে বক্সটা তার ডিফল্ট ("প্রোডাক্ট খুঁজুন" আইকন) অবস্থায় ফিরে যাবে। আবার বক্সে
-  // hover/focus করলে টাইমার বাতিল হয়ে যায় (dependency-তে desktopSearchExpanded আছে)।
-  // এই টাইমারটা শুধুই ডেস্কটপ hover/focus সার্চ বক্সের জন্য — মোবাইল সার্চ
-  // (আলাদা UI, উপরের effect-এ হ্যান্ডল হয়) খোলা থাকলে এটা একেবারেই স্কিপ করা
-  // হয়, নাহলে আগে এই একই টাইমার ভুলে মোবাইলেও fire করে দুটো বন্ধ-হওয়ার
-  // effect একটার পর একটা চেইন-রিয়্যাকশন ঘটাচ্ছিল (আগে টাইপ করা রেজাল্ট,
-  // তারপর টেক্সটবক্স — দুটোই কয়েক সেকেন্ড পর পর অটোমেটিক বন্ধ হয়ে যেত)।
   useEffect(() => {
     if (mobileSearchOpen) return undefined;
     if (desktopSearchExpanded || !searchQuery) return undefined;
@@ -592,24 +477,6 @@ export default function Navbar({
     return () => clearTimeout(t);
   }, [desktopSearchExpanded, searchQuery, mobileSearchOpen]);
 
-  // আগে এখানে একটা useEffect([searchQuery]) দিয়ে রেজাল্ট কম্পিউট করা হতো —
-  // টাইপ করলে debounce (280ms) দিয়ে, আর রিসেন্ট/পপুলার চিপে ক্লিক করলে
-  // skipDebounceRef নামের একটা ref-flag দিয়ে সেই একই effect-কে বলা হতো
-  // "এবার সাথে সাথেই বসাও"। আসল বাগ ছিল এখানেই: চিপে ক্লিক করলে দুটো আলাদা
-  // রেন্ডার-চক্র জড়িয়ে যেত — প্রথমে ক্লিক-হ্যান্ডলারের নিজের setState
-  // (searchQuery/showDropdown/searchResults), তারপর সেই রেন্ডার কমিট হওয়ার
-  // পর effect আবার আলাদাভাবে searchResults/catResults সেট করত। এই দুই ধাপের
-  // মাঝখানে (রিয়েল ব্রাউজারে, টাইপ করার তুলনায় ক্লিকে state-update বেশি হওয়ায়)
-  // ফলাফল ড্রপডাউন মাঝেমধ্যে দেখাচ্ছিল না — টাইপ করলে সমস্যা হতো না কারণ
-  // সেটা সবসময় শুধু debounce (setTimeout) পাথ দিয়েই যেত, কোনো ডাবল-রাইট ছিল
-  // না।
-  //
-  // এখন পুরো effect+ref কম্বিনেশনটাই সরিয়ে ফেলা হয়েছে। রেজাল্ট বসানোর জন্য
-  // এখন মাত্র একটা ফাংশন (runSearch) আছে — টাইপিং আর চিপে ক্লিক, দুটোই এই
-  // একই ফাংশনকে সরাসরি কল করে (টাইপিং একটা প্লেইন setTimeout দিয়ে ডিলে করে,
-  // ক্লিক তাৎক্ষণিকভাবে, কোনো ডিলে ছাড়াই)। কোনো effect-নির্ভরতা না থাকায়
-  // দুই রেন্ডার-চক্রের মধ্যে race হওয়ার সুযোগও আর নেই — যা-ই ঘটুক, একটাই
-  // setState-ব্যাচে সব বসে।
   const runSearch = useCallback((q: string) => {
     setSearchResults(searchProducts(prodsRef.current, q).slice(0, 6));
     setCatResults(matchCategoryList(catsRef.current, q));
@@ -623,9 +490,6 @@ export default function Navbar({
 
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
-    // টেক্সট মুছে খালি করে দিলেও (যেমন ব্যাকস্পেস দিয়ে) বক্সটা তখনো ফোকাসড
-    // থাকে, তাই ড্রপডাউন পুরো বন্ধ না করে ডিফল্ট প্যানেল (সাম্প্রতিক অনুসন্ধান
-    // + জনপ্রিয় ক্যাটাগরি) দেখানো হয়।
     setShowDropdown(true);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     if (!value.trim()) {
@@ -664,12 +528,6 @@ export default function Navbar({
   };
 
   const pickRecentSearch = (term: string) => {
-    // টাইপ করার সময় যে ফাংশনটা রেজাল্ট বসায় (runSearch), চিপে ক্লিক করলেও
-    // ঠিক সেই একই ফাংশন এখানে সরাসরি (কোনো ডিলে ছাড়া) কল হচ্ছে — এটাই
-    // একমাত্র জায়গা যেখানে searchResults/catResults সেট হয়, তাই আর কোনো
-    // effect পরে এসে দ্বিতীয়বার (এবং সম্ভাব্য ভিন্ন টাইমিং-এ) একই ডেটা
-    // আবার বসানোর চেষ্টা করে না — দুটো পাথ (টাইপ/ক্লিক) আর কখনো একে অপরের
-    // সাথে রেসে পড়তে পারে না।
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setSearchQuery(term);
     setShowDropdown(true);
@@ -685,35 +543,6 @@ export default function Navbar({
     setRecentSearches([]);
   };
 
-  // ================================================================
-  // আসল বাগের গোড়া (এতদিন যেটা ধরা পড়েনি): এই লিসেনারটা bubble phase-এ
-  // ('click', capture flag ছাড়া) attach করা ছিল। ধাপে ধাপে যা ঘটত —
-  //
-  //  ১) "নিয়ন লাইট" চিপে ক্লিক → এটা DOM-এর গভীরে, তাই React-এর নিজস্ব
-  //     bubble-phase onClick (pickRecentSearch) সবার আগে চলে (React-এর
-  //     delegated listener document-এর চেয়ে গাছের নিচের দিকে বসানো)।
-  //  ২) pickRecentSearch সাথে সাথে setSearchQuery/runSearch চালায় → React
-  //     re-render করে "ডিফল্ট প্যানেল" (চিপ/ক্যাটাগরি বাটনগুলো) সরিয়ে
-  //     "রেজাল্ট ভিউ" বসিয়ে দেয় — মানে যে চিপ-বাটনে ক্লিক হয়েছিল সেটা DOM
-  //     থেকে সম্পূর্ণ সরে (unmount) যায়, এই একই ইভেন্ট এখনো bubble করছে
-  //     অবস্থাতেই।
-  //  ৩) native ইভেন্টটা এরপর bubble করে document পর্যন্ত পৌঁছায়, তখন এই
-  //     handler-এ e.target সেই আগের (এখন DOM থেকে বিচ্ছিন্ন/detached) চিপ
-  //     এলিমেন্টটাই থেকে যায়। কোনো এলিমেন্ট ডকুমেন্ট থেকে detached হয়ে
-  //     গেলে ব্রাউজারের .contains() চেক তাকে আর কোনো ancestor-এর ভিতরে
-  //     "আছে" বলে ধরে না — even তার আগের আসল প্যারেন্টের জন্যও না।
-  //  ৪) ফলে insideDesktop/insideMobile ভুলভাবে false আসে → মনে হয় ক্লিকটা
-  //     "বাইরে" হয়েছে → সাথে সাথে setShowDropdown(false) → একদম নতুন খোলা
-  //     রেজাল্ট ড্রপডাউনটাই বন্ধ হয়ে যায়। টাইপ করলে সমস্যা হতো না কারণ
-  //     সেটা 'click' ইভেন্টই না (keyboard event), এই লিসেনার তখন চলেই না।
-  //
-  // সমাধান: capture phase (তৃতীয় আর্গুমেন্ট true) ব্যবহার করা — capture
-  // ইভেন্টের সবচেয়ে প্রথম ধাপ, document-এ react-এর কোনো bubble-phase
-  // onClick চলারও আগে ঘটে। তাই e.target তখনো আসল, এখনো-DOM-এ-থাকা এলিমেন্ট,
-  // .contains() চেক সঠিক ফলাফল দেয় — তারপরেই React-এর pickRecentSearch/
-  // goToCat ইত্যাদি normal bubble-phase-এ চলে, DOM পাল্টায়, কিন্তু ততক্ষণে
-  // আমাদের "ভিতরে না বাইরে" সিদ্ধান্তটা ইতিমধ্যে সঠিকভাবে নেওয়া হয়ে গেছে।
-  // ================================================================
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -726,13 +555,6 @@ export default function Navbar({
     return () => document.removeEventListener('click', handleClickOutside, true);
   }, []);
 
-  // পিছনের স্ক্রল/ক্লিক লক হবে যখন ড্রপডাউনে দেখানোর মতো আসল কিছু থাকে —
-  // হয় সত্যিকারের রেজাল্ট (প্রোডাক্ট/ক্যাটাগরি), অথবা ডিফল্ট প্যানেল (সাম্প্রতিক/
-  // জনপ্রিয় সার্চ)। আগে শুধু hasResults-এ লক হতো, ডিফল্ট প্যানেলে হতো না —
-  // তাই "সব মুছুন" চাপার পর তালিকা re-render হওয়ার সময় সামান্য reflow-scroll
-  // হয়ে গেলেই সেটা "ইউজার স্ক্রল করেছে" ধরে নিয়ে পুরো ড্রপডাউন বন্ধ করে দিত।
-  // শুধু "কোনো পণ্য পাওয়া যায়নি" খালি স্টেটে লক না করাই ঠিক আছে (দেখানোর
-  // মতো তেমন কিছু নেই, স্ক্রল ব্লক করার দরকার নেই)।
   useEffect(() => {
     if (!showDropdown) return;
     if (searchQuery.trim() && !hasResults) return;
@@ -784,14 +606,10 @@ export default function Navbar({
                 ref={desktopSearchWrapRef}
                 className="relative z-10 hidden md:block md:h-10 md:w-[240px] lg:w-[300px]"
               >
-                {/* বক্সটা সবসময় position: absolute — কখনো relative-এ টগল হয় না, শুধু
-                    left/width অ্যানিমেট হয়, তাই collapse হওয়ার সময় "ছোট হয়ে গিয়ে আবার
-                    বড় হওয়া" গ্লিচটা আর হয় না। wrapper-এ এখন এক্সপ্লিসিট height (h-10)
-                    দেওয়া হয়েছে — box টা absolute হওয়ায় flow-তে না থাকায় আগে wrapper-এর
-                    height 0 হয়ে যাচ্ছিল, ফলে box-এরও height 0 হয়ে যেত (হোভার ডিটেকশন
-                    কাজ করত না, আর বক্সটা ভুল জায়গায় দেখাচ্ছিল) — এটাই আসল বাগ ছিল। */}
                 <div
                   ref={desktopSearchBoxRef}
+                  onMouseEnter={() => setDesktopSearchHovered(true)}
+                  onMouseLeave={() => setDesktopSearchHovered(false)}
                   style={desktopSearchExpanded && desktopSearchGeo ? { left: desktopSearchGeo.left, width: desktopSearchGeo.width } : undefined}
                   className={`absolute left-0 top-0 h-full w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
                   onClick={(e) => e.stopPropagation()}
@@ -902,15 +720,7 @@ export default function Navbar({
         </div>
       </nav>
 
-      {/* এই wrapper-এর নিজের কোনো overflow-hidden নেই — শুধু ভিতরের input-bar box-টার
-          height animate করার জন্য overflow-hidden ব্যবহার হয়েছে, dropdown সেই box-এর
-          বাইরে আলাদা sibling হিসেবে বসানো, তাই clip হয়ে অদৃশ্য হয়ে যায় না। */}
       <div className="relative md:hidden" ref={mobileSearchAreaRef}>
-        {/* grid-template-rows (0fr -> 1fr) দিয়ে height animate করা হচ্ছে —
-            max-height-এর মতো কোনো আন্দাজের সংখ্যা (যেমন আগে max-h-[480px]) লাগে
-            না, তাই ঝাঁকুনি/আটকানো ভাব ছাড়াই আসল কন্টেন্ট height অনুযায়ী মসৃণভাবে
-            খোলে-বন্ধ হয়। duration ৩০০ থেকে কমিয়ে ২০০ms করা হয়েছে যাতে দ্রুত,
-            snappy মনে হয়। */}
         <div
           className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-200 ease-out ${mobileSearchOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
         >
