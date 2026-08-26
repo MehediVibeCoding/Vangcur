@@ -682,13 +682,13 @@ export default function Navbar({
 
                 {currentUser ? (
                   <button className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5" onClick={onAccountClick}>
-                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-primary text-[10px] font-bold text-white">
+                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-white shadow-sh1">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <span className="truncate">{currentUser.name || t('আমার অ্যাকাউন্ট')}</span>
                   </button>
                 ) : (
-                  <button className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-accent hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
+                  <button className="shrink-0 rounded-full bg-brand-light px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
                     {t('লগইন করুন')}
                   </button>
                 )}
