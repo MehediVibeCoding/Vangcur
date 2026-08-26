@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
-import { useCartStore, cartTotal, clearCartOnRealPagehide } from '@/lib/store/cartStore';
+import { useCartStore, cartTotal } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
@@ -106,8 +106,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const cart = useCartStore((s) => s.cart);
   const prodsRef = useRef<Product[]>([]);
 
-  useEffect(() => clearCartOnRealPagehide(), []);
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -169,7 +167,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       <div
         className={`fixed inset-y-0 right-0 z-[965] flex w-full max-w-[400px] flex-col bg-white shadow-sh3 transition-transform duration-brand sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:rounded-[20px]${isOpen ? ' translate-x-0' : ' translate-x-full'}`}
       >
-        {/* Header */}
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-brand-bg/60 via-white to-white px-5 pb-4 pt-5 sm:rounded-t-[20px]">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
