@@ -1,8 +1,5 @@
 import type { CartItem } from '@/types';
 
-const GAS_ENDPOINT =
-  'https://script.google.com/macros/s/AKfycbyQOHCmm_HnucXSwAWej6K_UCsNxeiJlWljyH2nlmd_gcC1xmbcudzy30hUaQIrOqon/exec';
-
 function itemsSummary(items: CartItem[]): string {
   if (!Array.isArray(items)) return '';
   return items.map((i) => `${i.name} x${i.qty}`).join(', ');
@@ -43,11 +40,16 @@ export function sendLead({ leadId, name, phone, dist, addr, email, items }: Send
   try {
     const body = JSON.stringify(payload);
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(GAS_ENDPOINT, new Blob([body], { type: 'text/plain;charset=UTF-8' }));
+      navigator.sendBeacon('/api/lead', new Blob([body], { type: 'application/json' }));
     } else {
-      fetch(GAS_ENDPOINT, { method: 'POST', mode: 'no-cors', body });
+      fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      }).catch(() => {});
     }
   } catch {
-    // best-effort only — never block or interrupt the customer over this
+    // best-effort only
   }
 }
