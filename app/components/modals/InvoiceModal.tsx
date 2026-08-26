@@ -1,43 +1,5 @@
 'use client';
 
-// Converted from legacy mehedihasanop/vangcur-next's app/components/modals/InvoiceModal.js
-// (genInvoice()/showInvoiceModal()/dlInvoice()/dlInvoiceById() — see that file's own
-// header comment for the original 32-javascript-all.js line references). This repo's
-// previous version of this file was a small centered "viewer" modal (print button,
-// no real download) — replaced below with the legacy's actual full-screen
-// invoice-with-PNG-download flow, since that's what every "ইনভয়েস ডাউনলোড করুন"
-// button on this site is meant to produce.
-//
-// Kept from the legacy version: full-screen takeover, dark header bar with a back
-// button and a "🖼️ ছবি ডাউনলোড" button, html2canvas PNG export, and the 800ms
-// auto-download-on-open behavior. CSS ported verbatim to globals.css (see the
-// "INVOICE PAGE" block) so the exported image is pixel-identical to legacy invoices.
-//
-// Adapted (not copied) for this repo's own data layer instead of legacy's:
-// - Order lookup uses lib/orderStatus.ts's fetchFullOrder(), which already does the
-//   RLS-safe thing (secure RPC for guests via phone, direct select() for logged-in
-//   users) — legacy's own fetch was a plain select() with a vc_orders localStorage
-//   fallback, which this repo doesn't need since the RPC path already covers guests.
-// - order.items here carry `imgs?: string[]` (Cloudinary URLs), not legacy's
-//   `emoji` field — thumbnail rendering below mirrors the same img/fallback-emoji
-//   pattern already used in app/components/orders/OrderCard.tsx.
-// - Contact footer note reads store_settings->vc_contact the same way
-//   lib/floatButtonsData.ts already does elsewhere in this repo.
-// - Back-button routing: legacy branched on ctx 'acc' / 'track' / default. This
-//   repo's actual callers pass ctx 'acc' (AccountPage.tsx modal), 'acc-orders'
-//   (the standalone /account/orders page — nothing to reopen, closing just reveals
-//   the page underneath), 'guest-track' (TrackOrderModal), or no ctx at all (the
-//   checkout-success flow in StatusClient.tsx) — mapped below to the equivalent
-//   OPEN_ACCOUNT_EVENT / OPEN_TRACK_ORDER_EVENT / (nothing) / SHOW_POST_RECEIVE_INFO_EVENT.
-//   (Note: the no-ctx branch originally reopened SHOW_POST_ORDER_INFO_EVENT — the
-//   pre-delivery "what happens next?" steps — which didn't fit right after closing an
-//   invoice, since by then the order is already confirmed. It now opens
-//   PostReceiveInfoModal, the unboxing-video/warranty reminder, instead.)
-// - Mandatory-until-downloaded flow: this modal now persists across refresh via
-//   vc_pending_invoice (localStorage), and the back button stays disabled until
-//   downloadPNG() actually succeeds — matching BgConfirmPopup.tsx's own
-//   vc_pending_confirm persistence for the confirmation step before this one.
-
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { fetchFullOrder } from '@/lib/orderStatus';
@@ -94,6 +56,7 @@ export default function InvoiceModal() {
   const [order, setOrder] = useState<Order | null>(null);
   const [ctx, setCtx] = useState<string | undefined>(undefined);
   const [hasDownloaded, setHasDownloaded] = useState(false);
+  const [allowEmergencyClose, setAllowEmergencyClose] = useState(false);
   const [contact, setContact] = useState<InvoiceContact>({
     phoneLabel: DEFAULT_FOOTER.contact.phoneLabel,
     email: DEFAULT_FOOTER.contact.email,
@@ -108,11 +71,12 @@ export default function InvoiceModal() {
     setOrder(mapSupabaseOrderRow(row));
     setCtx(callerCtx);
     setHasDownloaded(false);
+    setAllowEmergencyClose(false);
     setIsOpen(true);
     try {
       localStorage.setItem(PENDING_INVOICE_KEY, JSON.stringify({ orderId, phone, ctx: callerCtx }));
     } catch {
-      // localStorage অনুপলব্ধ হলে persistence স্কিপ, এই সেশনে ঠিকই দেখাবে
+      // ignore
     }
   };
 
@@ -124,12 +88,8 @@ export default function InvoiceModal() {
     };
     window.addEventListener(GENERATE_INVOICE_EVENT, onGenerate);
     return () => window.removeEventListener(GENERATE_INVOICE_EVENT, onGenerate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // পেজ রিফ্রেশ / নতুন ট্যাবে ঢোকার সময় ইনভয়েস মডেল খোলা অবস্থায় ছিল কিনা
-  // localStorage-এ চেক করা হচ্ছে — থাকলে সেই একই ইনভয়েস পেজটাই আবার সরাসরি
-  // দেখানো হয় ("← ফিরে যান" ক্লিক করার আগ পর্যন্ত ধাপটা বাধ্যতামূলক থাকে)।
   useEffect(() => {
     let raw: string | null = null;
     try {
@@ -145,12 +105,8 @@ export default function InvoiceModal() {
     } catch {
       try { localStorage.removeItem(PENDING_INVOICE_KEY); } catch { /* ignore */ }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Legacy: _settings['vc_contact'] read at genInvoice() render time (admin-editable
-  // phone/email/address shown in the invoice footer note) — same store_settings key
-  // already used by lib/floatButtonsData.ts / lib/footerData.ts elsewhere in this repo.
   useEffect(() => {
     if (!isOpen) return;
     (async () => {
@@ -174,6 +130,12 @@ export default function InvoiceModal() {
         // keep defaults
       }
     })();
+
+    const emergencyTimer = setTimeout(() => {
+      setAllowEmergencyClose(true);
+    }, 4000);
+
+    return () => clearTimeout(emergencyTimer);
   }, [isOpen, supabase]);
 
   useEffect(() => {
@@ -186,16 +148,11 @@ export default function InvoiceModal() {
     setDownloading(true);
     try {
       const html2canvas = (await import('html2canvas')).default;
-      // মোবাইলে মাঝেমধ্যে প্রোডাক্ট ছবি (Cloudinary) লোড হতে দেরি হলে বা CORS
-      // সমস্যা হলে html2canvas চিরকালের জন্য আটকে যেতে পারত (না error, না
-      // সফল) — imageTimeout দিয়ে ধীর ছবি স্কিপ করা হচ্ছে, আর বাইরের একটা হার্ড
-      // টাইমআউট দিয়ে নিশ্চিত করা হচ্ছে এই বাধ্যতামূলক ধাপে কেউ চিরকালের জন্য
-      // আটকে না থাকে — টাইমআউট হলে এরর দেখিয়ে আবার চেষ্টা করার সুযোগ থাকবে।
       const renderPromise = html2canvas(invoiceRef.current, {
         scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, imageTimeout: 8000,
       });
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('invoice-render-timeout')), 15000);
+        setTimeout(() => reject(new Error('invoice-render-timeout')), 12000);
       });
       const canvas = await Promise.race([renderPromise, timeoutPromise]);
       const link = document.createElement('a');
@@ -207,24 +164,22 @@ export default function InvoiceModal() {
       setHasDownloaded(true);
     } catch {
       showToast(t('❌ ডাউনলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।'));
+      setAllowEmergencyClose(true);
     } finally {
       setDownloading(false);
     }
   };
 
-  // Legacy: auto-download 800ms after the modal opens ("✅ Auto-download").
   useEffect(() => {
     if (!isOpen) return undefined;
     const timer = setTimeout(() => { downloadPNG(); }, 800);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // Legacy: invBackBtn onclick's callerCtx branch — see file header comment for how
-  // this repo's actual ctx values ('acc' / 'acc-orders' / 'guest-track' / none) map
-  // onto legacy's 'acc' / 'track' / default branches.
+  const canClose = hasDownloaded || allowEmergencyClose;
+
   const close = () => {
-    if (!hasDownloaded) return; // ডাউনলোড সম্পন্ন না হওয়া পর্যন্ত বের হওয়া যাবে না
+    if (!canClose) return;
     try { localStorage.removeItem(PENDING_INVOICE_KEY); } catch { /* ignore */ }
     setIsOpen(false);
     if (ctx === 'acc') {
@@ -258,10 +213,10 @@ export default function InvoiceModal() {
       >
         <button
           onClick={close}
-          disabled={!hasDownloaded}
-          title={hasDownloaded ? undefined : (lang === 'en' ? 'Downloading your invoice first…' : 'আগে ইনভয়েসটা ডাউনলোড হচ্ছে…')}
+          disabled={!canClose}
+          title={canClose ? undefined : (lang === 'en' ? 'Downloading your invoice first…' : 'আগে ইনভয়েসটা ডাউনলোড হচ্ছে…')}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.12)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: hasDownloaded ? 'pointer' : 'default', opacity: hasDownloaded ? 1 : 0.4, fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
+            display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.12)', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: canClose ? 'pointer' : 'default', opacity: canClose ? 1 : 0.4, fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
           }}
         >
           {t('← ফিরে যান')}
