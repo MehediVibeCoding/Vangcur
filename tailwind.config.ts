@@ -66,8 +66,8 @@ const config: Config = {
           to: { opacity: '1', transform: 'translateX(0)' },
         },
         badgeHotGlow: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(68,167,252,.45)' },
-          '50%': { boxShadow: '0 0 8px 3px rgba(68,167,252,0)' },
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.85', transform: 'scale(1.04)' },
         },
         heartbeat: {
           '0%': { transform: 'scale(1)' },
@@ -80,8 +80,6 @@ const config: Config = {
           '0%': { transform: 'scale(0)', opacity: '.5' },
           '100%': { transform: 'scale(4)', opacity: '0' },
         },
-        // Navbar wishlist আইকনের ভিতরে "পানি ঢালার" এনিমেশনে লিকুইড লেয়ারটা
-        // একদম সোজাসুজি না উঠে সামান্য নড়তে নড়তে (slosh) ওঠে — সেই wobble
         liquidWobble: {
           '0%, 100%': { transform: 'scaleX(1)' },
           '25%': { transform: 'scaleX(.93)' },
@@ -92,7 +90,7 @@ const config: Config = {
       animation: {
         'cart-jiggle': 'cartJiggle .7s cubic-bezier(.36,.07,.19,.97) both',
         'section-reveal': 'sectionReveal .5s cubic-bezier(.4,0,.2,1) both',
-        'badge-hot-glow': 'badgeHotGlow 2s ease-in-out infinite',
+        'badge-hot-glow': 'badgeHotGlow 2.2s ease-in-out infinite',
         heartbeat: 'heartbeat .45s ease forwards',
         ripple: 'ripple .55s linear forwards',
         'liquid-wobble': 'liquidWobble .65s ease-in-out',
