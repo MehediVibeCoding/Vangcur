@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { CATEGORY_FILTER_EVENT, makeCatSlug } from '@/lib/categoryData';
+import {
+  CATEGORY_FILTER_EVENT, makeCatSlug, DEFAULT_CATEGORIES, fetchCategories, subscribeCategories,
+} from '@/lib/categoryData';
 import { prodInCat, subscribeCustomProducts } from '@/lib/productData';
 import { useT } from '@/lib/i18n/useT';
-import type { Product } from '@/types';
+import type { Category, Product } from '@/types';
 import ProductCard from './ProductCard';
 
 const PRODS_PER_PAGE = 20;
@@ -48,6 +50,11 @@ export default function ProductGrid({ initialProducts, initialCategory, category
   const searchParams = useSearchParams();
   const [prods, setProds] = useState<Product[]>(initialProducts);
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
+  // categoryName prop টা শুধু /category/[slug] (Server Component)-এ পাওয়া
+  // যায়। হোমপেজে ক্যাটাগরি carousel থেকে ক্লিক করলে বা সার্চ পেজ থেকে
+  // ?cat=<id> নিয়ে এলে সেই prop থাকে না — তখন এই লিস্ট থেকে activeCat-এর
+  // নাম খুঁজে নেওয়া হয় যাতে হেডিং সবসময় সঠিক ক্যাটাগরি-নাম দেখায়।
+  const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
   // /category/[slug] (Server Component)-এ initialCategory pass হলে প্রথম
   // ব্যাচের সাইজ ওই ক্যাটাগরিতে ফিল্টার করা কাউন্ট অনুযায়ী হিসাব হয়, পুরো
   // unfiltered লিস্টের length অনুযায়ী না।
@@ -215,6 +222,16 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchCategories(supabase).then((list) => { if (!cancelled) setCats(list); });
+    const channel = subscribeCategories(supabase, (list) => setCats(list));
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
+
   const handleShowAll = () => {
     setActiveCat('all');
     window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId: 'all' } }));
@@ -227,13 +244,18 @@ export default function ProductGrid({ initialProducts, initialCategory, category
   const visibleItems = list.slice(0, renderedCount);
   const isDone = renderedCount >= list.length;
   const showCategoryEndBtn = isDone && activeCat !== 'all' && list.length > 0;
+  const activeCategoryName = categoryName || cats.find((c) => c.id === activeCat)?.name;
 
   return (
     <div className="mx-auto mb-11 max-w-[1300px] px-5" id="prodSec">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
-          {categoryName && activeCat !== 'all' ? (
-            categoryName
+          {activeCategoryName && activeCat !== 'all' ? (
+            lang === 'en' ? (
+              <>{activeCategoryName} <span className="text-brand-light">Products</span></>
+            ) : (
+              <>{activeCategoryName} <span className="text-brand-light">সমূহ</span></>
+            )
           ) : (
             <>{t('সকল')} <span className="text-brand-light">{t('প্রোডাক্ট')}</span></>
           )}
