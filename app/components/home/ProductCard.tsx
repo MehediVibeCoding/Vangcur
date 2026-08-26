@@ -17,19 +17,6 @@ function prefersReducedMotion(): boolean {
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-// আগে card-এর নিজের pixel width অনুযায়ী ফন্ট/প্যাডিং স্কেল করার জন্য প্রতিটা
-// ProductCard-এ একটা ResizeObserver বসানো ছিল (useCardWidth + cq() হেল্পার)।
-// পিঞ্চ-জুম বা window resize-এর সময় এই ডজনখানেক observer একসাথে ফায়ার হয়ে
-// React state আপডেট করত, যা প্রতিটা কার্ডের জন্য আলাদা layout recalculation +
-// repaint ট্রিগার করত — এটাই মোবাইলে pinch-zoom স্টেপ-বাই-স্টেপ রিপেইন্ট/জ্যাঙ্কের
-// একটা বড় কারণ ছিল।
-//
-// এখন কোনো runtime JS observer নেই — নিচের সব সাইজ স্ট্যাটিক Tailwind
-// breakpoint ক্লাস (base/sm/xl) দিয়ে করা, যেগুলো grid-এর column breakpoint
-// (2 → 2 → 3 → 4 → 6 কলাম) অনুযায়ী আগের cq() ভ্যালুগুলোর কাছাকাছি রাখা হয়েছে।
-// এতে zoom/resize-এর সময় শুধু CSS media query re-evaluate হয় — কোনো JS
-// measurement, state update, বা extra repaint হয় না।
-
 function StarRating({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, rating || 4.5));
   const full = Math.floor(r);
@@ -50,8 +37,6 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-// Navbar-এ যে হার্ট (উইশলিস্ট) আইকনটা ব্যবহার হয়েছে, ঠিক সেই একই SVG পাথ —
-// ইমোজির বদলে আসল ভেক্টর আইকন, তাই ডিভাইস/ফন্ট যাই হোক শেপ সবসময় নিখুঁত গোল থাকবে
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg width="52%" height="52%" viewBox="0 0 24 24" fill={filled ? '#FF5A6E' : 'none'} stroke={filled ? '#FF5A6E' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +45,6 @@ function HeartIcon({ filled }: { filled: boolean }) {
   );
 }
 
-// Navbar-এর কার্ট আইকনের সেই একই SVG পাথ
 function CartIcon() {
   return (
     <svg width="46%" height="46%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -76,14 +60,13 @@ function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?:
   if (!imgVal) return <span className="text-[52px]">📦</span>;
   if (isUrl && !broken) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={optimizeCloudinaryUrl(imgVal, 500)}
+        src={optimizeCloudinaryUrl(imgVal, 380)}
         alt={name || ''}
         loading={lazy ? 'lazy' : 'eager'}
-        // প্রথম প্রোডাক্ট কার্ডের ছবিটাই LCP element — এটাকে fetchPriority=high
-        // দিয়ে ব্রাউজারকে বলে দেওয়া হচ্ছে এটা আগে ফেচ করতে (font/JS চাংকগুলোর
-        // সাথে প্রতিযোগিতায় পিছিয়ে না পড়ে)
         fetchPriority={lazy ? undefined : 'high'}
+        decoding="async"
         draggable={false}
         onContextMenu={(e) => e.preventDefault()}
         className="block h-full w-full select-none object-cover [-webkit-touch-callout:none]"
@@ -122,9 +105,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
       setHeartBeat(false);
       requestAnimationFrame(() => setHeartBeat(true));
     }
-    // শুধু নতুন যোগ হলেই (রিমুভ করার সময় না) হার্ট বাটনের অবস্থান থেকে
-    // Navbar-এর wishlist আইকন পর্যন্ত উড়ন্ত-হার্ট এনিমেশন ছোঁড়া হয়
-    // (দেখুন WishlistFlyOverlay + Navbar.tsx)
     if (added && wishBtnRef.current) {
       const r = wishBtnRef.current.getBoundingClientRect();
       window.dispatchEvent(new CustomEvent(WISHLIST_FLY_EVENT, {
@@ -154,7 +134,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </div>
 
-        {/* কালো টিন্ট — উপরের ৭০% স্বচ্ছ, নিচের ৩০% গাঢ় */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.94) 100%)' }}
