@@ -24,7 +24,11 @@ export default function FloatCartBadge() {
 
   return (
     <div
-      className={`fixed bottom-[152px] right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-light shadow-sh3 ${jiggle ? 'animate-cart-jiggle' : ''}`}
+      // উইশলিস্টের ফ্লোটিং বাটন (FloatWishBadge) পার্মানেন্টলি সরিয়ে দেওয়ার পর
+      // তার জায়গা (bottom-[218px]) খালি হয়ে গিয়েছিল — কার্ট বাটনকে সেই
+      // জায়গায় (আগে ছিল 152px) নিয়ে আসা হলো যাতে স্ট্যাকে কোনো ফাঁকা গ্যাপ না
+      // থাকে। BackToTopButton নিচে নেমে এই বাটনের আগের (152px) জায়গা নিয়েছে।
+      className={`fixed bottom-[218px] right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-light shadow-sh3 ${jiggle ? 'animate-cart-jiggle' : ''}`}
       ref={btnRef}
       onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
       onAnimationEnd={() => setJiggle(false)}

@@ -7,6 +7,7 @@ import {
   QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
@@ -116,10 +117,19 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   };
 
   const handleWish = () => {
-    useWishlistStore.getState().toggleWish(p);
+    const added = useWishlistStore.getState().toggleWish(p);
     if (!prefersReducedMotion()) {
       setHeartBeat(false);
       requestAnimationFrame(() => setHeartBeat(true));
+    }
+    // শুধু নতুন যোগ হলেই (রিমুভ করার সময় না) হার্ট বাটনের অবস্থান থেকে
+    // Navbar-এর wishlist আইকন পর্যন্ত উড়ন্ত-হার্ট এনিমেশন ছোঁড়া হয়
+    // (দেখুন WishlistFlyOverlay + Navbar.tsx)
+    if (added && wishBtnRef.current) {
+      const r = wishBtnRef.current.getBoundingClientRect();
+      window.dispatchEvent(new CustomEvent(WISHLIST_FLY_EVENT, {
+        detail: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
+      }));
     }
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, type RefObject } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/se
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { WISHLIST_NAV_HIT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, Category, CurrentUser } from '@/types';
 
@@ -39,6 +40,39 @@ function SearchIcon({ className = '' }: { className?: string }) {
     <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
       <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
     </svg>
+  );
+}
+
+// Navbar-এর wishlist আইকন — সাধারণ আউটলাইন হার্টের উপর ব্র্যান্ড-নীল রঙের একটা
+// "লিকুইড" হার্ট ওভারলে করা থাকে, যেটা clip-path দিয়ে নিচ থেকে উপরে (গ্লাসে
+// পানি ঢালার মতো) ফিল হয়ে ওঠে/নেমে যায়। liquidPhase অনুযায়ী fill-এর
+// target/duration/easing বদলায় — filling-এ সামান্য overshoot bounce (পানি
+// ঢালার সময়কার sloshing-এর অনুভূতি দিতে) আর draining-এ মসৃণ ease।
+function NavWishlistIcon({
+  wrapRef, liquidPhase,
+}: {
+  wrapRef: RefObject<HTMLDivElement | null>;
+  liquidPhase: 'idle' | 'filling' | 'full' | 'draining';
+}) {
+  const filled = liquidPhase === 'filling' || liquidPhase === 'full';
+  const clipTop = filled ? 0 : 100;
+  const duration = liquidPhase === 'filling' ? '650ms' : liquidPhase === 'draining' ? '500ms' : '0ms';
+  const easing = liquidPhase === 'draining' ? 'cubic-bezier(.55,0,.55,1)' : 'cubic-bezier(.34,1.56,.64,1)';
+  const heartPath = 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z';
+  return (
+    <div id="nav-wishlist-icon" ref={wrapRef} className="relative flex h-5 w-5 items-center justify-center">
+      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d={heartPath} />
+      </svg>
+      <div
+        className={`pointer-events-none absolute inset-0 ${liquidPhase === 'filling' ? 'animate-liquid-wobble' : ''}`}
+        style={{ clipPath: `inset(${clipTop}% 0 0 0)`, transition: `clip-path ${duration} ${easing}` }}
+      >
+        <svg width="20" height="20" fill="#44A7FC" stroke="none" viewBox="0 0 24 24">
+          <path d={heartPath} />
+        </svg>
+      </div>
+    </div>
   );
 }
 
@@ -327,6 +361,8 @@ export default function Navbar({
   const mobileSearchAreaRef = useRef<HTMLDivElement>(null);
   const mobileSearchToggleRef = useRef<HTMLButtonElement>(null);
   const cartBtnRef = useRef<HTMLButtonElement>(null);
+  const wishIconWrapRef = useRef<HTMLDivElement>(null);
+  const [wishLiquidPhase, setWishLiquidPhase] = useState<'idle' | 'filling' | 'full' | 'draining'>('idle');
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const prodsRef = useRef<Product[]>([]);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
@@ -421,6 +457,44 @@ export default function Navbar({
     btn.classList.add('animate-cart-jiggle');
     window.setTimeout(() => btn.classList.remove('animate-cart-jiggle'), 750);
   }, [cartAddedTick]);
+
+  // WishlistFlyOverlay-এর উড়ন্ত হার্ট এই আইকনে "হিট" করার মুহূর্তে এই ইভেন্ট
+  // আসে — cartBtnRef-এর জিগলের মতোই সরাসরি classList দিয়ে জিগল চালানো হয়
+  // (state/re-render লাগে না), আর সাথে লিকুইড-ফিল সিকোয়েন্স শুরু হয়।
+  useEffect(() => {
+    const onHit = () => {
+      const wrap = wishIconWrapRef.current;
+      if (wrap) {
+        wrap.classList.remove('animate-cart-jiggle');
+        void wrap.offsetWidth;
+        wrap.classList.add('animate-cart-jiggle');
+        window.setTimeout(() => wrap.classList.remove('animate-cart-jiggle'), 750);
+      }
+      setWishLiquidPhase('filling');
+    };
+    window.addEventListener(WISHLIST_NAV_HIT_EVENT, onHit);
+    return () => window.removeEventListener(WISHLIST_NAV_HIT_EVENT, onHit);
+  }, []);
+
+  // লিকুইড-ফিল state machine: filling (নিচ থেকে উপরে ফিল হচ্ছে, bounce সহ)
+  // → full (পুরো ভর্তি অবস্থায় সংক্ষিপ্ত বিরতি) → draining (আবার খালি হয়ে
+  // যাচ্ছে) → idle (বিশ্রাম, পরের হিটের জন্য প্রস্তুত)। প্রতিটা ধাপের সময়
+  // NavWishlistIcon-এ ব্যবহৃত transition duration-এর সাথে মিলিয়ে রাখা হয়েছে।
+  useEffect(() => {
+    if (wishLiquidPhase === 'filling') {
+      const t = window.setTimeout(() => setWishLiquidPhase('full'), 650);
+      return () => clearTimeout(t);
+    }
+    if (wishLiquidPhase === 'full') {
+      const t = window.setTimeout(() => setWishLiquidPhase('draining'), 260);
+      return () => clearTimeout(t);
+    }
+    if (wishLiquidPhase === 'draining') {
+      const t = window.setTimeout(() => setWishLiquidPhase('idle'), 500);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [wishLiquidPhase]);
 
   // ডেক্সটপ সার্চ বক্সের এক্সপ্যান্ডেড (hover/focus) অবস্থার জন্য left/width হিসাব করা হয়
   // এখানে, একবারই (মাউন্ট + রিসাইজে) — hover state-এর উপর নির্ভর করে না। বক্সটা সবসময়
@@ -770,9 +844,7 @@ export default function Navbar({
 
               <div className="flex items-center gap-1.5">
                 <button className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onWishClick} title="Wishlist">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                  </svg>
+                  <NavWishlistIcon wrapRef={wishIconWrapRef} liquidPhase={wishLiquidPhase} />
                   <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
                 </button>
 

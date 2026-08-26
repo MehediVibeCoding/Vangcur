@@ -41,7 +41,13 @@ export default function BackToTopButton() {
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       title={t('উপরে যান')}
-      className="fixed bottom-[284px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand-light shadow-sh3 animate-section-reveal transition-brand duration-brand hover:bg-brand-light hover:text-white"
+      // FloatWishBadge সরে যাওয়ায় স্ট্যাকের সবচেয়ে উপরের (284px) বাটন এখন এই
+      // একটাই বেঁচে ছিল — তাই এটাকে নামিয়ে কার্ট বাটনের আগের জায়গায় (152px)
+      // বসানো হলো, যাতে Messenger → BackToTop → কার্ট — এই তিনটা বাটন একে
+      // অন্যের গায়ে গায়ে লেগে, ফাঁকা গ্যাপ ছাড়া সিরিয়ালি সাজানো থাকে।
+      // রঙও উল্টো ছিল (সাদা ব্যাকগ্রাউন্ড + নীল আইকন) — কার্ট আইকনের মতোই এখন
+      // ব্র্যান্ড-নীল ব্যাকগ্রাউন্ড + সাদা আইকন করে দেওয়া হলো।
+      className="fixed bottom-[152px] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-light text-white shadow-sh3 animate-section-reveal transition-brand duration-brand hover:bg-brand-light-hover"
     >
       <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
         <path d="M12 19V5" />

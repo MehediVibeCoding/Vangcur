@@ -80,6 +80,14 @@ const config: Config = {
           '0%': { transform: 'scale(0)', opacity: '.5' },
           '100%': { transform: 'scale(4)', opacity: '0' },
         },
+        // Navbar wishlist আইকনের ভিতরে "পানি ঢালার" এনিমেশনে লিকুইড লেয়ারটা
+        // একদম সোজাসুজি না উঠে সামান্য নড়তে নড়তে (slosh) ওঠে — সেই wobble
+        liquidWobble: {
+          '0%, 100%': { transform: 'scaleX(1)' },
+          '25%': { transform: 'scaleX(.93)' },
+          '50%': { transform: 'scaleX(1.06)' },
+          '75%': { transform: 'scaleX(.97)' },
+        },
       },
       animation: {
         'cart-jiggle': 'cartJiggle .7s cubic-bezier(.36,.07,.19,.97) both',
@@ -87,6 +95,7 @@ const config: Config = {
         'badge-hot-glow': 'badgeHotGlow 2s ease-in-out infinite',
         heartbeat: 'heartbeat .45s ease forwards',
         ripple: 'ripple .55s linear forwards',
+        'liquid-wobble': 'liquidWobble .65s ease-in-out',
       },
     },
   },

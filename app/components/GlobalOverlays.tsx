@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import FloatCartBadge from './cart/FloatCartBadge';
-import FloatWishBadge from './cart/FloatWishBadge';
+import WishlistFlyOverlay from './cart/WishlistFlyOverlay';
 import FloatContactButtons from './layout/FloatContactButtons';
 import BackToTopButton from './layout/BackToTopButton';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
@@ -37,8 +37,8 @@ export default function GlobalOverlays() {
   // চেকআউট পেজে কোনো ফ্লোটিং কার্ট/উইশলিস্ট বাটন দেখানো উচিত না — এখানে সেগুলো শুধু
   // বিভ্রান্তিকর, কারণ চেকআউট নিজেই একটা ফোকাসড ফ্লো।
   const hideFloatingBadges = pathname?.startsWith('/checkout') ?? false;
-  // প্রোডাক্ট পেজে (নিজের একটা ফোকাসড, বিস্তারিত পেজ) মেসেঞ্জার/হোয়াটসঅ্যাপ কার্ড,
-  // ফ্লোটিং উইশলিস্ট বাজ, আর ব্যাক-টু-টপ বাটন থাকবে না — শুধু হোম আর সার্চ পেজে থাকবে।
+  // প্রোডাক্ট পেজে (নিজের একটা ফোকাসড, বিস্তারিত পেজ) মেসেঞ্জার/হোয়াটসঅ্যাপ কার্ড
+  // আর ব্যাক-টু-টপ বাটন থাকবে না — শুধু হোম আর সার্চ পেজে থাকবে।
   // ফ্লোটিং কার্ট বাজ ইচ্ছাকৃতভাবে বাদ (এটা প্রোডাক্ট পেজেও রাখতে বলা হয়েছে)।
   const isProductPage = pathname?.startsWith('/product/') ?? false;
 
@@ -75,11 +75,18 @@ export default function GlobalOverlays() {
       {!hideFloatingBadges && <FloatCartBadge />}
       {!hideFloatingBadges && !isProductPage && (
         <>
-          <FloatWishBadge />
           <FloatContactButtons />
           <BackToTopButton />
         </>
       )}
+      {/*
+        FloatWishBadge (উইশলিস্টে যোগ করলে যে আলাদা ভাসমান হার্ট বাটন উঠত)
+        পার্মানেন্টলি সরিয়ে দেওয়া হয়েছে। তার বদলে WishlistFlyOverlay সব
+        পেজেই (চেকআউট/প্রোডাক্ট পেজ সহ) মাউন্ট থাকে, কারণ এই পেজগুলোর নিজস্ব
+        Navbar-এও wishlist আইকন আছে আর সেখান থেকেও হার্ট বাটনে ক্লিক করলে
+        উড়ন্ত-হার্ট এনিমেশন কাজ করা উচিত।
+      */}
+      <WishlistFlyOverlay />
       <RareOverlays />
     </>
   );

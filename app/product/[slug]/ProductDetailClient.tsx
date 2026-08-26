@@ -18,7 +18,7 @@ import {
 import { showToast } from '@/lib/toast';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT, WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
 import Navbar from '@/app/components/layout/Navbar';
 import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
@@ -447,6 +447,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const tabsWrapRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const relatedGridRef = useRef<HTMLDivElement>(null);
+  const ppWishBtnRef = useRef<HTMLButtonElement>(null);
 
   const wished = useWishlistStore((s) => (prod ? s.wishlist.some((x) => String(x.id) === String(prod.id)) : false));
 
@@ -541,7 +542,18 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     window.dispatchEvent(new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: prod.id, name: prod.name } }));
   };
 
-  const toggleWishFromPP = () => { if (prod) useWishlistStore.getState().toggleWish(prod); };
+  const toggleWishFromPP = () => {
+    if (!prod) return;
+    const added = useWishlistStore.getState().toggleWish(prod);
+    // ProductCard.tsx-এর মতোই — শুধু নতুন যোগ হলে হার্ট বাটন থেকে Navbar-এর
+    // wishlist আইকন পর্যন্ত উড়ন্ত-হার্ট এনিমেশন ছোঁড়া হয়
+    if (added && ppWishBtnRef.current) {
+      const r = ppWishBtnRef.current.getBoundingClientRect();
+      window.dispatchEvent(new CustomEvent(WISHLIST_FLY_EVENT, {
+        detail: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
+      }));
+    }
+  };
 
   function buildOrderMsg(): string {
     if (!prod) return '';
@@ -853,6 +865,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                   rounded-[10px] (কর্নার-রাউন্ড করা চারকোনা) — বাকি বাটনগুলোর
                   সাথে corner-radius মিলিয়ে রাখা হলো। */}
               <button
+                ref={ppWishBtnRef}
                 onClick={toggleWishFromPP}
                 title={t('Wishlist এ যোগ করুন')}
                 className={`flex h-9 w-9 items-center justify-center rounded-[10px] bg-brand-bg/35 transition-brand duration-brand ${wished ? 'text-brand-light' : 'text-ink/60 hover:text-brand-light'}`}
