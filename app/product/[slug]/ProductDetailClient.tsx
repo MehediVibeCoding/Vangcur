@@ -170,6 +170,20 @@ function useSpecPillRows(pills: string[]) {
   const measureRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState<string[][] | null>(null);
 
+  // 🩹 pills আগে সরাসরি dependency ছিল — কিন্তু কলার-সাইডে এটা প্রতি রেন্ডারে
+
+  // নতুন array literal হিসেবে তৈরি হতো, ফলে reference বদলে যাওয়ায় এই effect
+
+  // প্রতিটা রেন্ডারেই re-fire হতো এবং প্রতিবার setRows() কল করে আরেকটা
+
+  // রেন্ডার ট্রিগার করত — অসীম লুপ → "Maximum update depth exceeded" ক্র্যাশ।
+
+  // তাই এখন content-ভিত্তিক একটা স্থিতিশীল স্ট্রিং key দিয়ে dependency ধরা হচ্ছে,
+
+  // যাতে pill-এর আসল লেখা না বদলালে effect আর re-fire না করে।
+
+  const pillsKey = pills.join('\u0001');
+
   useLayoutEffect(() => {
     if (!pills.length) { setRows([]); return; }
     const recompute = () => {
@@ -201,7 +215,7 @@ function useSpecPillRows(pills: string[]) {
     recompute();
     window.addEventListener('resize', recompute);
     return () => window.removeEventListener('resize', recompute);
-  }, [pills]);
+  }, [pillsKey]);
 
   return { containerRef, measureRef, rows };
 }
@@ -358,6 +372,23 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   }, [baseProd?.id, supabase]);
 
   const prod = useMemo(() => (baseProd ? { ...baseProd, ...(detail || {}) } : null), [baseProd, detail]);
+
+  // 🩹 এই দুটো hook (useMemo + useSpecPillRows — যেটা নিজেই ভেতরে useRef/useState/
+  // useLayoutEffect ব্যবহার করে) আগে নিচে `if (!prod) return ...`-এর পরে কল হতো —
+  // prod null থাকা অবস্থায় এই hook গুলো একেবারেই কল হতো না, আবার prod পরে
+  // non-null হলে হঠাৎ এক্সট্রা hook কল হয়ে যেত। এটা React-এর Rules of Hooks
+  // ভঙ্গ করে (রেন্ডারে রেন্ডারে hook-সংখ্যা বদলে যাওয়া) এবং
+  // "Rendered fewer hooks than expected" ক্র্যাশ দিতে পারে — বিশেষ করে যেসব
+  // প্রোডাক্ট সার্ভারে initialProduct হিসেবে না এসে শুধু client-side Supabase
+  // fetch-এ পাওয়া যায়। তাই এখন এই hook গুলো সবসময়, প্রতিটা রেন্ডারে,
+  // early-return-এর আগেই আনকন্ডিশনালি কল হচ্ছে। এখানে useMemo ব্যবহার করে
+  // quickSpecPills-ও স্থিতিশীল (stable reference) রাখা হলো, যাতে
+  // useSpecPillRows-এর ভেতরের effect অকারণে re-fire না করে।
+  const quickSpecPills = useMemo(
+    () => (prod ? getQuickSpecPills(prod.quickSpecsText, prod.specs) : []),
+    [prod],
+  );
+  const { containerRef: specPillsRef, measureRef: specPillsMeasureRef, rows: specPillRows } = useSpecPillRows(quickSpecPills);
 
   const [qty, setQty] = useState(1);
   const [curImgIdx, setCurImgIdx] = useState(0);
@@ -623,8 +654,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
   const sold = prod.stock <= 0;
   const imgs = prod.imgs && prod.imgs.length ? prod.imgs : ['📦'];
-  const quickSpecPills = getQuickSpecPills(prod.quickSpecsText, prod.specs);
-  const { containerRef: specPillsRef, measureRef: specPillsMeasureRef, rows: specPillRows } = useSpecPillRows(quickSpecPills);
   const techRows = getTechSpecRows(prod.specs);
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
