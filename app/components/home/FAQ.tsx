@@ -18,26 +18,8 @@ export default function FAQ() {
       if (!cancelled) setFaqs(list);
     });
 
-    const channel = supabase
-      .channel('faq-store-watch')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_faqs' },
-        (payload) => {
-          const row = payload.new as { setting_value?: unknown } | null;
-          if (!row) return;
-          const raw = row.setting_value;
-          const parsed = typeof raw === 'string'
-            ? (() => { try { return JSON.parse(raw); } catch { return null; } })()
-            : raw;
-          if (Array.isArray(parsed) && parsed.length) setFaqs(parsed as Faq[]);
-        },
-      )
-      .subscribe();
-
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
     };
   }, [supabase]);
 
@@ -65,7 +47,7 @@ export default function FAQ() {
                 onClick={() => toggleFAQ(i)}
               >
                 <span>{t(f.q)}</span>
-                <span className={`shrink-0 text-[11px] text-muted transition-transform duration-[250ms] ${open ? 'rotate-180' : ''}`}>â–¼</span>
+                <span className={`shrink-0 text-[11px] text-muted transition-transform duration-[250ms] ${open ? 'rotate-180' : ''}`}>▼</span>
               </div>
               <div
                 className="overflow-hidden px-[17px] text-[13px] leading-[1.8] text-muted transition-[max-height,padding] duration-[320ms] ease-in-out"
@@ -79,4 +61,4 @@ export default function FAQ() {
       </div>
     </div>
   );
-      }
+}
