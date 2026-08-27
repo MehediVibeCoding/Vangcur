@@ -25,6 +25,8 @@ function persist(w: WishlistItem[]): void {
 interface WishlistState {
   wishlist: WishlistItem[];
   addedTick: number;
+  hydrated: boolean;
+  hydrate: () => void;
   setWishlist: (w: WishlistItem[]) => void;
   isWishlisted: (id: number | string) => boolean;
   toggleWish: (prod: Product) => boolean;
@@ -33,8 +35,14 @@ interface WishlistState {
 }
 
 export const useWishlistStore = create<WishlistState>((set, get) => ({
-  wishlist: loadWishlist(),
+  wishlist: [],
   addedTick: 0,
+  hydrated: false,
+
+  hydrate: () => {
+    if (get().hydrated) return;
+    set({ wishlist: loadWishlist(), hydrated: true });
+  },
 
   setWishlist: (wishlist) => {
     persist(wishlist);
