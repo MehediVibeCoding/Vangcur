@@ -328,7 +328,6 @@ export default function CheckoutPage() {
   const submitOrderNowRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    // হোমপেজ প্রি-ফেচ যাতে ক্রস বাটনে ক্লিক করলে চোখের পলকে হোমে ফেরা যায়
     router.prefetch('/');
     const prevBg = document.body.style.background;
     document.body.style.background = '#EFF6FE';
@@ -342,13 +341,6 @@ export default function CheckoutPage() {
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
-        // ⚠️ এখানে আগে sessionStorage.removeItem() সাথে সাথেই কল হতো, যেটা
-        // ফ্র্যাজাইল ছিল: checkout পেজ যদি কোনো কারণে দুইবার mount হয়
-        // (যেমন React #419 হাইড্রেশন বাগ থেকে রিকভারি), দ্বিতীয় mount-এ এই
-        // key আগেই খালি পাওয়া যেত আর ভুলভাবে "কার্ট খালি" দেখিয়ে হোমে
-        // পাঠিয়ে দিত। এখন এই key শুধু অর্ডার সত্যিই সফল হলে (submitOrderNow)
-        // বা ইউজার × বাটনে explicit ক্যানসেল করলে ক্লিয়ার হয় — কখনো read
-        // করার সাথে সাথে না।
         setCartItems(quickOrder);
         hasItems = true;
       } else {
@@ -624,15 +616,6 @@ export default function CheckoutPage() {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData?.user?.id || null;
 
-      // ⚠️ আগে এখানে সরাসরি localStorage.setItem('vc_cart', '[]') করা হতো —
-      // এটা persisted ভ্যালু আপডেট করত ঠিকই, কিন্তু cartStore-এর (Zustand)
-      // in-memory `cart` স্টেট, যেটা CartSidebar/cart আইকন সরাসরি রিড করে,
-      // কখনো ক্লিয়ার হতো না। ফলে অর্ডার সাবমিট/রিজেক্টের পরেও কার্ট সাইডবারে
-      // পুরনো প্রোডাক্টগুলো (ভুলভাবে) দেখাতে থাকত — অথচ checkout পেজ সরাসরি
-      // localStorage থেকে পড়ে খালি পেয়ে "কার্ট খালি" দেখাত। এখন
-      // clearCart() ব্যবহার করা হচ্ছে, যা localStorage আর in-memory স্টেট
-      // দুটোই একসাথে ঠিকভাবে ক্লিয়ার করে — কার্ট UI সাথে সাথেই সঠিকভাবে
-      // আপডেট হবে।
       useCartStore.getState().clearCart();
       orderDoneRef.current = true;
       clearDraft();
@@ -711,88 +694,88 @@ export default function CheckoutPage() {
       <div className="relative min-h-dvh overflow-hidden bg-[#EFF6FE]">
         <DesktopSideDecor />
         <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-[0_25px_70px_-25px_rgba(0,88,199,0.35)] sm:ring-1 sm:ring-border-base">
-            <div className="rounded-t-[20px] bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-5 pb-3.5 pt-4 shadow-[0_10px_26px_-10px_rgba(37,99,235,0.45)]">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#5CB0FA] shadow-sh1">
-                    <IconLock />
-                  </span>
-                  <h2 className="font-body text-[15px] font-bold text-white">
-                    {step === 1 ? t('নিরাপদ চেকআউট') : step === 2 ? t('নিরাপদ পেমেন্ট') : t('নিরাপদ নিশ্চিতকরণ')}
-                  </h2>
-                </div>
-                {step === 1 ? (
-                  <Link
-                    href="/"
-                    prefetch={true}
-                    aria-label={t('বন্ধ করুন')}
-                    title={t('বন্ধ করুন')}
-                    onClick={() => {
-                      try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
-                    }}
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45 no-underline"
-                  >
-                    <IconClose />
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => goBack(step - 1)}
-                    aria-label={t('আগের ধাপে যান')}
-                    title={t('আগের ধাপে যান')}
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
-                  >
-                    <IconArrowLeft />
-                  </button>
-                )}
+          <div className="rounded-t-[20px] bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-5 pb-3.5 pt-4 shadow-[0_10px_26px_-10px_rgba(37,99,235,0.45)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#5CB0FA] shadow-sh1">
+                  <IconLock />
+                </span>
+                <h2 className="font-body text-[15px] font-bold text-white">
+                  {step === 1 ? t('নিরাপদ চেকআউট') : step === 2 ? t('নিরাপদ পেমেন্ট') : t('নিরাপদ নিশ্চিতকরণ')}
+                </h2>
               </div>
+              {step === 1 ? (
+                <Link
+                  href="/"
+                  prefetch={true}
+                  aria-label={t('বন্ধ করুন')}
+                  title={t('বন্ধ করুন')}
+                  onClick={() => {
+                    try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
+                  }}
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45 no-underline"
+                >
+                  <IconClose />
+                </Link>
+              ) : (
+                <button
+                  onClick={() => goBack(step - 1)}
+                  aria-label={t('আগের ধাপে যান')}
+                  title={t('আগের ধাপে যান')}
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
+                >
+                  <IconArrowLeft />
+                </button>
+              )}
             </div>
+          </div>
 
-            {step === 1 && cartItems.length === 1 && (
-              <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/70 bg-gradient-to-br from-white/88 via-brand-bg/65 to-white/60 px-4 py-3.5 shadow-sh2 backdrop-blur-[8px]">
-                <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-brand-primary/70">
-                  <IconBag /> YOUR ORDER
-                </div>
-                <div className="flex flex-col gap-[5px] text-ink">
-                  {cartItems.map((i) => (
-                    <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
-                      <span>{i.name} × {i.qty}</span>
-                      <span className="flex-shrink-0 text-brand-primary">৳{(i.price * i.qty).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
+          {step === 1 && cartItems.length === 1 && (
+            <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/70 bg-gradient-to-br from-white/88 via-brand-bg/65 to-white/60 px-4 py-3.5 shadow-sh2 backdrop-blur-[8px]">
+              <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-brand-primary/70">
+                <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
               </div>
-            )}
-
-            <div className="flex px-6 pb-2.5 pt-[13px]">
-              {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
-                const isDone = step > s.n;
-                const isActive = step === s.n;
-                return (
-                  <div
-                    key={s.n}
-                    className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-3 after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
-                  >
-                    <div
-                      className={`relative z-10 mx-auto mb-[3px] flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-body text-[11px] font-bold transition-all duration-300 ${isDone || isActive ? 'border-info bg-info text-white' : 'border-info/50 bg-white text-info'}`}
-                    >
-                      {isDone ? <IconCheck /> : s.n}
-                    </div>
-                    <div>{s.label}</div>
+              <div className="flex flex-col gap-[5px] text-ink">
+                {cartItems.map((i) => (
+                  <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
+                    <span>{i.name} × {i.qty}</span>
+                    <span className="flex-shrink-0 text-brand-primary">৳{(i.price * i.qty).toLocaleString()}</span>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-            <div className="px-6 pb-1.5 pt-1.5">
-              <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
+          )}
+
+          <div className="flex px-6 pb-2.5 pt-[13px]">
+            {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
+              const isDone = step > s.n;
+              const isActive = step === s.n;
+              return (
                 <div
-                  className="h-full rounded-full bg-info transition-[width] duration-300"
-                  style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
-                />
-              </div>
-              <div className="text-right font-body text-[11px] font-semibold text-info">
-                {step === 3 ? t('প্রায় সম্পন্ন!') : step === 2 ? t('আর মাত্র ১ ধাপ!') : t('আর মাত্র ২ ধাপ!')}
-              </div>
+                  key={s.n}
+                  className={`relative flex-1 text-center font-body text-[11px] font-semibold after:absolute after:left-1/2 after:top-3 after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink' : 'text-muted'} ${isDone ? 'after:bg-info' : 'after:bg-info/15'}`}
+                >
+                  <div
+                    className={`relative z-10 mx-auto mb-[3px] flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-body text-[11px] font-bold transition-all duration-300 ${isDone || isActive ? 'border-info bg-info text-white' : 'border-info/50 bg-white text-info'}`}
+                  >
+                    {isDone ? <IconCheck /> : s.n}
+                  </div>
+                  <div>{s.label}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="px-6 pb-1.5 pt-1.5">
+            <div className="mb-[5px] h-[5px] overflow-hidden rounded-full bg-info/10">
+              <div
+                className="h-full rounded-full bg-info transition-[width] duration-300"
+                style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
+              />
             </div>
+            <div className="text-right font-body text-[11px] font-semibold text-info">
+              {step === 3 ? t('প্রায় সম্পন্ন!') : step === 2 ? t('আর মাত্র ১ ধাপ!') : t('আর মাত্র ২ ধাপ!')}
+            </div>
+          </div>
 
           {step === 1 && (
             <div className="px-6 py-5">
@@ -1003,12 +986,12 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>Subtotal</span><span>৳{sub.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}</span><span>৳{sub.toLocaleString()}</span></div>
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{t('ডেলিভারি চার্জ (Shipping)')}</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
                 <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>{t('সর্বমোট বিল (Total)')}</span><span>৳{total.toLocaleString()}</span></div>
                 <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-ink">
-                  <span className="flex items-center gap-1.5 text-info"><IconCheck /> Paid (bKash Advance)</span>
+                  <span className="flex items-center gap-1.5 text-info"><IconCheck /> {lang === 'en' ? 'Paid (bKash Advance)' : 'পরিশোধিত (বিকাশ অগ্রিম)'}</span>
                   <span>- ৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
                 <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-info">৳{balance.toLocaleString()}</span></div>
