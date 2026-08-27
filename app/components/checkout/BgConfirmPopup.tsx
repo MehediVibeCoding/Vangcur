@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { fetchFullOrder, readLatestGuestOrder } from '@/lib/orderStatus';
+import { fetchFullOrder, readLatestGuestOrder, clearPendingOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
 import { GENERATE_INVOICE_EVENT, SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
@@ -11,6 +11,9 @@ import type { Order } from '@/types';
 
 const PENDING_CONFIRM_KEY = 'vc_pending_confirm';
 const RESTORE_SHOW_DELAY_MS = 1200;
+
+let lastPlayedOrderId: string | number | null = null;
+let lastPlayedTime = 0;
 
 const successSound = () => {
   try {
@@ -41,6 +44,16 @@ const successSound = () => {
   }
 };
 
+const playSoundOnce = (orderId?: string | number) => {
+  const now = Date.now();
+  if (orderId && lastPlayedOrderId === orderId && now - lastPlayedTime < 5000) {
+    return;
+  }
+  lastPlayedOrderId = orderId || null;
+  lastPlayedTime = now;
+  successSound();
+};
+
 export default function BgConfirmPopup() {
   const { t, lang } = useT();
   const supabase = useRef(createClient()).current;
@@ -55,12 +68,14 @@ export default function BgConfirmPopup() {
   useEffect(() => { orderRef.current = order; }, [order]);
   useEffect(() => { phoneRef.current = phone; }, [phone]);
 
-  const showPopup = useCallback((o: Order, p?: string) => {
+  const showPopup = useCallback((o: Order, p?: string, playAudio = true) => {
     const finalPhone = p || o.customer?.phone || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || undefined : undefined);
     setOrder(o);
     setPhone(finalPhone);
     setOpen(true);
-    successSound();
+    if (playAudio) {
+      playSoundOnce(o.id);
+    }
     try {
       localStorage.setItem(PENDING_CONFIRM_KEY, JSON.stringify({ order: o, phone: finalPhone }));
     } catch {
@@ -71,7 +86,7 @@ export default function BgConfirmPopup() {
   useEffect(() => {
     const onShow = (e: Event) => {
       const detail = (e as CustomEvent<{ order?: Order; phone?: string }>).detail;
-      if (detail?.order) showPopup(detail.order, detail.phone);
+      if (detail?.order) showPopup(detail.order, detail.phone, true);
     };
     window.addEventListener(SHOW_BG_CONFIRM_EVENT, onShow);
     return () => window.removeEventListener(SHOW_BG_CONFIRM_EVENT, onShow);
@@ -108,13 +123,13 @@ export default function BgConfirmPopup() {
             try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
             return;
           }
-          showPopup(mapped, lookupPhone);
+          showPopup(mapped, lookupPhone, false);
           return;
         }
       } catch {
         // fail-open
       }
-      if (!cancelled) showPopup(saved!.order!, lookupPhone);
+      if (!cancelled) showPopup(saved!.order!, lookupPhone, false);
     }, RESTORE_SHOW_DELAY_MS);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [supabase, showPopup]);
@@ -137,10 +152,13 @@ export default function BgConfirmPopup() {
       || o.customer?.phone 
       || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
 
+    clearPendingOrder();
+    try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
+    
     window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
       detail: { orderId: o.id, phone: finalInvoicePhone },
     }));
-    try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
+    
     setOpen(false);
     setOrder(null);
   };
