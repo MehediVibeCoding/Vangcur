@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Android Chrome-এ যেকোনো element-এ ট্যাপ করলে ব্রাউজার নিজে থেকে একটা ধূসর/নীলচে
-   হাইলাইট বক্স দেখায় (tap highlight) যেটা কখনোই আমাদের custom border-radius মানে
-   না — সবসময় SQUARE বক্স হিসেবে আসে। এই কারণেই rounded search box/button-এর কোণার
-   বাইরে ভুল রঙের patch দেখা যাচ্ছিল, বিশেষ করে ট্যাপ/ফোকাস করার সময়। সম্পূর্ণ বন্ধ
-   করে দেওয়া হলো — আমাদের নিজস্ব hover/focus style-ই যথেষ্ট visual feedback দেয়। */
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
@@ -14,16 +9,6 @@
   html, body {
     touch-action: manipulation;
     min-height: 100vh;
-    /* 🩹 কোনো একটা এলিমেন্ট ভুলে ভিউপোর্টের চেয়ে চওড়া হয়ে গেলেও (যেমনটা
-       হয়েছিল প্রোডাক্ট পেজের spec-pill measuring div-এ) যাতে পুরো পেজ
-       হরাইজন্টালি স্ক্রল/rubber-band করে পিছনের ব্যাকগ্রাউন্ড দেখিয়ে না
-       দেয় — একটা সেফটি-নেট হিসেবে। `hidden` না দিয়ে `clip` ব্যবহার করা হচ্ছে:
-       `overflow-x: hidden` body-কে একটা scroll container বানিয়ে দেয় (কারণ
-       overflow-y স্বয়ংক্রিয়ভাবে auto হয়ে যায়), আর তখন body-র ভিতরের
-       position:sticky এলিমেন্ট (যেমন Navbar) viewport-এর বদলে body-র নিজের,
-       কখনো না-নড়া স্ক্রলপোর্টের সাপেক্ষে বসে যায় — ফলে সেটা আর স্ক্রলে
-       viewport-এর top-এ পিন হয়ে থাকে না। `clip` একই হরাইজন্টাল সুরক্ষা দেয়
-       কিন্তু নতুন scroll container বানায় না, তাই sticky ঠিকভাবে কাজ করে। */
     overflow-x: clip;
   }
 }
@@ -61,9 +46,6 @@
   to { transform: translateX(440px) translateY(0); }
 }
 
-/* Chrome/Edge autofill (saved email/password) দিয়ে ভরা field-এর ব্যাকগ্রাউন্ড
-   ব্রাউজার নিজে থেকে হালকা ছাই/নীলচে রঙ বসিয়ে দেয় — এখানে সেটাকে ফোর্স করে
-   আমাদের normal সাদা field background-এর মতোই রাখা হচ্ছে। */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -74,10 +56,6 @@ input:-webkit-autofill:active {
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* Chrome/Android-এ input[type="search"]-এর নিজস্ব native cancel-button/decoration
-   box থাকে যেটা আমাদের custom rounded-full corner মানে না — গোল কোণার বাইরে ছোট্ট
-   একটা square patch (ভুল রঙের) দেখা যায়। আমরা নিজেরাই SVG আইকন আর ✕ বাটন বসিয়েছি,
-   তাই native decoration সম্পূর্ণ বন্ধ করে দেওয়া হলো। */
 input[type='search'] {
   -webkit-appearance: none;
   appearance: none;
@@ -91,13 +69,6 @@ input[type='search']::-webkit-search-results-decoration {
   display: none;
 }
 
-/* Navbar-এ bg-white/70 + backdrop-blur মিলিয়ে একটা ফ্রস্টেড-গ্লাস লুক তৈরি হয়।
-   কিন্তু পুরনো ব্রাউজারে (যেমন iPhone 7-এর পুরনো iOS Safari) backdrop-filter
-   সাপোর্টই করে না — ফলে ব্লার ছাড়া শুধু ৭০% অপাসিটি সাদা রঙ দেখা যায়, যার
-   পিছনে থাকা কনটেন্ট স্পষ্ট দেখা যায় এবং Navbar-টা বাকি ডিভাইসের (Android/
-   ডেক্সটপ, যেখানে ব্লার কাজ করে) তুলনায় অনেক বেশি স্বচ্ছ মনে হয়। ব্লার সাপোর্ট
-   না থাকলে অপাসিটি বাড়িয়ে দিয়ে সব ডিভাইসেই কাছাকাছি একটা সলিড লুক ধরে রাখা
-   হচ্ছে। */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .navbar-glass {
     background-color: rgba(255, 255, 255, 0.94) !important;
@@ -107,41 +78,18 @@ input[type='search']::-webkit-search-results-decoration {
   }
 }
 
-/* উপরের ব্লকটা শুধু তখনই ধরে যখন backdrop-filter সম্পূর্ণ unsupported (যেমন
-   iPhone 7-এর পুরনো iOS)। কিন্তু আধুনিক iPhone/iPad ও Mac-এর Safari-তে
-   backdrop-filter সাপোর্টেড থাকা সত্ত্বেও, Chrome/Android-এর তুলনায় একই px
-   মানে চোখে অনেক কম ঘন ব্লার দেখায় — WebKit-এর blur রেন্ডারিং অ্যালগরিদম
-   Blink (Chrome)-এর চেয়ে দুর্বল, ফলে navbar/search dropdown-এর পিছনের লেখা
-   Safari-তে স্পষ্ট পড়া যায় যেখানে Chrome-এ ঠিকভাবে ঝাপসা থাকে।
-
-   `-webkit-hyphens: none` শুধু Safari (iOS + macOS)-ই বৈধ মান হিসেবে চেনে —
-   Chrome/Firefox এই @supports শর্তে ঢোকে না। তাই এই ব্লকটা শুধু Safari-কেই
-   টার্গেট করে সেখানকার blur radius বাড়িয়ে Android/Chrome-এর মতো ঘন
-   ফ্রস্টেড-গ্লাস লুক আনছে — Android বা Desktop Chrome-এর রেন্ডারিং (যা
-   ইতিমধ্যে ঠিক আছে) এতে একদমই প্রভাবিত হয় না। */
 @supports (-webkit-hyphens: none) {
   .navbar-glass {
-    -webkit-backdrop-filter: blur(26px) !important;
-    backdrop-filter: blur(26px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
   }
-  /* search dropdown-টা navbar-এর ব্লার-বুস্টের পরেও দুর্বল থেকে গিয়েছিল —
-     এর মানে শুধু ব্লার radius যথেষ্ট ছিল না, তাই এখানে আরও শক্তিশালী blur
-     আর সামান্য বেশি opacity (শুধু এই Safari-only ব্লকের ভিতরেই, তাই Android/
-     Chrome-এ ৯৫%-ই থেকে যাচ্ছে, কোনো পরিবর্তন হচ্ছে না) দেওয়া হলো। */
   .search-dropdown-glass {
-    -webkit-backdrop-filter: blur(46px) !important;
-    backdrop-filter: blur(46px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+    backdrop-filter: blur(22px) !important;
     background-color: rgba(255, 255, 255, 0.985) !important;
   }
 }
 
-/* সার্চ ড্রপডাউন (রেজাল্ট/ডিফল্ট প্যানেল) খোলার সময় হালকা fade-in — আগে এটা
-   JS setTimeout-ভিত্তিক একটা "ready" state দিয়ে করা হতো (বক্সের width-transition
-   শেষ হওয়ার আগে dropdown পপ না করার জন্য), কিন্তু সেই টাইমার-গেট রিয়েল
-   ব্রাউজারে কোনো এক সূক্ষ্ম focus/blur/click রেসে "স্টাক" হয়ে যাচ্ছিল — showDropdown
-   ঠিকই true থাকত, ডেটাও ঠিক থাকত, কিন্তু dropdown-টা আর কখনো দেখা যেত না।
-   এখন সেই একই polish বিশুদ্ধ CSS animation দিয়ে করা হচ্ছে, যেটা কখনো "আটকে"
-   থাকতে পারে না — মাউন্ট হওয়ার সাথে সাথেই শুরু হয়ে নিজে থেকেই শেষ হয়ে যায়। */
 @keyframes searchDropdownReveal {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -150,12 +98,6 @@ input[type='search']::-webkit-search-results-decoration {
   animation: searchDropdownReveal .16s ease-out both;
 }
 
-/* === INVOICE PAGE — ported verbatim from legacy mehedihasanop/vangcur-next
-   (app/globals.css, "INVOICE PAGE" block). InvoiceModal.tsx html2canvas-captures
-   this exact markup to generate the downloadable PNG, so these are fixed hex
-   colors (not this repo's brand-primary/ink tokens) — the invoice image itself
-   must stay pixel-identical to every invoice already issued by the legacy site,
-   regardless of any future design-token changes here. */
 .invoice-wrap{max-width:620px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.10);overflow:hidden;position:relative}
 .inv-body{padding:32px 30px 28px}
 .inv-body .hdr{text-align:center;border-bottom:2px solid #f0f0f0;padding-bottom:20px;margin-bottom:22px}
@@ -181,8 +123,6 @@ input[type='search']::-webkit-search-results-decoration {
 @media print{.invoice-wrap{box-shadow:none;border-radius:0}}
 @media(max-width:600px){.invoice-wrap{border-radius:0;box-shadow:none;max-width:100%}}
 
-/* স্ক্রলযোগ্য কিন্তু স্ক্রলবার-বিহীন (ছাই রঙের বার হাইড করার জন্য) —
-   প্রোডাক্ট পেজের ট্যাব-বার (বিবরণ/ফিচারস/স্পেসিফিকেশন...) এ ব্যবহার হয়। */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
