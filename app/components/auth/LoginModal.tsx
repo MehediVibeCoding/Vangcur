@@ -165,9 +165,6 @@ function FieldError({ text }: { text?: string }) {
 }
 
 function fieldClass(hasErr: boolean, extra = '') {
-  // bg-white (opaque) — semi-transparent (bg-white/NN) সবসময় এড়ানো উচিত এখানে, কারণ
-  // parent-এর multi-stop gradient background-এর সাথে মিশে প্রতিটা field-এর vertical
-  // position অনুযায়ী আলাদা আলাদা shade দেখায়, যদিও class একই।
   const base =
     'w-full rounded-full border pl-11 pr-[18px] py-[13px] font-body text-sm text-ink outline-none transition-brand duration-brand placeholder:text-muted/70';
   const normal =
@@ -213,7 +210,7 @@ export default function LoginModal({
   const [rPhone, setRPhone] = useState('');
   const [rEmail, setREmail] = useState('');
   const [rPass, setRPass] = useState('');
-  const [rHoneypot, setRHoneypot] = useState(''); // বট-ফাঁদ — মানুষ কখনো ভরে না, বট auto-fill করে ফেলে
+  const [rHoneypot, setRHoneypot] = useState('');
   const [showRPass, setShowRPass] = useState(false);
   const [rErr, setRErr] = useState('');
   const [rEmailErr, setREmailErr] = useState('');
@@ -258,7 +255,6 @@ export default function LoginModal({
       await applyWishlistSync(safeUser.id || '');
       showToast(t('Google দিয়ে লগইন সফল হয়েছে'));
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -269,7 +265,6 @@ export default function LoginModal({
       saveWishlistToSupabase(supabase, user.id, state.wishlist);
     });
     return unsub;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function applyWishlistSync(userId: string) {
@@ -311,7 +306,6 @@ export default function LoginModal({
     if (orderMode && onAuthSuccess) onAuthSuccess(safeUser);
   };
 
-  /** Invisible Turnstile ভেরিফাই — site key সেট না থাকলে (turnstileEnabled=false) সবসময় pass। */
   const runTurnstileCheck = async (): Promise<boolean> => {
     if (!turnstileEnabled) return true;
     const token = turnstileRef.current?.getToken() || '';
@@ -343,8 +337,6 @@ export default function LoginModal({
     if (error) {
       const msg = (error.message || '').toLowerCase();
       if (msg.includes('invalid login')) {
-        // Supabase দেখায় না ইমেইল না পাসওয়ার্ড ভুল — একসাথে দেখানো হলে অ্যাকাউন্ট
-        // enumeration ঠেকানো যায় (কেউ ইমেইল খাতায় আছে কিনা বুঝতে পারবে না)
         setLEmailErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
         setLPassErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
       } else if (msg.includes('email')) {
@@ -371,7 +363,6 @@ export default function LoginModal({
   };
 
   const doRegister = async () => {
-    // Honeypot — মানুষ এই ফিল্ড দেখতেই পায় না, শুধু বট auto-fill করে ফেলে
     if (rHoneypot) return;
 
     const nm = sanitizeInput(rName.trim());
@@ -407,10 +398,6 @@ export default function LoginModal({
     }
     if (!data.user) { setRErr(t('অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে')); return; }
 
-    // Supabase কোনো error না দিয়েই একটা phantom user ফেরত দেয় (identities খালি array)
-    // যখন ইমেইলটা ইতিমধ্যে নিবন্ধিত থাকে — email enumeration ঠেকানোর জন্যই এই আচরণ।
-    // এটা ধরা না হলে ডুপ্লিকেট ইমেইল দিয়ে register করলে কোনো error ছাড়াই মোডাল
-    // বন্ধ হয়ে যায় এবং কিছুই হয়নি এমন মনে হয়।
     if (data.user.identities && data.user.identities.length === 0) {
       setREmailErr(t('এই ইমেইল ইতিমধ্যে নিবন্ধিত, লগইন করুন'));
       return;
@@ -556,12 +543,17 @@ export default function LoginModal({
             </div>
           ) : mode === 'register' ? (
             <div className="flex flex-col gap-3.5">
-              {/* Honeypot — বাস্তব ইউজার এটা দেখতেই পারবে না; শুধু বট ফর্ম auto-fill করলে ধরা পড়ে */}
+              {/* Honeypot — বট ধরা পড়ার ফাঁদ, ব্রাউজারের অটোফিল বিভ্রান্ত না করার জন্য সুরক্ষিত নাম */}
               <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
-                <label htmlFor="rg-website">Website</label>
+                <label htmlFor="b_auth_extra_field">Security Extra</label>
                 <input
-                  id="rg-website" name="website" type="text" tabIndex={-1} autoComplete="off"
-                  value={rHoneypot} onChange={(e) => setRHoneypot(e.target.value)}
+                  id="b_auth_extra_field"
+                  name="b_auth_extra_field"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="new-password"
+                  value={rHoneypot}
+                  onChange={(e) => setRHoneypot(e.target.value)}
                 />
               </div>
               <div>
@@ -669,4 +661,4 @@ export default function LoginModal({
       </div>
     </div>
   );
-}
+         }
