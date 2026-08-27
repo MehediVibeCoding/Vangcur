@@ -572,7 +572,7 @@ export default function Navbar({
         />
       )}
       <nav
-        className={`navbar-glass relative z-[900] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
+        className={`navbar-glass relative z-[900] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px] [isolation:isolate] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
@@ -723,13 +723,14 @@ export default function Navbar({
         </div>
       </nav>
 
-      <div className="relative md:hidden" ref={mobileSearchAreaRef}>
+      {/* মোবাইল সার্চ ড্রপডাউন এরিয়া — ক্রোম কম্পোজিটর গ্লিচ মুক্ত ও সিমেট্রিক্যাল ৩৫px রেডিয়াস */}
+      <div className="relative md:hidden [isolation:isolate]" ref={mobileSearchAreaRef}>
         <div
-          className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-200 ease-out ${mobileSearchOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${mobileSearchOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}
         >
-          <div className="min-h-0 overflow-hidden">
-            <div className="navbar-glass relative z-[900] -mt-px rounded-b-[22px] border border-t-0 border-white/60 bg-white/80 px-5 pb-3 pt-2 shadow-sh2 backdrop-blur-[8px]">
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <div className="min-h-0 overflow-visible bg-transparent">
+            <div className="navbar-glass relative z-[900] rounded-b-[35px] border border-t-0 border-white/60 bg-white/80 px-5 pb-4 pt-2 backdrop-blur-[8px]">
+              <div className="relative bg-transparent" onClick={(e) => e.stopPropagation()}>
                 <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-light/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                 </svg>
