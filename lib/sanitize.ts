@@ -8,16 +8,4 @@ export function sanitizeSvgHtml(html?: string | null): string {
   });
 }
 
-const SAFE_PROTOCOLS = ['http:', 'https:', 'tel:', 'mailto:'];
-
-export function sanitizeHref(url?: string | null): string {
-  if (!url || typeof url !== 'string') return '#';
-  const trimmed = url.trim();
-  if (trimmed.startsWith('/') || trimmed.startsWith('#') || trimmed.startsWith('?')) return trimmed;
-  try {
-    const parsed = new URL(trimmed, 'https://vangcur.netlify.app');
-    return SAFE_PROTOCOLS.includes(parsed.protocol) ? trimmed : '#';
-  } catch {
-    return '#';
-  }
-}
+export { sanitizeHref } from './security';
