@@ -75,8 +75,13 @@ export function subscribeFooterSettings(
   supabase: SupabaseClient,
   onChange: (key: 'vc_logo' | 'vc_contact', val: unknown) => void,
 ) {
+  // ⚠️ ফিক্সড চ্যানেল নাম বাগ — subscribeCategories() (lib/categoryData.ts),
+  // subscribeContactSettings() (lib/floatButtonsData.ts), আর
+  // About.tsx-এও ঠিক এই একই ক্লাসের বাগ পাওয়া গিয়েছিল/ফিক্স হয়েছে;
+  // একই কারণে এখানেও ইউনিক নাম ব্যবহার করা হলো।
+  const uniqueName = `footer-settings-watch-${Math.random().toString(36).slice(2, 9)}`;
   return supabase
-    .channel('footer-settings-watch')
+    .channel(uniqueName)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_logo' },

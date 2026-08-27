@@ -31,8 +31,18 @@ export default function About() {
       }
     })();
 
+    // ⚠️ ফিক্সড চ্যানেল নাম বাগ — subscribeCategories() (lib/categoryData.ts)
+    // আর subscribeContactSettings() (lib/floatButtonsData.ts)-এ ঠিক এই একই
+    // ক্লাসের বাগ আগে পাওয়া গিয়েছিল: ফিক্সড (হার্ডকোডেড) চ্যানেল নামে দ্বিতীয়
+    // কোনো .subscribe() কল একই টপিকে এসে পড়লে Supabase Realtime
+    // "cannot add postgres_changes callbacks ... after subscribe()" থ্রো করে,
+    // যা পুরো render/boundary ক্র্যাশ করিয়ে দেয় (ব্রাউজার কনসোলে React error
+    // #419 আর নেটওয়ার্ক ট্যাবে সেই রিয়েলটাইম রিকোয়েস্টের জন্য
+    // ERR_HTTP2_SERVER_REFUSED_STREAM হিসেবে দেখা যায়)। এখানেও ঠিক সেই একই
+    // প্যাটার্নে র‍্যান্ডম সাফিক্স দিয়ে ইউনিক নাম ব্যবহার করা হলো।
+    const uniqueName = `about-desc-watch-${Math.random().toString(36).slice(2, 9)}`;
     const channel = supabase
-      .channel('about-desc-watch')
+      .channel(uniqueName)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_about_desc' },
