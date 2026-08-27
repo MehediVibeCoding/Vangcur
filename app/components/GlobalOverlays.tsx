@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import FloatCartBadge from './cart/FloatCartBadge';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import { useLanguageStore } from '@/lib/store/languageStore';
@@ -23,11 +23,18 @@ export default function GlobalOverlays() {
   const [trackOpen, setTrackOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const lang = useLanguageStore((s) => s.lang);
 
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  // ইনস্ট্যান্ট চেকআউট ট্রানজিশনের জন্য প্রি-ফেচ
+  useEffect(() => {
+    router.prefetch('/checkout');
+    router.prefetch('/');
+  }, [router]);
 
   // hydration mismatch এড়াতে cart/wishlist store localStorage থেকে
   // শুধু client mount হওয়ার পর (hydration শেষে) লোড হয়, initial
