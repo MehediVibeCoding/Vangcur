@@ -106,6 +106,12 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const cart = useCartStore((s) => s.cart);
   const prodsRef = useRef<Product[]>([]);
 
+  // ইনস্ট্যান্ট নেভিগেশনের জন্য চেকআউট প্রি-ফেচ
+  useEffect(() => {
+    router.prefetch('/checkout');
+    router.prefetch('/');
+  }, [router]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
