@@ -54,12 +54,18 @@ export function parseSupabaseVal<T = unknown>(val: unknown): T {
   return val as unknown as T;
 }
 
+// #419 ফিক্স — homepage-এর Promise.all-এ fetchCustomProducts()-এর সাথে
+// সমান্তরালে চলে, তাই এখানেও একই bounded টাইমআউট দরকার (lib/productData.ts
+// দ্রষ্টব্য), নাহলে এটাও পুরো render-কে অনির্দিষ্টকালের জন্য আটকে রাখতে পারত।
+const QUERY_TIMEOUT_MS = 3500;
+
 export async function fetchCategories(supabase: SupabaseClient): Promise<Category[]> {
   try {
     const { data, error } = await supabase
       .from('store_settings')
       .select('setting_value')
       .eq('setting_key', 'vc_categories')
+      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
       .maybeSingle();
     if (error || !data) return DEFAULT_CATEGORIES;
     const parsed = parseSupabaseVal<Category[]>(data.setting_value);

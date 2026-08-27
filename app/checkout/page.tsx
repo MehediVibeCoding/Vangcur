@@ -341,7 +341,13 @@ export default function CheckoutPage() {
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
-        sessionStorage.removeItem('vc_quick_order_items');
+        // ⚠️ এখানে আগে sessionStorage.removeItem() সাথে সাথেই কল হতো, যেটা
+        // ফ্র্যাজাইল ছিল: checkout পেজ যদি কোনো কারণে দুইবার mount হয়
+        // (যেমন React #419 হাইড্রেশন বাগ থেকে রিকভারি), দ্বিতীয় mount-এ এই
+        // key আগেই খালি পাওয়া যেত আর ভুলভাবে "কার্ট খালি" দেখিয়ে হোমে
+        // পাঠিয়ে দিত। এখন এই key শুধু অর্ডার সত্যিই সফল হলে (submitOrderNow)
+        // বা ইউজার × বাটনে explicit ক্যানসেল করলে ক্লিয়ার হয় — কখনো read
+        // করার সাথে সাথে না।
         setCartItems(quickOrder);
         hasItems = true;
       } else {
@@ -623,6 +629,7 @@ export default function CheckoutPage() {
       try {
         sessionStorage.removeItem('vc_form_draft');
         sessionStorage.removeItem('vc_lead_id');
+        sessionStorage.removeItem('vc_quick_order_items');
         localStorage.setItem('vc_pending_ls', String(orderId));
         localStorage.setItem('vc_pending_num_ls', num);
         localStorage.setItem('vc_pending_phone_ls', phone.trim());
@@ -710,6 +717,9 @@ export default function CheckoutPage() {
                     prefetch={true}
                     aria-label={t('বন্ধ করুন')}
                     title={t('বন্ধ করুন')}
+                    onClick={() => {
+                      try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
+                    }}
                     className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45 no-underline"
                   >
                     <IconClose />

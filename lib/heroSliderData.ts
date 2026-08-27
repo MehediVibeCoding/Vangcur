@@ -37,12 +37,18 @@ export function padCards(arr: unknown): HeroCard[] {
   return padded.slice(0, DUO_TOTAL);
 }
 
+// #419 ফিক্স — homepage-এর Promise.all-এ fetchCustomProducts()-এর সাথে
+// সমান্তরালে চলে, তাই এখানেও একই bounded টাইমআউট দরকার (lib/productData.ts
+// দ্রষ্টব্য), নাহলে এটাও পুরো render-কে অনির্দিষ্টকালের জন্য আটকে রাখতে পারত।
+const QUERY_TIMEOUT_MS = 3500;
+
 export async function fetchHeroCards(supabase: SupabaseClient): Promise<HeroCard[]> {
   try {
     const { data, error } = await supabase
       .from('store_settings')
       .select('setting_value')
       .eq('setting_key', 'vc_cath_cards')
+      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
       .maybeSingle();
     if (error || !data) return DEFAULT_HERO_CARDS;
     const parsedVal = parseSupabaseVal<unknown>(data.setting_value);

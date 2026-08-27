@@ -123,12 +123,24 @@ const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,powe
 // fetch করে apply করা হয়, তাই home/category/search — যেখানেই
 // fetchCustomProducts() ব্যবহার হয় সবখানে স্বয়ংক্রিয়ভাবে সঠিক অর্ডার আসবে,
 // আলাদা করে প্রতিটা call site বদলাতে হয়নি।
+// ⚠️ #419 ফিক্স — এই কুয়েরিগুলোর কোনো টাইমআউট ছিল না, তাই Supabase একটু
+// ধীর হলেও (এরর না দিয়ে) এই কল অনির্দিষ্টকালের জন্য ঝুলে থাকতে পারত।
+// রুট লেআউট প্রতি রিকোয়েস্টে কুকি পড়ে বলে হোমপেজ সবসময় dynamic SSR-এ
+// রেন্ডার হয়, ফলে এমন একটা ঝুলে-থাকা কল Vercel-এর ফাংশন টাইম-বাজেট পার
+// করে দিতে পারত — এটাই React error #419-এর ("Suspense boundary couldn't
+// finish on the server") মূল কারণ ছিল। এখন প্রতিটা কুয়েরিতে
+// abortSignal(AbortSignal.timeout(...)) দিয়ে একটা হার্ড ডেডলাইন বসানো
+// হয়েছে, তাই ওয়ার্স্ট-কেস ওয়েট টাইম এখন বাউন্ডেড ও প্রেডিক্টেবল।
+const QUERY_TIMEOUT_MS = 3500;
+const RETRY_DELAY_MS = 400;
+
 async function fetchProdOrder(supabase: SupabaseClient): Promise<unknown> {
   try {
     const { data } = await supabase
       .from('store_settings')
       .select('setting_value')
       .eq('setting_key', 'vc_prod_order')
+      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
       .maybeSingle();
     return data?.setting_value ?? null;
   } catch {
@@ -140,15 +152,20 @@ async function fetchProdOrder(supabase: SupabaseClient): Promise<unknown> {
 }
 
 export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Product[]> {
+  // fetchProdOrder() স্বাধীন একটা কুয়েরি — মূল products কুয়েরির সাথে
+  // sequentially await না করে সমান্তরালে শুরু করা হচ্ছে, যাতে এটা মোট
+  // ওয়েট টাইমে আলাদা করে যোগ না হয় (নিজের ৩৫০০ms বাজেটের মধ্যেই থাকে)।
+  const orderPromise = fetchProdOrder(supabase);
   let attempt = 0;
-  const MAX_ATTEMPTS = 3;
+  const MAX_ATTEMPTS = 2;
   while (attempt < MAX_ATTEMPTS) {
     attempt++;
     try {
       const { data: sbProds, error } = await supabase
         .from('custom_products')
         .select(GRID_COLS)
-        .order('id', { ascending: true });
+        .order('id', { ascending: true })
+        .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS));
 
       if (error) {
         logWarn('[Vangcur] custom_products fetch error (attempt ' + attempt + '):', error.message, '| code:', error.code);
@@ -157,19 +174,19 @@ export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Pro
           return [];
         }
         if (attempt < MAX_ATTEMPTS) {
-          await new Promise((r) => setTimeout(r, 1200 * attempt));
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
           continue;
         }
         return [];
       }
       if (!sbProds || !sbProds.length) return [];
       const mapped = (sbProds as unknown as RawCustomProduct[]).map(mapCustomProduct);
-      const orderArr = await fetchProdOrder(supabase);
+      const orderArr = await orderPromise;
       return applyProdOrder(mapped, orderArr);
     } catch (e) {
       logWarn('[Vangcur] custom_products exception (attempt ' + attempt + '):', e);
       if (attempt < MAX_ATTEMPTS) {
-        await new Promise((r) => setTimeout(r, 1200 * attempt));
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
       }
     }
   }

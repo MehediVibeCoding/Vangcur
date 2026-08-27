@@ -26,8 +26,6 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-const LCP_HERO_IMG = 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto:good,f_auto/v1779333775/quality_restoration_20260521091638399_e24mi5.jpg';
-
 export default async function RootLayout({
   children,
 }: {
@@ -39,13 +37,6 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        <link
-          rel="preload"
-          as="image"
-          href={LCP_HERO_IMG}
-          // @ts-expect-error - fetchpriority is standard in modern browsers
-          fetchpriority="high"
-        />
       </head>
       <body className="min-h-screen bg-white font-body text-ink antialiased">
         <div

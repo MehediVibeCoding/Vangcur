@@ -44,6 +44,17 @@ export default function ClientHome({ initialProducts, initialCategories, initial
     return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
   }, []);
 
+  useEffect(() => {
+    // চেকআউট পেজ এখন আর quick-order sessionStorage key সাথে সাথে ডিলিট
+    // করে না (cart-empty বাগ ফিক্স, app/checkout/page.tsx দ্রষ্টব্য) — সেটা
+    // ক্লিয়ার হয় শুধু অর্ডার সফল হলে বা × দিয়ে ক্যানসেল করলে। কিন্তু ইউজার
+    // ব্রাউজার Back বাটন দিয়ে চেকআউট ছেড়ে হোমে ফিরলে ওই ক্লিয়ার-আপ চলে না,
+    // তাই হোমপেজে ফেরাকেই "quick order attempt পরিত্যক্ত" ধরে এখানে
+    // defensively পুরনো key মুছে ফেলা হচ্ছে, যাতে পরে normal cart দিয়ে
+    // checkout করলে সেটা এই পুরনো single-item quick order দিয়ে hijack না হয়।
+    try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
+  }, []);
+
   return (
     <>
       <Navbar
