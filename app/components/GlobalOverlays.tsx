@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import FloatCartBadge from './cart/FloatCartBadge';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import { useLanguageStore } from '@/lib/store/languageStore';
+import { useCartStore } from '@/lib/store/cartStore';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 
 const CartSidebar = dynamic(() => import('./cart/CartSidebar'), { ssr: false });
 const WishlistDrawer = dynamic(() => import('./cart/WishlistDrawer'), { ssr: false });
@@ -27,7 +29,15 @@ export default function GlobalOverlays() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  // মোবাইল সিপিইউ ফ্রি রাখতে প্রথম রেন্ডারের পর অলস সময়ে নন-ক্রিটিক্যাল ওভারলে লোড
+  // hydration mismatch এড়াতে cart/wishlist store localStorage থেকে
+  // শুধু client mount হওয়ার পর (hydration শেষে) লোড হয়, initial
+  // server/client render দুটোই খালি state দিয়ে মেলে
+  useEffect(() => {
+    useCartStore.getState().hydrate();
+    useWishlistStore.getState().hydrate();
+  }, []);
+
+  // মোবাইল সিপিইউ ফ্রি রাখতে প্রথম রেন্ডারের পর অলস সময়ে নন-ক্রিটিক্যাল ওভারলে লোড
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(timer);
