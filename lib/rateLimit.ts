@@ -13,11 +13,17 @@ async function checkRpcLimit(
 ): Promise<RateLimitResult> {
   try {
     const { data, error } = await supabase.rpc(fn, params);
-    if (error || !data) return { allowed: true, remaining: 0 };
-    return { allowed: !!(data as { allowed?: boolean }).allowed, remaining: Number((data as { remaining?: number }).remaining) || 0 };
+    if (error || !data) {
+      if (error) logWarn(`[Vangcur] ${fn} RPC error:`, error.message);
+      return { allowed: false, remaining: 0 };
+    }
+    return {
+      allowed: !!(data as { allowed?: boolean }).allowed,
+      remaining: Number((data as { remaining?: number }).remaining) || 0,
+    };
   } catch (e) {
-    logWarn(`[Vangcur] ${fn}:`, e);
-    return { allowed: true, remaining: 0 };
+    logWarn(`[Vangcur] ${fn} exception:`, e);
+    return { allowed: false, remaining: 0 };
   }
 }
 
