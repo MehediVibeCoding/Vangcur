@@ -1,4 +1,3 @@
-import QuickOrderBridge from './checkout/QuickOrderBridge';
 import WaitingOverlay from './checkout/WaitingOverlay';
 import BgConfirmPopup from './checkout/BgConfirmPopup';
 import PostReceiveInfoModal from './checkout/PostReceiveInfoModal';
@@ -12,7 +11,6 @@ import RecoveryToast from './modals/RecoveryToast';
 export default function RareOverlays() {
   return (
     <>
-      <QuickOrderBridge />
       <WaitingOverlay />
       <BgConfirmPopup />
       <PostReceiveInfoModal />
