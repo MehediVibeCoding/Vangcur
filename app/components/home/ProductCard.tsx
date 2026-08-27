@@ -169,7 +169,8 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           <Link
             href={href}
             prefetch={true}
-            className="line-clamp-1 block cursor-pointer text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
+            title={p.name}
+            className="block w-full cursor-pointer truncate overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
           >
             {p.name}
           </Link>
