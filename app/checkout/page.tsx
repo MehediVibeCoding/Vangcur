@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import dynamic from 'next/dynamic';
 import { showToast } from '@/lib/toast';
+import { trackBeginCheckout, trackPurchase } from '@/lib/analytics';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const PreConfirmLoginModal = dynamic(() => import('@/app/components/checkout/PreConfirmLoginModal'));
@@ -326,6 +327,7 @@ export default function CheckoutPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const submitOrderNowRef = useRef<(() => void) | null>(null);
+  const trackedBeginCheckoutRef = useRef(false);
 
   useEffect(() => {
     router.prefetch('/');
@@ -338,15 +340,18 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let hasItems = false;
+    let loadedItems: CartItem[] = [];
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
         setCartItems(quickOrder);
+        loadedItems = quickOrder;
         hasItems = true;
       } else {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
         const validCart = Array.isArray(cart) ? cart : [];
         setCartItems(validCart);
+        loadedItems = validCart;
         hasItems = validCart.length > 0;
       }
     } catch {
@@ -357,6 +362,23 @@ export default function CheckoutPage() {
       router.replace('/');
       return;
     }
+
+    // GTM / Pixel begin_checkout ট্র্যাকিং
+    if (!trackedBeginCheckoutRef.current && loadedItems.length > 0) {
+      trackedBeginCheckoutRef.current = true;
+      const initialSubtotal = loadedItems.reduce((s, i) => s + (i.price || 0) * (i.qty || 0), 0);
+      trackBeginCheckout(
+        loadedItems.map((i) => ({
+          item_id: i.id,
+          item_name: i.name,
+          price: i.price,
+          quantity: i.qty,
+          item_category: i.cat,
+        })),
+        initialSubtotal,
+      );
+    }
+
     try {
       const draft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
       if (draft) {
@@ -616,6 +638,20 @@ export default function CheckoutPage() {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData?.user?.id || null;
 
+      // GTM / Pixel purchase ইভেন্ট ট্র্যাকিং
+      trackPurchase(
+        num,
+        total,
+        sc,
+        cartItems.map((i) => ({
+          item_id: i.id,
+          item_name: i.name,
+          price: i.price,
+          quantity: i.qty,
+          item_category: i.cat,
+        })),
+      );
+
       useCartStore.getState().clearCart();
       orderDoneRef.current = true;
       clearDraft();
@@ -648,7 +684,7 @@ export default function CheckoutPage() {
       confirmLockRef.current = false;
       showToast(t('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।'));
     }
-  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4, lang, router, supabase, t]);
+  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4, lang, router, supabase, t, total, sc]);
 
   useEffect(() => { submitOrderNowRef.current = submitOrderNow; }, [submitOrderNow]);
 
