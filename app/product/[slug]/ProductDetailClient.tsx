@@ -2,12 +2,13 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
   prodInCat, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
   findProdBySlug,
-  QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
+  startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { fetchProductDetail } from '@/lib/productDetailData';
@@ -319,6 +320,7 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ slug, initialId, initialProduct }: ProductDetailClientProps) {
   const { t, lang } = useT();
+  const router = useRouter();
   const supabase = useRef(createClient()).current;
 
   // app/product/[slug]/page.tsx (Server Component) সরাসরি সার্ভারেই এই
@@ -533,12 +535,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   };
 
   const orderNow = () => {
-    if (!prod || prod.stock <= 0) return;
-    window.dispatchEvent(new CustomEvent(QUICK_ORDER_EVENT, {
-      detail: {
-        id: prod.id, name: prod.name, emoji: prod.imgs[0], price: prod.price, cat: prod.cat, qty,
-      },
-    }));
+    if (!prod) return;
+    startQuickOrder(router, prod, qty);
   };
 
   const notifyStock = () => {
