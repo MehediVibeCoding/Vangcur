@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   productHref,
-  QUICK_ORDER_EVENT, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
+  startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
@@ -213,13 +213,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   style={{
                     background: 'linear-gradient(115deg, rgba(255,255,255,.94) 0%, rgba(195,222,252,.9) 38%, rgba(255,255,255,.92) 64%, rgba(68,167,252,.35) 100%)',
                   }}
-                  onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
-                    new CustomEvent(QUICK_ORDER_EVENT, {
-                      detail: {
-                        id: p.id, name: p.name, emoji: (p.imgs || ['📦'])[0], price: p.price, cat: p.cat, qty: 1,
-                      },
-                    }),
-                  ))}
+                  onClick={(e) => handleCtaClick(e, () => startQuickOrder(router, p, 1))}
                 >
                   {t('অর্ডার করুন')}
                 </button>
