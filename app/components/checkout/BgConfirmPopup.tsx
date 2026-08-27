@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { fetchFullOrder } from '@/lib/orderStatus';
+import { fetchFullOrder, readLatestGuestOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
 import { GENERATE_INVOICE_EVENT, SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
@@ -12,10 +12,6 @@ import type { Order } from '@/types';
 const PENDING_CONFIRM_KEY = 'vc_pending_confirm';
 const RESTORE_SHOW_DELAY_MS = 1200;
 
-// অর্ডার কনফার্ম হলে WaitingOverlay সবসময় সম্পূর্ণ বন্ধ হয়ে (মিনিমাইজড থাকুক বা
-// ফুল-স্ক্রিন থাকুক) এই কম্পোনেন্টে হ্যান্ডঅফ করে — legacy vangcur-next-এর
-// showBgConfirmPopup()-এর মতোই এটাই আসল কনফার্মেশন UI (কেন্দ্রীভূত মডাল, একটা
-// মাত্র বাধ্যতামূলক ইনভয়েস-ডাউনলোড বাটন)। এটা কর্নার-টোস্ট না।
 const successSound = () => {
   try {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -41,7 +37,7 @@ const successSound = () => {
     });
     setTimeout(() => ctx.close(), 1200);
   } catch {
-    // Web Audio অসমর্থিত/ব্লকড হলে চুপচাপ কিছু হবে না
+    // Web Audio blocked or unsupported
   }
 };
 
@@ -60,17 +56,15 @@ export default function BgConfirmPopup() {
   useEffect(() => { phoneRef.current = phone; }, [phone]);
 
   const showPopup = useCallback((o: Order, p?: string) => {
+    const finalPhone = p || o.customer?.phone || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || undefined : undefined);
     setOrder(o);
-    setPhone(p);
+    setPhone(finalPhone);
     setOpen(true);
     successSound();
-    // ইনভয়েস ডাউনলোড না করা পর্যন্ত এই পপ-আপ "বাধ্যতামূলক" রাখতে localStorage-এ
-    // রেখে দেওয়া হচ্ছে — কাস্টমার রিফ্রেশ করলে, ট্যাব বন্ধ করে আবার খুললে, বা
-    // নতুন ট্যাবে ঢুকলেও একই কনফার্মেশন মেসেজ আবার দেখবে (নিচের restore effect)।
     try {
-      localStorage.setItem(PENDING_CONFIRM_KEY, JSON.stringify({ order: o, phone: p }));
+      localStorage.setItem(PENDING_CONFIRM_KEY, JSON.stringify({ order: o, phone: finalPhone }));
     } catch {
-      // localStorage অনুপলব্ধ হলে persistence স্কিপ, তবু পপ-আপ এই সেশনে ঠিকই দেখাবে
+      // ignore
     }
   }, []);
 
@@ -83,11 +77,6 @@ export default function BgConfirmPopup() {
     return () => window.removeEventListener(SHOW_BG_CONFIRM_EVENT, onShow);
   }, [showPopup]);
 
-  // পেজ রিফ্রেশ / নতুন ট্যাবে ঢোকার সময় localStorage-এ vc_pending_confirm পাওয়া
-  // গেলে — একটু দেরিতে (১.২ সেকেন্ড, legacy-র মতোই) আবার একই কনফার্মেশন
-  // পপ-আপ দেখানো হয়, যাতে ইনভয়েস ডাউনলোড না করে কেউ মূল সাইটে "পালাতে" না
-  // পারে। সার্ভারে গিয়ে যাচাই করা হয় অর্ডারটা এখনো বাতিল/রিজেক্ট হয়নি —
-  // নেটওয়ার্ক এরর হলে fail-open (তবুও দেখানো হয়, যাতে বৈধ কাস্টমার আটকে না যায়)।
   useEffect(() => {
     let cancelled = false;
     let raw: string | null = null;
@@ -109,50 +98,47 @@ export default function BgConfirmPopup() {
     }
     const timer = setTimeout(async () => {
       if (cancelled) return;
-      const isGuest = !currentUser;
-      // phone সবসময় পাঠানো হচ্ছে — fetchFullOrder নিজেই লাইভ সেশন যাচাই করে
-      // ঠিক পথ বেছে নেয় (দ্রষ্টব্য: lib/orderStatus.ts-এর মন্তব্য)।
+      const lookupPhone = saved!.phone || saved!.order?.customer?.phone || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone : undefined);
       try {
-        const data = await fetchFullOrder(supabase, String(saved!.order!.id), saved!.phone);
+        const data = await fetchFullOrder(supabase, String(saved!.order!.id), lookupPhone);
         if (cancelled) return;
         if (data) {
           const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
           if (mapped.status === 'cancelled' || mapped.status === 'rejected') {
-            // এই ফাঁকে অ্যাডমিন যদি রিজেক্ট করে থাকে — বাধ্যতামূলক পপ-আপ আর
-            // দেখানোর দরকার নেই, WaitingOverlay-এর রিজেক্ট প্যানেলই যথেষ্ট।
             try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
             return;
           }
-          showPopup(mapped, isGuest ? saved!.phone : undefined);
+          showPopup(mapped, lookupPhone);
           return;
         }
       } catch {
-        // নেটওয়ার্ক এরর — fail-open, নিচে সেভ করা তথ্য দিয়েই দেখানো হবে
+        // fail-open
       }
-      if (!cancelled) showPopup(saved!.order!, saved!.phone);
+      if (!cancelled) showPopup(saved!.order!, lookupPhone);
     }, RESTORE_SHOW_DELAY_MS);
     return () => { cancelled = true; clearTimeout(timer); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase, showPopup]);
 
   const copyOrderNum = async () => {
     if (!order) return;
     try {
       await navigator.clipboard.writeText(String(order.orderNum));
     } catch {
-      // clipboard may be unavailable
+      // ignore
     }
     setCopyLabel(t('✅'));
     setTimeout(() => setCopyLabel(t('📋')), 2000);
   };
 
-  // ইনভয়েস ডাউনলোডই এখানে একমাত্র বাটন — legacy dlInvoiceFromPopup()-এর মতো এটাই
-  // পপ-আপ বন্ধ করার একমাত্র পথ, যাতে ইনভয়েস সত্যিই বাধ্যতামূলক থাকে।
   const downloadInvoice = () => {
     const o = orderRef.current;
     if (!o) return;
+    const finalInvoicePhone = phoneRef.current 
+      || o.customer?.phone 
+      || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
+
     window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
-      detail: { orderId: o.id, phone: phoneRef.current },
+      detail: { orderId: o.id, phone: finalInvoicePhone },
     }));
     try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
     setOpen(false);
