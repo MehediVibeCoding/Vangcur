@@ -79,7 +79,12 @@ export default function StatusClient() {
     setOrderId(pending.id);
     (async () => {
       const isGuest = !currentUser;
-      const data = await fetchFullOrder(supabase, pending.id, isGuest ? pending.phone : undefined);
+      // ⚠️ আগে এখানে phone শুধু isGuest true হলেই পাঠানো হতো — কিন্তু isGuest
+      // অ্যাপের নিজস্ব (সম্ভাব্য stale) currentUser মিরর থেকে আসে, Supabase-এর
+      // আসল সেশনের সাথে নিশ্চয়তামূলক সম্পর্ক নেই। এখন phone সবসময় পাঠানো
+      // হচ্ছে — fetchFullOrder নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয় এবং
+      // দরকার হলে phone দিয়ে fallback করে।
+      const data = await fetchFullOrder(supabase, pending.id, pending.phone);
       if (data) {
         const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
         // অতি দ্রুত (কয়েক মিলিসেকেন্ডের মধ্যে) অ্যাডমিন যদি ইতিমধ্যে
@@ -109,7 +114,9 @@ export default function StatusClient() {
   useEffect(() => {
     if (!orderId) return undefined;
     const isGuest = !currentUser;
-    const stop = watchOrderStatus(supabase, orderId, isGuest ? phoneRef.current : undefined, (newStatus) => {
+    // ⚠️ আগের মতো isGuest দিয়ে phone গেট না করে সবসময় phone পাঠানো হচ্ছে —
+    // fetchFullOrder এখন নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয়।
+    const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
       if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
         // WaitingOverlay-এর handleOrderStatusUpdate()-এর মতোই: এখানেও আলাদা
         // কোনো confirm প্যানেল না রেখে সরাসরি একই বাধ্যতামূলক BgConfirmPopup-এ

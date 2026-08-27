@@ -54,25 +54,50 @@ export function readLatestGuestOrder(): { id: string; orderNum: string; phone: s
 }
 
 /** নির্দিষ্ট id-এর পুরো অর্ডার row আনে।
- * - phone দেওয়া থাকলে: guest হিসেবে ধরা হয় — secure RPC (get_guest_order)
- *   দিয়ে আনা হয়, যেটা id + phone দুটো মিললে তবেই ডেটা দেয় (RLS-এ anon
- *   SELECT বন্ধ, তাই সরাসরি select() আর কাজ করে না — এটাই এখন একমাত্র
- *   বৈধ পথ)।
- * - phone না দিলে: লগইন করা ইউজার ধরা হয় — সরাসরি select() করা হয়, যেটা RLS
- *   পলিসি অনুযায়ী শুধু নিজের (auth.uid() = user_id) row-ই রিটার্ন করবে। */
+ *
+ * ⚠️ আগে এখানে কল করার সময় caller নিজে ঠিক করে দিত phone পাঠাবে কিনা,
+ * ভিত্তি ছিল অ্যাপের নিজস্ব `currentUser` (Zustand স্টোর, যেটা শুধু
+ * localStorage-এর `vc_user` মিরর করে)। সমস্যা হলো — Supabase-এর আসল লগইন
+ * সেশন (JWT) এর সাথে এই লোকাল মিররের কোনো নিশ্চয়তামূলক সম্পর্ক নেই:
+ * অ্যাক্সেস টোকেন সময়ের সাথে expire হয়ে যেতে পারে, বা রিফ্রেশ ফেইল হতে
+ * পারে, অথচ `vc_user` তখনও localStorage-এ থেকে যায়। ফলে অ্যাপ ভাবত ইউজার
+ * "লগইন করা আছে" আর সরাসরি RLS-scoped select() চালাত — কিন্তু আসল সেশন
+ * অবৈধ থাকায় PostgREST 401 Unauthorized রিটার্ন করত, আর কনফার্ম স্ট্যাটাস
+ * পোলিং করে কখনো ডেটা পেতোই না (এডমিন কনফার্ম করলেও UI আপডেট হতো না)।
+ *
+ * এখন থেকে caller-নির্ভর অনুমানের বদলে এখানেই Supabase-এর *আসল লাইভ
+ * সেশন* যাচাই করা হয় (supabase.auth.getSession())। সেশন সত্যিই বৈধ থাকলে
+ * প্রথমে RLS-scoped select() চেষ্টা হয়; সেটা ব্যর্থ হলে (বা সেশন না
+ * থাকলে) phone দেওয়া থাকলে সবসময় phone-verified secure RPC
+ * (get_guest_order)-এ fallback করা হয় — এটাই guest checkout-এর একমাত্র
+ * নিরাপদ পথ এবং এটা কখনো ভুল করে বাদ পড়বে না। */
 export async function fetchFullOrder(
   supabase: SupabaseClient,
   orderId: string,
   phone?: string,
 ): Promise<Record<string, unknown> | null> {
   try {
+    let hasLiveSession = false;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      hasLiveSession = !!sessionData?.session;
+    } catch {
+      hasLiveSession = false;
+    }
+
+    if (hasLiveSession) {
+      try {
+        const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
+        if (!error && data) return data as Record<string, unknown>;
+      } catch {
+        // নিচে phone fallback চেষ্টা করা হবে
+      }
+    }
+
     if (phone) {
       const { data, error } = await supabase.rpc('get_guest_order', { p_id: orderId, p_phone: phone });
       if (!error && data && data.length) return data[0] as Record<string, unknown>;
-      return null;
     }
-    const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
-    if (!error && data) return data as Record<string, unknown>;
     return null;
   } catch {
     return null;

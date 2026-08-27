@@ -110,8 +110,10 @@ export default function BgConfirmPopup() {
     const timer = setTimeout(async () => {
       if (cancelled) return;
       const isGuest = !currentUser;
+      // phone সবসময় পাঠানো হচ্ছে — fetchFullOrder নিজেই লাইভ সেশন যাচাই করে
+      // ঠিক পথ বেছে নেয় (দ্রষ্টব্য: lib/orderStatus.ts-এর মন্তব্য)।
       try {
-        const data = await fetchFullOrder(supabase, String(saved!.order!.id), isGuest ? saved!.phone : undefined);
+        const data = await fetchFullOrder(supabase, String(saved!.order!.id), saved!.phone);
         if (cancelled) return;
         if (data) {
           const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);

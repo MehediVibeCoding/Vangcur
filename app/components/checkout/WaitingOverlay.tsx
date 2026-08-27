@@ -39,10 +39,14 @@ export default function WaitingOverlay() {
     phoneRef.current = phone;
     setOrderId(id);
     setStatus('pending');
-    // এই মুহূর্তে লগইন থাকলে নিজের RLS-scoped select ব্যবহার হবে (phone
-    // লাগবে না); guest হলে phone-verified secure RPC ব্যবহার হবে।
+    // ⚠️ আগে এখানে phone শুধু isGuest (স্থানীয় currentUser মিরর) true হলেই
+    // পাঠানো হতো। কিন্তু সেই মিরর Supabase-এর আসল সেশনের বৈধতা প্রতিফলিত
+    // করে না (JWT expire হয়ে গেলেও থেকে যায়), ফলে stale অবস্থায় সরাসরি
+    // RLS-scoped select() চেষ্টা হতো আর 401 দিত। এখন phone সবসময় পাঠানো
+    // হচ্ছে — fetchFullOrder নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয় এবং
+    // দরকার হলে phone দিয়ে fallback করে।
     const isGuest = !currentUser;
-    const data = await fetchFullOrder(supabase, id, isGuest ? phone : undefined);
+    const data = await fetchFullOrder(supabase, id, phone);
     const mapped: Order = data
       ? mapSupabaseOrderRow(data as Record<string, unknown>)
       : {
@@ -97,7 +101,9 @@ export default function WaitingOverlay() {
   useEffect(() => {
     if (!orderId) return undefined;
     const isGuest = !currentUser;
-    const stop = watchOrderStatus(supabase, orderId, isGuest ? phoneRef.current : undefined, (newStatus) => {
+    // phone সবসময় পাঠানো হচ্ছে (openForPending-এর মন্তব্য দ্রষ্টব্য) — fetchFullOrder
+    // নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয়।
+    const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
       if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') {
         clearPendingOrder();
       }
