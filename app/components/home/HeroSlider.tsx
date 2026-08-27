@@ -9,7 +9,6 @@ import {
   type HeroCard,
   DUO_TOTAL,
   DEFAULT_HERO_CARDS,
-  padCards,
   fetchHeroCards,
 } from '@/lib/heroSliderData';
 
@@ -17,7 +16,6 @@ const AUTOPLAY_MS = 5500;
 const HOVER_AUTOPLAY_MS = 8000;
 const GAP = 12;
 
-// পেজ নেভিগেশনের সময় স্লাইডার যেন ১ নাম্বার কার্ডে রিসেট না হয়ে আগের কার্ডেই থাকে
 let globalSavedIndex = DUO_TOTAL;
 
 function getDuoPerPage(): number {
@@ -101,7 +99,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     requestAnimationFrame(() => setPosition(false));
     startAuto();
 
-    // স্ক্রিনের বাইরে চলে গেলে (নিচে স্ক্রল করলে) স্লাইডার অ্যানিমেশন বন্ধ থাকবে
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
