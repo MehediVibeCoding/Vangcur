@@ -13,6 +13,7 @@ import {
 } from '@/lib/security';
 import { logWarn, logError } from '@/lib/logger';
 import { staticDictionary } from '@/lib/i18n/dictionary';
+import { sendTelegramOrderNotification } from '@/lib/telegram';
 import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 
 const MAX_ITEMS = 30;
@@ -183,6 +184,23 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     if (insErr?.code === '23505') return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
+
+  // এডমিনের টেলিগ্রাম বোটে ব্যাকগ্রাউন্ডে ইনস্ট্যান্ট নোটিফিকেশন পাঠানো (নন-ব্লকিং)
+  sendTelegramOrderNotification({
+    orderNum,
+    name,
+    phone,
+    district: dist,
+    address: addr,
+    email,
+    items: verifiedItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+    total: vTotal,
+    shippingCost: sc,
+    paymentTxn: txn || undefined,
+    paymentLast4: last4 || undefined,
+  }).catch((err) => {
+    logWarn('[checkout] telegram notification error:', err);
+  });
 
   return { ok: true, data: { id: insData.id, orderNum } };
 }
