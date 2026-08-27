@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   productHref,
@@ -14,10 +14,9 @@ import { useT } from '@/lib/i18n/useT';
 import type { WishlistItem } from '@/types';
 
 function WishImg({ emoji }: { emoji?: string }) {
-  const [broken, setBroken] = useState(false);
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
   if (!emoji) return <span className="text-2xl">📦</span>;
-  if (isUrl && !broken) {
+  if (isUrl) {
     return (
       <img
         src={optimizeCloudinaryUrl(emoji, 150)}
@@ -25,7 +24,6 @@ function WishImg({ emoji }: { emoji?: string }) {
         className="block h-full w-full rounded-[11px] object-cover"
         loading="lazy"
         decoding="async"
-        onError={() => setBroken(true)}
       />
     );
   }
@@ -97,6 +95,11 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
   const items = useWishlistStore((s) => s.wishlist);
 
   useEffect(() => {
+    router.prefetch('/checkout');
+    router.prefetch('/');
+  }, [router]);
+
+  useEffect(() => {
     if (isOpen) lockBody();
     else unlockBody();
   }, [isOpen]);
@@ -135,7 +138,6 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
         className={`flex max-h-[85vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[20px] bg-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="relative shrink-0 bg-gradient-to-br from-brand-bg/60 via-white to-white px-5 pb-4 pt-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
