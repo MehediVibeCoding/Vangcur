@@ -24,7 +24,7 @@ export default function FloatCartBadge() {
 
   return (
     <div
-      className={`fixed bottom-[86px] right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-light shadow-sh3 ${jiggle ? 'animate-cart-jiggle' : ''}`}
+      className={`fixed bottom-[92px] right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-light shadow-sh3 ${jiggle ? 'animate-cart-jiggle' : ''}`}
       ref={btnRef}
       onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
       onAnimationEnd={() => setJiggle(false)}
