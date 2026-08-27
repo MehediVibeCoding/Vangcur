@@ -1,24 +1,12 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   DEFAULT_CATEGORIES, makeCatSlug, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { useT } from '@/lib/i18n/useT';
 import type { Category } from '@/types';
-
-function getCatPerPage(): number {
-  if (typeof window === 'undefined') return 8;
-  return window.innerWidth <= 768 ? 4 : 8;
-}
-
-function getCatCols(): number {
-  if (typeof window === 'undefined') return 4;
-  if (window.innerWidth <= 768) return 2;
-  if (window.innerWidth <= 1024) return 3;
-  return 4;
-}
 
 function CatIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
@@ -36,6 +24,8 @@ export default function Categories({ initialCategories }: CategoriesProps) {
   const { lang } = useT();
   const [cats] = useState<Category[]>(initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES);
   const [catPage, setCatPage] = useState(0);
+  const [gridCols, setGridCols] = useState(4);
+  const [perPage, setPerPage] = useState(8);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -43,20 +33,30 @@ export default function Categories({ initialCategories }: CategoriesProps) {
   const nextBtnRef = useRef<HTMLButtonElement>(null);
   const btnResetTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const touchRef = useRef({ x: 0, y: 0 });
-  const [gridCols, setGridCols] = useState(4);
 
-  const maxPage = Math.max(0, Math.ceil(cats.length / getCatPerPage()) - 1);
-  const clampPage = useCallback((p: number) => Math.max(0, Math.min(p, maxPage)), [maxPage]);
+  const maxPage = Math.max(0, Math.ceil(cats.length / perPage) - 1);
 
   useEffect(() => {
     const applyResponsive = () => {
-      setGridCols(getCatCols());
-      setCatPage((p) => clampPage(p));
+      if (typeof window === 'undefined') return;
+      if (window.visualViewport && window.visualViewport.scale !== 1) return;
+      
+      const width = window.innerWidth;
+      const cols = width <= 768 ? 2 : width <= 1024 ? 3 : 4;
+      const pp = width <= 768 ? 4 : 8;
+      
+      setGridCols(cols);
+      setPerPage(pp);
+      setCatPage((p) => {
+        const nextMax = Math.max(0, Math.ceil(cats.length / pp) - 1);
+        return Math.max(0, Math.min(p, nextMax));
+      });
     };
+
     applyResponsive();
     window.addEventListener('resize', applyResponsive);
     return () => window.removeEventListener('resize', applyResponsive);
-  }, [clampPage]);
+  }, [cats.length]);
 
   const slide = (dir: number, btnKey: 'prev' | 'next') => {
     setCatPage((p) => {
@@ -106,7 +106,6 @@ export default function Categories({ initialCategories }: CategoriesProps) {
     document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const perPage = getCatPerPage();
   const pageCount = maxPage + 1;
 
   return (
