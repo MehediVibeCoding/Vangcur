@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { fetchCustomProducts } from '@/lib/productData';
 import { fetchCategories } from '@/lib/categoryData';
@@ -20,12 +19,10 @@ export default async function HomePage() {
   ]);
 
   return (
-    <Suspense fallback={null}>
-      <ClientHome
-        initialProducts={initialProducts}
-        initialCategories={initialCategories}
-        initialHeroCards={initialHeroCards}
-      />
-    </Suspense>
+    <ClientHome
+      initialProducts={initialProducts}
+      initialCategories={initialCategories}
+      initialHeroCards={initialHeroCards}
+    />
   );
 }
