@@ -10,6 +10,7 @@ import {
   checkOAuthCallback, mergeGuestOrdersToUser, signInWithGoogle,
 } from '@/lib/authData';
 import { useAuthStore } from '@/lib/store/authStore';
+import { useCartStore } from '@/lib/store/cartStore';
 import dynamic from 'next/dynamic';
 import { showToast } from '@/lib/toast';
 
@@ -623,7 +624,16 @@ export default function CheckoutPage() {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData?.user?.id || null;
 
-      localStorage.setItem('vc_cart', '[]');
+      // ⚠️ আগে এখানে সরাসরি localStorage.setItem('vc_cart', '[]') করা হতো —
+      // এটা persisted ভ্যালু আপডেট করত ঠিকই, কিন্তু cartStore-এর (Zustand)
+      // in-memory `cart` স্টেট, যেটা CartSidebar/cart আইকন সরাসরি রিড করে,
+      // কখনো ক্লিয়ার হতো না। ফলে অর্ডার সাবমিট/রিজেক্টের পরেও কার্ট সাইডবারে
+      // পুরনো প্রোডাক্টগুলো (ভুলভাবে) দেখাতে থাকত — অথচ checkout পেজ সরাসরি
+      // localStorage থেকে পড়ে খালি পেয়ে "কার্ট খালি" দেখাত। এখন
+      // clearCart() ব্যবহার করা হচ্ছে, যা localStorage আর in-memory স্টেট
+      // দুটোই একসাথে ঠিকভাবে ক্লিয়ার করে — কার্ট UI সাথে সাথেই সঠিকভাবে
+      // আপডেট হবে।
+      useCartStore.getState().clearCart();
       orderDoneRef.current = true;
       clearDraft();
       try {
