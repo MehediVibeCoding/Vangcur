@@ -534,7 +534,11 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
   const orderNow = () => {
     if (!prod || prod.stock <= 0) return;
-    window.dispatchEvent(new CustomEvent(QUICK_ORDER_EVENT, { detail: { id: prod.id, qty } }));
+    window.dispatchEvent(new CustomEvent(QUICK_ORDER_EVENT, {
+      detail: {
+        id: prod.id, name: prod.name, emoji: prod.imgs[0], price: prod.price, cat: prod.cat, qty,
+      },
+    }));
   };
 
   const notifyStock = () => {
