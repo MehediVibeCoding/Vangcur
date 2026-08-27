@@ -35,7 +35,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const trackRef = useRef<HTMLDivElement>(null);
   const duoIdxRef = useRef(globalSavedIndex);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pausedRef = useRef(false);
+  const isInteractingRef = useRef(false);
   const infiniteJumpRef = useRef(false);
   const dragRef = useRef({ active: false, startX: 0 });
   const touchRef = useRef({ startX: 0, startY: 0 });
@@ -56,22 +56,20 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     normalizeIdx();
     const allCards = track.querySelectorAll<HTMLElement>('[data-cath-card]');
     const perPage = getDuoPerPage();
-    let wrapWidth = wrap.getBoundingClientRect().width;
-    if (!wrapWidth || wrapWidth < 10) {
-      const cathWrap = wrap.parentElement;
-      const cathPad = cathWrap
-        ? parseFloat(getComputedStyle(cathWrap).paddingLeft) + parseFloat(getComputedStyle(cathWrap).paddingRight)
-        : 28;
-      wrapWidth = window.innerWidth - cathPad;
-    }
+    const wrapWidth = wrap.clientWidth || wrap.getBoundingClientRect().width;
     if (!wrapWidth || wrapWidth < 50) return;
+    
+    // বাম ও ডান দুটি কার্ডের একদম নিখুঁত সমান উইডথ ক্যালকুলেশন
     const cardWidth = Math.floor((wrapWidth - GAP * (perPage - 1)) / perPage);
     if (!cardWidth || cardWidth < 10) return;
+
     allCards.forEach((c) => {
-      c.style.width = cardWidth + 'px';
-      c.style.minWidth = cardWidth + 'px';
+      c.style.width = `${cardWidth}px`;
+      c.style.minWidth = `${cardWidth}px`;
+      c.style.maxWidth = `${cardWidth}px`;
       c.style.flexShrink = '0';
     });
+
     const offset = duoIdxRef.current * (cardWidth + GAP);
     track.style.transition = animate ? 'transform .48s cubic-bezier(.4,0,.2,1)' : 'none';
     track.style.transform = `translateX(-${offset}px)`;
@@ -84,11 +82,13 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     setPosition(true);
   }, [setPosition]);
 
-  const startAuto = useCallback(() => {
+  const startAuto = useCallback((intervalMs = AUTOPLAY_MS) => {
     if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     autoTimerRef.current = setInterval(() => {
-      if (!pausedRef.current && isVisibleRef.current) duoStep(1);
-    }, AUTOPLAY_MS);
+      if (!isInteractingRef.current && isVisibleRef.current) {
+        duoStep(1);
+      }
+    }, intervalMs);
   }, [duoStep]);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     if (!wrap || !track) return;
 
     requestAnimationFrame(() => setPosition(false));
-    startAuto();
+    startAuto(AUTOPLAY_MS);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -107,50 +107,76 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
           clearInterval(autoTimerRef.current);
           autoTimerRef.current = null;
         } else if (entry.isIntersecting && !autoTimerRef.current) {
-          startAuto();
+          startAuto(AUTOPLAY_MS);
         }
       },
       { threshold: 0.1 }
     );
     observer.observe(wrap);
 
+    // টাচ বা আঙুল রাখার সাথে সাথে স্লাইডার সম্পূর্ণ পজ (Pause) থাকবে
     const onTouchStart = (e: TouchEvent) => {
       touchRef.current.startX = e.touches[0].clientX;
       touchRef.current.startY = e.touches[0].clientY;
-      pausedRef.current = true;
+      isInteractingRef.current = true;
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     };
+
     const onTouchEnd = (e: TouchEvent) => {
       const dx = e.changedTouches[0].clientX - touchRef.current.startX;
       const dy = e.changedTouches[0].clientY - touchRef.current.startY;
-      if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) duoStep(dx < 0 ? 1 : -1);
-      pausedRef.current = false;
-      setTimeout(() => startAuto(), 2000);
+      if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) {
+        duoStep(dx < 0 ? 1 : -1);
+      }
+      isInteractingRef.current = false;
+      setTimeout(() => startAuto(AUTOPLAY_MS), 2500);
     };
-    const onTouchCancel = () => { pausedRef.current = false; startAuto(); };
+
+    const onTouchCancel = () => {
+      isInteractingRef.current = false;
+      startAuto(AUTOPLAY_MS);
+    };
+
+    // ডেস্কে মাউস হোভার করলে গতি কমে ৮ সেকেন্ড হবে
     const onMouseEnter = () => {
       if (window.innerWidth >= 769) {
-        if (autoTimerRef.current) clearInterval(autoTimerRef.current);
-        autoTimerRef.current = setInterval(() => { if (!pausedRef.current && isVisibleRef.current) duoStep(1); }, HOVER_AUTOPLAY_MS);
+        startAuto(HOVER_AUTOPLAY_MS);
       }
     };
-    const onMouseLeaveAuto = () => { if (window.innerWidth >= 769) startAuto(); };
+
+    const onMouseLeaveAuto = () => {
+      if (window.innerWidth >= 769) {
+        startAuto(AUTOPLAY_MS);
+      }
+    };
+
     const onMouseDown = (e: MouseEvent) => {
       if (window.innerWidth < 769) return;
       dragRef.current.startX = e.clientX;
       dragRef.current.active = true;
+      isInteractingRef.current = true;
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     };
+
     const onMouseUp = (e: MouseEvent) => {
       if (!dragRef.current.active) return;
       dragRef.current.active = false;
+      isInteractingRef.current = false;
       const dx = e.clientX - dragRef.current.startX;
-      if (Math.abs(dx) > 40) duoStep(dx < 0 ? 1 : -1);
-      setTimeout(() => startAuto(), 1500);
+      if (Math.abs(dx) > 40) {
+        duoStep(dx < 0 ? 1 : -1);
+      }
+      setTimeout(() => startAuto(AUTOPLAY_MS), 1500);
     };
+
     const onMouseLeaveDrag = () => {
-      if (dragRef.current.active) { dragRef.current.active = false; startAuto(); }
+      if (dragRef.current.active) {
+        dragRef.current.active = false;
+        isInteractingRef.current = false;
+        startAuto(AUTOPLAY_MS);
+      }
     };
+
     const onTransitionEnd = () => {
       if (infiniteJumpRef.current) return;
       if (duoIdxRef.current >= DUO_TOTAL * 2) {
@@ -167,6 +193,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
         infiniteJumpRef.current = false;
       }
     };
+
     const onResize = () => {
       if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) return;
       requestAnimationFrame(() => setPosition(false));
@@ -174,12 +201,15 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
     const onDocVisibility = () => {
       if (document.hidden) {
-        pausedRef.current = true;
-        if (autoTimerRef.current) { clearInterval(autoTimerRef.current); autoTimerRef.current = null; }
+        isInteractingRef.current = true;
+        if (autoTimerRef.current) {
+          clearInterval(autoTimerRef.current);
+          autoTimerRef.current = null;
+        }
       } else {
         setPosition(false);
-        pausedRef.current = false;
-        startAuto();
+        isInteractingRef.current = false;
+        startAuto(AUTOPLAY_MS);
       }
     };
 
@@ -237,9 +267,9 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const tripled = [...cards, ...cards, ...cards];
 
   return (
-    <div className="relative min-h-[220px] bg-transparent p-3.5 pb-0 sm:min-h-[300px] md:min-h-[280px]">
+    <div className="relative mx-auto max-w-[1300px] bg-transparent px-3.5 pt-3.5 sm:px-5 2xl:max-w-[1560px]">
       <div className="relative w-full touch-pan-y overflow-hidden bg-transparent" ref={wrapRef}>
-        <div className="flex gap-3 bg-transparent px-0.5" style={{ willChange: 'transform' }} ref={trackRef}>
+        <div className="flex gap-3 bg-transparent" style={{ willChange: 'transform' }} ref={trackRef}>
           {tripled.map((card, i) => {
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
@@ -250,14 +280,14 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
               <div
                 data-cath-card
                 key={`${catId}-${i}`}
-                className="group relative flex aspect-[9/16] w-[calc((100vw-56px)/2)] max-w-[calc(50vw-8px)] min-h-[220px] shrink-0 cursor-pointer flex-col justify-end overflow-hidden rounded-[20px] bg-[#111] shadow-[0_8px_24px_rgba(0,0,0,.06),0_1px_3px_rgba(0,0,0,.03)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-1 hover:scale-[1.008] hover:shadow-[0_20px_52px_rgba(0,0,0,.40),0_2px_8px_rgba(0,0,0,.15)] active:scale-[.97] sm:min-h-[300px] md:min-h-[280px] md:w-[calc((100%-60px)/6)] md:max-w-none"
+                className="group relative flex aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98] sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
                 style={{ background: bg }}
                 onClick={() => goCategory(catId)}
               >
                 {card.img ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-[550ms] ease-brand group-hover:scale-[1.07]"
+                    className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-[550ms] ease-brand group-hover:scale-[1.05]"
                     src={optimizeCloudinaryUrl(card.img, 360)}
                     alt={label}
                     loading={isEager ? 'eager' : 'lazy'}
@@ -266,11 +296,11 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                   />
                 ) : isSvgEmoji ? (
                   <div
-                    className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.08] [&_svg]:h-20 [&_svg]:w-20"
+                    className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.06] [&_svg]:h-20 [&_svg]:w-20"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(card.emoji) }}
                   />
                 ) : card.emoji ? (
-                  <div className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.08]">
+                  <div className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.06]">
                     {card.emoji}
                   </div>
                 ) : null}
@@ -282,9 +312,9 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                   }}
                 />
 
-                <div className="relative z-[2] flex flex-col items-start gap-[5px] px-3.5 pb-[18px]">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/[.16] px-3 py-[5px] text-[11px] font-bold uppercase tracking-[.3px] text-white shadow-[0_2px_10px_rgba(0,0,0,.2)] backdrop-blur-[8px] transition-[background,border-color,transform] duration-200 group-hover:translate-x-0.5 group-hover:border-white/50 group-hover:bg-white/[.26]">
-                    {label} <span className="text-[13px] transition-transform duration-200 group-hover:translate-x-1">→</span>
+                <div className="relative z-[2] flex flex-col items-start gap-[5px] px-3 pb-[14px]">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/[.16] px-2.5 py-[4px] text-[10.5px] font-bold uppercase tracking-[.3px] text-white shadow-[0_2px_10px_rgba(0,0,0,.2)] backdrop-blur-[8px] transition-[background,border-color,transform] duration-200 group-hover:translate-x-0.5 group-hover:border-white/50 group-hover:bg-white/[.26]">
+                    {label} <span className="text-[12px] transition-transform duration-200 group-hover:translate-x-0.5">→</span>
                   </span>
                 </div>
               </div>
@@ -294,14 +324,14 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       </div>
 
       <button
-        className="absolute left-0.5 top-[calc(50%-14px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
+        className="absolute left-1 top-[calc(50%-7px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
         onClick={() => duoStep(-1)}
         aria-label="Previous"
       >
         &#8249;
       </button>
       <button
-        className="absolute right-0.5 top-[calc(50%-14px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
+        className="absolute right-1 top-[calc(50%-7px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
         onClick={() => duoStep(1)}
         aria-label="Next"
       >
