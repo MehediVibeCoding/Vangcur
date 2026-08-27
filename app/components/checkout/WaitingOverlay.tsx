@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
-  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
+  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES, readLatestGuestOrder,
 } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -39,26 +39,15 @@ export default function WaitingOverlay() {
     phoneRef.current = phone;
     setOrderId(id);
     setStatus('pending');
-    // ⚠️ আগে এখানে phone শুধু isGuest (স্থানীয় currentUser মিরর) true হলেই
-    // পাঠানো হতো। কিন্তু সেই মিরর Supabase-এর আসল সেশনের বৈধতা প্রতিফলিত
-    // করে না (JWT expire হয়ে গেলেও থেকে যায়), ফলে stale অবস্থায় সরাসরি
-    // RLS-scoped select() চেষ্টা হতো আর 401 দিত। এখন phone সবসময় পাঠানো
-    // হচ্ছে — fetchFullOrder নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয় এবং
-    // দরকার হলে phone দিয়ে fallback করে।
-    const isGuest = !currentUser;
     const data = await fetchFullOrder(supabase, id, phone);
     const mapped: Order = data
       ? mapSupabaseOrderRow(data as Record<string, unknown>)
       : {
         id, orderNum, date: new Date().toISOString(), status: 'pending', total: 0, items: [], customer: {},
       };
-    // রিফ্রেশ/নতুন ট্যাবে ঢোকার সময় অর্ডারটা যদি ইতিমধ্যে কনফার্ম/শিপড/ডেলিভারড
-    // হয়ে গিয়ে থাকে, তাহলে "ওয়েটিং" প্যানেল না দেখিয়ে সরাসরি BgConfirmPopup-এ
-    // পাঠানো হচ্ছে — লেগেসির showBgConfirmPopup() persistent-check লজিকের মতোই।
     if (['confirmed', 'shipped', 'delivered'].includes(mapped.status)) {
-      clearPendingOrder();
       window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
-        detail: { order: mapped, phone: isGuest ? phone : undefined },
+        detail: { order: mapped, phone: phone || mapped.customer?.phone },
       }));
       return;
     }
@@ -66,26 +55,16 @@ export default function WaitingOverlay() {
     setStatus(mapped.status);
     setVisible(true);
     setMinimized(!!opts?.startMinimized);
-  }, [supabase, currentUser]);
+  }, [supabase]);
 
   useEffect(() => {
-    // /checkout/status নিজেই এই একই পেন্ডিং-অর্ডার স্টেট দেখায় (dedicated পেজ),
-    // তাই ওই পেজে থাকা অবস্থায় এখানে কিছু দেখানো হয় না — ডুপ্লিকেট এড়াতে।
-    // এই কম্পোনেন্ট গ্লোবাল ও সাইটে একবারই মাউন্ট হয়, তাই path পরিবর্তনের সাথে
-    // সাথে পুনরায় চেক করা জরুরি — নাহলে অর্ডার সাবমিট করে status পেজে যাওয়ার
-    // পর অন্য পেজে (যেমন হোম) ফিরে এলেও এই কম্পোনেন্ট নতুন অর্ডারটার কথা কখনো
-    // জানতে পারত না (আগে শুধু প্রথম মাউন্টেই একবার চেক হতো)।
-    if (orderId) return; // ইতিমধ্যে একটা অর্ডার ট্র্যাক করা হচ্ছে
+    if (orderId) return;
     if (pathname?.startsWith('/checkout/status')) return;
     const pending = readPendingOrder();
     if (pending) {
-      // status পেজ থেকে অন্য কোথাও গিয়ে (বা নতুন ট্যাবে/রিফ্রেশে স্টেল পেন্ডিং
-      // অর্ডার পেয়ে) পিক-আপ হলে সরাসরি কর্নার-badge আকারে দেখানো হচ্ছে, পুরো
-      // প্যানেল জোর করে খুলে ইউজারকে বিরক্ত না করে।
       openForPending(pending.id, pending.orderNum, pending.phone, { startMinimized: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, orderId]);
+  }, [pathname, orderId, openForPending]);
 
   useEffect(() => {
     const onOpen = () => {
@@ -100,27 +79,19 @@ export default function WaitingOverlay() {
 
   useEffect(() => {
     if (!orderId) return undefined;
-    const isGuest = !currentUser;
-    // phone সবসময় পাঠানো হচ্ছে (openForPending-এর মন্তব্য দ্রষ্টব্য) — fetchFullOrder
-    // নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয়।
     const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
-      if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') {
-        clearPendingOrder();
-      }
       if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
-        // লেগেসির handleOrderStatusUpdate()-এর মতোই: কনফার্ম হলে ওয়েটিং প্যানেল
-        // সবসময় সম্পূর্ণ বন্ধ হয়ে সরাসরি BgConfirmPopup-এ হ্যান্ডঅফ হয় —
-        // মিনিমাইজড থাকুক বা ফুল-স্ক্রিন খোলা থাকুক, দুই অবস্থাতেই একই আচরণ।
         const updatedOrder = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
         setVisible(false);
         setMinimized(false);
+        const confirmPhone = phoneRef.current 
+          || updatedOrder?.customer?.phone 
+          || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
+
         window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
-          detail: { order: updatedOrder, phone: isGuest ? phoneRef.current : undefined },
+          detail: { order: updatedOrder, phone: confirmPhone },
         }));
       } else {
-        // রিজেক্ট/বাতিল হলে (বা অন্য কোনো ইন্টারমিডিয়েট স্ট্যাটাসে) — মিনিমাইজড
-        // badge-এ আটকে না রেখে পুরো প্যানেল খুলে ফলাফলটা দেখানো হচ্ছে, নাহলে
-        // badge-টা শুধু "প্রসেস হচ্ছে..." লেখাই ধরে রাখত, স্ট্যাটাস বদলে গেলেও।
         setStatus(newStatus);
         setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
         if (newStatus === 'cancelled' || newStatus === 'rejected') {
@@ -130,7 +101,7 @@ export default function WaitingOverlay() {
       }
     });
     return stop;
-  }, [orderId, supabase, currentUser]);
+  }, [orderId, supabase]);
 
   useEffect(() => {
     if (visible && !minimized) lockBody();
@@ -158,7 +129,7 @@ export default function WaitingOverlay() {
     try {
       await navigator.clipboard.writeText(String(order.orderNum));
     } catch {
-      // clipboard may be unavailable
+      // ignore
     }
     setCopyLabel(t('✅ কপি হয়েছে!'));
     setTimeout(() => setCopyLabel(t('📋 কপি')), 2000);
