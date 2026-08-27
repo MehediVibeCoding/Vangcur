@@ -85,6 +85,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const { t } = useT();
+  const router = useRouter();
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
   const [heartBeat, setHeartBeat] = useState(false);
@@ -135,7 +136,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   return (
     <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand md:hover:-translate-y-1 md:hover:shadow-sh3 active:scale-[.98] [transform:translateZ(0)]">
       <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
-        {/* অপটিমাইজড লিংক: ক্লিক করার সাথে সাথে ইনস্ট্যান্ট প্রি-ফেচ লোড */}
         <Link href={href} prefetch={true} className="absolute inset-0 block cursor-pointer">
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </Link>
