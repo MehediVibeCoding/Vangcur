@@ -11,10 +11,25 @@ export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
   rejected: 'bg-[#FEE2E2] text-[#991B1B]',
 };
 
-export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: '⏳ Pending', confirmed: 'Confirmed', shipped: '🚚 Shipped',
-  delivered: '📦 Delivered', cancelled: 'Cancelled', rejected: 'Cancelled',
+export const ORDER_STATUS_LABEL_EN: Record<OrderStatus, string> = {
+  pending: '⏳ Pending',
+  confirmed: '✅ Confirmed',
+  shipped: '🚚 Shipped',
+  delivered: '📦 Delivered',
+  cancelled: 'Cancelled',
+  rejected: 'Cancelled',
 };
+
+export const ORDER_STATUS_LABEL_BN: Record<OrderStatus, string> = {
+  pending: '⏳ পেন্ডিং',
+  confirmed: '✅ কনফার্মড',
+  shipped: '🚚 শিপড',
+  delivered: '📦 ডেলিভার্ড',
+  cancelled: 'বাতিল',
+  rejected: 'বাতিল',
+};
+
+export const ORDER_STATUS_LABEL = ORDER_STATUS_LABEL_EN;
 
 function ItemThumb({ imgVal }: { imgVal?: string }) {
   const isUrl = typeof imgVal === 'string' && imgVal.startsWith('http');
@@ -42,11 +57,17 @@ interface OrderCardProps {
 export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
   const { t, lang } = useT();
   const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+  const statusLabel = lang === 'en'
+    ? (ORDER_STATUS_LABEL_EN[o.status] || ORDER_STATUS_LABEL_EN.pending)
+    : (ORDER_STATUS_LABEL_BN[o.status] || ORDER_STATUS_LABEL_BN.pending);
+
   return (
     <div className="rounded-brand border border-border-base bg-white shadow-sh1">
       <div className="flex items-center justify-between border-b border-border-base px-4 py-2.5">
         <span className="font-body text-[13px] font-bold text-ink">{o.orderNum}</span>
-        <span className={`rounded-full px-2.5 py-1 font-body text-[11px] font-bold ${ORDER_STATUS_CLASS[o.status] || ORDER_STATUS_CLASS.pending}`}>{ORDER_STATUS_LABEL[o.status] || ORDER_STATUS_LABEL.pending}</span>
+        <span className={`rounded-full px-2.5 py-1 font-body text-[11px] font-bold ${ORDER_STATUS_CLASS[o.status] || ORDER_STATUS_CLASS.pending}`}>
+          {statusLabel}
+        </span>
       </div>
       <div className="px-4 py-3">
         <div className="mb-2.5 font-body text-[11.5px] text-muted">📅 {dateStr} &nbsp;|&nbsp; 👤 {o.customer?.name || '-'}</div>
