@@ -1,16 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { fetchCustomProducts, QUICK_ORDER_EVENT } from '@/lib/productData';
+import { QUICK_ORDER_EVENT } from '@/lib/productData';
 import { showToast } from '@/lib/toast';
-import type { Product, CartItem } from '@/types';
+import type { CartItem } from '@/types';
 
 export default function QuickOrderBridge() {
   const router = useRouter();
-  const supabase = useRef(createClient()).current;
-  const prodsRef = useRef<Product[]>([]);
 
   // ইনস্ট্যান্ট চেকআউট ট্রানজিশনের জন্য প্রি-ফেচ
   useEffect(() => {
@@ -19,35 +16,19 @@ export default function QuickOrderBridge() {
   }, [router]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const customRows = await fetchCustomProducts(supabase);
-      if (!cancelled && customRows.length) {
-        prodsRef.current = customRows;
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [supabase]);
-
-  useEffect(() => {
     const onQuickOrder = (e: Event) => {
       const detail = (e as CustomEvent).detail || {};
       const id = detail.id;
-      if (id === undefined) return;
-      const p = prodsRef.current.find((x) => String(x.id) === String(id));
-      if (!p) return;
-      if (p.stock <= 0) {
-        showToast('স্টক শেষ!');
-        return;
-      }
-      const qty = Math.max(1, Math.min(Number(detail.qty) || 1, p.stock, 99));
+      if (id === undefined || !detail.name) return;
+      const qty = Math.max(1, Math.min(Number(detail.qty) || 1, 99));
       const item: CartItem = {
-        id: p.id, name: p.name, emoji: p.imgs[0], price: p.price, qty, cat: p.cat,
+        id, name: detail.name, emoji: detail.emoji, price: detail.price, qty, cat: detail.cat,
       };
       try {
         sessionStorage.setItem('vc_quick_order_items', JSON.stringify([item]));
       } catch {
-        // storage unavailable, ignore
+        showToast('একটু সমস্যা হয়েছে, আবার চেষ্টা করুন');
+        return;
       }
       router.push('/checkout');
     };
