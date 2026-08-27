@@ -3,7 +3,6 @@ import type { OrderStatus } from '@/types';
 
 export const PENDING_ORDER_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 export const RESOLVED_ORDER_STATUSES: OrderStatus[] = ['confirmed', 'shipped', 'delivered', 'cancelled', 'rejected'];
-const STATUS_POLL_INTERVAL_MS = 4000;
 
 export const ORDER_TRACK_STEPS: { key: OrderStatus; label: string; icon: string }[] = [
   { key: 'pending', label: 'অর্ডার গ্রহণ করা হয়েছে', icon: '🧾' },
@@ -53,24 +52,7 @@ export function readLatestGuestOrder(): { id: string; orderNum: string; phone: s
   }
 }
 
-/** নির্দিষ্ট id-এর পুরো অর্ডার row আনে।
- *
- * ⚠️ আগে এখানে কল করার সময় caller নিজে ঠিক করে দিত phone পাঠাবে কিনা,
- * ভিত্তি ছিল অ্যাপের নিজস্ব `currentUser` (Zustand স্টোর, যেটা শুধু
- * localStorage-এর `vc_user` মিরর করে)। সমস্যা হলো — Supabase-এর আসল লগইন
- * সেশন (JWT) এর সাথে এই লোকাল মিররের কোনো নিশ্চয়তামূলক সম্পর্ক নেই:
- * অ্যাক্সেস টোকেন সময়ের সাথে expire হয়ে যেতে পারে, বা রিফ্রেশ ফেইল হতে
- * পারে, অথচ `vc_user` তখনও localStorage-এ থেকে যায়। ফলে অ্যাপ ভাবত ইউজার
- * "লগইন করা আছে" আর সরাসরি RLS-scoped select() চালাত — কিন্তু আসল সেশন
- * অবৈধ থাকায় PostgREST 401 Unauthorized রিটার্ন করত, আর কনফার্ম স্ট্যাটাস
- * পোলিং করে কখনো ডেটা পেতোই না (এডমিন কনফার্ম করলেও UI আপডেট হতো না)।
- *
- * এখন থেকে caller-নির্ভর অনুমানের বদলে এখানেই Supabase-এর *আসল লাইভ
- * সেশন* যাচাই করা হয় (supabase.auth.getSession())। সেশন সত্যিই বৈধ থাকলে
- * প্রথমে RLS-scoped select() চেষ্টা হয়; সেটা ব্যর্থ হলে (বা সেশন না
- * থাকলে) phone দেওয়া থাকলে সবসময় phone-verified secure RPC
- * (get_guest_order)-এ fallback করা হয় — এটাই guest checkout-এর একমাত্র
- * নিরাপদ পথ এবং এটা কখনো ভুল করে বাদ পড়বে না। */
+/** নির্দিষ্ট id-এর পুরো অর্ডার row আনে। */
 export async function fetchFullOrder(
   supabase: SupabaseClient,
   orderId: string,
@@ -104,10 +86,11 @@ export async function fetchFullOrder(
   }
 }
 
-/** প্রতি কয়েক সেকেন্ডে status চেক করে — Realtime-এর বদলে এই পোলিং ব্যবহার
- * করা হচ্ছে যাতে RLS/Realtime-এর কোনো বিশেষ কনফিগারেশনের উপর নির্ভর করতে না
- * হয়, সবসময় predictable ভাবে কাজ করে। status resolve (confirmed/rejected
- * ইত্যাদি) হয়ে গেলে নিজে থেকেই থেমে যায়। */
+/** স্মার্ট ব্যাকঅফ পোলিং:
+ * - ১ম মিনিট: প্রতি ৫ সেকেন্ড
+ * - ২য়-৫ম মিনিট: প্রতি ১৫ সেকেন্ড
+ * - ৫ম-৩০তম মিনিট: প্রতি ৩০ সেকেন্ড
+ * - ৩০ মিনিট পার হলে পোলিং স্বয়ংক্রিয়ভাবে বন্ধ (ডাটাবেজ কোটা সুরক্ষা) */
 export function watchOrderStatus(
   supabase: SupabaseClient,
   orderId: string,
@@ -116,19 +99,37 @@ export function watchOrderStatus(
 ): () => void {
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
+  const startTime = Date.now();
+  const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // ৩০ মিনিট
+
+  function getNextInterval(): number {
+    const elapsed = Date.now() - startTime;
+    if (elapsed < 60 * 1000) return 5000; // ১ম মিনিট: ৫ সেকেন্ড
+    if (elapsed < 5 * 60 * 1000) return 15000; // ২য় থেকে ৫ম মিনিট: ১৫ সেকেন্ড
+    return 30000; // ৫ম থেকে ৩০তম মিনিট: ৩০ সেকেন্ড
+  }
 
   async function tick() {
     if (stopped) return;
+
+    if (Date.now() - startTime >= MAX_POLL_DURATION_MS) {
+      stopped = true;
+      return;
+    }
+
     const row = await fetchFullOrder(supabase, orderId, phone);
     if (row && row.status) {
       const st = row.status as OrderStatus;
       onUpdate(st);
       if (RESOLVED_ORDER_STATUSES.includes(st)) return;
     }
-    if (!stopped) timer = setTimeout(tick, STATUS_POLL_INTERVAL_MS);
+
+    if (!stopped) {
+      timer = setTimeout(tick, getNextInterval());
+    }
   }
 
-  timer = setTimeout(tick, STATUS_POLL_INTERVAL_MS);
+  timer = setTimeout(tick, 5000);
 
   return function stop() {
     stopped = true;
