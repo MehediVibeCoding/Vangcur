@@ -36,9 +36,6 @@ export function readPendingOrder(): { id: string; orderNum: string; phone: strin
   }
 }
 
-/** localStorage-এ রাখা গেস্ট-অর্ডার আর্কাইভ (vc_guest_orders) থেকে সবচেয়ে
- * সাম্প্রতিক অর্ডারটা পড়ে — "Track" বাটনে ক্লিক করলে (checkout ফ্লো ছাড়াও)
- * guest-এর নিজের অর্ডার automatic দেখানোর জন্য ব্যবহৃত হয়। */
 export function readLatestGuestOrder(): { id: string; orderNum: string; phone: string } | null {
   try {
     const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]') as
@@ -52,7 +49,6 @@ export function readLatestGuestOrder(): { id: string; orderNum: string; phone: s
   }
 }
 
-/** নির্দিষ্ট id-এর পুরো অর্ডার row আনে। */
 export async function fetchFullOrder(
   supabase: SupabaseClient,
   orderId: string,
@@ -72,12 +68,18 @@ export async function fetchFullOrder(
         const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
         if (!error && data) return data as Record<string, unknown>;
       } catch {
-        // নিচে phone fallback চেষ্টা করা হবে
+        // fall through to phone fallback
       }
     }
 
-    if (phone) {
-      const { data, error } = await supabase.rpc('get_guest_order', { p_id: orderId, p_phone: phone });
+    const fallbackPhone = phone
+      || (typeof window !== 'undefined'
+        ? (localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined)
+        : undefined);
+
+    if (fallbackPhone) {
+      const cleanPhone = String(fallbackPhone).trim();
+      const { data, error } = await supabase.rpc('get_guest_order', { p_id: String(orderId), p_phone: cleanPhone });
       if (!error && data && data.length) return data[0] as Record<string, unknown>;
     }
     return null;
@@ -86,11 +88,6 @@ export async function fetchFullOrder(
   }
 }
 
-/** স্মার্ট ব্যাকঅফ পোলিং:
- * - ১ম মিনিট: প্রতি ৫ সেকেন্ড
- * - ২য়-৫ম মিনিট: প্রতি ১৫ সেকেন্ড
- * - ৫ম-৩০তম মিনিট: প্রতি ৩০ সেকেন্ড
- * - ৩০ মিনিট পার হলে পোলিং স্বয়ংক্রিয়ভাবে বন্ধ (ডাটাবেজ কোটা সুরক্ষা) */
 export function watchOrderStatus(
   supabase: SupabaseClient,
   orderId: string,
@@ -100,13 +97,13 @@ export function watchOrderStatus(
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   const startTime = Date.now();
-  const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // ৩০ মিনিট
+  const MAX_POLL_DURATION_MS = 30 * 60 * 1000;
 
   function getNextInterval(): number {
     const elapsed = Date.now() - startTime;
-    if (elapsed < 60 * 1000) return 5000; // ১ম মিনিট: ৫ সেকেন্ড
-    if (elapsed < 5 * 60 * 1000) return 15000; // ২য় থেকে ৫ম মিনিট: ১৫ সেকেন্ড
-    return 30000; // ৫ম থেকে ৩০তম মিনিট: ৩০ সেকেন্ড
+    if (elapsed < 60 * 1000) return 5000;
+    if (elapsed < 5 * 60 * 1000) return 15000;
+    return 30000;
   }
 
   async function tick() {
