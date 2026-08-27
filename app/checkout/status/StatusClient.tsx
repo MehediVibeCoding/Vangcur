@@ -6,7 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import {
-  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES,
+  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES, readLatestGuestOrder,
 } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
@@ -20,10 +20,6 @@ const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
 const socialIconClass = 'flex h-[35px] w-[35px] items-center justify-center rounded-[9px] bg-surface-muted text-ink transition-brand duration-brand hover:bg-brand-primary hover:text-white [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-current';
 
-// এই পেজে সরাসরি URL দিয়ে ঢোকা যায় (অর্ডার সম্পন্ন করার পর `/checkout/status`-এ
-// পাঠানো হয়), কিন্তু কোনো বৈধ সাম্প্রতিক অর্ডার ছাড়া (readPendingOrder() খালি)
-// এটা কাউকে ভুয়া "সফল" স্ক্রিন দেখাবে না — সাথে সাথে হোমে পাঠানো হয়। এটাই এই
-// রুটের "protected" আচরণ।
 export default function StatusClient() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -58,12 +54,6 @@ export default function StatusClient() {
       router.replace('/');
       return;
     }
-    // এই পেজটা শুধু অর্ডার সাবমিট করার পরে সরাসরি প্রথমবার আসার সময়ই পুরো
-    // "ওয়েটিং" UI দেখাবে (checkout/page.tsx-এর submitOrderNow() একটা
-    // sessionStorage মার্কার সেট করে দেয়)। এই মার্কার না থাকলে বোঝা যায় এটা
-    // রিফ্রেশ / ট্যাব বন্ধ করে আবার খোলা / নতুন ট্যাব — তখন এই পুরো পেজ আর
-    // দেখানো হয় না, বরং হোমে পাঠিয়ে দেওয়া হয় যাতে কর্নারের ছোট্ট
-    // "প্রসেস হচ্ছে..." badge-টা (WaitingOverlay) দেখায়, যেটা কম বিরক্তিকর।
     let justSubmitted = false;
     try {
       justSubmitted = sessionStorage.getItem('vc_just_submitted') === '1';
@@ -78,23 +68,12 @@ export default function StatusClient() {
     phoneRef.current = pending.phone;
     setOrderId(pending.id);
     (async () => {
-      const isGuest = !currentUser;
-      // ⚠️ আগে এখানে phone শুধু isGuest true হলেই পাঠানো হতো — কিন্তু isGuest
-      // অ্যাপের নিজস্ব (সম্ভাব্য stale) currentUser মিরর থেকে আসে, Supabase-এর
-      // আসল সেশনের সাথে নিশ্চয়তামূলক সম্পর্ক নেই। এখন phone সবসময় পাঠানো
-      // হচ্ছে — fetchFullOrder নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয় এবং
-      // দরকার হলে phone দিয়ে fallback করে।
       const data = await fetchFullOrder(supabase, pending.id, pending.phone);
       if (data) {
         const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
-        // অতি দ্রুত (কয়েক মিলিসেকেন্ডের মধ্যে) অ্যাডমিন যদি ইতিমধ্যে
-        // কনফার্ম/শিপড/ডেলিভারড করে ফেলে থাকে — পুরনো নিজস্ব প্যানেল না দেখিয়ে
-        // সরাসরি একই বাধ্যতামূলক BgConfirmPopup-এ পাঠানো হচ্ছে (একটাই
-        // consistent confirm UI, WaitingOverlay-এর মতোই)।
         if (mapped.status === 'confirmed' || mapped.status === 'shipped' || mapped.status === 'delivered') {
-          clearPendingOrder();
           window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
-            detail: { order: mapped, phone: isGuest ? pending.phone : undefined },
+            detail: { order: mapped, phone: pending.phone || mapped.customer?.phone },
           }));
           router.replace('/');
           return;
@@ -108,23 +87,19 @@ export default function StatusClient() {
       }
       setChecked(true);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router, supabase]);
 
   useEffect(() => {
     if (!orderId) return undefined;
-    const isGuest = !currentUser;
-    // ⚠️ আগের মতো isGuest দিয়ে phone গেট না করে সবসময় phone পাঠানো হচ্ছে —
-    // fetchFullOrder এখন নিজেই লাইভ সেশন যাচাই করে ঠিক পথ বেছে নেয়।
     const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
       if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
-        // WaitingOverlay-এর handleOrderStatusUpdate()-এর মতোই: এখানেও আলাদা
-        // কোনো confirm প্যানেল না রেখে সরাসরি একই বাধ্যতামূলক BgConfirmPopup-এ
-        // হ্যান্ডঅফ করা হচ্ছে — পুরো সাইটে confirm-এর UI একটাই জায়গায়।
-        clearPendingOrder();
         const updated = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
+        const confirmPhone = phoneRef.current 
+          || updated?.customer?.phone 
+          || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
+
         window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
-          detail: { order: updated, phone: isGuest ? phoneRef.current : undefined },
+          detail: { order: updated, phone: confirmPhone },
         }));
         router.replace('/');
         return;
@@ -134,18 +109,18 @@ export default function StatusClient() {
       if (RESOLVED_ORDER_STATUSES.includes(newStatus) && newStatus !== 'pending') clearPendingOrder();
     });
     return stop;
-  }, [orderId, supabase, currentUser, router]);
+  }, [orderId, supabase, router]);
 
   const copyOrderNum = useCallback(async () => {
     if (!order) return;
     try {
       await navigator.clipboard.writeText(String(order.orderNum));
     } catch {
-      // clipboard may be unavailable
+      // ignore
     }
     setCopyLabel(t('✅ কপি হয়েছে!'));
     setTimeout(() => setCopyLabel(t('📋 কপি')), 2000);
-  }, [order]);
+  }, [order, t]);
 
   const retryOrder = () => {
     clearPendingOrder();
