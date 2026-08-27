@@ -13,6 +13,7 @@ import {
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { fetchProductDetail } from '@/lib/productDetailData';
 import { trackProductView } from '@/lib/visitorTracking';
+import { trackViewItem, trackAddToCart } from '@/lib/analytics';
 import {
   DEFAULT_WA_LINK, DEFAULT_MSG_LINK, computeWaLink, computeMsgLink, fetchContactSettings, subscribeContactSettings,
 } from '@/lib/floatButtonsData';
@@ -28,9 +29,6 @@ import AccountPage from '@/app/components/auth/AccountPage';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, ProductSpecs } from '@/types';
 
-/* ---------- ছোট, একরঙা line-icon সেট (DESIGN_SYSTEM-এর Icon System অনুযায়ী —
-   viewBox 0 0 24 24, stroke=currentColor, কোনো emoji নয়) — প্রোডাক্ট পেজের
-   সব বাটন/হেডিং/badge-এ ব্যবহার হয়, রঙ প্যারেন্ট থেকে (currentColor) আসে। ---------- */
 function ShieldIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -141,11 +139,6 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
   );
 }
 
-// 🆕 "স্পেসিফিকেশন এক নজরে" এখন থেকে মূলত quickSpecsText (ফ্রি-ফ্লো, "•"
-// দিয়ে ভাগ করা) থেকে আসে। পুরনো প্রোডাক্ট, যেগুলোতে এখনো নতুন কলামটা খালি
-// কিন্তু specs._quick_keys-এ পুরনো key:value ডেটা আছে, তাদের জন্য আগের
-// pill রেন্ডারিং fallback হিসেবে রয়ে গেছে — কোনো পুরনো প্রোডাক্টের
-// এক নজরে বক্স হঠাৎ খালি হয়ে যাবে না।
 function getQuickSpecPills(quickSpecsText: string | undefined, specs?: ProductSpecs & { _quick_keys?: string[] }): string[] {
   if (quickSpecsText && quickSpecsText.trim()) {
     return quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
@@ -158,30 +151,12 @@ function getQuickSpecPills(quickSpecsText: string | undefined, specs?: ProductSp
   return [];
 }
 
-const SPEC_PILL_GAP = 8; // gap-2 (0.5rem) — bin-packing হিসাবের সাথে মিলিয়ে রাখা হয়েছে
+const SPEC_PILL_GAP = 8;
 
-// "স্পেসিফিকেশন এক নজরে"-এর পিলগুলো আসল রেন্ডার-করা পিক্সেল-প্রস্থ মেপে
-// row-ভিত্তিক bin-packing (first-fit decreasing) করে সাজায় — যাতে কোনো
-// লাইনের শেষে ফাঁকা জায়গা থাকলে সেখানে ছোট-বড় যেকোনো একটা পিল (ক্রম
-// অনুযায়ী পরেরটা না হয়েও) এসে বসে জায়গাটা পূরণ করে দেয়। প্রথম রেন্ডারে
-// (মাপ হওয়ার আগে) সাধারণ flex-wrap fallback দেখানো হয়, মাউন্টের পরপরই
-// প্যাকড লে-আউটে upgrade হয়ে যায়।
 function useSpecPillRows(pills: string[]) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState<string[][] | null>(null);
-
-  // 🩹 pills আগে সরাসরি dependency ছিল — কিন্তু কলার-সাইডে এটা প্রতি রেন্ডারে
-
-  // নতুন array literal হিসেবে তৈরি হতো, ফলে reference বদলে যাওয়ায় এই effect
-
-  // প্রতিটা রেন্ডারেই re-fire হতো এবং প্রতিবার setRows() কল করে আরেকটা
-
-  // রেন্ডার ট্রিগার করত — অসীম লুপ → "Maximum update depth exceeded" ক্র্যাশ।
-
-  // তাই এখন content-ভিত্তিক একটা স্থিতিশীল স্ট্রিং key দিয়ে dependency ধরা হচ্ছে,
-
-  // যাতে pill-এর আসল লেখা না বদলালে effect আর re-fire না করে।
 
   const pillsKey = pills.join('\u0001');
 
@@ -225,10 +200,6 @@ function getTechSpecRows(specs?: ProductSpecs & { _quick_keys?: string[] }): [st
   const s = specs || {};
   const quickKeys = s._quick_keys;
   const quickKeySet = Array.isArray(quickKeys) ? new Set(quickKeys) : new Set<string>();
-  // পুরনো প্রোডাক্টে Packaging Content এখনো specs-এর ভেতরে এই দুই key-এর
-  // একটায় গুঁজে থাকতে পারে (নতুন dedicated packaging_content কলামের আগে
-  // থেকে) — টেবিলে যাতে অন্য স্পেকের সাথে মিশে না যায়, তাই বাদ দেওয়া হলো;
-  // getPackagingContent() নিচে এটাকেই fallback হিসেবে ব্যবহার করে।
   const EXCLUDE_FROM_TABLE = new Set(['Packaging Content', 'packaging_content']);
   return Object.entries(s).filter(
     ([k]) => !k.startsWith('_') && !quickKeySet.has(k) && !EXCLUDE_FROM_TABLE.has(k),
@@ -295,9 +266,6 @@ const TABS = [
   { id: 'ppSecReviews', label: 'রিভিউ' },
 ];
 
-// 🆕 Specification ট্যাবে টেবিলের নিচে বসা ছোট, distinct callout box — Power
-// Info আর Packaging Content দুটোই একই স্টাইল শেয়ার করে যাতে চোখে গুলিয়ে না
-// যায় description-এর সাথে, কিন্তু নিজেরাও আলাদা রঙ দিয়ে আলাদা বোঝা যায়।
 function SpecCalloutBox({ icon, title, children, tone }: { icon: string; title: string; children: ReactNode; tone: 'amber' | 'blue' }) {
   const toneClasses = tone === 'amber'
     ? 'border-[#FDE0B0] bg-[#FFF7ED]'
@@ -323,11 +291,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const router = useRouter();
   const supabase = useRef(createClient()).current;
 
-  // app/product/[slug]/page.tsx (Server Component) সরাসরি সার্ভারেই এই
-  // নির্দিষ্ট প্রোডাক্টটা fetch করে initialProduct prop হিসেবে পাঠায় — তাই
-  // প্রথম পেইন্টেই (সার্ভার HTML-এই) আসল প্রোডাক্ট দেখা যায়, "লোড হচ্ছে..."
-  // স্পিনার ফ্ল্যাশ হয় না, আর SEO crawler স্টেল/খালি HTML পায় না। বাকি প্রোডাক্ট
-  // লিস্ট (related products-এর জন্য) এখনো নিচের effect-এ client-side fetch হয়।
   const [prods, setProds] = useState<Product[]>(initialProduct ? [initialProduct] : []);
   const [prodsLoaded, setProdsLoaded] = useState(!!initialProduct);
 
@@ -375,17 +338,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
   const prod = useMemo(() => (baseProd ? { ...baseProd, ...(detail || {}) } : null), [baseProd, detail]);
 
-  // 🩹 এই দুটো hook (useMemo + useSpecPillRows — যেটা নিজেই ভেতরে useRef/useState/
-  // useLayoutEffect ব্যবহার করে) আগে নিচে `if (!prod) return ...`-এর পরে কল হতো —
-  // prod null থাকা অবস্থায় এই hook গুলো একেবারেই কল হতো না, আবার prod পরে
-  // non-null হলে হঠাৎ এক্সট্রা hook কল হয়ে যেত। এটা React-এর Rules of Hooks
-  // ভঙ্গ করে (রেন্ডারে রেন্ডারে hook-সংখ্যা বদলে যাওয়া) এবং
-  // "Rendered fewer hooks than expected" ক্র্যাশ দিতে পারে — বিশেষ করে যেসব
-  // প্রোডাক্ট সার্ভারে initialProduct হিসেবে না এসে শুধু client-side Supabase
-  // fetch-এ পাওয়া যায়। তাই এখন এই hook গুলো সবসময়, প্রতিটা রেন্ডারে,
-  // early-return-এর আগেই আনকন্ডিশনালি কল হচ্ছে। এখানে useMemo ব্যবহার করে
-  // quickSpecPills-ও স্থিতিশীল (stable reference) রাখা হলো, যাতে
-  // useSpecPillRows-এর ভেতরের effect অকারণে re-fire না করে।
   const quickSpecPills = useMemo(
     () => (prod ? getQuickSpecPills(prod.quickSpecsText, prod.specs) : []),
     [prod],
@@ -409,8 +361,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       setIsMobileWidth(window.innerWidth <= 600);
     };
     const scheduleCheck = () => {
-      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া resize ইভেন্টে state আপডেট
-      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
       if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
         return;
       }
@@ -428,8 +378,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
   const [msgLink, setMsgLink] = useState<string | null>(DEFAULT_MSG_LINK);
 
-  // Navbar (হোম পেইজের অরিজিনাল Navbar-ই এখানে reuse হচ্ছে) চালাতে যে state/ইভেন্ট
-  // দরকার — ঠিক ClientHome.tsx-এ যেভাবে ওয়্যার করা আছে, এখানেও সেই একই প্যাটার্ন।
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -460,6 +408,13 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     setZoomed(false);
     setActiveTab('ppSecDesc');
     setOpenFaqIdx(null);
+
+    trackViewItem({
+      item_id: prod.id,
+      item_name: prod.name,
+      price: prod.price,
+      item_category: prod.cat,
+    });
   }, [prod?.id]);
 
   useEffect(() => {
@@ -486,8 +441,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       setStickyShown(el.getBoundingClientRect().top <= 70);
     };
     const scheduleHandler = () => {
-      // পিঞ্চ/জুম গেসচারের সময় ট্রিগার হওয়া scroll ইভেন্টে state আপডেট
-      // (এবং তার ফলে re-render/repaint) সম্পূর্ণ বন্ধ রাখা হচ্ছে।
       if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
         return;
       }
@@ -515,9 +468,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     }, { rootMargin: '0px 0px -30px 0px', threshold: 0.08 });
     grid.querySelectorAll('.prod-card').forEach((card, i) => {
       card.classList.add('vc-reveal');
-      // অনেকগুলো কার্ড একসাথে (যেমন জুম-আউটের পরে হঠাৎ) ভিউতে চলে এলে delay
-      // cap না থাকলে সেগুলো লম্বা সময় ধরে একটার পর একটা "লোড হচ্ছে"-র মতো
-      // দেখায় — তাই স্ট্যাগার সর্বোচ্চ ৫টা কার্ড পর্যন্তই বাড়বে (৩০০ms ক্যাপ)।
       (card as HTMLElement).style.transitionDelay = (Math.min(i, 5) * 60) + 'ms';
       obs.observe(card);
     });
@@ -531,6 +481,17 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const addCartFromPP = () => {
     if (!prod || prod.stock <= 0) return;
     window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
+    
+    trackAddToCart(
+      {
+        item_id: prod.id,
+        item_name: prod.name,
+        price: prod.price,
+        item_category: prod.cat,
+      },
+      qty,
+    );
+
     showToast(t('কার্টে যোগ হয়েছে'));
   };
 
@@ -547,8 +508,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const toggleWishFromPP = () => {
     if (!prod) return;
     const added = useWishlistStore.getState().toggleWish(prod);
-    // ProductCard.tsx-এর মতোই — শুধু নতুন যোগ হলে হার্ট বাটন থেকে Navbar-এর
-    // wishlist আইকন পর্যন্ত উড়ন্ত-হার্ট এনিমেশন ছোঁড়া হয়
     if (added && ppWishBtnRef.current) {
       const r = ppWishBtnRef.current.getBoundingClientRect();
       window.dispatchEvent(new CustomEvent(WISHLIST_FLY_EVENT, {
@@ -600,9 +559,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     setActiveTab(id);
     const section = sectionRefs.current[id];
     if (!section) return;
-    // এখন এই পেজের Navbar আর fixed/sticky নয় (স্বাভাবিক flow-তে স্ক্রল করে চলে
-    // যায়) — শুধু ট্যাব-বারটাই sticky top-0, তাই অফসেট হিসাবে শুধু তার
-    // উচ্চতাই যথেষ্ট, আলাদা navHeight আর লাগছে না।
     const tabHeight = tabsWrapRef.current ? tabsWrapRef.current.offsetHeight : 50;
     const top = section.getBoundingClientRect().top + window.scrollY - tabHeight - 8;
     window.scrollTo({ top, behavior: 'smooth' });
@@ -610,9 +566,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
   const toggleFaq = (i: number) => setOpenFaqIdx((cur) => (cur === i ? null : i));
 
-  // Navbar-এ (হোম পেইজের অরিজিনাল কম্পোনেন্ট) পাঠানোর props — এই পেজে
-  // sticky={false} (স্ক্রলে fixed থাকবে না) আর showHomeButton (লোগোর বদলে
-  // ব্র্যান্ড-কালার হোম বাটন) দুটোই on।
   const navbarProps = {
     sticky: false as const,
     showHomeButton: true,
@@ -751,11 +704,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             )}
           </div>
 
-          {/* 🆕 Stock status — এতদিন prod.stock শুধু কোয়ান্টিটি-লিমিট আর
-              সোল্ড-আউট badge নিয়ন্ত্রণে ব্যবহার হতো, কিন্তু আসল সংখ্যাটা customer-কে
-              কোথাও দেখানো হতো না। ১০ বা তার কম হলে urgency-স্টাইলে, বেশি হলে
-              সাধারণ "স্টকে আছে" — sold-out অবস্থায় গ্যালারির badge-ই যথেষ্ট, তাই
-              এখানে আলাদা করে কিছু দেখানো হচ্ছে না। */}
           {!sold && (
             <div className="mb-3 flex items-center gap-1.5 text-[12.5px] font-semibold">
               {prod.stock <= 10 ? (
@@ -788,14 +736,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                 {t('স্পেসিফিকেশন এক নজরে')}
               </div>
               <div ref={specPillsRef} className="relative overflow-hidden">
-                {/* আসল পিক্সেল-প্রস্থ মাপার জন্য অদৃশ্য কপি — কখনো দেখা যায় না।
-                    🩹 আগে এই প্যারেন্টে overflow-hidden ছিল না, তাই সবগুলো পিল
-                    এক লাইনে (wrap ছাড়া) পাশাপাশি বসানো এই absolute ডিভটা
-                    ভিউপোর্টের চেয়ে চওড়া হয়ে পুরো পেজকেই হরাইজন্টালি স্ক্রলযোগ্য
-                    করে ফেলছিল — মোবাইলে বাম-থেকে-ডানে সোয়াইপ করলে তখন পিছনের
-                    ব্যাকগ্রাউন্ড দেখা যেত (native swipe/rubber-band)। এখানে
-                    overflow-hidden যোগ করলে getBoundingClientRect()-এর মাপ
-                    ঠিকই থাকে, শুধু ভিজ্যুয়ালি ক্লিপ হয়ে যায়। */}
                 <div ref={specPillsMeasureRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex gap-2 opacity-0">
                   {quickSpecPills.map((pill, i) => (
                     <div key={i} className="whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
@@ -859,13 +799,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             )}
 
             <div className="ml-auto flex items-center gap-1">
-              {/* 🩹 আগে এই বাটনে কোনো ব্যাকগ্রাউন্ড ছিল না (শুধু hover-এ ধূসর),
-                  এখন স্পেসিফিকেশন পিলের সেই একই হালকা নীল ব্যাকগ্রাউন্ড
-                  সবসময় দৃশ্যমান থাকবে — ক্লিক করলে (wishlist-এ যোগ হলে)
-                  শুধু ভিতরের হার্ট আইকনটাই নীল রঙে ফিল হবে, ব্যাকগ্রাউন্ড
-                  অপরিবর্তিত থাকবে। শেপ rounded-full (গোল বৃত্ত) না রেখে
-                  rounded-[10px] (কর্নার-রাউন্ড করা চারকোনা) — বাকি বাটনগুলোর
-                  সাথে corner-radius মিলিয়ে রাখা হলো। */}
               <button
                 ref={ppWishBtnRef}
                 onClick={toggleWishFromPP}
@@ -974,7 +907,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             </table>
           </div>
 
-          {/* 🆕 Power Info — সম্পূর্ণ ঐচ্ছিক, admin-এ খালি থাকলে কিছুই দেখাবে না */}
           {prod.powerInfo && (
             <SpecCalloutBox icon="🔌" title={t('পাওয়ার / কানেকশন তথ্য')} tone="amber">
               {prod.powerInfo.split('\n').filter((l) => l.trim()).map((l, i) => (
@@ -983,8 +915,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             </SpecCalloutBox>
           )}
 
-          {/* Packaging Content — আগে টেবিলের ভিতরে row হিসেবে ছিল, এখন টেবিলের বাইরে
-              নিজস্ব আলাদা বক্সে, যাতে বাকি স্পেক-লিস্টের সাথে মিশে না যায়। */}
           {pkg && (
             <SpecCalloutBox icon="📦" title={t('Packaging Content')} tone="blue">
               {pkg.split('\n').filter((l) => l.trim()).map((l, i) => (
