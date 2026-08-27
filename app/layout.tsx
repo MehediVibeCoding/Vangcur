@@ -34,6 +34,10 @@ export default async function RootLayout({
   const lang = await getServerLang();
   return (
     <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+      </head>
       <body className="min-h-screen bg-white font-body text-ink antialiased">
         <div
           aria-hidden="true"
