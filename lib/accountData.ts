@@ -267,12 +267,6 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
     // profiles table may not be reachable yet — auth metadata update above already applied
   }
   try {
-    // অডিট ফিক্স — আগে এখানে orders.customer নামে একটা jsonb কলাম আছে ধরে
-    // নিয়ে কোড লেখা হয়েছিল, কিন্তু আসলে সেই কলামই নেই (flat customer_name
-    // কলাম আছে) — তাই এই cascade এতদিন silently fail করছিল। এখন সঠিক
-    // কলামে সরাসরি bulk update করা হচ্ছে; RLS policy (orders_update_own +
-    // column-scoped GRANT UPDATE(customer_name)) অনুযায়ী এটা শুধু নিজের
-    // orders-এই কাজ করবে।
     await supabase.from('orders').update({ customer_name: newName }).eq('user_id', currentUser.id);
   } catch {
     // order rows may not exist yet — profile name is still updated above
@@ -371,10 +365,13 @@ export async function deleteDraft(supabase: SupabaseClient, currentUser: Current
       // storage unavailable — Supabase delete below still runs if applicable
     }
   }
-  if (currentUser) {
+  if (currentUser?.id) {
     try {
-      if (sbId) await supabase.from('abandoned_checkouts').delete().eq('id', sbId);
-      else await supabase.from('abandoned_checkouts').delete().eq('draft_id', draftId).eq('user_id', currentUser.id);
+      if (sbId) {
+        await supabase.from('abandoned_checkouts').delete().eq('id', sbId).eq('user_id', currentUser.id);
+      } else {
+        await supabase.from('abandoned_checkouts').delete().eq('draft_id', draftId).eq('user_id', currentUser.id);
+      }
     } catch {
       // delete failed — draft may already be gone or table unreachable
     }
@@ -387,7 +384,7 @@ export async function deleteAllDrafts(supabase: SupabaseClient, currentUser: Cur
   } catch {
     // storage unavailable — Supabase delete below still runs if applicable
   }
-  if (currentUser) {
+  if (currentUser?.id) {
     try {
       await supabase.from('abandoned_checkouts').delete().eq('user_id', currentUser.id);
     } catch {
