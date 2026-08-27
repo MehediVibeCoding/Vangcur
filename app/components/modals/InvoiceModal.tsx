@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { fetchFullOrder } from '@/lib/orderStatus';
+import { fetchFullOrder, readLatestGuestOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -66,7 +66,12 @@ export default function InvoiceModal() {
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const openInvoice = async (orderId: string | number, phone?: string, callerCtx?: string) => {
-    const row = await fetchFullOrder(supabase, String(orderId), phone);
+    const lookupPhone = phone
+      || (typeof window !== 'undefined'
+        ? (localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined)
+        : undefined);
+
+    const row = await fetchFullOrder(supabase, String(orderId), lookupPhone);
     if (!row) { showToast(t('❌ অর্ডার তথ্য পাওয়া যাচ্ছে না')); return; }
     setOrder(mapSupabaseOrderRow(row));
     setCtx(callerCtx);
@@ -74,7 +79,7 @@ export default function InvoiceModal() {
     setAllowEmergencyClose(false);
     setIsOpen(true);
     try {
-      localStorage.setItem(PENDING_INVOICE_KEY, JSON.stringify({ orderId, phone, ctx: callerCtx }));
+      localStorage.setItem(PENDING_INVOICE_KEY, JSON.stringify({ orderId, phone: lookupPhone, ctx: callerCtx }));
     } catch {
       // ignore
     }
