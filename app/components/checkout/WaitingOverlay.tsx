@@ -46,6 +46,11 @@ export default function WaitingOverlay() {
         id, orderNum, date: new Date().toISOString(), status: 'pending', total: 0, items: [], customer: {},
       };
     if (['confirmed', 'shipped', 'delivered'].includes(mapped.status)) {
+      clearPendingOrder();
+      const dismissedKey = `vc_confirm_dismissed_${mapped.id}`;
+      if (typeof window !== 'undefined' && sessionStorage.getItem(dismissedKey)) {
+        return;
+      }
       window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
         detail: { order: mapped, phone: phone || mapped.customer?.phone },
       }));
@@ -58,8 +63,10 @@ export default function WaitingOverlay() {
   }, [supabase]);
 
   useEffect(() => {
+    if (pathname?.startsWith('/checkout/status')) {
+      return;
+    }
     if (orderId) return;
-    if (pathname?.startsWith('/checkout/status')) return;
     const pending = readPendingOrder();
     if (pending) {
       openForPending(pending.id, pending.orderNum, pending.phone, { startMinimized: true });
@@ -78,9 +85,10 @@ export default function WaitingOverlay() {
   }, []);
 
   useEffect(() => {
-    if (!orderId) return undefined;
+    if (!orderId || pathname?.startsWith('/checkout/status')) return undefined;
     const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
       if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
+        clearPendingOrder();
         const updatedOrder = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
         setVisible(false);
         setMinimized(false);
@@ -95,19 +103,21 @@ export default function WaitingOverlay() {
         setStatus(newStatus);
         setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
         if (newStatus === 'cancelled' || newStatus === 'rejected') {
+          clearPendingOrder();
           setVisible(true);
           setMinimized(false);
         }
       }
     });
     return stop;
-  }, [orderId, supabase]);
+  }, [orderId, supabase, pathname]);
 
   useEffect(() => {
     if (visible && !minimized) lockBody();
     else unlockBody();
   }, [visible, minimized]);
 
+  if (visible && pathname?.startsWith('/checkout/status')) return null;
   if (!visible || !order) return null;
 
   const isPending = status === 'pending';
