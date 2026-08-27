@@ -8,6 +8,14 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "browserslist": [
+    "chrome >= 100",
+    "edge >= 100",
+    "firefox >= 100",
+    "safari >= 15.4",
+    "ios >= 15.4",
+    "not dead"
+  ],
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.5.1",
     "@supabase/ssr": "^0.5.2",
