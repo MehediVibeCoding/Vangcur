@@ -1,6 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Product } from '@/types';
+import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
+
+interface MinimalRouter {
+  push: (href: string) => void;
+}
 
 export function prodInCat(p: Product, catId: string): boolean {
   if (catId === 'all') return true;
@@ -250,6 +254,24 @@ export const QUICK_ORDER_EVENT = 'vc:quickOrder';
 export const QUICK_CART_EVENT = 'vc:quickCart';
 export const QUICK_ORDER_MODAL_EVENT = 'vc:quickOrderModal';
 export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
+
+export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): void {
+  if (!prod || prod.stock <= 0) return;
+  const item: CartItem = {
+    id: prod.id,
+    name: prod.name,
+    emoji: (prod.imgs || ['📦'])[0],
+    price: prod.price,
+    qty: Math.max(1, Math.min(qty, prod.stock, 99)),
+    cat: prod.cat,
+  };
+  try {
+    sessionStorage.setItem('vc_quick_order_items', JSON.stringify([item]));
+  } catch {
+    // storage unavailable, ignore
+  }
+  router.push('/checkout');
+}
 
 export function makeSlug(str: string): string {
   return String(str || '')
