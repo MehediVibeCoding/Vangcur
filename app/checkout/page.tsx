@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { createOrder } from '@/app/actions/checkout';
 import { getFingerprintId } from '@/lib/fingerprint';
@@ -35,7 +36,7 @@ import {
 import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
 import { useT } from '@/lib/i18n/useT';
-import type { CartItem, CurrentUser } from '@/types';
+import type { CartItem } from '@/types';
 
 interface CheckoutErrors {
   eN?: string;
@@ -326,12 +327,14 @@ export default function CheckoutPage() {
   const submitOrderNowRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    // হোমপেজ প্রি-ফেচ যাতে ক্রস বাটনে ক্লিক করলে চোখের পলকে হোমে ফেরা যায়
+    router.prefetch('/');
     const prevBg = document.body.style.background;
     document.body.style.background = '#EFF6FE';
     return () => {
       document.body.style.background = prevBg;
     };
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let hasItems = false;
@@ -384,8 +387,7 @@ export default function CheckoutPage() {
     fetchBkashNumber(supabase).then(setBkashNum);
     fetchShipConfig(supabase).then(setShipCfg);
     getFingerprintId().then((id) => { fingerprintIdRef.current = id; });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router, supabase, t]);
 
   useEffect(() => {
     (async () => {
@@ -423,8 +425,7 @@ export default function CheckoutPage() {
       showToast(t('লগইন সফল — অর্ডার সম্পন্ন হচ্ছে...'));
       setTimeout(() => submitOrderNowRef.current && submitOrderNowRef.current(), 350);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase, t]);
 
   useEffect(() => {
     try {
@@ -486,8 +487,7 @@ export default function CheckoutPage() {
         // ignore
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dist]);
+  }, [dist, selectedShip, shipOptions]);
 
   const selectShip = (key: string) => {
     setSelectedShip(key);
@@ -561,7 +561,7 @@ export default function CheckoutPage() {
     try {
       await navigator.clipboard.writeText(num);
     } catch {
-      // clipboard may be unavailable
+      // ignore
     }
     setCopyLabel(t('কপি হয়েছে!'));
     setTimeout(() => setCopyLabel('Copy'), 2000);
@@ -628,10 +628,6 @@ export default function CheckoutPage() {
         localStorage.setItem('vc_pending_phone_ls', phone.trim());
         localStorage.setItem('vc_pending_ts', String(Date.now()));
         localStorage.setItem('vc_last_order_time', String(Date.now()));
-        // /checkout/status পেজকে জানানো হচ্ছে এটা সাবমিট করার পরে সরাসরি প্রথমবার
-        // আসা — তাই পুরো "ওয়েটিং" UI দেখাবে। এই মার্কার consume হয়ে যায় প্রথম
-        // রিডেই (StatusClient.tsx), তাই পরে রিফ্রেশ/নতুন ট্যাবে এই মার্কার আর
-        // থাকবে না এবং সরাসরি হোমে + কর্নার badge-এ পাঠানো হবে।
         sessionStorage.setItem('vc_just_submitted', '1');
       } catch {
         // ignore
@@ -652,8 +648,7 @@ export default function CheckoutPage() {
       confirmLockRef.current = false;
       showToast(t('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।'));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4]);
+  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4, lang, router, supabase, t]);
 
   useEffect(() => { submitOrderNowRef.current = submitOrderNow; }, [submitOrderNow]);
 
@@ -694,8 +689,6 @@ export default function CheckoutPage() {
     }
   };
 
-  const closeCheckout = () => router.push('/');
-
   return (
     <>
       <div className="relative min-h-dvh overflow-hidden bg-[#EFF6FE]">
@@ -712,14 +705,15 @@ export default function CheckoutPage() {
                   </h2>
                 </div>
                 {step === 1 ? (
-                  <button
-                    onClick={closeCheckout}
+                  <Link
+                    href="/"
+                    prefetch={true}
                     aria-label={t('বন্ধ করুন')}
                     title={t('বন্ধ করুন')}
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-sh1 backdrop-blur-[8px] transition-brand duration-brand hover:bg-white/45 no-underline"
                   >
                     <IconClose />
-                  </button>
+                  </Link>
                 ) : (
                   <button
                     onClick={() => goBack(step - 1)}
