@@ -12,6 +12,12 @@ export default function QuickOrderBridge() {
   const supabase = useRef(createClient()).current;
   const prodsRef = useRef<Product[]>([]);
 
+  // ইনস্ট্যান্ট চেকআউট ট্রানজিশনের জন্য প্রি-ফেচ
+  useEffect(() => {
+    router.prefetch('/checkout');
+    router.prefetch('/');
+  }, [router]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
