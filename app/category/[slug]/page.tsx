@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { fetchCustomProducts } from '@/lib/productData';
 import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
@@ -10,15 +10,14 @@ import CategoryClient from './CategoryClient';
 
 const SITE_URL = 'https://vangcur.com';
 
-// আগে /category/<slug> URL শুধু client-side history.replaceState দিয়ে
-// cosmetic-ভাবে বসানো হতো (Categories.tsx / ProductGrid.tsx-এ) — আসলে এই
-// রুটে কোনো পেজ ছিল না, তাই সরাসরি লিংক শেয়ার/রিলোড/crawl করলে 404 পেতো।
-// এখন এটা একটা real, crawlable, SSR রুট — প্রতিটা ক্যাটাগরির নিজস্ব title/
-// meta description থাকবে আর গুগলে ইনডেক্স হবে। fetchCategories() অ্যাডমিন
-// প্যানেল থেকে যোগ করা কাস্টম ক্যাটাগরিও ধরবে, শুধু হার্ডকোড ডিফল্ট লিস্ট না।
-// cache() দিয়ে generateMetadata আর পেজ কম্পোনেন্ট একই রিকোয়েস্টে একবারই fetch করবে।
+// ৫ মিনিট পর পর ব্যাকগ্রাউন্ডে ফ্রেশ ক্যাটাগরি ক্যাশ আপডেট হবে
+export const revalidate = 300;
+
 const getCategories = cache(async () => {
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   return fetchCategories(supabase);
 });
 
@@ -57,7 +56,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const cat = cats.find((c) => c.id !== 'all' && makeCatSlug(c.id) === slug) || null;
   if (!cat) notFound();
 
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const initialProducts = await fetchCustomProducts(supabase);
 
   return (
