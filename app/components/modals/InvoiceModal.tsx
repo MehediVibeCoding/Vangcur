@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { fetchFullOrder, readLatestGuestOrder } from '@/lib/orderStatus';
+import { fetchFullOrder, readLatestGuestOrder, clearPendingOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -185,7 +185,13 @@ export default function InvoiceModal() {
 
   const close = () => {
     if (!canClose) return;
-    try { localStorage.removeItem(PENDING_INVOICE_KEY); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(PENDING_INVOICE_KEY);
+      if (order?.id) {
+        sessionStorage.setItem(`vc_confirm_dismissed_${order.id}`, '1');
+      }
+    } catch { /* ignore */ }
+    clearPendingOrder();
     setIsOpen(false);
     if (ctx === 'acc') {
       window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
