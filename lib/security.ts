@@ -53,7 +53,7 @@ export function sanitizeEmailInput(value: string): string {
 
 export function validateAddress(address: string): boolean {
   const trimmed = address.trim();
-  return trimmed.length >= 10 && trimmed.length <= 300;
+  return trimmed.length >= 8 && trimmed.length <= 300;
 }
 
 export const MAX_ADDR_LEN = 300;
