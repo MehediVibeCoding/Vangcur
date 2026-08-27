@@ -72,6 +72,7 @@ export default function StatusClient() {
       if (data) {
         const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
         if (mapped.status === 'confirmed' || mapped.status === 'shipped' || mapped.status === 'delivered') {
+          clearPendingOrder();
           window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
             detail: { order: mapped, phone: pending.phone || mapped.customer?.phone },
           }));
@@ -93,6 +94,7 @@ export default function StatusClient() {
     if (!orderId) return undefined;
     const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
       if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
+        clearPendingOrder();
         const updated = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
         const confirmPhone = phoneRef.current 
           || updated?.customer?.phone 
