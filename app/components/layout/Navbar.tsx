@@ -594,9 +594,9 @@ export default function Navbar({
                 <Image
                   src="/vangcur-logo.png"
                   alt="Vangcur Gadgets"
-                  width={180}
-                  height={64}
-                  sizes="160px"
+                  width={140}
+                  height={49}
+                  sizes="133px"
                   priority
                   className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
                   draggable={false}
