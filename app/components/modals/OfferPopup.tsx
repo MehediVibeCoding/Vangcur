@@ -8,17 +8,10 @@ import { fetchCustomProducts, fetchProductById, productHref } from '@/lib/produc
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { sanitizeHref } from '@/lib/sanitize';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
-// ⚠️ sync-gap ফিক্স — admin panel-এর Offers Management (/offers-mgmt) পেজ
-// store_settings key 'vc_offer_popup'-এ একটা OfferConfig সেভ করে (৩টা UI
-// মডেলের মধ্যে যেকোনো একটা "active" থাকতে পারে, অথবা 'none')। আগে এই
-// কম্পোনেন্ট সেই key একেবারেই পড়ত না — admin যা-ই কনফিগার করুক, storefront
-// বরং নিজে থেকে discount-থাকা প্রোডাক্টের অটো-লিস্ট দেখাত। এখন active_model
-// অনুযায়ী admin-এর কনফিগার করা কনটেন্ট দেখানো হয়; active_model === 'none'
-// (বা কনফিগার অসম্পূর্ণ/অনুপস্থিত/ডিলিট-হওয়া প্রোডাক্ট) হলে আগের
-// অটো-ডিসকাউন্ট-লিস্ট fallback হিসেবেই থেকে যায় — খালি পপআপ কখনো দেখাবে না।
 interface OfferModel1 {
   title: string;
   body: string;
@@ -58,14 +51,14 @@ async function fetchOfferConfig(supabase: SupabaseClient): Promise<OfferConfig |
   }
 }
 
-// btn_url/url ফিল্ড admin free-text — internal path ("/category/tws") অথবা
-// external URL ("https://...") দুটোই হতে পারে, তাই দুটোই হ্যান্ডেল করা হচ্ছে।
 function navigateTo(router: ReturnType<typeof useRouter>, url: string) {
   if (!url) return;
-  if (/^https?:\/\//i.test(url)) {
-    window.location.href = url;
+  const safe = sanitizeHref(url);
+  if (safe === '#' || !safe) return;
+  if (/^https?:\/\//i.test(safe)) {
+    window.location.href = safe;
   } else {
-    router.push(url.startsWith('/') ? url : `/${url}`);
+    router.push(safe.startsWith('/') ? safe : `/${safe}`);
   }
 }
 
@@ -111,7 +104,7 @@ export default function OfferPopup() {
           useFallback = true;
         } else {
           m3prod = await fetchProductById(supabase, cfg.model3.product_id);
-          if (!m3prod) useFallback = true; // প্রোডাক্ট ডিলিট হয়ে গেছে হয়তো
+          if (!m3prod) useFallback = true;
         }
       }
 
@@ -123,7 +116,7 @@ export default function OfferPopup() {
         try {
           prods = await fetchCustomProducts(supabase);
         } catch {
-          // network/Supabase সমস্যায় খালি অফার লিস্ট দেখাবে
+          // network error fallback
         }
         const offers = prods.filter((p) => discountPct(p) > 0 && p.stock > 0).sort((a, b) => discountPct(b) - discountPct(a));
         setItems(offers);
