@@ -40,6 +40,8 @@ interface QtyResult {
 interface CartState {
   cart: CartItem[];
   addedTick: number;
+  hydrated: boolean;
+  hydrate: () => void;
   setCart: (cart: CartItem[]) => void;
   addToCart: (prods: Product[], id: number | string, qty: number) => AddResult;
   updateQty: (prods: Product[], id: number | string, delta: number) => QtyResult;
@@ -48,8 +50,14 @@ interface CartState {
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
-  cart: loadCart(),
+  cart: [],
   addedTick: 0,
+  hydrated: false,
+
+  hydrate: () => {
+    if (get().hydrated) return;
+    set({ cart: loadCart(), hydrated: true });
+  },
 
   setCart: (cart) => {
     persist(cart);
