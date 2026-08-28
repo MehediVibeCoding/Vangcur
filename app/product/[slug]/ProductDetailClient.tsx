@@ -31,7 +31,6 @@ import ProductReviews from '@/app/components/product/ProductReviews';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, ProductSpecs } from '@/types';
 
-// সলিড ভরাট সাদা রঙের সেকশন হেডার আইকনসমূহ
 function SolidDocIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -133,11 +132,10 @@ function ArrowIcon({ className = '', dir = 'left' }: { className?: string; dir?:
   );
 }
 
-// সেকশন হেডার: সলিড ব্লু ব্যাকগ্রাউন্ডে ভরাট সাদা আইকন
 function SectionHeading({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="mb-5 flex items-center gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-xs">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
         {icon}
       </div>
       <div className="font-display text-lg font-bold text-ink">{children}</div>
@@ -618,7 +616,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
 
-  // প্রোডাক্টের নিজস্ব কাস্টম FAQ ডাটা
   const faqs: { q: string; a: string }[] = useMemo(() => {
     if (!prod?.faqs) return [];
     if (Array.isArray(prod.faqs)) return prod.faqs;
@@ -840,7 +837,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      <div className="sticky top-0 z-10 border-b border-border-base bg-white/95 backdrop-blur" ref={tabsWrapRef}>
+      {/* Sticky Tab Bar — z-30 এবং ফ্রস্টেড ব্যাকগ্রাউন্ড যাতে স্ক্রলিং কনটেন্ট এর নিচে যায় */}
+      <div className="sticky top-0 z-30 border-b border-border-base bg-white/95 backdrop-blur-md" ref={tabsWrapRef}>
         <div
           className="no-scrollbar mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
@@ -857,8 +855,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* Main Content Sections — নিচে pb-28 সেফটি প্যাডিং দেওয়া হয়েছে যাতে স্টিকি বার কনটেন্ট না ঢাকে */}
-      <div className="mx-auto max-w-[1100px] px-4 pb-28 md:px-8">
+      {/* Main Content Sections */}
+      <div className="mx-auto max-w-[1100px] px-4 pb-8 md:px-8">
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
           <SectionHeading icon={<SolidDocIcon />}>
             {t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span>
@@ -889,7 +887,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* স্পেসিফিকেশন টেবিল — ১০০% ফুল-উইথ ও নিখুঁত সিমেট্রি */}
+        {/* স্পেসিফিকেশন টেবিল */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<SolidWrenchIcon />}>
             {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
@@ -952,13 +950,12 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* প্রশ্নোত্তর (Q&A) সেকশন */}
+        {/* প্রশ্নোত্তর সেকশন */}
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
-          {/* ১. প্রোডাক্টের নিজস্ব কাস্টম FAQ (যদি ডেটাবেজে সেট থাকে) */}
           {faqs.length > 0 && (
             <div className="mb-10">
               <SectionHeading icon={<SolidQuestionBookIcon />}>
-                <span>{t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর')} <span className="font-body font-extrabold tracking-wide">(FAQ)</span></span></span>
+                <span>{t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর (FAQ)')}</span></span>
               </SectionHeading>
               <div className="flex flex-col gap-3">
                 {faqs.map((f, i) => {
@@ -978,7 +975,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                         onClick={() => toggleFaq(i)}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isOpen ? 'bg-brand-primary text-white' : 'bg-brand-bg text-brand-primary'}`}>
+                          {/* সলিড স্কাই-ব্লু ব্যাকগ্রাউন্ডে ভরাট সাদা Q */}
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light text-xs font-bold text-white shadow-xs">
                             Q
                           </span>
                           <span>{t(f.q)}</span>
@@ -1000,12 +998,12 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             </div>
           )}
 
-          {/* ২. লাইভ কাস্টমার প্রশ্ন ও উত্তর সেকশন */}
+          {/* লাইভ কাস্টমার প্রশ্নোত্তর */}
           <ProductQnA productId={prod.id} productName={prod.name} />
         </div>
 
         {/* ৩D কভারফ্লো কাস্টমার রিভিউ গ্যালারি সেকশন */}
-        <div className="py-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
+        <div className="pt-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
           <ProductReviews
             productId={prod.id}
             productName={prod.name}
@@ -1015,8 +1013,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
+      {/* একই ক্যাটাগরির আরও পণ্য — pb-32 বাফার দিয়ে নিচে যথেষ্ট ফাঁকা রাখা হয়েছে যাতে বটম বার কোনো বাটন না ঢাকে */}
       {related.length > 0 && (
-        <div className="mx-auto max-w-[1100px] px-4 pb-10 md:px-8">
+        <div className="mx-auto max-w-[1100px] px-4 pb-32 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-base" />
             <div className="whitespace-nowrap font-display text-lg font-bold text-ink">{t('একই ক্যাটাগরির')} <span className="text-brand-light">{t('আরও পণ্য')}</span></div>
@@ -1036,21 +1035,18 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
       <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
 
-      {/* রিডিজাইন করা স্টিকি বটম বার: বামে ২ লাইনে নাম + নিচে দাম, ডানে বাটন */}
+      {/* স্টিকি বটম বার: স্কাই-ব্লু প্রাইস কালার এবং নিখুঁত প্রাইস ও পিছ ফরম্যাট */}
       <div className={`fixed inset-x-0 bottom-0 z-30 border-t border-border-base bg-white/95 shadow-sh3 backdrop-blur transition-transform duration-brand ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-2.5 md:px-8">
-          {/* বাম পাশে নাম (২ লাইন) এবং নিচে দাম */}
           <div className="min-w-0 flex-1 flex flex-col justify-center pr-2">
             <div className="line-clamp-2 font-body text-[12px] font-semibold leading-tight text-ink">
               {prod.name}
             </div>
-            <div className="mt-0.5 font-body text-[14.5px] font-extrabold text-brand-primary">
-              ৳{(prod.price * qty).toLocaleString('en-US')}
-              {qty > 1 && <span className="ml-1 font-body text-[11px] font-normal text-muted">×{qty}</span>}
+            <div className="mt-0.5 font-body text-[14.5px] font-extrabold text-brand-light">
+              ৳{(prod.price * qty).toLocaleString('en-US')} - {qty} {lang === 'en' ? 'Pcs' : 'পিছ'}
             </div>
           </div>
 
-          {/* ডান পাশে অ্যাকশন বাটনসমূহ */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {sold ? (
               <button className="flex items-center gap-1.5 rounded-[10px] border-none bg-gold px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
