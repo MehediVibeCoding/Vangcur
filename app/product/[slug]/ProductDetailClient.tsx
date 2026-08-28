@@ -26,6 +26,8 @@ import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
 import LoginModal from '@/app/components/auth/LoginModal';
 import AccountPage from '@/app/components/auth/AccountPage';
+import ProductQnA from '@/app/components/product/ProductQnA';
+import ProductReviews from '@/app/components/product/ProductReviews';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, ProductSpecs } from '@/types';
 
@@ -86,28 +88,6 @@ function WrenchIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.7 2.7-2-2 2.7-2.7Z" />
-    </svg>
-  );
-}
-function QuestionIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3.05 4" /><path d="M12 17.5h.01" />
-      <circle cx="12" cy="12" r="9" />
-    </svg>
-  );
-}
-function StarFillIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6-5.9-3.3-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8Z" />
-    </svg>
-  );
-}
-function ChevronIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9l6 6 6-6" />
     </svg>
   );
 }
@@ -349,7 +329,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [zoomed, setZoomed] = useState(false);
   const [transformOrigin, setTransformOrigin] = useState('center center');
   const [activeTab, setActiveTab] = useState('ppSecDesc');
-  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
   const [isMobileWidth, setIsMobileWidth] = useState(false);
@@ -407,7 +386,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     setCurImgIdx(0);
     setZoomed(false);
     setActiveTab('ppSecDesc');
-    setOpenFaqIdx(null);
 
     trackViewItem({
       item_id: prod.id,
@@ -564,8 +542,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
-  const toggleFaq = (i: number) => setOpenFaqIdx((cur) => (cur === i ? null : i));
-
   const navbarProps = {
     sticky: false as const,
     showHomeButton: true,
@@ -624,8 +600,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const techRows = getTechSpecRows(prod.specs);
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
-  const faqs = Array.isArray(prod.faqs) ? prod.faqs : [];
-  const rating = prod.rating || 4.5;
   const related = prods
     .filter((p) => prodInCat(p, prod.cat) && p.id !== prod.id)
     .sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0))
@@ -882,13 +856,14 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
+        {/* স্পেসিফিকেশন টেবিল — ১০০% ফুল-উইথ ও নিখুঁত সিমেট্রি (৬০০px ও অফসেট বাগ ফিক্সড) */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<WrenchIcon />}>{t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span></SectionHeading>
-          <div className="mx-auto max-w-[600px] overflow-x-auto rounded-brand border border-border-base sm:translate-x-[12%]">
+          <div className="w-full overflow-x-auto rounded-brand border border-border-base bg-white shadow-sh1">
             <table className="w-full border-collapse text-[14px]">
               <thead>
                 <tr className="bg-surface-muted">
-                  <th className="w-[42%] px-4 py-3 text-left font-semibold text-ink">{t('বিবরণ')}</th>
+                  <th className="w-[38%] px-4 py-3 text-left font-semibold text-ink">{t('বিবরণ')}</th>
                   <th className="px-4 py-3 text-left font-semibold text-ink">{t('তথ্য')}</th>
                 </tr>
               </thead>
@@ -940,46 +915,19 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
+        {/* প্রশ্নোত্তর (Q&A) সেকশন — সম্পূর্ণ ডেটাবেজ-চালিত */}
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
-          <SectionHeading icon={<QuestionIcon />}>{t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর (FAQ)')}</span></SectionHeading>
-          {faqs.length ? faqs.map((f, i) => (
-            <div className="border-b border-border-base last:border-0" key={i}>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 py-4 text-left text-[14.5px] font-semibold text-ink transition-brand duration-brand hover:text-brand-light"
-                onClick={() => toggleFaq(i)}
-              >
-                <span>{f.q}</span>
-                <ChevronIcon className={`shrink-0 transition-transform duration-brand ${openFaqIdx === i ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
-              </button>
-              {openFaqIdx === i && <div className="pb-4 text-[14px] leading-[1.7] text-muted">{f.a}</div>}
-            </div>
-          )) : (
-            <div className="text-[13px] text-muted">{t('কোনো FAQ নেই।')}</div>
-          )}
+          <ProductQnA productId={prod.id} productName={prod.name} />
         </div>
 
+        {/* কাস্টমার রিভিউ সেকশন — স্মার্ট হাইব্রিড রেটিং, ফেসবুক-স্টাইল প্রিভিউ ও ক্লাউডিনারি আপলোড */}
         <div className="py-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <div className="flex shrink-0 flex-col items-center gap-1.5 sm:border-r sm:border-border-base sm:pr-8">
-              <div className="font-display text-4xl font-bold text-ink">{rating.toFixed(1)}</div>
-              <div className="flex gap-0.5 text-gold">
-                {[0, 1, 2, 3, 4].map((i) => <StarFillIcon key={i} className={i < Math.round(rating) ? '' : 'opacity-25'} />)}
-              </div>
-              <div className="text-[12px] text-muted">{t('বেশিরভাগ কাস্টমার সন্তুষ্ট')}</div>
-            </div>
-            <div className="flex flex-1 flex-col gap-2">
-              {[[5, 65], [4, 22], [3, 8], [2, 3], [1, 2]].map(([star, pct]) => (
-                <div key={star} className="flex items-center gap-2 text-[12px]">
-                  <span className="w-5 text-right text-ink">{star}★</span>
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted">
-                    <div className="h-full rounded-full bg-gold" style={{ width: pct + '%' }} />
-                  </div>
-                  <span className="w-8 text-muted">{pct}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ProductReviews
+            productId={prod.id}
+            productName={prod.name}
+            defaultRating={prod.rating || 4.8}
+            onOpenLogin={() => setLoginOpen(true)}
+          />
         </div>
       </div>
 
