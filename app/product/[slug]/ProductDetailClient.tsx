@@ -138,7 +138,7 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
         {icon}
       </div>
-      <div className="font-display text-lg font-bold text-ink">{children}</div>
+      <div className="font-body text-lg font-bold text-ink">{children}</div>
     </div>
   );
 }
@@ -388,7 +388,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const touchRef = useRef({ x: 0, y: 0 });
   const tabsWrapRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const relatedGridRef = useRef<HTMLDivElement>(null);
   const ppWishBtnRef = useRef<HTMLButtonElement>(null);
 
   const wished = useWishlistStore((s) => (prod ? s.wishlist.some((x) => String(x.id) === String(prod.id)) : false));
@@ -446,25 +445,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       if (raf) cancelAnimationFrame(raf);
     };
   }, [prod?.id]);
-
-  useEffect(() => {
-    const grid = relatedGridRef.current;
-    if (!grid) return undefined;
-    const prefersReduced = typeof window !== 'undefined' && window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced || !window.IntersectionObserver) return undefined;
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) { entry.target.classList.add('vc-visible'); obs.unobserve(entry.target); }
-      });
-    }, { rootMargin: '0px 0px -30px 0px', threshold: 0.08 });
-    grid.querySelectorAll('.prod-card').forEach((card, i) => {
-      card.classList.add('vc-reveal');
-      (card as HTMLElement).style.transitionDelay = (Math.min(i, 5) * 60) + 'ms';
-      obs.observe(card);
-    });
-    return () => obs.disconnect();
-  }, [prod?.id, prods]);
 
   const maxQty = prod ? (prod.stock > 0 ? Math.min(prod.stock, 99) : 99) : 99;
 
@@ -887,17 +867,17 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* স্পেসিফিকেশন টেবিল */}
+        {/* স্পেসিফিকেশন টেবিল — Apple-Style স্কাই-ব্লু ফ্রস্টেড গ্লাস ব্যাকগ্রাউন্ড */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<SolidWrenchIcon />}>
             {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
           </SectionHeading>
-          <div className="w-full overflow-x-auto rounded-brand border border-border-base bg-white shadow-sh1">
+          <div className="w-full overflow-x-auto rounded-brand border border-white/80 bg-gradient-to-br from-[#E0F2FE]/70 via-white/95 to-[#F0F9FF]/80 p-1 shadow-sh1 backdrop-blur-sm">
             <table className="w-full border-collapse text-[14px]">
               <thead>
-                <tr className="bg-surface-muted">
-                  <th className="w-[38%] px-4 py-3 text-left font-semibold text-ink">{t('বিবরণ')}</th>
-                  <th className="px-4 py-3 text-left font-semibold text-ink">{t('তথ্য')}</th>
+                <tr className="bg-brand-bg/30">
+                  <th className="w-[38%] px-4 py-3 text-left font-bold text-ink">{t('বিবরণ')}</th>
+                  <th className="px-4 py-3 text-left font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -905,8 +885,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                   <tr><td colSpan={2} className="p-4 text-center text-muted">{t('স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।')}</td></tr>
                 ) : (
                   techRows.map(([k, v], i) => (
-                    <tr key={k} className={`border-t border-border-base transition-brand duration-brand hover:bg-surface-muted/60 ${i % 2 === 1 ? 'bg-surface-muted/30' : ''}`}>
-                      <td className="px-4 py-3 font-medium text-ink">{k}</td>
+                    <tr key={k} className={`border-t border-sky-100/80 transition-brand duration-brand hover:bg-brand-bg/15 ${i % 2 === 1 ? 'bg-white/40' : ''}`}>
+                      <td className="px-4 py-3 font-semibold text-ink">{k}</td>
                       <td className="px-4 py-3 text-ink/80">{v}</td>
                     </tr>
                   ))
@@ -974,13 +954,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                         className="flex w-full items-center justify-between gap-3 p-4 text-left font-body text-[14px] font-bold text-ink transition-colors"
                         onClick={() => toggleFaq(i)}
                       >
-                        <div className="flex items-center gap-2.5">
-                          {/* সলিড স্কাই-ব্লু ব্যাকগ্রাউন্ডে ভরাট সাদা Q */}
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light text-xs font-bold text-white shadow-xs">
-                            Q
-                          </span>
-                          <span>{t(f.q)}</span>
-                        </div>
+                        <span className="font-semibold">{t(f.q)}</span>
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
                       
@@ -1013,17 +987,19 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* একই ক্যাটাগরির আরও পণ্য — pb-32 বাফার দিয়ে নিচে যথেষ্ট ফাঁকা রাখা হয়েছে যাতে বটম বার কোনো বাটন না ঢাকে */}
+      {/* একই ক্যাটাগরির আরও পণ্য — pb-32 দিয়ে নিচে পর্যাপ্ত বাফার রাখা হয়েছে যাতে বটম বার কখনোই পেছনের বাটন না ঢাকে */}
       {related.length > 0 && (
         <div className="mx-auto max-w-[1100px] px-4 pb-32 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-base" />
-            <div className="whitespace-nowrap font-display text-lg font-bold text-ink">{t('একই ক্যাটাগরির')} <span className="text-brand-light">{t('আরও পণ্য')}</span></div>
+            <div className="whitespace-nowrap font-body text-lg font-bold text-ink">
+              {t('একই ক্যাটাগরির')} <span className="text-brand-light">{t('আরও পণ্য')}</span>
+            </div>
             <div className="h-px flex-1 bg-border-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4" ref={relatedGridRef}>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {related.map((p) => (
-              <div className="prod-card" key={p.id}>
+              <div key={p.id}>
                 <ProductCard prod={p} isFirst={false} />
               </div>
             ))}
@@ -1038,7 +1014,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       {/* স্টিকি বটম বার: স্কাই-ব্লু প্রাইস কালার এবং নিখুঁত প্রাইস ও পিছ ফরম্যাট */}
       <div className={`fixed inset-x-0 bottom-0 z-30 border-t border-border-base bg-white/95 shadow-sh3 backdrop-blur transition-transform duration-brand ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-2.5 md:px-8">
-          <div className="min-w-0 flex-1 flex flex-col justify-center pr-2">
+          <div className="min-w-0 flex flex-1 flex-col justify-center pr-2">
             <div className="line-clamp-2 font-body text-[12px] font-semibold leading-tight text-ink">
               {prod.name}
             </div>
@@ -1067,4 +1043,4 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       </div>
     </div>
   );
-}
+      }
