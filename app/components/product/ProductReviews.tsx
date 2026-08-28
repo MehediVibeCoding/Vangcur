@@ -8,7 +8,6 @@ import { showToast } from '@/lib/toast';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { uploadReviewImageToCloudinary } from '@/lib/cloudinaryUpload';
-import { checkIsUserAdmin } from '@/lib/productQnaData';
 import UserAvatar from './UserAvatar';
 import {
   fetchProductReviews,
@@ -17,8 +16,7 @@ import {
   toggleReviewLike,
   getLikedReviews,
   calculateReviewSummary,
-  checkIsVerifiedBuyer,
-  checkUnverifiedReviewDailyLimit,
+  checkIsReviewAdminOrMod,
 } from '@/lib/productReviewData';
 import type { ProductReview, ReviewRatingSummary } from '@/types';
 
@@ -137,7 +135,7 @@ export default function ProductReviews({
     setLoading(true);
     const [data, adminStatus] = await Promise.all([
       fetchProductReviews(supabase, productId, currentUser?.id),
-      checkIsUserAdmin(supabase, currentUser?.id),
+      checkIsReviewAdminOrMod(supabase, currentUser?.id),
     ]);
     setReviews(data);
     setIsAdmin(adminStatus);
@@ -232,8 +230,29 @@ export default function ProductReviews({
     return items;
   }, [reviews, currentUser?.id]);
 
+  const n = galleryItems.length;
+
+  // নিখুঁত ৩D সেন্টার ট্রিপলেট রেন্ডার লজিক — একটিভ কার্ড সবসময় ফিজিক্যাল সেন্টারে থাকবে
+  const visibleTriplet = useMemo(() => {
+    if (n === 0) return [];
+    if (n === 1) return [{ item: galleryItems[0], idx: 0, isCenter: true }];
+    if (n === 2) {
+      const other = (activeCardIdx + 1) % 2;
+      return [
+        { item: galleryItems[activeCardIdx], idx: activeCardIdx, isCenter: true },
+        { item: galleryItems[other], idx: other, isCenter: false },
+      ];
+    }
+    const prevIdx = (activeCardIdx - 1 + n) % n;
+    const nextIdx = (activeCardIdx + 1) % n;
+    return [
+      { item: galleryItems[prevIdx], idx: prevIdx, isCenter: false },
+      { item: galleryItems[activeCardIdx], idx: activeCardIdx, isCenter: true },
+      { item: galleryItems[nextIdx], idx: nextIdx, isCenter: false },
+    ];
+  }, [galleryItems, activeCardIdx, n]);
+
   const slide = (dir: number) => {
-    const n = galleryItems.length;
     if (n <= 1) return;
     setActiveCardIdx((cur) => (cur + dir + n) % n);
   };
@@ -325,22 +344,15 @@ export default function ProductReviews({
       return;
     }
 
-    if (userExistingReview) {
+    const isPrivileged = await checkIsReviewAdminOrMod(supabase, currentUser.id);
+
+    if (!isPrivileged && userExistingReview) {
       if (userExistingReview.is_rejected) {
         setRejectedReviewNotice(userExistingReview);
         return;
       }
       showToast(t('আপনি ইতিমধ্যে এই প্রোডাক্টটিতে একটি রিভিউ দিয়েছেন'));
       return;
-    }
-
-    const isVerified = await checkIsVerifiedBuyer(supabase, productId, currentUser.id);
-    if (!isVerified) {
-      const limitCheck = await checkUnverifiedReviewDailyLimit(supabase, currentUser.id);
-      if (!limitCheck.allowed) {
-        setLimitModalOpen(true);
-        return;
-      }
     }
 
     setRatingInput(5);
@@ -437,9 +449,9 @@ export default function ProductReviews({
 
   return (
     <div className="py-1">
-      {/* Header Block — টু-টোন ব্র্যান্ড হেডার ও স্কাই-ব্লু ব্যাজ আইকন */}
+      {/* Header Block — টু-টোন ব্র্যান্ড হেডার, মসৃণ Sans-serif ও স্কাই-ব্লু ব্যাজ */}
       <div className="mb-5 flex flex-col gap-1">
-        <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
+        <div className="flex items-center gap-2.5 font-body text-lg font-bold text-ink">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
             <SolidStarIcon />
           </span>
@@ -478,7 +490,7 @@ export default function ProductReviews({
               ? 'Be the first customer to share your unboxing experience with this product!'
               : 'আপনিই প্রথম রিভিউ দিয়ে প্রোডাক্টের কোয়ালিটি সম্পর্কে আপনার অভিজ্ঞতা জানান!'}
           </p>
-          {!userExistingReview && (
+          {(!userExistingReview || isAdmin) && (
             <button
               onClick={handleOpenWriteReview}
               className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
@@ -489,7 +501,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* 3D Coverflow Review Gallery — সফট ও স্মুথ শ্যাডো */}
+      {/* 3D Coverflow Review Gallery — ফিজিক্যাল সেন্টার পজিশনিং ও মসৃণ হালকা শ্যাডো */}
       {!loading && galleryItems.length > 0 && (
         <div className="mb-1">
           <div
@@ -498,8 +510,7 @@ export default function ProductReviews({
             onTouchEnd={handleTouchEnd}
           >
             <div className="flex items-center justify-center gap-3 sm:gap-6">
-              {galleryItems.map((item, idx) => {
-                const isActive = idx === activeCardIdx;
+              {visibleTriplet.map(({ item, idx, isCenter }) => {
                 const isOwnPending = !item.isApproved && item.userId === currentUser?.id;
                 const isLiked = likedList.includes(String(item.reviewId));
                 const dateStr = item.createdAt
@@ -508,21 +519,14 @@ export default function ProductReviews({
                   })
                   : '';
 
-                const n = galleryItems.length;
-                const prevIdx = (activeCardIdx - 1 + n) % n;
-                const nextIdx = (activeCardIdx + 1) % n;
-                const isVisible = idx === activeCardIdx || idx === prevIdx || idx === nextIdx;
-
-                if (!isVisible && n > 2) return null;
-
                 return (
                   <div
                     key={item.id}
                     onClick={() => setActiveCardIdx(idx)}
                     className={`relative h-[390px] w-[245px] shrink-0 select-none overflow-hidden rounded-[20px] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[280px] ${
-                      isActive
+                      isCenter
                         ? 'z-10 scale-100 opacity-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] ring-1 ring-brand-light/30'
-                        : 'z-0 scale-[0.85] opacity-60 cursor-pointer'
+                        : 'z-0 scale-[0.85] opacity-60 cursor-pointer hover:opacity-80'
                     }`}
                   >
                     {/* ফটো রিভিউ বনাম ফ্রস্টেড গ্লাস টেক্সট রিভিউ */}
@@ -714,7 +718,7 @@ export default function ProductReviews({
           )}
 
           {/* Bottom Button */}
-          {!userExistingReview && (
+          {(!userExistingReview || isAdmin) && (
             <div className="mt-2.5 flex justify-center pt-1">
               <button
                 onClick={handleOpenWriteReview}
@@ -735,7 +739,7 @@ export default function ProductReviews({
         >
           <div className="w-full max-w-[460px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
-              <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+              <h3 className="flex items-center gap-2 font-body text-base font-bold text-ink">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white">
                   <SolidStarIcon />
                 </span>
@@ -865,7 +869,7 @@ export default function ProductReviews({
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">
               ⚠️
             </div>
-            <h3 className="mb-1 font-display text-base font-bold text-ink">
+            <h3 className="mb-1 font-body text-base font-bold text-ink">
               {t('আপনার রিভিউটি গ্রহণ করা সম্ভব হয়নি')}
             </h3>
             <p className="mb-2 font-body text-xs font-bold text-brand-primary">
@@ -912,7 +916,7 @@ export default function ProductReviews({
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl text-amber-700">
               🚫
             </div>
-            <h3 className="mb-2 font-display text-base font-bold text-ink">
+            <h3 className="mb-2 font-body text-base font-bold text-ink">
               {t('রিভিউ সীমা অতিক্রম করেছে')}
             </h3>
             <p className="mb-5 font-body text-xs leading-relaxed text-muted">
