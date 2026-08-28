@@ -91,6 +91,23 @@ function WrenchIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+function QuestionBookIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      <path d="M12 7a2 2 0 0 1 1.8 1.1c0 1.2-1.8 1.5-1.8 2.4" />
+      <circle cx="12" cy="14" r=".4" fill="currentColor" />
+    </svg>
+  );
+}
+function ChevronIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
 function CheckBadgeIcon({ className = '' }: { className?: string }) {
   return (
     <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/10 text-success ${className}`}>
@@ -327,8 +344,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [qty, setQty] = useState(1);
   const [curImgIdx, setCurImgIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
-  const [transformOrigin, setTransformOrigin] = useState('center center');
   const [activeTab, setActiveTab] = useState('ppSecDesc');
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
   const [isMobileWidth, setIsMobileWidth] = useState(false);
@@ -386,6 +403,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     setCurImgIdx(0);
     setZoomed(false);
     setActiveTab('ppSecDesc');
+    setOpenFaqIdx(null);
 
     trackViewItem({
       item_id: prod.id,
@@ -542,6 +560,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
+  const toggleFaq = (i: number) => setOpenFaqIdx((cur) => (cur === i ? null : i));
+
   const navbarProps = {
     sticky: false as const,
     showHomeButton: true,
@@ -600,6 +620,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const techRows = getTechSpecRows(prod.specs);
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
+  const faqs = Array.isArray(prod.faqs) ? prod.faqs : [];
   const related = prods
     .filter((p) => prodInCat(p, prod.cat) && p.id !== prod.id)
     .sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0))
@@ -915,12 +936,59 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* প্রশ্নোত্তর (Q&A) সেকশন — সম্পূর্ণ ডেটাবেজ-চালিত */}
+        {/* নতুন রিডিজাইন করা এসইও FAQ এবং কাস্টমার Q&A সেকশন */}
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
+          {/* ১. প্রোডাক্টের নির্দিষ্ট এসইও FAQ (কার্ড-বেসড অ্যাকর্ডিয়ন ডিজাইন) */}
+          {faqs.length > 0 && (
+            <div className="mb-10">
+              <SectionHeading icon={<QuestionBookIcon />}>
+                {t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর (FAQ)')}</span>
+              </SectionHeading>
+              <div className="flex flex-col gap-3">
+                {faqs.map((f, i) => {
+                  const isOpen = openFaqIdx === i;
+                  return (
+                    <div
+                      key={i}
+                      className={`overflow-hidden rounded-[14px] border transition-all duration-brand ${
+                        isOpen
+                          ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] to-white shadow-sh1 ring-1 ring-brand-light/20'
+                          : 'border-border-base bg-white shadow-xs hover:border-brand-light/40 hover:bg-brand-bg/10'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between gap-3 p-4 text-left font-body text-[14px] font-bold text-ink transition-colors"
+                        onClick={() => toggleFaq(i)}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isOpen ? 'bg-brand-primary text-white' : 'bg-brand-bg text-brand-primary'}`}>
+                            Q
+                          </span>
+                          <span>{f.q}</span>
+                        </div>
+                        <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
+                      </button>
+                      
+                      {isOpen && (
+                        <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
+                          <div className="border-l-2 border-brand-light/60 pl-3">
+                            {f.a}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ২. লাইভ কাস্টমার প্রশ্ন ও উত্তর সেকশন */}
           <ProductQnA productId={prod.id} productName={prod.name} />
         </div>
 
-        {/* কাস্টমার রিভিউ সেকশন — স্মার্ট হাইব্রিড রেটিং, ফেসবুক-স্টাইল প্রিভিউ ও ক্লাউডিনারি আপলোড */}
+        {/* কাস্টমার রিভিউ সেকশন */}
         <div className="py-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
           <ProductReviews
             productId={prod.id}
