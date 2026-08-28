@@ -49,12 +49,22 @@ export async function checkIsUserAdmin(
   supabase: SupabaseClient,
   userId?: string | null,
 ): Promise<boolean> {
-  if (!userId) return false;
+  let targetId = userId;
+  if (!targetId) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      targetId = data?.session?.user?.id || null;
+    } catch {
+      return false;
+    }
+  }
+  if (!targetId) return false;
+
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('is_admin')
-      .eq('id', userId)
+      .eq('id', targetId)
       .maybeSingle();
 
     if (error || !data) return false;
@@ -87,11 +97,14 @@ export async function submitProductQuestion(
   }
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
+
     const { data, error } = await supabase
       .from('product_questions')
       .insert({
         product_id: payload.productId,
-        user_id: payload.userId || null,
+        user_id: liveUserId,
         user_name: name,
         question: qText,
       })
@@ -130,13 +143,22 @@ export async function submitProductAnswer(
   }
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
+
+    // ডেটাবেজ লেভেলে এডমিন স্ট্যাটাস নিশ্চিত করা
+    let userIsAdmin = payload.isAdmin;
+    if (liveUserId) {
+      userIsAdmin = await checkIsUserAdmin(supabase, liveUserId);
+    }
+
     const { data, error } = await supabase
       .from('product_question_answers')
       .insert({
         question_id: payload.questionId,
-        user_id: payload.userId || null,
-        author_name: name || (payload.isAdmin ? 'Vangcur টিম' : 'ইউজার'),
-        is_admin: !!payload.isAdmin,
+        user_id: liveUserId,
+        author_name: name || (userIsAdmin ? 'Vangcur টিম' : 'ইউজার'),
+        is_admin: !!userIsAdmin,
         answer: aText,
       })
       .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
@@ -152,4 +174,4 @@ export async function submitProductAnswer(
     logWarn('[QnA] submitProductAnswer exception:', e);
     return { ok: false, error: 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।' };
   }
-      }
+}
