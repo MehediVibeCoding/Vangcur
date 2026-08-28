@@ -258,7 +258,7 @@ export interface ProductQuestion {
   answer?: ProductQuestionAnswer | null;
 }
 
-// 🆕 কাস্টমার রিভিউ (Reviews) টাইপসমূহ
+// 🆕 কাস্টমার রিভিউ (Reviews) টাইপসমূহ (লাইক ও রিজেকশন সাপোর্ট সহ)
 export interface ProductReview {
   id: number | string;
   product_id: number | string;
@@ -267,14 +267,17 @@ export interface ProductReview {
   rating: number;
   review_text: string;
   image_url?: string | null;
+  like_count?: number;
   is_verified_buyer: boolean;
   is_approved: boolean;
+  is_rejected?: boolean;
+  rejection_reason?: string | null;
   created_at: string;
 }
 
 export interface ReviewRatingSummary {
   average: number;
   count: number;
-  breakdown: Record<number, number>; // { 5: pct, 4: pct, 3: pct, 2: pct, 1: pct }
+  breakdown: Record<number, number>;
   hasReviews: boolean;
 }
