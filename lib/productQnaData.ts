@@ -8,6 +8,45 @@ const MAX_QUESTION_LEN = 300;
 const MIN_ANSWER_LEN = 5;
 const MAX_ANSWER_LEN = 500;
 
+export async function checkIsUserAdmin(
+  supabase: SupabaseClient,
+  userId?: string | null,
+): Promise<boolean> {
+  let targetId = userId;
+  let userEmail: string | null = null;
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!targetId) targetId = data?.session?.user?.id || null;
+    userEmail = data?.session?.user?.email || null;
+  } catch {
+    // fallback
+  }
+
+  // মডারেটরের নির্দিষ্ট জিমেইল থাকলে সরাসরি এক্সেস দেওয়া
+  if (userEmail && userEmail.toLowerCase() === 'mehedivibecoding@gmail.com') {
+    return true;
+  }
+
+  if (!targetId) return false;
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_admin, role, email')
+      .eq('id', targetId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+    
+    if (data.email && data.email.toLowerCase() === 'mehedivibecoding@gmail.com') return true;
+    if (data.role && ['admin', 'super_admin', 'moderator'].includes(data.role)) return true;
+    return !!data.is_admin;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchProductQuestions(
   supabase: SupabaseClient,
   productId: number | string,
@@ -42,35 +81,6 @@ export async function fetchProductQuestions(
   } catch (e) {
     logWarn('[QnA] fetchProductQuestions error:', e);
     return [];
-  }
-}
-
-export async function checkIsUserAdmin(
-  supabase: SupabaseClient,
-  userId?: string | null,
-): Promise<boolean> {
-  let targetId = userId;
-  if (!targetId) {
-    try {
-      const { data } = await supabase.auth.getSession();
-      targetId = data?.session?.user?.id || null;
-    } catch {
-      return false;
-    }
-  }
-  if (!targetId) return false;
-
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', targetId)
-      .maybeSingle();
-
-    if (error || !data) return false;
-    return !!data.is_admin;
-  } catch {
-    return false;
   }
 }
 
@@ -146,10 +156,10 @@ export async function submitProductAnswer(
     const { data: sessionData } = await supabase.auth.getSession();
     const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
 
-    // ডেটাবেজ লেভেলে এডমিন স্ট্যাটাস নিশ্চিত করা
-    let userIsAdmin = payload.isAdmin;
+    // এডমিন বা মডারেটর যাচাই
+    let userIsAdminOrMod = payload.isAdmin;
     if (liveUserId) {
-      userIsAdmin = await checkIsUserAdmin(supabase, liveUserId);
+      userIsAdminOrMod = await checkIsUserAdmin(supabase, liveUserId);
     }
 
     const { data, error } = await supabase
@@ -157,8 +167,8 @@ export async function submitProductAnswer(
       .insert({
         question_id: payload.questionId,
         user_id: liveUserId,
-        author_name: name || (userIsAdmin ? 'Vangcur টিম' : 'ইউজার'),
-        is_admin: !!userIsAdmin,
+        author_name: name || (userIsAdminOrMod ? 'Vangcur টিম' : 'ইউজার'),
+        is_admin: !!userIsAdminOrMod,
         answer: aText,
       })
       .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
