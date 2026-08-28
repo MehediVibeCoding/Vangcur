@@ -182,7 +182,6 @@ export const staticDictionary: Record<string, string> = {
   'কারিগরি': 'Technical',
   'স্পেসিফিকেশন': 'Specifications',
   'বিবরণ': 'Description',
-  'তথ্য': 'Details',
   'স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।': 'Specifications will be added soon.',
   'কমন': 'Common',
   'প্রশ্নোত্তর': 'Questions & Answers',
