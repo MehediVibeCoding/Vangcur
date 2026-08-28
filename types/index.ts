@@ -28,17 +28,14 @@ export interface Product {
   closing?: string;
   nameBn?: string;
   tags?: string;
-  powerInfo?: string; // 🆕 ঐচ্ছিক — থাকলে Specification ট্যাবে টেবিলের নিচে আলাদা বক্সে দেখায়
-  infoBoxes?: ProductInfoBox[]; // 🆕 ঐচ্ছিক — "অতিরিক্ত তথ্য" ট্যাবে আলাদা কার্ড হিসেবে
-  // 🆕 (AI Planner + SEO ফিল্ড ওভারহল, ২০২৬-০৮): সবগুলো ঐচ্ছিক — খালি হলে
-  // fallback ব্যবহার হয় (নিচে ব্যবহারের জায়গায় দ্রষ্টব্য), পুরনো প্রোডাক্টে
-  // কোনো পরিবর্তন দেখাবে না।
-  seoH1?: string; // খালি হলে <h1>-এ prod.name দেখাবে
-  metaTitle?: string; // খালি হলে generateMetadata আগের মতোই "নাম - ৳দাম | Vangcur" অটো বানাবে
-  metaDescription?: string; // খালি হলে desc থেকে auto-truncate হবে (আগের আচরণ)
-  ogDescription?: string; // খালি হলে metaDescription (বা তার fallback) ব্যবহার হবে
-  quickSpecsText?: string; // 🆕 "স্পেসিফিকেশন এক নজরে" ফ্রি-ফ্লো টেক্সট — "•" দিয়ে ভাগ করে পিল হিসেবে দেখায়; খালি হলে পুরনো specs._quick_keys সিস্টেমে fallback করে
-  packagingContent?: string; // 🆕 Packaging Content — Power Info-এর ঠিক পরে (Power Info না থাকলে স্পেসিফিকেশন টেবিলের পরে) আলাদা বক্সে দেখায়
+  powerInfo?: string;
+  infoBoxes?: ProductInfoBox[];
+  seoH1?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  ogDescription?: string;
+  quickSpecsText?: string;
+  packagingContent?: string;
   _detailLoaded: boolean;
 }
 
@@ -238,4 +235,46 @@ export interface OrderPayload {
 export interface CreateOrderResult {
   id: string | number;
   orderNum: string;
+}
+
+// 🆕 প্রশ্নোত্তর (Q&A) টাইপসমূহ
+export interface ProductQuestionAnswer {
+  id: number | string;
+  question_id: number | string;
+  user_id?: string | null;
+  author_name: string;
+  is_admin: boolean;
+  answer: string;
+  created_at: string;
+}
+
+export interface ProductQuestion {
+  id: number | string;
+  product_id: number | string;
+  user_id?: string | null;
+  user_name: string;
+  question: string;
+  created_at: string;
+  answer?: ProductQuestionAnswer | null;
+}
+
+// 🆕 কাস্টমার রিভিউ (Reviews) টাইপসমূহ
+export interface ProductReview {
+  id: number | string;
+  product_id: number | string;
+  user_id: string;
+  user_name: string;
+  rating: number;
+  review_text: string;
+  image_url?: string | null;
+  is_verified_buyer: boolean;
+  is_approved: boolean;
+  created_at: string;
+}
+
+export interface ReviewRatingSummary {
+  average: number;
+  count: number;
+  breakdown: Record<number, number>; // { 5: pct, 4: pct, 3: pct, 2: pct, 1: pct }
+  hasReviews: boolean;
 }
