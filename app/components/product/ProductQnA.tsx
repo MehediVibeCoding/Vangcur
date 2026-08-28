@@ -20,18 +20,38 @@ interface ProductQnAProps {
   productName: string;
 }
 
-function QuestionMarkIcon() {
+function MessageQuestionIcon({ className = '' }: { className?: string }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.1 9a3 3 0 0 1 5.82 1c0 2-3 2-3.05 4" /><path d="M12 17.5h.01" />
-      <circle cx="12" cy="12" r="9" />
+    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      <path d="M9.5 9a3 3 0 0 1 5.4 1.4c0 1.6-2.4 2.1-2.4 3.1" />
+      <circle cx="12.5" cy="16.5" r=".5" fill="currentColor" />
     </svg>
   );
 }
 
-function CheckBadgeIcon() {
+function PlusChatIcon({ className = '' }: { className?: string }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <line x1="12" y1="8" x2="12" y2="14" />
+      <line x1="9" y1="11" x2="15" y2="11" />
+    </svg>
+  );
+}
+
+function EditPencilIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
+
+function CheckBadgeIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
     </svg>
   );
@@ -139,7 +159,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
     setSubmittingA(false);
     if (!res.ok || !res.data) {
-      setAnswerError(res.error || t('উত্তর জমা দেওয়া যায়নি'));
+      setAnswerError(res.error || t('উত্তর জমা দেওয়া যায়নি বা অনুমতি নেই।'));
       return;
     }
 
@@ -151,30 +171,23 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
     showToast(t('✅ উত্তর সফলভাবে প্রকাশিত হয়েছে!'));
   };
 
+  const hasQuestions = questions.length > 0;
+
   return (
     <div className="py-2">
-      {/* Header & Ask Button */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border-base pb-4">
-        <div>
-          <div className="flex items-center gap-2 font-display text-lg font-bold text-ink">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-brand-light">
-              <QuestionMarkIcon />
-            </span>
-            {t('প্রশ্ন ও উত্তর (Q&A)')}
-          </div>
-          <p className="mt-1 font-body text-[12.5px] text-muted">
-            {lang === 'en'
-              ? `Have a question about ${productName}? Ask now and get answers from our team.`
-              : `${productName} সম্পর্কে কোনো প্রশ্ন থাকলে এখানে জিজ্ঞেস করুন।`}
-          </p>
+      {/* Header Block — খালি অবস্থায় বাটন ও দাগ ছাড়া ফ্রেশ লুক */}
+      <div className={`flex flex-col gap-1 ${hasQuestions ? 'mb-6 border-b border-border-base pb-4' : 'mb-4'}`}>
+        <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-brand-light">
+            <MessageQuestionIcon />
+          </span>
+          {t('প্রশ্ন ও উত্তর (Q&A)')}
         </div>
-
-        <button
-          onClick={openAskModal}
-          className="inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-brand-bg/40 px-5 py-2.5 font-body text-[13px] font-bold text-brand-primary shadow-sm transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg/70 hover:shadow-sh1"
-        >
-          <span>💬</span> {t('প্রশ্ন করুন')}
-        </button>
+        <p className="font-body text-[12.5px] text-muted">
+          {lang === 'en'
+            ? `Have a question about ${productName}? Ask now and get answers from our team.`
+            : `${productName} সম্পর্কে কোনো প্রশ্ন থাকলে এখানে জেনে নিন।`}
+        </p>
       </div>
 
       {/* Loading State */}
@@ -185,25 +198,27 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && questions.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-brand border border-dashed border-border-base bg-surface-muted/30 px-4 py-8 text-center">
-          <div className="mb-2 text-2xl">💬</div>
+      {/* Empty State — স্ক্রিনশট ৩ অনুযায়ী একক বাটনযুক্ত মিনিমালিস্টিক কার্ড */}
+      {!loading && !hasQuestions && (
+        <div className="flex flex-col items-center justify-center rounded-brand border border-dashed border-border-base bg-surface-muted/40 px-4 py-8 text-center">
+          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-bg/50 text-brand-primary">
+            <MessageQuestionIcon className="h-5 w-5" />
+          </div>
           <p className="font-body text-sm font-bold text-ink">{t('এখনো কোনো প্রশ্ন করা হয়নি')}</p>
-          <p className="mt-1 font-body text-[12.5px] text-muted">
+          <p className="mt-1 max-w-sm font-body text-[12.5px] text-muted">
             {t('এই প্রোডাক্ট সম্পর্কে আপনার কোনো কিছু জানার থাকলে সবার আগে প্রশ্ন করুন!')}
           </p>
           <button
             onClick={openAskModal}
-            className="mt-3.5 rounded-full bg-brand-light px-5 py-2 font-body text-xs font-bold text-white shadow-sm transition-brand hover:bg-brand-light-hover"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-light px-5 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
           >
-            {t('প্রথম প্রশ্নটি করুন')}
+            <PlusChatIcon /> {t('প্রথম প্রশ্নটি করুন')}
           </button>
         </div>
       )}
 
-      {/* Questions List */}
-      {!loading && questions.length > 0 && (
+      {/* Questions List & Bottom Button — স্ক্রিনশট ৪ অনুযায়ী সব প্রশ্নের নিচে বাটন */}
+      {!loading && hasQuestions && (
         <div className="flex flex-col gap-4">
           {questions.map((q) => {
             const dateStr = q.created_at
@@ -212,7 +227,6 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               })
               : '';
 
-            // কে উত্তর দিতে পারবে: এডমিন অথবা প্রশ্নের আসল লেখক (যদি লগইন করা থাকে)
             const canAnswer = !q.answer && (isAdmin || (currentUser?.id && q.user_id === currentUser.id));
 
             return (
@@ -266,15 +280,25 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   <div className="mt-3 flex justify-end sm:ml-9">
                     <button
                       onClick={() => openAnswerModal(q)}
-                      className="rounded-lg border border-brand-light/40 bg-brand-bg/30 px-3 py-1.5 font-body text-xs font-bold text-brand-primary transition-brand hover:bg-brand-bg/70"
+                      className="inline-flex items-center gap-1 rounded-lg border border-brand-light/40 bg-brand-bg/30 px-3 py-1.5 font-body text-xs font-bold text-brand-primary transition-brand hover:bg-brand-bg/70"
                     >
-                      ✍️ {t('উত্তর দিন')}
+                      <EditPencilIcon /> {t('উত্তর দিন')}
                     </button>
                   </div>
                 ) : null}
               </div>
             );
           })}
+
+          {/* Bottom Button */}
+          <div className="mt-2 flex justify-center pt-2">
+            <button
+              onClick={openAskModal}
+              className="inline-flex items-center gap-2 rounded-full border border-brand-light/50 bg-brand-bg/40 px-6 py-2.5 font-body text-[13px] font-bold text-brand-primary shadow-sm transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg hover:shadow-sh1"
+            >
+              <PlusChatIcon /> {t('নতুন প্রশ্ন করুন')}
+            </button>
+          </div>
         </div>
       )}
 
@@ -286,7 +310,9 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         >
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
-              <h3 className="font-display text-base font-bold text-ink">💬 {t('প্রশ্ন করুন')}</h3>
+              <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+                <MessageQuestionIcon className="text-brand-light" /> {t('প্রশ্ন করুন')}
+              </h3>
               <button
                 onClick={() => setAskModalOpen(false)}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
@@ -352,7 +378,9 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         >
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
-              <h3 className="font-display text-base font-bold text-ink">✍️ {t('উত্তর লিখুন')}</h3>
+              <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+                <EditPencilIcon className="text-brand-light" /> {t('উত্তর লিখুন')}
+              </h3>
               <button
                 onClick={() => setAnsweringQuestion(null)}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
