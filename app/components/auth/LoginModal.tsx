@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -26,8 +27,6 @@ const MAX_NAME_LEN = 30;
 const MAX_PASS_LEN = 30;
 const MAX_EMAIL_LEN = 254;
 
-/** প্রতিটা পজিশন অনুযায়ী শুধু বৈধ characters typing-এই আটকে দেয়:
- *  position 0 -> শুধু '0', position 1 -> শুধু '1', position 2 -> শুধু 3-9, এরপর যেকোনো অঙ্ক, সর্বোচ্চ ১১ অঙ্ক */
 function filterPhoneInput(value: string): string {
   const digits = value.replace(/\D/g, '');
   let out = '';
@@ -126,7 +125,6 @@ function IconMailCheck() {
   );
 }
 
-/** Faint decorative device-line-art on the header gradient — echoes the brand key art, no emoji. */
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
@@ -194,6 +192,7 @@ export default function LoginModal({
   isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
 }: LoginModalProps) {
   const { t, lang } = useT();
+  const router = useRouter();
   const supabase = useRef(createClient()).current;
   const turnstileRef = useRef<TurnstileHandle>(null);
   const turnstileEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -254,8 +253,18 @@ export default function LoginModal({
       await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
       await applyWishlistSync(safeUser.id || '');
       showToast(t('Google দিয়ে লগইন সফল হয়েছে'));
+
+      // রিভিউ বা কাস্টম পেইজের অটো-রিডাইরেক্ট হ্যান্ডলিং
+      try {
+        const redirectPath = sessionStorage.getItem('vc_auth_redirect');
+        if (redirectPath && window.location.pathname !== redirectPath) {
+          router.push(redirectPath);
+        }
+      } catch {
+        // ignore
+      }
     })();
-  }, []);
+  }, [router, supabase, t]);
 
   useEffect(() => {
     const unsub = useWishlistStore.subscribe((state, prevState) => {
@@ -265,7 +274,7 @@ export default function LoginModal({
       saveWishlistToSupabase(supabase, user.id, state.wishlist);
     });
     return unsub;
-  }, []);
+  }, [supabase]);
 
   async function applyWishlistSync(userId: string) {
     const items = await syncWishlistFromSupabase(supabase, userId);
@@ -303,7 +312,20 @@ export default function LoginModal({
     await applyWishlistSync(safeUser.id || '');
     showToast(successMsg);
     onClose();
-    if (orderMode && onAuthSuccess) onAuthSuccess(safeUser);
+
+    if (orderMode && onAuthSuccess) {
+      onAuthSuccess(safeUser);
+    }
+
+    // রিভিউ বা নির্দিষ্ট পেজ থেকে লগইন করলে সেখানেই ফিরিয়ে আনা
+    try {
+      const redirectPath = sessionStorage.getItem('vc_auth_redirect');
+      if (redirectPath && window.location.pathname !== redirectPath) {
+        router.push(redirectPath);
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const runTurnstileCheck = async (): Promise<boolean> => {
@@ -543,7 +565,6 @@ export default function LoginModal({
             </div>
           ) : mode === 'register' ? (
             <div className="flex flex-col gap-3.5">
-              {/* Honeypot — বট ধরা পড়ার ফাঁদ, ব্রাউজারের অটোফিল বিভ্রান্ত না করার জন্য সুরক্ষিত নাম */}
               <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
                 <label htmlFor="b_auth_extra_field">Security Extra</label>
                 <input
@@ -661,4 +682,4 @@ export default function LoginModal({
       </div>
     </div>
   );
-         }
+}
