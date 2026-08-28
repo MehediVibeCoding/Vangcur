@@ -143,7 +143,6 @@ export default function ProductReviews({
     setIsAdmin(adminStatus);
     setLikedList(getLikedReviews());
 
-    // চেক: বর্তমান ইউজারের কোনো রিভিউ রিজেক্ট করা হয়েছে কি না
     if (currentUser?.id) {
       const rejected = data.find((r) => r.user_id === currentUser.id && r.is_rejected);
       if (rejected) {
@@ -160,7 +159,6 @@ export default function ProductReviews({
     loadReviewsData();
   }, [loadReviewsData]);
 
-  // লগইন শেষে স্বয়ংক্রিয়ভাবে রিভিউ মডাল ওপেন করার লজিক
   useEffect(() => {
     try {
       if (currentUser?.id && sessionStorage.getItem('vc_auto_open_review') === '1') {
@@ -186,12 +184,6 @@ export default function ProductReviews({
     [reviews, currentUser?.id]
   );
 
-  const approvedReviews = useMemo(
-    () => reviews.filter((r) => r.is_approved && !r.is_rejected),
-    [reviews]
-  );
-
-  // গ্যালারিতে দেখানোর জন্য রিভিউগুলোকে কার্ড আইটেমে রূপান্তর
   const galleryItems = useMemo<GalleryCardItem[]>(() => {
     const listToProcess = [...reviews].filter(
       (r) => (r.is_approved && !r.is_rejected) || (currentUser?.id && r.user_id === currentUser.id && !r.is_rejected)
@@ -199,7 +191,6 @@ export default function ProductReviews({
 
     const items: GalleryCardItem[] = [];
     listToProcess.forEach((r) => {
-      // যদি একাধিক ছবি থাকে (কমা দিয়ে আলাদা)
       if (r.image_url && r.image_url.includes(',')) {
         const urls = r.image_url.split(',').map((u) => u.trim()).filter(Boolean);
         urls.forEach((url, i) => {
@@ -241,7 +232,6 @@ export default function ProductReviews({
     return items;
   }, [reviews, currentUser?.id]);
 
-  // Carousel Navigation
   const slide = (dir: number) => {
     const n = galleryItems.length;
     if (n <= 1) return;
@@ -261,7 +251,6 @@ export default function ProductReviews({
     }
   };
 
-  // Like Toggle
   const handleLikeClick = async (e: React.MouseEvent, reviewId: number | string) => {
     e.stopPropagation();
     const idStr = String(reviewId);
@@ -275,7 +264,6 @@ export default function ProductReviews({
     await toggleReviewLike(supabase, reviewId);
   };
 
-  // On-Site Admin Moderation
   const handleAdminApprove = async (e: React.MouseEvent, reviewId: number | string) => {
     e.stopPropagation();
     try {
@@ -364,7 +352,6 @@ export default function ProductReviews({
     setWriteModalOpen(true);
   };
 
-  // Drag & Drop / File Change
   const processFiles = (files: FileList | File[]) => {
     const valid = Array.from(files).filter((f) => ['image/jpeg', 'image/png', 'image/webp'].includes(f.type));
     if (valid.length === 0) {
@@ -449,11 +436,11 @@ export default function ProductReviews({
   };
 
   return (
-    <div className="py-2">
+    <div className="py-1">
       {/* Header Block — টু-টোন ব্র্যান্ড হেডার ও স্কাই-ব্লু ব্যাজ আইকন */}
-      <div className="mb-6 flex flex-col gap-1">
+      <div className="mb-5 flex flex-col gap-1">
         <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-white shadow-xs">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
             <SolidStarIcon />
           </span>
           <span>
@@ -470,12 +457,12 @@ export default function ProductReviews({
       {/* Loading State */}
       {loading && (
         <div className="py-8 text-center font-body text-[13px] text-muted">
-          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light mr-2" />
+          <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
           {t('রিভিউ লোড হচ্ছে...')}
         </div>
       )}
 
-      {/* Empty State — স্ক্রিনশট ৫ অনুযায়ী ছাই ব্যাকগ্রাউন্ড ও সিমেট্রিক্যাল বাটন */}
+      {/* Empty State */}
       {!loading && galleryItems.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-border-base bg-surface-muted/50 p-6 text-center">
           <div className="mb-2 flex gap-1">
@@ -502,11 +489,11 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* 3D Coverflow Swipeable Review Gallery — অ্যাপল ফ্রস্টেড গ্লাস ও ফটো জুম */}
+      {/* 3D Coverflow Review Gallery — সফট ও স্মুথ শ্যাডো */}
       {!loading && galleryItems.length > 0 && (
-        <div className="mb-2">
+        <div className="mb-1">
           <div
-            className="relative mx-auto w-full max-w-[850px] overflow-hidden py-3"
+            className="relative mx-auto w-full max-w-[850px] overflow-hidden py-1"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -534,11 +521,11 @@ export default function ProductReviews({
                     onClick={() => setActiveCardIdx(idx)}
                     className={`relative h-[390px] w-[245px] shrink-0 select-none overflow-hidden rounded-[20px] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[280px] ${
                       isActive
-                        ? 'z-10 scale-100 opacity-100 shadow-[0_10px_30px_rgba(0,88,199,0.12)] ring-1 ring-brand-light/40'
-                        : 'z-0 scale-90 opacity-60 cursor-pointer'
+                        ? 'z-10 scale-100 opacity-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] ring-1 ring-brand-light/30'
+                        : 'z-0 scale-[0.85] opacity-60 cursor-pointer'
                     }`}
                   >
-                    {/* কার্ড ব্যাকগ্রাউন্ড: ফটো রিভিউ বনাম অ্যাপল স্কাই-ব্লু গ্লাস টেক্সট রিভিউ */}
+                    {/* ফটো রিভিউ বনাম ফ্রস্টেড গ্লাস টেক্সট রিভিউ */}
                     {item.imageUrl ? (
                       <div
                         className="group relative h-full w-full cursor-zoom-in"
@@ -554,11 +541,9 @@ export default function ProductReviews({
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
                         />
-                        {/* সফট গ্রেডিয়েন্ট শুধু উপরে ও নিচে যাতে ছবি মাঝখানে ১০০% ক্লিয়ার থাকে */}
                         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/75 via-transparent to-black/85" />
                       </div>
                     ) : (
-                      /* Apple-Style Frosted Sky-Blue + White Glassmorphism Card */
                       <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-br from-[#E0F2FE]/90 via-white to-[#F0F9FF]/95 p-5 backdrop-blur-md">
                         <div className="flex items-center justify-between">
                           <div className="flex gap-0.5">
@@ -573,7 +558,6 @@ export default function ProductReviews({
                           )}
                         </div>
 
-                        {/* Centered Typography for Text Review */}
                         <div className="my-auto px-2 text-center">
                           <p className="line-clamp-6 font-body text-[13.5px] font-semibold leading-relaxed text-slate-800">
                             &quot;{item.reviewText}&quot;
@@ -581,7 +565,7 @@ export default function ProductReviews({
                         </div>
 
                         <div className="flex items-center justify-between border-t border-sky-100 pt-3">
-                          <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
                             <UserAvatar name={item.userName} size="sm" />
                             <div className="min-w-0 text-left">
                               <div className="truncate font-body text-xs font-bold text-ink">
@@ -608,12 +592,12 @@ export default function ProductReviews({
                       </div>
                     )}
 
-                    {/* PHOTO CARD OVERLAYS: Top Rating & Bottom Author */}
+                    {/* PHOTO CARD OVERLAYS */}
                     {item.imageUrl && (
                       <>
                         <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-3.5 pt-4">
                           <div>
-                            <div className="flex gap-0.5 mb-1">
+                            <div className="mb-1 flex gap-0.5">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <StarIcon key={star} filled={star <= Number(item.rating)} className="h-3.5 w-3.5" />
                               ))}
@@ -630,7 +614,7 @@ export default function ProductReviews({
                         </div>
 
                         <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between p-3.5 pb-4">
-                          <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
                             <UserAvatar name={item.userName} size="sm" />
                             <div className="min-w-0 text-left">
                               <div className="truncate font-body text-xs font-bold text-white drop-shadow-sm">
@@ -657,9 +641,9 @@ export default function ProductReviews({
                       </>
                     )}
 
-                    {/* On-Site Admin / Author Moderation Bar */}
+                    {/* Moderation Bar */}
                     {(isAdmin || (currentUser?.id && item.userId === currentUser.id)) && (
-                      <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md">
+                      <div className="absolute right-2.5 top-2.5 z-20 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md">
                         {isAdmin && !item.isApproved && (
                           <button
                             onClick={(e) => handleAdminApprove(e, item.reviewId)}
@@ -699,7 +683,7 @@ export default function ProductReviews({
                   type="button"
                   onClick={() => slide(-1)}
                   aria-label="Previous"
-                  className="absolute left-1 top-1/2 -translate-y-1/2 z-20 hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink shadow-sh2 hover:bg-white"
+                  className="absolute left-1 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-sh2 hover:bg-white sm:flex"
                 >
                   &#8249;
                 </button>
@@ -707,7 +691,7 @@ export default function ProductReviews({
                   type="button"
                   onClick={() => slide(1)}
                   aria-label="Next"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 z-20 hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink shadow-sh2 hover:bg-white"
+                  className="absolute right-1 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-sh2 hover:bg-white sm:flex"
                 >
                   &#8250;
                 </button>
@@ -717,7 +701,7 @@ export default function ProductReviews({
 
           {/* Dots Indicator */}
           {galleryItems.length > 1 && (
-            <div className="flex justify-center gap-1.5 my-2">
+            <div className="my-2 flex justify-center gap-1.5">
               {galleryItems.map((_, i) => (
                 <button
                   key={i}
@@ -729,9 +713,9 @@ export default function ProductReviews({
             </div>
           )}
 
-          {/* Bottom Solid Blue "আপনার রিভিউ যুক্ত করুন" Button */}
+          {/* Bottom Button */}
           {!userExistingReview && (
-            <div className="mt-3 flex justify-center pt-1">
+            <div className="mt-2.5 flex justify-center pt-1">
               <button
                 onClick={handleOpenWriteReview}
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover"
@@ -743,7 +727,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Write Review Modal (Multi-Image Drag & Drop) */}
+      {/* Write Review Modal */}
       {writeModalOpen && (
         <div
           className="fixed inset-0 z-[1100] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-[2px] animate-section-reveal"
@@ -752,7 +736,7 @@ export default function ProductReviews({
           <div className="w-full max-w-[460px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-bg text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white">
                   <SolidStarIcon />
                 </span>
                 {t('আপনার রিভিউ যুক্ত করুন')}
@@ -766,7 +750,6 @@ export default function ProductReviews({
             </div>
 
             <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
-              {/* Star Rating Selector */}
               <div>
                 <label className="mb-1.5 block font-body text-xs font-bold text-ink">{t('রেটিং সিলেক্ট করুন')}</label>
                 <div className="flex items-center gap-1.5">
@@ -792,7 +775,6 @@ export default function ProductReviews({
                 </div>
               </div>
 
-              {/* Review Text */}
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="font-body text-xs font-bold text-ink">{t('আপনার মূল্যবান মতামত')}</label>
@@ -809,7 +791,6 @@ export default function ProductReviews({
                 />
               </div>
 
-              {/* Multi-Image Desktop Drag & Drop Upload Zone */}
               <div>
                 <label className="mb-1.5 block font-body text-xs font-bold text-ink">
                   {t('প্রোডাক্টের ছবি যুক্ত করুন')} <span className="font-normal text-muted">({t('ঐচ্ছিক, সর্বোচ্চ ৩টি ছবি')})</span>
@@ -828,7 +809,7 @@ export default function ProductReviews({
                       {previews.map((url, i) => (
                         <div key={i} className="relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={url} alt="Preview" className="h-16 w-16 rounded-lg object-cover shadow-sm border border-border-base" />
+                          <img src={url} alt="Preview" className="h-16 w-16 rounded-lg border border-border-base object-cover shadow-sm" />
                           <button
                             type="button"
                             onClick={() => handleRemoveFile(i)}
@@ -874,7 +855,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Rejection Notice Modal (প্রোডাক্টের নাম সহ এবং রি-রিভিউ বাটন) */}
+      {/* Rejection Notice Modal */}
       {rejectedReviewNotice && (
         <div
           className="fixed inset-0 z-[1250] flex items-center justify-center bg-ink/60 p-4 backdrop-blur-[2px] animate-section-reveal"
@@ -921,7 +902,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* 2-Review Limit Warning Modal */}
+      {/* Limit Modal */}
       {limitModalOpen && (
         <div
           className="fixed inset-0 z-[1200] flex items-center justify-center bg-ink/60 p-4 backdrop-blur-[2px] animate-section-reveal"
@@ -947,7 +928,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Lightbox High-Resolution Zoom Lightbox Modal */}
+      {/* Zoom Lightbox */}
       {zoomImageUrl && (
         <div
           className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-section-reveal"
