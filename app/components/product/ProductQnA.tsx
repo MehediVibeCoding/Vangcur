@@ -20,9 +20,10 @@ interface ProductQnAProps {
   productName: string;
 }
 
+// ডুপ্লিকেট অ্যাট্রিবিউট মুক্ত সলিড ভরাট সাদা আইকন
 function SolidChatQuestionIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="white" className="text-white fill-current">
+    <svg className={`text-white fill-current ${className}`.trim()} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
     </svg>
   );
@@ -308,14 +309,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
             const isAuthor = currentUser?.id && q.user_id === currentUser.id;
             const canDeleteQuestion = isAdmin || isAuthor;
-
-            // অ্যাডমিন উত্তর দিতে পারবে যদি এখনো অ্যাডমিনের উত্তর না থাকে
             const canAdminAnswer = isAdmin && !q.adminAnswer;
-
-            // কাস্টমার ফলো-আপ রিপ্লাই দিতে পারবে যদি:
-            // ১. সে এই প্রশ্নের আসল লেখক
-            // ২. অ্যাডমিন ইতিমধ্যে প্রথম উত্তরটি দিয়েছে
-            // ৩. লেখক ইতিমধ্যে কোনো ফলো-আপ রিপ্লাই দেয়নি
             const canAuthorFollowUp = isAuthor && q.adminAnswer && !q.authorReply;
 
             return (
@@ -348,7 +342,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   </div>
                 </div>
 
-                {/* ২. Admin Official Answer (যদি থাকে) */}
+                {/* ২. Admin Official Answer */}
                 {q.adminAnswer ? (
                   <div className="mt-3.5 flex items-start gap-3 rounded-[12px] border border-[#BAE0FD] bg-[#F0F9FF] p-3.5 sm:ml-9">
                     <UserAvatar
@@ -383,7 +377,6 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                     </div>
                   </div>
                 ) : (
-                  /* যদি এখনো অ্যাডমিন উত্তর না দেয় */
                   <div className="mt-3 flex items-center justify-between sm:ml-9 pt-1">
                     <span className="font-body text-[11px] italic text-amber-700/80">
                       ⏳ {t('Vangcur টিমের উত্তরের অপেক্ষায়...')}
@@ -399,7 +392,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   </div>
                 )}
 
-                {/* ৩. Author 1-Time Follow-up Reply (অ্যাডমিনের উত্তরের পর কাস্টমারের ফলো-আপ) */}
+                {/* ৩. Author 1-Time Follow-up Reply */}
                 {q.authorReply && (
                   <div className="mt-2.5 flex items-start gap-3 rounded-[12px] border border-border-base bg-surface-muted/60 p-3 sm:ml-16">
                     <UserAvatar
@@ -434,7 +427,6 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   </div>
                 )}
 
-                {/* যদি কাস্টমার এখনো ফলো-আপ রিপ্লাই না দিয়ে থাকে (১ বার রিপ্লাই দেওয়ার সুযোগ) */}
                 {canAuthorFollowUp && (
                   <div className="mt-2.5 flex justify-end sm:ml-9">
                     <button
@@ -449,7 +441,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
             );
           })}
 
-          {/* Bottom Solid Blue "নতুন প্রশ্ন করুন" Button */}
+          {/* Bottom Solid Blue Button */}
           <div className="mt-2 flex justify-center pt-2">
             <button
               onClick={openAskModal}
