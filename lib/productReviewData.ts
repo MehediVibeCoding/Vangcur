@@ -6,6 +6,7 @@ import { logWarn } from './logger';
 const MIN_REVIEW_LEN = 20;
 const MAX_REVIEW_LEN = 500;
 const MAX_UNVERIFIED_REVIEWS_PER_DAY = 2;
+const LIKED_REVIEWS_KEY = 'vc_liked_reviews';
 
 export async function fetchProductReviews(
   supabase: SupabaseClient,
@@ -15,7 +16,7 @@ export async function fetchProductReviews(
   try {
     const { data, error } = await supabase
       .from('product_reviews')
-      .select('id, product_id, user_id, user_name, rating, review_text, image_url, is_verified_buyer, is_approved, created_at')
+      .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
       .eq('product_id', productId)
       .order('created_at', { ascending: false });
 
@@ -23,12 +24,12 @@ export async function fetchProductReviews(
 
     const reviews = data as ProductReview[];
 
-    // যদি বর্তমান ইউজারের নিজস্ব পেন্ডিং রিভিউ থাকে, সেটিকে লিস্টের সবার উপরে আনা
+    // যদি বর্তমান ইউজারের নিজস্ব পেন্ডিং বা রিজেক্টেড রিভিউ থাকে, সেটিকে লিস্টের সবার উপরে আনা
     if (currentUserId) {
       reviews.sort((a, b) => {
-        const aIsOwnPending = a.user_id === currentUserId && !a.is_approved ? 1 : 0;
-        const bIsOwnPending = b.user_id === currentUserId && !b.is_approved ? 1 : 0;
-        return bIsOwnPending - aIsOwnPending;
+        const aIsOwn = a.user_id === currentUserId && (!a.is_approved || a.is_rejected) ? 1 : 0;
+        const bIsOwn = b.user_id === currentUserId && (!b.is_approved || b.is_rejected) ? 1 : 0;
+        return bIsOwn - aIsOwn;
       });
     }
 
@@ -151,10 +152,12 @@ export async function submitProductReview(
         rating,
         review_text: text,
         image_url: payload.imageUrl || null,
-        is_verified_buyer: isVerified,
-        is_approved: false, // ডিফল্টভাবে এডমিন অ্যাপ্রুভালের জন্য ওয়েটিংয়ে থাকবে
+        like_count: 0,
+        is_verified_buyer: false, // ডেটাবেজ ট্রিগার স্বয়ংক্রিয়ভাবে ভেরিফায়েড চেক করবে
+        is_approved: false,
+        is_rejected: false,
       })
-      .select('id, product_id, user_id, user_name, rating, review_text, image_url, is_verified_buyer, is_approved, created_at')
+      .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
       .single();
 
     if (error) {
@@ -172,16 +175,79 @@ export async function submitProductReview(
   }
 }
 
-/**
- * স্মার্ট হাইব্রিড রেটিং ক্যালকুলেটর:
- * - যদি কোনো এপ্রুভড রিভিউ না থাকে: ডাটাবেজের ডিফল্ট রেটিং (যেমন ৪.৮) রিটার্ন করে।
- * - যদি এপ্রুভড রিভিউ থাকে: লাইভ এভারেজ ও ৫-স্টার পার্সেন্টেজ হিসাব করে।
- */
+export async function deleteProductReview(
+  supabase: SupabaseClient,
+  reviewId: number | string,
+  userId?: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    let q = supabase.from('product_reviews').delete().eq('id', reviewId);
+    if (userId) {
+      const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle();
+      if (!profile?.is_admin) {
+        q = q.eq('user_id', userId);
+      }
+    }
+
+    const { error } = await q;
+    if (error) {
+      logWarn('[Review] deleteProductReview error:', error);
+      return { ok: false, error: 'রিভিউটি মুছে ফেলা সম্ভব হয়নি।' };
+    }
+    return { ok: true };
+  } catch (e) {
+    logWarn('[Review] deleteProductReview exception:', e);
+    return { ok: false, error: 'নেটওয়ার্ক সমস্যা।' };
+  }
+}
+
+export function getLikedReviews(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(LIKED_REVIEWS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export async function toggleReviewLike(
+  supabase: SupabaseClient,
+  reviewId: number | string,
+): Promise<{ ok: boolean; newCount?: number }> {
+  const idStr = String(reviewId);
+  const liked = getLikedReviews();
+  if (liked.includes(idStr)) {
+    return { ok: false };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('increment_review_like', {
+      p_review_id: Number(reviewId),
+    });
+
+    if (error) {
+      logWarn('[Review] toggleReviewLike RPC error:', error);
+      return { ok: false };
+    }
+
+    try {
+      localStorage.setItem(LIKED_REVIEWS_KEY, JSON.stringify([...liked, idStr]));
+    } catch {
+      // ignore
+    }
+
+    return { ok: true, newCount: Number(data) };
+  } catch (e) {
+    logWarn('[Review] toggleReviewLike exception:', e);
+    return { ok: false };
+  }
+}
+
 export function calculateReviewSummary(
   reviews: ProductReview[],
   defaultRating = 4.8,
 ): ReviewRatingSummary {
-  const approvedReviews = reviews.filter((r) => r.is_approved);
+  const approvedReviews = reviews.filter((r) => r.is_approved && !r.is_rejected);
   const count = approvedReviews.length;
 
   if (count === 0) {
@@ -216,4 +282,4 @@ export function calculateReviewSummary(
     breakdown,
     hasReviews: true,
   };
-                       }
+}
