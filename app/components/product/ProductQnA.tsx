@@ -251,9 +251,9 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
   return (
     <div className="py-2">
-      {/* Header Block — বর্ডার লাইন ছাড়া পরিষ্কার স্পেসিং ও স্কাই-ব্লু আইকন */}
+      {/* Header Block — বর্ডার দাগ ছাড়া পরিষ্কার আধুনিক স্পেসিং */}
       <div className="mb-5 flex flex-col gap-1">
-        <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
+        <div className="flex items-center gap-2.5 font-body text-lg font-bold text-ink">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
             <SolidChatQuestionIcon />
           </span>
@@ -379,22 +379,20 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-3 flex items-center justify-between pt-1 sm:ml-9">
-                    <span className="font-body text-[11px] italic text-amber-700/80">
-                      ⏳ {t('Vangcur টিমের উত্তরের অপেক্ষায়...')}
-                    </span>
-                    {canAdminAnswer && (
+                  // সাধারণ ইউজারের ক্ষেত্রে লেখা হাইড থাকবে, শুধু এডমিন/মডারেটরকে উত্তর বাটন দেখাবে
+                  canAdminAnswer && (
+                    <div className="mt-3 flex justify-end pt-1 sm:ml-9">
                       <button
                         onClick={() => openReplyModal(q, false)}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-brand-light/50 bg-brand-bg/40 px-3 py-1 font-body text-xs font-bold text-brand-primary hover:bg-brand-bg"
                       >
                         <ReplyCurveIcon /> {t('উত্তর দিন (Admin)')}
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )
                 )}
 
-                {/* ৩. Author 1-Time Follow-up Reply */}
+                {/* ৩. Author Follow-up Reply */}
                 {q.authorReply && (
                   <div className="mt-2.5 flex items-start gap-3 rounded-[12px] border border-border-base bg-surface-muted/60 p-3 sm:ml-16">
                     <UserAvatar
@@ -463,7 +461,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         >
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
-              <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+              <h3 className="flex items-center gap-2 font-body text-base font-bold text-ink">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white">
                   <SolidChatQuestionIcon />
                 </span>
@@ -485,7 +483,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   required
                   maxLength={30}
                   value={askName}
-                  disabled={!!currentUser?.name}
+                  disabled={!!currentUser?.name && !isAdmin}
                   onChange={(e) => setAskName(e.target.value)}
                   placeholder={t('আপনার নাম লিখুন')}
                   className="w-full rounded-xl border border-border-base bg-white px-3.5 py-2.5 font-body text-[13.5px] text-ink outline-none transition-brand focus:border-brand-light disabled:bg-surface-muted disabled:text-muted"
@@ -534,7 +532,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         >
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
-              <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+              <h3 className="flex items-center gap-2 font-body text-base font-bold text-ink">
                 <ReplyCurveIcon className="text-brand-primary" /> 
                 {isAdmin ? t('Vangcur টিমের উত্তর') : t('আপনার ফলো-আপ মন্তব্য')}
               </h3>
