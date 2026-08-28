@@ -8,6 +8,47 @@ const MAX_REVIEW_LEN = 500;
 const MAX_UNVERIFIED_REVIEWS_PER_DAY = 2;
 const LIKED_REVIEWS_KEY = 'vc_liked_reviews';
 
+const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
+
+export async function checkIsReviewAdminOrMod(
+  supabase: SupabaseClient,
+  userId?: string | null,
+): Promise<boolean> {
+  let targetId = userId;
+  let userEmail: string | null = null;
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!targetId) targetId = data?.session?.user?.id || null;
+    userEmail = data?.session?.user?.email || null;
+  } catch {
+    // fallback
+  }
+
+  // ১. সরাসরি অথরাইজড মডারেটর জিমেইল যাচাই
+  if (userEmail && userEmail.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) {
+    return true;
+  }
+
+  if (!targetId) return false;
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_admin, role, email')
+      .eq('id', targetId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+
+    if (data.email && data.email.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) return true;
+    if (data.role && ['admin', 'super_admin', 'moderator'].includes(data.role)) return true;
+    return !!data.is_admin;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchProductReviews(
   supabase: SupabaseClient,
   productId: number | string,
@@ -24,7 +65,6 @@ export async function fetchProductReviews(
 
     const reviews = data as ProductReview[];
 
-    // যদি বর্তমান ইউজারের নিজস্ব পেন্ডিং বা রিজেক্টেড রিভিউ থাকে, সেটিকে লিস্টের সবার উপরে আনা
     if (currentUserId) {
       reviews.sort((a, b) => {
         const aIsOwn = a.user_id === currentUserId && (!a.is_approved || a.is_rejected) ? 1 : 0;
@@ -127,18 +167,20 @@ export async function submitProductReview(
     return { ok: false, error: `রিভিউটি কমপক্ষে ${MIN_REVIEW_LEN} এবং সর্বোচ্চ ${MAX_REVIEW_LEN} অক্ষরের হতে হবে` };
   }
 
-  // ১. ভেরিফায়েড বায়ার চেক
-  const isVerified = await checkIsVerifiedBuyer(supabase, payload.productId, payload.userId);
+  // এডমিন বা অথরাইজড মডারেটর কি না যাচাই
+  const isPrivileged = await checkIsReviewAdminOrMod(supabase, payload.userId);
 
-  // ২. যদি না কেনা থাকে, তবে আজকের ২-রিভিউ লিমিট চেক
-  if (!isVerified) {
-    const limitCheck = await checkUnverifiedReviewDailyLimit(supabase, payload.userId);
-    if (!limitCheck.allowed) {
-      return {
-        ok: false,
-        limitExceeded: true,
-        error: 'আপনি ইতিমধ্যে আজকের জন্য সর্বোচ্চ ২টি আন-অর্ডারড প্রোডাক্টে রিভিউ দিয়েছেন এবং আপনি এই প্রোডাক্টটি অর্ডারও করেননি। প্রতারণা রোধে এই মুহূর্তে নতুন রিভিউ দেওয়া সম্ভব নয়।',
-      };
+  if (!isPrivileged) {
+    const isVerified = await checkIsVerifiedBuyer(supabase, payload.productId, payload.userId);
+    if (!isVerified) {
+      const limitCheck = await checkUnverifiedReviewDailyLimit(supabase, payload.userId);
+      if (!limitCheck.allowed) {
+        return {
+          ok: false,
+          limitExceeded: true,
+          error: 'আপনি ইতিমধ্যে আজকের জন্য সর্বোচ্চ ২টি আন-অর্ডারড প্রোডাক্টে রিভিউ দিয়েছেন।',
+        };
+      }
     }
   }
 
@@ -153,8 +195,8 @@ export async function submitProductReview(
         review_text: text,
         image_url: payload.imageUrl || null,
         like_count: 0,
-        is_verified_buyer: false, // ডেটাবেজ ট্রিগার স্বয়ংক্রিয়ভাবে ভেরিফায়েড চেক করবে
-        is_approved: false,
+        is_verified_buyer: isPrivileged,
+        is_approved: isPrivileged, // এডমিন বা মডারেটর রিভিউ দিলে সাথে সাথে লাইভ হবে
         is_rejected: false,
       })
       .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
@@ -181,12 +223,11 @@ export async function deleteProductReview(
   userId?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
+    const isPrivileged = await checkIsReviewAdminOrMod(supabase, userId);
+
     let q = supabase.from('product_reviews').delete().eq('id', reviewId);
-    if (userId) {
-      const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle();
-      if (!profile?.is_admin) {
-        q = q.eq('user_id', userId);
-      }
+    if (!isPrivileged && userId) {
+      q = q.eq('user_id', userId);
     }
 
     const { error } = await q;
