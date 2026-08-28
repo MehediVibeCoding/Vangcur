@@ -136,6 +136,16 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
   );
 }
 
+function parseJsonish<T>(val: unknown, fallback: T): T {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val !== 'string') return val as T;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 function getQuickSpecPills(quickSpecsText: string | undefined, specs?: ProductSpecs & { _quick_keys?: string[] }): string[] {
   if (quickSpecsText && quickSpecsText.trim()) {
     return quickSpecsText.split('•').map((s) => s.trim()).filter(Boolean);
@@ -344,6 +354,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [qty, setQty] = useState(1);
   const [curImgIdx, setCurImgIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const [transformOrigin, setTransformOrigin] = useState('center center');
   const [activeTab, setActiveTab] = useState('ppSecDesc');
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
   const [warrantyOpen, setWarrantyOpen] = useState(false);
@@ -620,7 +631,17 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const techRows = getTechSpecRows(prod.specs);
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
-  const faqs = Array.isArray(prod.faqs) ? prod.faqs : [];
+
+  // শুধুমাত্র ওই প্রোডাক্টের নিজস্ব কাস্টম FAQ ডাটা থাকলে তা দেখাবে (কোনো ৮টি ডিফল্ট স্টোর FAQ ফলব্যাক ছাড়াই)
+  const faqs: { q: string; a: string }[] = useMemo(() => {
+    if (!prod?.faqs) return [];
+    if (Array.isArray(prod.faqs)) return prod.faqs;
+    if (typeof prod.faqs === 'string') {
+      return parseJsonish<{ q: string; a: string }[]>(prod.faqs, []);
+    }
+    return [];
+  }, [prod?.faqs]);
+
   const related = prods
     .filter((p) => prodInCat(p, prod.cat) && p.id !== prod.id)
     .sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0))
@@ -936,9 +957,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* নতুন রিডিজাইন করা এসইও FAQ এবং কাস্টমার Q&A সেকশন */}
+        {/* প্রশ্নোত্তর (Q&A) সেকশন */}
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
-          {/* ১. প্রোডাক্টের নির্দিষ্ট এসইও FAQ (কার্ড-বেসড অ্যাকর্ডিয়ন ডিজাইন) */}
+          {/* ১. প্রোডাক্টের নিজস্ব স্পেসিফিক FAQ (যদি ডাটাবেজে থাকে তবেই কেবল নতুন কার্ড ডিজাইনে দেখাবে) */}
           {faqs.length > 0 && (
             <div className="mb-10">
               <SectionHeading icon={<QuestionBookIcon />}>
@@ -965,7 +986,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                           <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isOpen ? 'bg-brand-primary text-white' : 'bg-brand-bg text-brand-primary'}`}>
                             Q
                           </span>
-                          <span>{f.q}</span>
+                          <span>{t(f.q)}</span>
                         </div>
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
@@ -973,7 +994,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
                       {isOpen && (
                         <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
                           <div className="border-l-2 border-brand-light/60 pl-3">
-                            {f.a}
+                            {t(f.a)}
                           </div>
                         </div>
                       )}
