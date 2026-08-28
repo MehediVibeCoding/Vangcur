@@ -30,25 +30,41 @@ interface ProductReviewsProps {
   onOpenLogin?: () => void;
 }
 
+interface GalleryCardItem {
+  id: string;
+  reviewId: number | string;
+  userName: string;
+  rating: number;
+  reviewText: string;
+  imageUrl?: string | null;
+  likeCount: number;
+  isVerifiedBuyer: boolean;
+  isApproved: boolean;
+  isRejected?: boolean;
+  rejectionReason?: string | null;
+  createdAt: string;
+  userId: string;
+}
+
 function StarIcon({ filled = false, className = '' }: { filled?: boolean; className?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? '#D4A853' : 'none'} stroke={filled ? '#D4A853' : '#D1D5DB'} strokeWidth="1.5" className={className}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? '#D4A853' : 'none'} stroke={filled ? '#D4A853' : '#D1D5DB'} strokeWidth="1.5" className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
     </svg>
   );
 }
 
-function StarBadgeIcon({ className = '' }: { className?: string }) {
+function SolidStarIcon() {
   return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6-5.9-3.3-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8Z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="white" className="text-white fill-current">
+      <path d="M12 2l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6-5.9-3.3-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" />
     </svg>
   );
 }
 
 function PlusIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
@@ -73,7 +89,7 @@ function TrashIcon() {
 
 function HeartIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#FF5A6E' : 'none'} stroke={filled ? '#FF5A6E' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#FF5A6E' : 'none'} stroke={filled ? '#FF5A6E' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
     </svg>
   );
@@ -107,17 +123,16 @@ export default function ProductReviews({
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Modals: 2-Review Limit & Rejection Notice
+  // Modals
   const [limitModalOpen, setLimitModalOpen] = useState(false);
   const [rejectedReviewNotice, setRejectedReviewNotice] = useState<ProductReview | null>(null);
 
   // Lightbox Zoom
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
 
-  // Touch Swipe Ref
+  // Touch Swipe
   const touchRef = useRef({ startX: 0, startY: 0 });
 
-  // Fetch reviews, likes & admin status
   const loadReviewsData = useCallback(async () => {
     setLoading(true);
     const [data, adminStatus] = await Promise.all([
@@ -128,7 +143,7 @@ export default function ProductReviews({
     setIsAdmin(adminStatus);
     setLikedList(getLikedReviews());
 
-    // চেক: বর্তমান ইউজারের রিভিউ কি রিজেক্ট হয়েছে?
+    // চেক: বর্তমান ইউজারের কোনো রিভিউ রিজেক্ট করা হয়েছে কি না
     if (currentUser?.id) {
       const rejected = data.find((r) => r.user_id === currentUser.id && r.is_rejected);
       if (rejected) {
@@ -145,6 +160,18 @@ export default function ProductReviews({
     loadReviewsData();
   }, [loadReviewsData]);
 
+  // লগইন শেষে স্বয়ংক্রিয়ভাবে রিভিউ মডাল ওপেন করার লজিক
+  useEffect(() => {
+    try {
+      if (currentUser?.id && sessionStorage.getItem('vc_auto_open_review') === '1') {
+        sessionStorage.removeItem('vc_auto_open_review');
+        setTimeout(() => handleOpenWriteReview(), 400);
+      }
+    } catch {
+      // ignore
+    }
+  }, [currentUser?.id]);
+
   useEffect(() => {
     if (writeModalOpen || limitModalOpen || zoomImageUrl || rejectedReviewNotice) {
       lockBody();
@@ -154,9 +181,6 @@ export default function ProductReviews({
     return () => unlockBody();
   }, [writeModalOpen, limitModalOpen, zoomImageUrl, rejectedReviewNotice]);
 
-  const summary = useMemo(() => calculateReviewSummary(reviews, defaultRating), [reviews, defaultRating]);
-  
-  // ব্যবহারকারী কি ইতিমধ্যে রিভিউ দিয়েছেন?
   const userExistingReview = useMemo(
     () => (currentUser?.id ? reviews.find((r) => r.user_id === currentUser.id) : null),
     [reviews, currentUser?.id]
@@ -167,17 +191,59 @@ export default function ProductReviews({
     [reviews]
   );
 
-  const displayReviews = useMemo(() => {
-    // লেখকের পেন্ডিং রিভিউ থাকলে সবার আগে দেখাবে
-    if (userExistingReview && !userExistingReview.is_approved && !userExistingReview.is_rejected) {
-      return [userExistingReview, ...approvedReviews.filter((r) => r.id !== userExistingReview.id)];
-    }
-    return approvedReviews;
-  }, [userExistingReview, approvedReviews]);
+  // গ্যালারিতে দেখানোর জন্য রিভিউগুলোকে কার্ড আইটেমে রূপান্তর
+  const galleryItems = useMemo<GalleryCardItem[]>(() => {
+    const listToProcess = [...reviews].filter(
+      (r) => (r.is_approved && !r.is_rejected) || (currentUser?.id && r.user_id === currentUser.id && !r.is_rejected)
+    );
 
-  // 3D Carousel Navigation
+    const items: GalleryCardItem[] = [];
+    listToProcess.forEach((r) => {
+      // যদি একাধিক ছবি থাকে (কমা দিয়ে আলাদা)
+      if (r.image_url && r.image_url.includes(',')) {
+        const urls = r.image_url.split(',').map((u) => u.trim()).filter(Boolean);
+        urls.forEach((url, i) => {
+          items.push({
+            id: `${r.id}-${i}`,
+            reviewId: r.id,
+            userName: r.user_name,
+            rating: r.rating,
+            reviewText: r.review_text,
+            imageUrl: url,
+            likeCount: r.like_count || 0,
+            isVerifiedBuyer: r.is_verified_buyer,
+            isApproved: r.is_approved,
+            isRejected: r.is_rejected,
+            rejectionReason: r.rejection_reason,
+            createdAt: r.created_at,
+            userId: r.user_id,
+          });
+        });
+      } else {
+        items.push({
+          id: String(r.id),
+          reviewId: r.id,
+          userName: r.user_name,
+          rating: r.rating,
+          reviewText: r.review_text,
+          imageUrl: r.image_url || null,
+          likeCount: r.like_count || 0,
+          isVerifiedBuyer: r.is_verified_buyer,
+          isApproved: r.is_approved,
+          isRejected: r.is_rejected,
+          rejectionReason: r.rejection_reason,
+          createdAt: r.created_at,
+          userId: r.user_id,
+        });
+      }
+    });
+
+    return items;
+  }, [reviews, currentUser?.id]);
+
+  // Carousel Navigation
   const slide = (dir: number) => {
-    const n = displayReviews.length;
+    const n = galleryItems.length;
     if (n <= 1) return;
     setActiveCardIdx((cur) => (cur + dir + n) % n);
   };
@@ -245,22 +311,27 @@ export default function ProductReviews({
     }
   };
 
-  const handleDeleteReview = async (e: React.MouseEvent, review: ProductReview) => {
+  const handleDeleteReview = async (e: React.MouseEvent, reviewId: number | string) => {
     e.stopPropagation();
     if (!window.confirm('আপনি কি নিশ্চিতভাবে এই রিভিউটি মুছে ফেলতে চান?')) return;
 
-    const res = await deleteProductReview(supabase, review.id, currentUser?.id);
+    const res = await deleteProductReview(supabase, reviewId, currentUser?.id);
     if (res.ok) {
-      setReviews((prev) => prev.filter((r) => r.id !== review.id));
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       showToast(t('রিভিউটি মুছে ফেলা হয়েছে'));
     } else {
       showToast(t('মুছে ফেলা সম্ভব হয়নি'));
     }
   };
 
-  // Open Write Modal
   const handleOpenWriteReview = async () => {
     if (!currentUser?.id) {
+      try {
+        sessionStorage.setItem('vc_auth_redirect', window.location.pathname);
+        sessionStorage.setItem('vc_auto_open_review', '1');
+      } catch {
+        // ignore
+      }
       showToast(t('রিভিউ দেওয়ার জন্য অনুগ্রহ করে আগে লগইন করুন'));
       if (onOpenLogin) onOpenLogin();
       return;
@@ -321,7 +392,6 @@ export default function ProductReviews({
     setPreviews(nextF.map((f) => URL.createObjectURL(f)));
   };
 
-  // Submit Review
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser?.id) return;
@@ -330,18 +400,21 @@ export default function ProductReviews({
     setSubmitting(true);
 
     try {
-      let uploadedUrl: string | null = null;
+      const uploadedUrls: string[] = [];
       if (selectedFiles.length > 0) {
-        try {
-          uploadedUrl = await uploadReviewImageToCloudinary(selectedFiles[0]);
-        } catch (uploadErr: any) {
-          setSubmitting(false);
-          setErrorMessage(
-            uploadErr?.message?.includes('preset')
-              ? t('ক্লাউডিনারি প্রিসেট সেট করা হয়নি। ছবি ছাড়া রিভিউ সাবমিট করতে পারেন।')
-              : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'))
-          );
-          return;
+        for (const file of selectedFiles) {
+          try {
+            const url = await uploadReviewImageToCloudinary(file);
+            if (url) uploadedUrls.push(url);
+          } catch (uploadErr: any) {
+            setSubmitting(false);
+            setErrorMessage(
+              uploadErr?.message?.includes('preset')
+                ? t('ক্লাউডিনারি প্রিসেট সেট করা হয়নি। ছবি ছাড়া রিভিউ সাবমিট করতে পারেন।')
+                : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'))
+            );
+            return;
+          }
         }
       }
 
@@ -351,7 +424,7 @@ export default function ProductReviews({
         userName: currentUser.name || 'Customer',
         rating: ratingInput,
         reviewText,
-        imageUrl: uploadedUrl,
+        imageUrl: uploadedUrls.length > 0 ? uploadedUrls.join(',') : null,
       });
 
       setSubmitting(false);
@@ -377,11 +450,11 @@ export default function ProductReviews({
 
   return (
     <div className="py-2">
-      {/* Header Block — ক্লিন টু-টোন ব্র্যান্ড হেডার */}
-      <div className="mb-6 flex flex-col gap-1 border-b border-border-base pb-4">
+      {/* Header Block — টু-টোন ব্র্যান্ড হেডার ও স্কাই-ব্লু ব্যাজ আইকন */}
+      <div className="mb-6 flex flex-col gap-1">
         <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-white shadow-xs">
-            <StarBadgeIcon className="text-white fill-current" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-white shadow-xs">
+            <SolidStarIcon />
           </span>
           <span>
             {t('কাস্টমার')} <span className="text-brand-light">{t('রিভিউ ও রেটিং')}</span>
@@ -389,73 +462,9 @@ export default function ProductReviews({
         </div>
         <p className="font-body text-[12.5px] text-muted">
           {lang === 'en'
-            ? `Real unboxing photos, ratings and feedback from customers of ${productName}.`
+            ? `Real unboxing photos and customer reviews of ${productName}.`
             : `${productName}-এর প্রকৃত কাস্টমারদের আনবক্সিং অভিজ্ঞতা ও রিভিউ।`}
         </p>
-      </div>
-
-      {/* Top Rating Summary Breakdown */}
-      <div className="mb-7 rounded-brand border border-border-base bg-white p-5 shadow-sh1">
-        {summary.hasReviews ? (
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            {/* Left Score */}
-            <div className="flex shrink-0 flex-col items-center justify-center gap-1 sm:border-r sm:border-border-base sm:pr-8">
-              <div className="font-display text-4xl font-extrabold text-ink">{summary.average.toFixed(1)}</div>
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <StarIcon key={star} filled={star <= Math.round(summary.average)} />
-                ))}
-              </div>
-              <div className="mt-1 font-body text-xs font-semibold text-muted">
-                {lang === 'en' ? `Based on ${summary.count} reviews` : `${summary.count}টি রিভিউয়ের ভিত্তিতে`}
-              </div>
-            </div>
-
-            {/* Right Bars */}
-            <div className="flex flex-1 flex-col gap-2">
-              {[5, 4, 3, 2, 1].map((star) => {
-                const pct = summary.breakdown[star] || 0;
-                return (
-                  <div key={star} className="flex items-center gap-2.5 font-body text-xs">
-                    <span className="w-6 text-right font-bold text-ink">{star}★</span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-muted">
-                      <div
-                        className="h-full rounded-full bg-gold transition-all duration-500"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="w-9 text-right font-medium text-muted">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          /* Empty State — যদি ইউজার ইতিমধ্যে রিভিউ না দিয়ে থাকেন কেবল তখনই ইনভাইটেশন কার্ড দেখাবে */
-          <div className="flex flex-col items-center justify-center py-4 text-center">
-            <div className="mb-2 flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <StarIcon key={star} filled={star <= Math.round(defaultRating)} />
-              ))}
-            </div>
-            <p className="font-body text-sm font-bold text-ink">
-              {lang === 'en' ? 'No customer reviews yet' : 'এই প্রোডাক্টটিতে এখনো কোনো কাস্টমার রিভিউ নেই'}
-            </p>
-            <p className="mt-1 max-w-md font-body text-xs text-muted">
-              {lang === 'en'
-                ? 'Be the first customer to share your unboxing experience with this product!'
-                : 'আপনিই প্রথম রিভিউ দিয়ে প্রোডাক্টের কোয়ালিটি সম্পর্কে আপনার অভিজ্ঞতা জানান!'}
-            </p>
-            {!userExistingReview && (
-              <button
-                onClick={handleOpenWriteReview}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-light px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
-              >
-                <PlusIcon /> {t('আপনার রিভিউ যুক্ত করুন')}
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Loading State */}
@@ -466,27 +475,53 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* 3D Coverflow Swipeable Review Gallery (স্ক্রিনশট ২ অনুযায়ী) */}
-      {!loading && displayReviews.length > 0 && (
-        <div className="mb-4">
+      {/* Empty State — স্ক্রিনশট ৫ অনুযায়ী ছাই ব্যাকগ্রাউন্ড ও সিমেট্রিক্যাল বাটন */}
+      {!loading && galleryItems.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-border-base bg-surface-muted/50 p-6 text-center">
+          <div className="mb-2 flex gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <StarIcon key={star} filled={star <= Math.round(defaultRating)} />
+            ))}
+          </div>
+          <p className="font-body text-sm font-bold text-ink">
+            {lang === 'en' ? 'No customer reviews yet' : 'এই প্রোডাক্টটিতে এখনো কোনো কাস্টমার রিভিউ নেই'}
+          </p>
+          <p className="mt-1 max-w-sm font-body text-xs text-muted">
+            {lang === 'en'
+              ? 'Be the first customer to share your unboxing experience with this product!'
+              : 'আপনিই প্রথম রিভিউ দিয়ে প্রোডাক্টের কোয়ালিটি সম্পর্কে আপনার অভিজ্ঞতা জানান!'}
+          </p>
+          {!userExistingReview && (
+            <button
+              onClick={handleOpenWriteReview}
+              className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
+            >
+              <PlusIcon /> {t('আপনার রিভিউ যুক্ত করুন')}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 3D Coverflow Swipeable Review Gallery — অ্যাপল ফ্রস্টেড গ্লাস ও ফটো জুম */}
+      {!loading && galleryItems.length > 0 && (
+        <div className="mb-2">
           <div
-            className="relative mx-auto w-full max-w-[850px] overflow-hidden py-4"
+            className="relative mx-auto w-full max-w-[850px] overflow-hidden py-3"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
             <div className="flex items-center justify-center gap-3 sm:gap-6">
-              {displayReviews.map((r, idx) => {
+              {galleryItems.map((item, idx) => {
                 const isActive = idx === activeCardIdx;
-                const isOwnPending = !r.is_approved && r.user_id === currentUser?.id;
-                const isLiked = likedList.includes(String(r.id));
-                const dateStr = r.created_at
-                  ? new Date(r.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
+                const isOwnPending = !item.isApproved && item.userId === currentUser?.id;
+                const isLiked = likedList.includes(String(item.reviewId));
+                const dateStr = item.createdAt
+                  ? new Date(item.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
                     year: 'numeric', month: 'short', day: 'numeric',
                   })
                   : '';
 
-                // শুধু সক্রিয় এবং তার পাশের কার্ডগুলো প্রদর্শন
-                const n = displayReviews.length;
+                const n = galleryItems.length;
                 const prevIdx = (activeCardIdx - 1 + n) % n;
                 const nextIdx = (activeCardIdx + 1) % n;
                 const isVisible = idx === activeCardIdx || idx === prevIdx || idx === nextIdx;
@@ -495,100 +530,156 @@ export default function ProductReviews({
 
                 return (
                   <div
-                    key={r.id}
+                    key={item.id}
                     onClick={() => setActiveCardIdx(idx)}
-                    className={`relative h-[380px] w-[240px] shrink-0 select-none overflow-hidden rounded-[20px] bg-[#111] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[280px] ${
+                    className={`relative h-[390px] w-[245px] shrink-0 select-none overflow-hidden rounded-[20px] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[280px] ${
                       isActive
-                        ? 'z-10 scale-100 opacity-100 shadow-[0_16px_40px_rgba(0,0,0,0.3)] ring-2 ring-brand-light/50'
-                        : 'z-0 scale-90 opacity-60'
+                        ? 'z-10 scale-100 opacity-100 shadow-[0_10px_30px_rgba(0,88,199,0.12)] ring-1 ring-brand-light/40'
+                        : 'z-0 scale-90 opacity-60 cursor-pointer'
                     }`}
                   >
-                    {/* Review Image / Fallback Ambient Background */}
-                    {r.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={optimizeCloudinaryUrl(r.image_url, 450)}
-                        alt="Customer Unboxing"
-                        className="absolute inset-0 h-full w-full object-cover"
-                        loading="lazy"
-                      />
+                    {/* কার্ড ব্যাকগ্রাউন্ড: ফটো রিভিউ বনাম অ্যাপল স্কাই-ব্লু গ্লাস টেক্সট রিভিউ */}
+                    {item.imageUrl ? (
+                      <div
+                        className="group relative h-full w-full cursor-zoom-in"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setZoomImageUrl(item.imageUrl!);
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={optimizeCloudinaryUrl(item.imageUrl, 500)}
+                          alt="Review Unboxing"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        {/* সফট গ্রেডিয়েন্ট শুধু উপরে ও নিচে যাতে ছবি মাঝখানে ১০০% ক্লিয়ার থাকে */}
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/75 via-transparent to-black/85" />
+                      </div>
                     ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#1E293B] via-[#0F172A] to-[#020617] p-4 text-center">
-                        <span className="text-3xl opacity-40">⭐</span>
+                      /* Apple-Style Frosted Sky-Blue + White Glassmorphism Card */
+                      <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-br from-[#E0F2FE]/90 via-white to-[#F0F9FF]/95 p-5 backdrop-blur-md">
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <StarIcon key={star} filled={star <= Number(item.rating)} className="h-3.5 w-3.5" />
+                            ))}
+                          </div>
+                          {isOwnPending && (
+                            <span className="rounded-full bg-amber-500/90 px-2 py-0.5 font-body text-[9px] font-bold text-white shadow-xs">
+                              ⏳ {t('অনুমোদনের অপেক্ষায়')}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Centered Typography for Text Review */}
+                        <div className="my-auto px-2 text-center">
+                          <p className="line-clamp-6 font-body text-[13.5px] font-semibold leading-relaxed text-slate-800">
+                            &quot;{item.reviewText}&quot;
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-sky-100 pt-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <UserAvatar name={item.userName} size="sm" />
+                            <div className="min-w-0 text-left">
+                              <div className="truncate font-body text-xs font-bold text-ink">
+                                {item.userName}
+                              </div>
+                              <div className="flex items-center gap-1 font-body text-[10px] text-muted">
+                                <span>{dateStr}</span>
+                                {item.isVerifiedBuyer && <VerifiedCheckIcon />}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => handleLikeClick(e, item.reviewId)}
+                            className={`flex h-7 items-center gap-1 rounded-full px-2 transition-transform active:scale-90 ${isLiked ? 'bg-red-50 text-[#FF5A6E]' : 'bg-surface-muted text-muted'}`}
+                          >
+                            <HeartIcon filled={isLiked} />
+                            <span className="font-body text-[10.5px] font-bold">
+                              {item.likeCount || 0}
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     )}
 
-                    {/* Dark Gradients for Text Readability */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/85 via-black/30 to-black/90" />
-
-                    {/* TOP: Review Text & Pending Badge */}
-                    <div className="relative z-10 p-3.5 pt-4">
-                      {isOwnPending && (
-                        <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-500/90 px-2 py-0.5 font-body text-[9.5px] font-bold text-white shadow-xs">
-                          ⏳ {t('অনুমোদনের অপেক্ষায়')}
-                        </div>
-                      )}
-                      <div className="flex gap-0.5 mb-1.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <StarIcon key={star} filled={star <= Number(r.rating)} className="h-3.5 w-3.5" />
-                        ))}
-                      </div>
-                      <p className="line-clamp-4 font-body text-[12.5px] leading-relaxed text-white drop-shadow-sm">
-                        &quot;{r.review_text}&quot;
-                      </p>
-                    </div>
-
-                    {/* BOTTOM: Avatar, Name, Date & Like Button (❤️) */}
-                    <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between p-3.5 pb-4">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <UserAvatar name={r.user_name} size="sm" />
-                        <div className="min-w-0">
-                          <div className="truncate font-body text-xs font-bold text-white drop-shadow-sm">
-                            {r.user_name}
+                    {/* PHOTO CARD OVERLAYS: Top Rating & Bottom Author */}
+                    {item.imageUrl && (
+                      <>
+                        <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-3.5 pt-4">
+                          <div>
+                            <div className="flex gap-0.5 mb-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <StarIcon key={star} filled={star <= Number(item.rating)} className="h-3.5 w-3.5" />
+                              ))}
+                            </div>
+                            <p className="line-clamp-3 font-body text-[12px] font-medium text-white drop-shadow">
+                              &quot;{item.reviewText}&quot;
+                            </p>
                           </div>
-                          <div className="flex items-center gap-1 font-body text-[10px] text-white/70">
-                            <span>{dateStr}</span>
-                            {r.is_verified_buyer && <VerifiedCheckIcon />}
-                          </div>
+                          {isOwnPending && (
+                            <span className="rounded-full bg-amber-500/90 px-2 py-0.5 font-body text-[9px] font-bold text-white shadow-xs">
+                              ⏳ {t('অনুমোদনের অপেক্ষায়')}
+                            </span>
+                          )}
                         </div>
-                      </div>
 
-                      {/* Interactive Like (❤️) Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleLikeClick(e, r.id)}
-                        className={`flex h-8 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
-                      >
-                        <HeartIcon filled={isLiked} />
-                        <span className="font-body text-[11px] font-bold text-white">
-                          {r.like_count || 0}
-                        </span>
-                      </button>
-                    </div>
+                        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between p-3.5 pb-4">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <UserAvatar name={item.userName} size="sm" />
+                            <div className="min-w-0 text-left">
+                              <div className="truncate font-body text-xs font-bold text-white drop-shadow-sm">
+                                {item.userName}
+                              </div>
+                              <div className="flex items-center gap-1 font-body text-[10px] text-white/75">
+                                <span>{dateStr}</span>
+                                {item.isVerifiedBuyer && <VerifiedCheckIcon />}
+                              </div>
+                            </div>
+                          </div>
 
-                    {/* In-Place On-Site Admin / Author Moderation Bar */}
-                    {(isAdmin || (currentUser?.id && r.user_id === currentUser.id)) && (
-                      <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 rounded-full bg-black/70 p-1 backdrop-blur-md">
-                        {isAdmin && !r.is_approved && (
                           <button
-                            onClick={(e) => handleAdminApprove(e, r.id)}
+                            type="button"
+                            onClick={(e) => handleLikeClick(e, item.reviewId)}
+                            className={`flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
+                          >
+                            <HeartIcon filled={isLiked} />
+                            <span className="font-body text-[10.5px] font-bold text-white">
+                              {item.likeCount || 0}
+                            </span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {/* On-Site Admin / Author Moderation Bar */}
+                    {(isAdmin || (currentUser?.id && item.userId === currentUser.id)) && (
+                      <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md">
+                        {isAdmin && !item.isApproved && (
+                          <button
+                            onClick={(e) => handleAdminApprove(e, item.reviewId)}
                             title="Approve"
-                            className="rounded-full bg-emerald-600 px-2 py-0.5 font-body text-[10px] font-bold text-white hover:bg-emerald-500"
+                            className="rounded-full bg-emerald-600 px-2 py-0.5 font-body text-[9.5px] font-bold text-white hover:bg-emerald-500"
                           >
                             ✓
                           </button>
                         )}
-                        {isAdmin && !r.is_rejected && (
+                        {isAdmin && !item.isRejected && (
                           <button
-                            onClick={(e) => handleAdminReject(e, r.id)}
+                            onClick={(e) => handleAdminReject(e, item.reviewId)}
                             title="Reject"
-                            className="rounded-full bg-amber-600 px-2 py-0.5 font-body text-[10px] font-bold text-white hover:bg-amber-500"
+                            className="rounded-full bg-amber-600 px-2 py-0.5 font-body text-[9.5px] font-bold text-white hover:bg-amber-500"
                           >
                             ✕
                           </button>
                         )}
                         <button
-                          onClick={(e) => handleDeleteReview(e, r)}
+                          onClick={(e) => handleDeleteReview(e, item.reviewId)}
                           title="Delete"
                           className="flex h-5 w-5 items-center justify-center rounded-full text-red-400 hover:bg-red-500/30 hover:text-red-200"
                         >
@@ -602,7 +693,7 @@ export default function ProductReviews({
             </div>
 
             {/* Desktop Navigation Arrows */}
-            {displayReviews.length > 1 && (
+            {galleryItems.length > 1 && (
               <>
                 <button
                   type="button"
@@ -625,9 +716,9 @@ export default function ProductReviews({
           </div>
 
           {/* Dots Indicator */}
-          {displayReviews.length > 1 && (
+          {galleryItems.length > 1 && (
             <div className="flex justify-center gap-1.5 my-2">
-              {displayReviews.map((_, i) => (
+              {galleryItems.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveCardIdx(i)}
@@ -638,12 +729,12 @@ export default function ProductReviews({
             </div>
           )}
 
-          {/* Bottom Centered "আপনার রিভিউ যুক্ত করুন" Button */}
+          {/* Bottom Solid Blue "আপনার রিভিউ যুক্ত করুন" Button */}
           {!userExistingReview && (
-            <div className="mt-4 flex justify-center pt-2">
+            <div className="mt-3 flex justify-center pt-1">
               <button
                 onClick={handleOpenWriteReview}
-                className="inline-flex items-center gap-2 rounded-full bg-brand-light px-7 py-3 font-body text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover hover:shadow-sh2"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover"
               >
                 <PlusIcon /> {t('আপনার রিভিউ যুক্ত করুন')}
               </button>
@@ -652,7 +743,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Write Review Modal (Drag & Drop + Canvas WebP Compression) */}
+      {/* Write Review Modal (Multi-Image Drag & Drop) */}
       {writeModalOpen && (
         <div
           className="fixed inset-0 z-[1100] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-[2px] animate-section-reveal"
@@ -661,7 +752,10 @@ export default function ProductReviews({
           <div className="w-full max-w-[460px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
-                <StarBadgeIcon className="text-gold" /> {t('আপনার রিভিউ যুক্ত করুন')}
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-bg text-white">
+                  <SolidStarIcon />
+                </span>
+                {t('আপনার রিভিউ যুক্ত করুন')}
               </h3>
               <button
                 onClick={() => setWriteModalOpen(false)}
@@ -718,7 +812,7 @@ export default function ProductReviews({
               {/* Multi-Image Desktop Drag & Drop Upload Zone */}
               <div>
                 <label className="mb-1.5 block font-body text-xs font-bold text-ink">
-                  {t('প্রোডাক্টের ছবি যুক্ত করুন')} <span className="font-normal text-muted">({t('ঐচ্ছিক, ড্র্যাগ বা সিলেক্ট করুন')})</span>
+                  {t('প্রোডাক্টের ছবি যুক্ত করুন')} <span className="font-normal text-muted">({t('ঐচ্ছিক, সর্বোচ্চ ৩টি ছবি')})</span>
                 </label>
 
                 <div
@@ -780,7 +874,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Rejection Notice Modal (যদি অ্যাডমিন কাস্টমারের রিভিউ রিজেক্ট করে থাকে) */}
+      {/* Rejection Notice Modal (প্রোডাক্টের নাম সহ এবং রি-রিভিউ বাটন) */}
       {rejectedReviewNotice && (
         <div
           className="fixed inset-0 z-[1250] flex items-center justify-center bg-ink/60 p-4 backdrop-blur-[2px] animate-section-reveal"
@@ -790,9 +884,12 @@ export default function ProductReviews({
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">
               ⚠️
             </div>
-            <h3 className="mb-1.5 font-display text-base font-bold text-ink">
+            <h3 className="mb-1 font-display text-base font-bold text-ink">
               {t('আপনার রিভিউটি গ্রহণ করা সম্ভব হয়নি')}
             </h3>
+            <p className="mb-2 font-body text-xs font-bold text-brand-primary">
+              [{productName}]
+            </p>
             <p className="mb-3 font-body text-xs leading-relaxed text-muted">
               {t('দুঃখিত, আপনার সাবমিট করা রিভিউটি আমাদের রিভিউ নীতিমালা ও গাইডলাইনের সাথে সামঞ্জস্যপূর্ণ না হওয়ায় অ্যাডমিন কর্তৃক প্রত্যাখ্যাত হয়েছে।')}
             </p>
@@ -813,7 +910,7 @@ export default function ProductReviews({
                   await deleteProductReview(supabase, rejectedReviewNotice.id, currentUser?.id);
                   setReviews((prev) => prev.filter((r) => r.id !== rejectedReviewNotice.id));
                   setRejectedReviewNotice(null);
-                  handleOpenWriteReview();
+                  setTimeout(() => handleOpenWriteReview(), 200);
                 }}
                 className="flex-1 rounded-full bg-brand-primary py-2.5 font-body text-xs font-bold text-white shadow-sm hover:bg-brand-light-hover"
               >
@@ -850,10 +947,10 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Lightbox Zoom Modal */}
+      {/* Lightbox High-Resolution Zoom Lightbox Modal */}
       {zoomImageUrl && (
         <div
-          className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/80 p-4 backdrop-blur-[4px] animate-section-reveal"
+          className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-section-reveal"
           onClick={() => setZoomImageUrl(null)}
         >
           <div className="relative max-h-[90vh] max-w-[90vw]">
@@ -865,8 +962,8 @@ export default function ProductReviews({
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={optimizeCloudinaryUrl(zoomImageUrl, 1000)}
-              alt="Review Zoomed"
+              src={optimizeCloudinaryUrl(zoomImageUrl, 1200)}
+              alt="Full Resolution Unboxing"
               className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain shadow-2xl"
             />
           </div>
