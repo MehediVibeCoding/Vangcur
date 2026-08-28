@@ -31,6 +31,39 @@ import ProductReviews from '@/app/components/product/ProductReviews';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, ProductSpecs } from '@/types';
 
+// সলিড ভরাট সাদা রঙের সেকশন হেডার আইকনসমূহ
+function SolidDocIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+    </svg>
+  );
+}
+
+function SolidSparkIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
+    </svg>
+  );
+}
+
+function SolidWrenchIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" />
+    </svg>
+  );
+}
+
+function SolidQuestionBookIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 8h6v2H9V8zm0 3h6v2H9v-2zm0 3h4v2H9v-2z" />
+    </svg>
+  );
+}
+
 function ShieldIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -39,13 +72,15 @@ function ShieldIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+
 function HeartIcon({ className = '', filled = false }: { className?: string; filled?: boolean }) {
   return (
-    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke={filled ? 'currentColor' : 'none'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
     </svg>
   );
 }
+
 function BoltIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -53,6 +88,7 @@ function BoltIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+
 function CartIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -61,6 +97,7 @@ function CartIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+
 function BellIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -69,38 +106,7 @@ function BellIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
-function DocIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 3h6l5 5v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
-      <path d="M14 3v5h5M9 13h6M9 17h6" />
-    </svg>
-  );
-}
-function SparkIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
-    </svg>
-  );
-}
-function WrenchIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.7 2.7-2-2 2.7-2.7Z" />
-    </svg>
-  );
-}
-function QuestionBookIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <path d="M12 7a2 2 0 0 1 1.8 1.1c0 1.2-1.8 1.5-1.8 2.4" />
-      <circle cx="12" cy="14" r=".4" fill="currentColor" />
-    </svg>
-  );
-}
+
 function ChevronIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -108,6 +114,7 @@ function ChevronIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+
 function CheckBadgeIcon({ className = '' }: { className?: string }) {
   return (
     <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success/10 text-success ${className}`}>
@@ -117,6 +124,7 @@ function CheckBadgeIcon({ className = '' }: { className?: string }) {
     </span>
   );
 }
+
 function ArrowIcon({ className = '', dir = 'left' }: { className?: string; dir?: 'left' | 'right' }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
@@ -125,10 +133,11 @@ function ArrowIcon({ className = '', dir = 'left' }: { className?: string; dir?:
   );
 }
 
+// সেকশন হেডার: সলিড ব্লু ব্যাকগ্রাউন্ডে ভরাট সাদা আইকন
 function SectionHeading({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="mb-5 flex items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-light">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white shadow-xs">
         {icon}
       </div>
       <div className="font-display text-lg font-bold text-ink">{children}</div>
@@ -359,28 +368,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
-  const [isMobileWidth, setIsMobileWidth] = useState(false);
-
-  useEffect(() => {
-    let raf = 0;
-    const check = () => {
-      raf = 0;
-      setIsMobileWidth(window.innerWidth <= 600);
-    };
-    const scheduleCheck = () => {
-      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
-        return;
-      }
-      if (raf) return;
-      raf = requestAnimationFrame(check);
-    };
-    check();
-    window.addEventListener('resize', scheduleCheck);
-    return () => {
-      window.removeEventListener('resize', scheduleCheck);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
 
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
   const [msgLink, setMsgLink] = useState<string | null>(DEFAULT_MSG_LINK);
@@ -533,7 +520,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 পরিমাণ: ${qty}\n🛡️ ওয়ারেন্টি: ${prod.warranty}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
   }
   const waOrder = () => { if (prod) window.open(`${waLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
-  const msgOrder = () => { if (prod && msgLink) window.open(`${msgLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
 
   const goImg = (i: number) => { setCurImgIdx(i); setZoomed(false); };
   const galleryArrow = (dir: number) => {
@@ -632,7 +618,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const pkg = getPackagingContent(prod.packagingContent, prod.specs);
   const features = Array.isArray(prod.features) ? prod.features : [];
 
-  // শুধুমাত্র ওই প্রোডাক্টের নিজস্ব কাস্টম FAQ ডাটা থাকলে তা দেখাবে (কোনো ৮টি ডিফল্ট স্টোর FAQ ফলব্যাক ছাড়াই)
+  // প্রোডাক্টের নিজস্ব কাস্টম FAQ ডাটা
   const faqs: { q: string; a: string }[] = useMemo(() => {
     if (!prod?.faqs) return [];
     if (Array.isArray(prod.faqs)) return prod.faqs;
@@ -871,9 +857,12 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1100px] px-4 md:px-8">
+      {/* Main Content Sections — নিচে pb-28 সেফটি প্যাডিং দেওয়া হয়েছে যাতে স্টিকি বার কনটেন্ট না ঢাকে */}
+      <div className="mx-auto max-w-[1100px] px-4 pb-28 md:px-8">
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
-          <SectionHeading icon={<DocIcon />}>{t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span></SectionHeading>
+          <SectionHeading icon={<SolidDocIcon />}>
+            {t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span>
+          </SectionHeading>
           <div className="text-[15px] leading-[1.85] text-ink/80">
             {(prod.longDesc || prod.desc) ? (
               (prod.longDesc || prod.desc)!.split('\n\n').map((p, i) => (
@@ -888,7 +877,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
 
         <div className="border-b border-border-base py-8" id="ppSecFeatures" ref={(el) => { sectionRefs.current.ppSecFeatures = el; }}>
-          <SectionHeading icon={<SparkIcon />}>{t('প্রধান')} <span className="text-brand-light">{t('ফিচারস')}</span></SectionHeading>
+          <SectionHeading icon={<SolidSparkIcon />}>
+            {t('প্রধান')} <span className="text-brand-light">{t('ফিচারস')}</span>
+          </SectionHeading>
           {features.length ? (
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {features.map((f, i) => <FeatureItem key={i} text={f} />)}
@@ -898,9 +889,11 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* স্পেসিফিকেশন টেবিল — ১০০% ফুল-উইথ ও নিখুঁত সিমেট্রি (৬০০px ও অফসেট বাগ ফিক্সড) */}
+        {/* স্পেসিফিকেশন টেবিল — ১০০% ফুল-উইথ ও নিখুঁত সিমেট্রি */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
-          <SectionHeading icon={<WrenchIcon />}>{t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span></SectionHeading>
+          <SectionHeading icon={<SolidWrenchIcon />}>
+            {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
+          </SectionHeading>
           <div className="w-full overflow-x-auto rounded-brand border border-border-base bg-white shadow-sh1">
             <table className="w-full border-collapse text-[14px]">
               <thead>
@@ -942,7 +935,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
 
         <div className="border-b border-border-base py-8" id="ppSecExtra" ref={(el) => { sectionRefs.current.ppSecExtra = el; }}>
-          <SectionHeading icon={<DocIcon />}>{t('অতিরিক্ত')} <span className="text-brand-light">{t('তথ্য')}</span></SectionHeading>
+          <SectionHeading icon={<SolidDocIcon />}>
+            {t('অতিরিক্ত')} <span className="text-brand-light">{t('তথ্য')}</span>
+          </SectionHeading>
           {(prod.infoBoxes && prod.infoBoxes.length) ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {prod.infoBoxes.map((box, i) => (
@@ -959,11 +954,11 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
         {/* প্রশ্নোত্তর (Q&A) সেকশন */}
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
-          {/* ১. প্রোডাক্টের নিজস্ব স্পেসিফিক FAQ (যদি ডাটাবেজে থাকে তবেই কেবল নতুন কার্ড ডিজাইনে দেখাবে) */}
+          {/* ১. প্রোডাক্টের নিজস্ব কাস্টম FAQ (যদি ডেটাবেজে সেট থাকে) */}
           {faqs.length > 0 && (
             <div className="mb-10">
-              <SectionHeading icon={<QuestionBookIcon />}>
-                {t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর (FAQ)')}</span>
+              <SectionHeading icon={<SolidQuestionBookIcon />}>
+                <span>{t('কমন')} <span className="text-brand-light">{t('প্রশ্নোত্তর')} <span className="font-body font-extrabold tracking-wide">(FAQ)</span></span></span>
               </SectionHeading>
               <div className="flex flex-col gap-3">
                 {faqs.map((f, i) => {
@@ -1009,7 +1004,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <ProductQnA productId={prod.id} productName={prod.name} />
         </div>
 
-        {/* কাস্টমার রিভিউ সেকশন */}
+        {/* ৩D কভারফ্লো কাস্টমার রিভিউ গ্যালারি সেকশন */}
         <div className="py-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
           <ProductReviews
             productId={prod.id}
@@ -1041,32 +1036,37 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
       <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
 
+      {/* রিডিজাইন করা স্টিকি বটম বার: বামে ২ লাইনে নাম + নিচে দাম, ডানে বাটন */}
       <div className={`fixed inset-x-0 bottom-0 z-30 border-t border-border-base bg-white/95 shadow-sh3 backdrop-blur transition-transform duration-brand ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-4 py-2.5 md:px-8">
-          <div className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">
-            {(() => {
-              const maxLen = isMobileWidth ? 25 : 45;
-              return prod.name.length > maxLen ? prod.name.slice(0, maxLen) + '...' : prod.name;
-            })()}
+        <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-2.5 md:px-8">
+          {/* বাম পাশে নাম (২ লাইন) এবং নিচে দাম */}
+          <div className="min-w-0 flex-1 flex flex-col justify-center pr-2">
+            <div className="line-clamp-2 font-body text-[12px] font-semibold leading-tight text-ink">
+              {prod.name}
+            </div>
+            <div className="mt-0.5 font-body text-[14.5px] font-extrabold text-brand-primary">
+              ৳{(prod.price * qty).toLocaleString('en-US')}
+              {qty > 1 && <span className="ml-1 font-body text-[11px] font-normal text-muted">×{qty}</span>}
+            </div>
           </div>
-          <div className="shrink-0 whitespace-nowrap text-[15px] font-bold text-ink">
-            ৳{(prod.price * qty).toLocaleString('en-US')}
-            {qty > 1 && <span className="ml-1 text-[11px] font-normal text-muted">×{qty}</span>}
+
+          {/* ডান পাশে অ্যাকশন বাটনসমূহ */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {sold ? (
+              <button className="flex items-center gap-1.5 rounded-[10px] border-none bg-gold px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
+                <BellIcon /> {t('জানান')}
+              </button>
+            ) : (
+              <>
+                <button className="flex items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
+                  <BoltIcon /> {t('অর্ডার করুন')}
+                </button>
+                <button className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 px-4 py-2.5 text-[13px] font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
+                  <CartIcon /> {t('কার্ট')}
+                </button>
+              </>
+            )}
           </div>
-          {sold ? (
-            <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-gold px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
-              <BellIcon /> {t('জানান')}
-            </button>
-          ) : (
-            <>
-              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
-                <BoltIcon /> {t('অর্ডার করুন')}
-              </button>
-              <button className="flex shrink-0 items-center gap-1.5 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 px-4 py-2.5 text-[13px] font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
-                <CartIcon /> {t('কার্ট')}
-              </button>
-            </>
-          )}
         </div>
       </div>
     </div>
