@@ -8,7 +8,6 @@ import { showToast } from '@/lib/toast';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import UserAvatar from './UserAvatar';
 import {
-  fetchProductQuestions,
   submitProductQuestion,
   submitProductAnswer,
   checkIsUserAdmin,
@@ -20,7 +19,6 @@ interface ProductQnAProps {
   productName: string;
 }
 
-// ডুপ্লিকেট অ্যাট্রিবিউট মুক্ত সলিড ভরাট সাদা আইকন
 function SolidChatQuestionIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={`text-white fill-current ${className}`.trim()} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -253,14 +251,18 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
   return (
     <div className="py-2">
-      {/* Header Block — স্কাই-ব্লু ব্যাজ ও টু-টোন টাইটেল */}
-      <div className={`flex flex-col gap-1 ${hasQuestions ? 'mb-6 border-b border-border-base pb-4' : 'mb-4'}`}>
+      {/* Header Block — বর্ডার লাইন ছাড়া পরিষ্কার স্পেসিং ও স্কাই-ব্লু আইকন */}
+      <div className="mb-5 flex flex-col gap-1">
         <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-white shadow-xs">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
             <SolidChatQuestionIcon />
           </span>
           <span>
-            {t('প্রশ্ন ও')} <span className="text-brand-light">{t('উত্তর')} <span className="font-body font-extrabold tracking-wide">(Q&A)</span></span>
+            {lang === 'en' ? (
+              <>Customer <span className="text-brand-light">Q&A</span></>
+            ) : (
+              <>কাস্টমার <span className="text-brand-light">প্রশ্নোত্তর (Q&A)</span></>
+            )}
           </span>
         </div>
         <p className="font-body text-[12.5px] text-muted">
@@ -273,16 +275,16 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
       {/* Loading State */}
       {loading && (
         <div className="py-8 text-center font-body text-[13px] text-muted">
-          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light mr-2" />
+          <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
           {t('প্রশ্নোত্তর লোড হচ্ছে...')}
         </div>
       )}
 
-      {/* Empty State — ছাই ব্যাকগ্রাউন্ড ও সিমেট্রিক্যাল বাটন */}
+      {/* Empty State */}
       {!loading && !hasQuestions && (
         <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-border-base bg-surface-muted/50 p-6 text-center">
-          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-bg text-brand-primary">
-            <SolidChatQuestionIcon className="h-5 w-5 fill-current" />
+          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-light text-white">
+            <SolidChatQuestionIcon className="h-5 w-5 fill-current text-white" />
           </div>
           <p className="font-body text-sm font-bold text-ink">{t('এখনো কোনো প্রশ্ন করা হয়নি')}</p>
           <p className="mt-1 max-w-sm font-body text-xs text-muted">
@@ -329,7 +331,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                           <button
                             onClick={() => handleDeleteQuestion(q.id)}
                             title={t('প্রশ্ন মুছে ফেলুন')}
-                            className="text-muted/60 hover:text-red-500 transition-colors"
+                            className="text-muted/60 transition-colors hover:text-red-500"
                           >
                             <TrashIcon />
                           </button>
@@ -365,7 +367,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                           <button
                             onClick={() => handleDeleteAnswer(q.adminAnswer!.id, q.id, true)}
                             title={t('উত্তর মুছে ফেলুন')}
-                            className="text-muted/60 hover:text-red-500 transition-colors"
+                            className="text-muted/60 transition-colors hover:text-red-500"
                           >
                             <TrashIcon />
                           </button>
@@ -377,7 +379,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-3 flex items-center justify-between sm:ml-9 pt-1">
+                  <div className="mt-3 flex items-center justify-between pt-1 sm:ml-9">
                     <span className="font-body text-[11px] italic text-amber-700/80">
                       ⏳ {t('Vangcur টিমের উত্তরের অপেক্ষায়...')}
                     </span>
@@ -414,7 +416,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                           <button
                             onClick={() => handleDeleteAnswer(q.authorReply!.id, q.id, false)}
                             title={t('মন্তব্য মুছে ফেলুন')}
-                            className="text-muted/60 hover:text-red-500 transition-colors"
+                            className="text-muted/60 transition-colors hover:text-red-500"
                           >
                             <TrashIcon />
                           </button>
@@ -441,7 +443,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
             );
           })}
 
-          {/* Bottom Solid Blue Button */}
+          {/* Bottom Button */}
           <div className="mt-2 flex justify-center pt-2">
             <button
               onClick={openAskModal}
@@ -462,7 +464,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-bg text-white">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white">
                   <SolidChatQuestionIcon />
                 </span>
                 {t('প্রশ্ন করুন')}
