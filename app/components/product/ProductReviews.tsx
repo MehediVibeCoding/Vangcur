@@ -34,10 +34,45 @@ function StarIcon({ filled = false, className = '' }: { filled?: boolean; classN
   );
 }
 
-function VerifiedBadgeIcon() {
+function StarFillBadgeIcon({ className = '' }: { className?: string }) {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="#10B981" className="shrink-0">
+    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6-5.9-3.3-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8Z" />
+    </svg>
+  );
+}
+
+function EditPencilIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
+
+function CameraUploadIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  );
+}
+
+function VerifiedBadgeIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="13" height="13" viewBox="0 0 24 24" fill="#10B981">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+    </svg>
+  );
+}
+
+function BanShieldIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
     </svg>
   );
 }
@@ -98,6 +133,7 @@ export default function ProductReviews({
   }, [writeModalOpen, limitModalOpen, zoomImageUrl]);
 
   const summary = calculateReviewSummary(reviews, defaultRating);
+  const hasApprovedReviews = reviews.some((r) => r.is_approved);
 
   const handleOpenWriteReview = async () => {
     if (!currentUser?.id) {
@@ -166,7 +202,17 @@ export default function ProductReviews({
     try {
       let uploadedCloudinaryUrl: string | null = null;
       if (selectedFile) {
-        uploadedCloudinaryUrl = await uploadReviewImageToCloudinary(selectedFile);
+        try {
+          uploadedCloudinaryUrl = await uploadReviewImageToCloudinary(selectedFile);
+        } catch (uploadErr: any) {
+          setSubmitting(false);
+          setErrorMessage(
+            uploadErr?.message?.includes('preset')
+              ? t('ক্লাউডিনারি প্রিসেট তৈরি করা হয়নি। ছবি ছাড়া শুধু টেক্সট রিভিউ জমা দিতে পারেন।')
+              : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'))
+          );
+          return;
+        }
       }
 
       const res = await submitProductReview(supabase, {
@@ -190,37 +236,30 @@ export default function ProductReviews({
         return;
       }
 
-      // লেখকের নিজস্ব প্রিভিউ হিসেবে তালিকার সবার উপরে যোগ করা
       setReviews((prev) => [res.data!, ...prev]);
       setWriteModalOpen(false);
-      showToast(t('🎉 আপনার রিভিউটি জমা হয়েছে! অনুমোদনের পর লাইভ হবে।'));
+      showToast(t('✅ আপনার রিভিউটি জমা হয়েছে! অনুমোদনের পর লাইভ হবে।'));
     } catch (err: any) {
       setSubmitting(false);
-      setErrorMessage(err?.message || t('ছবি আপলোড বা রিভিউ সাবমিশনে সমস্যা হয়েছে'));
+      setErrorMessage(err?.message || t('রিভিউ সাবমিশনে সমস্যা হয়েছে'));
     }
   };
 
   return (
     <div className="py-2">
-      {/* Header & Write Review CTA */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border-base pb-4">
-        <div>
-          <div className="flex items-center gap-2 font-display text-lg font-bold text-ink">
-            <span>⭐</span> {t('কাস্টমার রিভিউ ও রেটিং')}
-          </div>
-          <p className="mt-1 font-body text-[12.5px] text-muted">
-            {lang === 'en'
-              ? `Real ratings and reviews from verified buyers of ${productName}.`
-              : `${productName}-এর প্রকৃত কাস্টমারদের রিভিউ ও রেটিং।`}
-          </p>
+      {/* Header Block — খালি থাকলে ডিভাইডার লাইন ও টপ বাটন ছাড়া কমপ্যাক্ট লুক */}
+      <div className={`flex flex-col gap-1 ${hasApprovedReviews || reviews.length > 0 ? 'mb-6 border-b border-border-base pb-4' : 'mb-4'}`}>
+        <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-brand-light">
+            <StarFillBadgeIcon className="text-gold" />
+          </span>
+          {t('কাস্টমার রিভিউ ও রেটিং')}
         </div>
-
-        <button
-          onClick={handleOpenWriteReview}
-          className="inline-flex items-center gap-1.5 rounded-full bg-brand-light px-5 py-2.5 font-body text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover hover:shadow-sh2"
-        >
-          <span>✍️</span> {t('রিভিউ লিখুন')}
-        </button>
+        <p className="font-body text-[12.5px] text-muted">
+          {lang === 'en'
+            ? `Real ratings and reviews from customers of ${productName}.`
+            : `${productName}-এর প্রকৃত কাস্টমারদের রিভিউ ও রেটিং।`}
+        </p>
       </div>
 
       {/* Top Rating Summary Card */}
@@ -260,8 +299,8 @@ export default function ProductReviews({
             </div>
           </div>
         ) : (
-          /* Smart Hybrid Fallback Invitation Card (যখন কোনো এপ্রুভড রিভিউ নেই) */
-          <div className="flex flex-col items-center justify-center py-3 text-center">
+          /* Smart Hybrid Fallback Invitation Card (স্ক্রিনশট ৩ অনুযায়ী কার্ডের ভেতরে লাল বৃত্তের বাটন) */
+          <div className="flex flex-col items-center justify-center py-4 text-center">
             <div className="mb-2 flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <StarIcon key={star} filled={star <= Math.round(defaultRating)} />
@@ -272,9 +311,15 @@ export default function ProductReviews({
             </p>
             <p className="mt-1 max-w-md font-body text-xs text-muted">
               {lang === 'en'
-                ? 'Be the first verified customer to share your unboxing and product experience!'
+                ? 'Be the first customer to share your experience with this product!'
                 : 'আপনিই প্রথম রিভিউ দিয়ে প্রোডাক্টের অভিজ্ঞতা ও কোয়ালিটি সম্পর্কে অন্যদের জানান!'}
             </p>
+            <button
+              onClick={handleOpenWriteReview}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-light px-5 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
+            >
+              <EditPencilIcon /> {t('প্রথম রিভিউটি লিখুন')}
+            </button>
           </div>
         )}
       </div>
@@ -287,7 +332,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Reviews List */}
+      {/* Reviews List & Bottom Button (যখন রিভিউ রয়েছে — সব রিভিউর নিচে বাটন প্লেসমেন্ট) */}
       {!loading && reviews.length > 0 && (
         <div className="flex flex-col gap-4">
           {reviews.map((r) => {
@@ -360,7 +405,7 @@ export default function ProductReviews({
                         className="h-full w-full object-cover"
                         loading="lazy"
                       />
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100 text-white text-xs">
                         🔍
                       </span>
                     </button>
@@ -376,6 +421,16 @@ export default function ProductReviews({
               </div>
             );
           })}
+
+          {/* Bottom "নতুন রিভিউ লিখুন" Button (যখন রিভিউ রয়েছে — নিচে প্লেসমেন্ট) */}
+          <div className="mt-2 flex justify-center pt-2">
+            <button
+              onClick={handleOpenWriteReview}
+              className="inline-flex items-center gap-2 rounded-full border border-brand-light/50 bg-brand-bg/40 px-6 py-2.5 font-body text-[13px] font-bold text-brand-primary shadow-sm transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg hover:shadow-sh1"
+            >
+              <EditPencilIcon /> {t('নতুন রিভিউ লিখুন')}
+            </button>
+          </div>
         </div>
       )}
 
@@ -387,7 +442,9 @@ export default function ProductReviews({
         >
           <div className="w-full max-w-[460px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
-              <h3 className="font-display text-base font-bold text-ink">⭐ {t('রিভিউ লিখুন')}</h3>
+              <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+                <StarFillBadgeIcon className="text-gold" /> {t('রিভিউ লিখুন')}
+              </h3>
               <button
                 onClick={() => setWriteModalOpen(false)}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
@@ -465,7 +522,7 @@ export default function ProductReviews({
                   </div>
                 ) : (
                   <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border-base bg-surface-muted/50 p-3.5 font-body text-xs font-semibold text-muted transition-brand hover:border-brand-light hover:text-brand-light">
-                    <span>📷</span> {t('ছবি আপলোড করুন (JPG/PNG/WEBP)')}
+                    <CameraUploadIcon className="h-4 w-4" /> {t('ছবি আপলোড করুন (JPG/PNG/WEBP)')}
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -501,8 +558,8 @@ export default function ProductReviews({
           onClick={() => setLimitModalOpen(false)}
         >
           <div className="w-full max-w-[400px] rounded-[24px] bg-white p-6 text-center shadow-sh3">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl text-amber-700">
-              🚫
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+              <BanShieldIcon />
             </div>
             <h3 className="mb-2 font-display text-base font-bold text-ink">
               {t('রিভিউ সীমা অতিক্রম করেছে')}
