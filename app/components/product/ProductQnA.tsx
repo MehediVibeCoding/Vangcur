@@ -20,22 +20,20 @@ interface ProductQnAProps {
   productName: string;
 }
 
-function MessageQuestionIcon({ className = '' }: { className?: string }) {
+// সলিড ভরাট সাদা আইকন
+function SolidChatQuestionIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-      <path d="M9.5 9a3 3 0 0 1 5.4 1.4c0 1.6-2.4 2.1-2.4 3.1" />
-      <circle cx="12.5" cy="16.5" r=".5" fill="currentColor" />
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z" />
     </svg>
   );
 }
 
-function PlusChatIcon({ className = '' }: { className?: string }) {
+function PlusIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      <line x1="12" y1="8" x2="12" y2="14" />
-      <line x1="9" y1="11" x2="15" y2="11" />
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }
@@ -49,9 +47,17 @@ function EditPencilIcon({ className = '' }: { className?: string }) {
   );
 }
 
-function CheckBadgeIcon({ className = '' }: { className?: string }) {
+function TrashIcon() {
   return (
-    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  );
+}
+
+function CheckBadgeIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
     </svg>
   );
@@ -79,22 +85,21 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
   const [answerError, setAnswerError] = useState('');
   const [submittingA, setSubmittingA] = useState(false);
 
+  const loadQuestionsData = async () => {
+    setLoading(true);
+    const [data, adminStatus] = await Promise.all([
+      fetchProductQuestions(supabase, productId),
+      checkIsUserAdmin(supabase, currentUser?.id),
+    ]);
+    setQuestions(data);
+    setIsAdmin(adminStatus);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const [data, adminStatus] = await Promise.all([
-        fetchProductQuestions(supabase, productId),
-        checkIsUserAdmin(supabase, currentUser?.id),
-      ]);
-      if (!cancelled) {
-        setQuestions(data);
-        setIsAdmin(adminStatus);
-        setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [productId, currentUser?.id, supabase]);
+    loadQuestionsData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId, currentUser?.id]);
 
   useEffect(() => {
     if (askModalOpen || answeringQuestion) {
@@ -171,17 +176,43 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
     showToast(t('✅ উত্তর সফলভাবে প্রকাশিত হয়েছে!'));
   };
 
+  const handleDeleteQuestion = async (qId: number | string) => {
+    if (!window.confirm('আপনি কি নিশ্চিতভাবে এই প্রশ্নটি মুছে ফেলতে চান?')) return;
+    try {
+      const { error } = await supabase.from('product_questions').delete().eq('id', qId);
+      if (error) throw error;
+      setQuestions((prev) => prev.filter((q) => q.id !== qId));
+      showToast(t('প্রশ্নটি মুছে ফেলা হয়েছে'));
+    } catch {
+      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
+    }
+  };
+
+  const handleDeleteAnswer = async (ansId: number | string, qId: number | string) => {
+    if (!window.confirm('আপনি কি এই উত্তরটি মুছে ফেলতে চান?')) return;
+    try {
+      const { error } = await supabase.from('product_question_answers').delete().eq('id', ansId);
+      if (error) throw error;
+      setQuestions((prev) => prev.map((q) => (q.id === qId ? { ...q, answer: null } : q)));
+      showToast(t('উত্তরটি মুছে ফেলা হয়েছে'));
+    } catch {
+      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
+    }
+  };
+
   const hasQuestions = questions.length > 0;
 
   return (
     <div className="py-2">
-      {/* Header Block — খালি অবস্থায় বাটন ও দাগ ছাড়া ফ্রেশ লুক */}
+      {/* Header Block — টু-টোন ব্র্যান্ড হেডার ও সলিড ভরাট সাদা আইকন */}
       <div className={`flex flex-col gap-1 ${hasQuestions ? 'mb-6 border-b border-border-base pb-4' : 'mb-4'}`}>
         <div className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-bg text-brand-light">
-            <MessageQuestionIcon />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-white shadow-xs">
+            <SolidChatQuestionIcon className="text-white fill-current" />
           </span>
-          {t('প্রশ্ন ও উত্তর (Q&A)')}
+          <span>
+            {t('প্রশ্ন ও')} <span className="text-brand-light">{t('উত্তর')} <span className="font-body font-extrabold tracking-wide">(Q&A)</span></span>
+          </span>
         </div>
         <p className="font-body text-[12.5px] text-muted">
           {lang === 'en'
@@ -198,11 +229,11 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         </div>
       )}
 
-      {/* Empty State — স্ক্রিনশট ৩ অনুযায়ী একক বাটনযুক্ত মিনিমালিস্টিক কার্ড */}
+      {/* Empty State — স্ক্রিনশট ৩ অনুযায়ী একক বোতামযুক্ত মার্জিত কার্ড */}
       {!loading && !hasQuestions && (
         <div className="flex flex-col items-center justify-center rounded-brand border border-dashed border-border-base bg-surface-muted/40 px-4 py-8 text-center">
-          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-bg/50 text-brand-primary">
-            <MessageQuestionIcon className="h-5 w-5" />
+          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-bg text-brand-primary">
+            <SolidChatQuestionIcon className="h-5 w-5 fill-current" />
           </div>
           <p className="font-body text-sm font-bold text-ink">{t('এখনো কোনো প্রশ্ন করা হয়নি')}</p>
           <p className="mt-1 max-w-sm font-body text-[12.5px] text-muted">
@@ -210,14 +241,14 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           </p>
           <button
             onClick={openAskModal}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-light px-5 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-light px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
           >
-            <PlusChatIcon /> {t('প্রথম প্রশ্নটি করুন')}
+            <PlusIcon /> {t('প্রথম প্রশ্নটি করুন')}
           </button>
         </div>
       )}
 
-      {/* Questions List & Bottom Button — স্ক্রিনশট ৪ অনুযায়ী সব প্রশ্নের নিচে বাটন */}
+      {/* Questions List & Bottom Button (স্ক্রিনশট ৪ অনুযায়ী) */}
       {!loading && hasQuestions && (
         <div className="flex flex-col gap-4">
           {questions.map((q) => {
@@ -228,11 +259,13 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               : '';
 
             const canAnswer = !q.answer && (isAdmin || (currentUser?.id && q.user_id === currentUser.id));
+            const canDeleteQuestion = isAdmin || (currentUser?.id && q.user_id === currentUser.id);
+            const canDeleteAnswer = q.answer && (isAdmin || (currentUser?.id && q.answer.user_id === currentUser.id));
 
             return (
               <div
                 key={q.id}
-                className="rounded-brand border border-border-base bg-white p-4 shadow-sh1 transition-brand duration-brand hover:border-brand-light/30"
+                className="relative rounded-brand border border-border-base bg-white p-4 shadow-sh1 transition-brand duration-brand hover:border-brand-light/30"
               >
                 {/* Question Row */}
                 <div className="flex items-start gap-3">
@@ -240,7 +273,18 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-1">
                       <span className="font-body text-[13px] font-bold text-ink">{q.user_name}</span>
-                      <span className="font-body text-[11px] text-muted">{dateStr}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-body text-[11px] text-muted">{dateStr}</span>
+                        {canDeleteQuestion && (
+                          <button
+                            onClick={() => handleDeleteQuestion(q.id)}
+                            title={t('প্রশ্ন মুছে ফেলুন')}
+                            className="text-muted/60 hover:text-red-500 transition-colors"
+                          >
+                            <TrashIcon />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-1 font-body text-[13.5px] leading-relaxed text-ink/90">
                       {q.question}
@@ -257,18 +301,30 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                       isAdmin={q.answer.is_admin}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-body text-[12.5px] font-bold text-ink">
-                          {q.answer.author_name}
-                        </span>
-                        {q.answer.is_admin ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2 py-0.5 font-body text-[10px] font-bold text-white shadow-xs">
-                            <CheckBadgeIcon /> Vangcur টিম
+                      <div className="flex flex-wrap items-center justify-between gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-body text-[12.5px] font-bold text-ink">
+                            {q.answer.author_name}
                           </span>
-                        ) : (
-                          <span className="rounded-full bg-surface-muted px-2 py-0.5 font-body text-[10px] font-semibold text-muted">
-                            {t('প্রশ্নকর্তার উত্তর')}
-                          </span>
+                          {q.answer.is_admin ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2 py-0.5 font-body text-[10px] font-bold text-white shadow-xs">
+                              <CheckBadgeIcon /> Vangcur টিম
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-surface-muted px-2 py-0.5 font-body text-[10px] font-semibold text-muted">
+                              {t('প্রশ্নকর্তার উত্তর')}
+                            </span>
+                          )}
+                        </div>
+
+                        {canDeleteAnswer && (
+                          <button
+                            onClick={() => handleDeleteAnswer(q.answer!.id, q.id)}
+                            title={t('উত্তর মুছে ফেলুন')}
+                            className="text-muted/60 hover:text-red-500 transition-colors"
+                          >
+                            <TrashIcon />
+                          </button>
                         )}
                       </div>
                       <p className="mt-1 font-body text-[13px] leading-relaxed text-ink/80">
@@ -280,7 +336,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   <div className="mt-3 flex justify-end sm:ml-9">
                     <button
                       onClick={() => openAnswerModal(q)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-brand-light/40 bg-brand-bg/30 px-3 py-1.5 font-body text-xs font-bold text-brand-primary transition-brand hover:bg-brand-bg/70"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-light/40 bg-brand-bg/30 px-3.5 py-1.5 font-body text-xs font-bold text-brand-primary transition-brand hover:bg-brand-bg/70"
                     >
                       <EditPencilIcon /> {t('উত্তর দিন')}
                     </button>
@@ -290,13 +346,13 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
             );
           })}
 
-          {/* Bottom Button */}
+          {/* Bottom Solid Blue "নতুন প্রশ্ন করুন" Button */}
           <div className="mt-2 flex justify-center pt-2">
             <button
               onClick={openAskModal}
-              className="inline-flex items-center gap-2 rounded-full border border-brand-light/50 bg-brand-bg/40 px-6 py-2.5 font-body text-[13px] font-bold text-brand-primary shadow-sm transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg hover:shadow-sh1"
+              className="inline-flex items-center gap-2 rounded-full bg-brand-light px-7 py-3 font-body text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover hover:shadow-sh2"
             >
-              <PlusChatIcon /> {t('নতুন প্রশ্ন করুন')}
+              <PlusIcon /> {t('নতুন প্রশ্ন করুন')}
             </button>
           </div>
         </div>
@@ -311,7 +367,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
-                <MessageQuestionIcon className="text-brand-light" /> {t('প্রশ্ন করুন')}
+                <SolidChatQuestionIcon className="text-brand-primary fill-current" /> {t('প্রশ্ন করুন')}
               </h3>
               <button
                 onClick={() => setAskModalOpen(false)}
@@ -379,7 +435,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-display text-base font-bold text-ink">
-                <EditPencilIcon className="text-brand-light" /> {t('উত্তর লিখুন')}
+                <EditPencilIcon className="text-brand-primary" /> {t('উত্তর লিখুন')}
               </h3>
               <button
                 onClick={() => setAnsweringQuestion(null)}
