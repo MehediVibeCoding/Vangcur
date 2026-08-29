@@ -158,7 +158,7 @@ export default function TrackOrderClient() {
           </p>
         </div>
 
-        {/* Main Card Container */}
+        {/* Main Card Container on Seamless Canvas */}
         <div className="rounded-[28px] border border-white/80 bg-gradient-to-b from-brand-bg/40 via-[#EFF6FE] to-white p-6 shadow-sh3">
           {loading && (
             <div className="py-12 text-center font-body text-[13px] text-muted">
@@ -197,12 +197,12 @@ export default function TrackOrderClient() {
                 ))}
               </div>
 
-              {/* হাই-কন্ট্রাস্ট সাইকোলজিক্যাল ভ্যালু লগইন কার্ড */}
-              <div className="rounded-[24px] border-[1.5px] border-brand-light/40 bg-white/95 p-4.5 shadow-md backdrop-blur-sm">
+              {/* হাই-কন্ট্রাস্ট ফ্রস্টেড গ্লাস ভিআইপি কনভার্শন কার্ড */}
+              <div className="rounded-[22px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
                 <div className="flex items-start gap-3">
                   <SparklesCrownSvgIcon />
                   <div className="flex-1">
-                    <div className="mb-1.5 font-body text-[13.5px] font-extrabold text-ink">
+                    <div className="mb-1 font-body text-[13.5px] font-extrabold text-ink">
                       {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
                     </div>
                     <p className="font-body text-[12px] leading-[1.7] text-ink/75">
@@ -212,7 +212,7 @@ export default function TrackOrderClient() {
                     </p>
                     <button
                       onClick={handleOpenLogin}
-                      className="mt-3 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
+                      className="mt-2.5 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
                     >
                       <span>{lang === 'en' ? 'Login to Account →' : 'অ্যাকাউন্টে লগইন করুন →'}</span>
                     </button>
