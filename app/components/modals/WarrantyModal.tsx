@@ -56,7 +56,30 @@ function ArrowLinkIcon() {
 
 export default function WarrantyModal({ isOpen, onClose, warrantyText }: WarrantyModalProps) {
   const { t, lang } = useT();
-  const content = useMemo(() => getWarrantyModalContent(warrantyText), [warrantyText]);
+  const rawContent = useMemo(() => getWarrantyModalContent(warrantyText), [warrantyText]);
+
+  // বাংলা সংখ্যা স্পষ্ট ও পাঠযোগ্য রাখার ক্লিন ফরম্যাটিং
+  const content = useMemo(() => {
+    let title = t(rawContent.title);
+    let body = t(rawContent.body);
+
+    if (lang === 'bn') {
+      title = title
+        .replace(/১ সপ্তাহ \(৭ দিন\)/g, '7 দিন (1 সপ্তাহ)')
+        .replace(/৬ মাস/g, '6 মাস')
+        .replace(/১ বছর \(১২ মাস\)/g, '1 বছর (12 মাস)')
+        .replace(/২ বছর \(২৪ মাস\)/g, '2 বছর (24 মাস)');
+
+      body = body
+        .replace(/৭ দিন/g, '7 দিন')
+        .replace(/১৮০ দিন \(৬ মাস\)/g, '180 দিন (6 মাস)')
+        .replace(/৩৬৫ দিন/g, '365 দিন')
+        .replace(/১ বছর/g, '1 বছর')
+        .replace(/২ বছর/g, '2 বছর');
+    }
+
+    return { title, body };
+  }, [rawContent, t, lang]);
 
   useEffect(() => {
     if (isOpen) lockBody();
@@ -99,7 +122,8 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                   <h3 className="font-body text-[17px] font-extrabold text-ink">
                     {lang === 'en' ? 'Warranty Information' : 'ওয়ারেন্টি তথ্য'}
                   </h3>
-                  <p className="font-body text-[11.5px] font-semibold text-brand-primary">
+                  {/* স্কাই-ব্লু কালার */}
+                  <p className="font-body text-[12px] font-bold text-brand-light">
                     {warrantyText || (lang === 'en' ? 'Official Brand Coverage' : 'অফিসিয়াল পলিসি কভারেজ')}
                   </p>
                 </div>
@@ -114,24 +138,24 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
             </div>
           </div>
 
-          {/* কন্টেন্ট বডি */}
-          <div className="flex-1 overflow-y-auto px-6 py-4.5">
+          {/* কন্টেন্ট বডি — ডিভাইডারের নিচ থেকে পর্যাপ্ত ব্রিদিং স্পেস (pt-5) */}
+          <div className="flex-1 overflow-y-auto px-6 pb-5 pt-5">
             {/* পলিসি টাইটেল ও বর্ণনা */}
             <div className="mb-4">
-              <h4 className="font-body text-[15px] font-bold text-ink leading-snug">
-                {t(content.title)}
+              <h4 className="font-body text-[15.5px] font-bold text-ink leading-snug">
+                {content.title}
               </h4>
-              <p className="mt-1 font-body text-[12.5px] leading-relaxed text-muted">
-                {t(content.body)}
+              <p className="mt-1.5 font-body text-[12.5px] leading-relaxed text-muted">
+                {content.body}
               </p>
             </div>
 
-            {/* শর্তাবলির তালিকা */}
+            {/* শর্তাবলির তালিকা — স্পষ্ট ক্রিস্টাল ক্লিয়ার নাম্বার সার্কেল */}
             <div className="space-y-3">
               {/* পয়েন্ট ১: আনবক্সিং ভিডিও */}
               <div className="flex items-start gap-3 rounded-[16px] border border-white/80 bg-white/70 p-3 shadow-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body text-xs font-bold text-white shadow-xs">
-                  {lang === 'en' ? '1' : '১'}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
+                  1
                 </span>
                 <p className="font-body text-[12.5px] leading-[1.65] text-ink/85">
                   {lang === 'en'
@@ -142,8 +166,8 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
 
               {/* পয়েন্ট ২: মূল বক্স ও ইনভয়েস */}
               <div className="flex items-start gap-3 rounded-[16px] border border-white/80 bg-white/70 p-3 shadow-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body text-xs font-bold text-white shadow-xs">
-                  {lang === 'en' ? '2' : '২'}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
+                  2
                 </span>
                 <p className="font-body text-[12.5px] leading-[1.65] text-ink/85">
                   {lang === 'en'
@@ -154,8 +178,8 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
 
               {/* পয়েন্ট ৩: বিস্তারিত সুরক্ষামূলক কভারেজ ও ব্যতিক্রম */}
               <div className="flex items-start gap-3 rounded-[16px] border border-white/80 bg-white/70 p-3 shadow-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body text-xs font-bold text-white shadow-xs">
-                  {lang === 'en' ? '3' : '৩'}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
+                  3
                 </span>
                 <p className="font-body text-[12.5px] leading-[1.65] text-ink/85">
                   {lang === 'en'
@@ -185,11 +209,11 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
             </div>
           </div>
 
-          {/* ফুটার — সিগনেচার ফুল-উইথ স্কাই-ব্লু বাটন */}
+          {/* ফুটার — কুইক অর্ডার ও উইশলিস্ট মডালের সাথে হুবহু ম্যাচ করা গ্রেডিয়েন্ট বাটন (from-info to-brand-light) */}
           <div className="shrink-0 px-6 pb-6 pt-2">
             <button
               onClick={onClose}
-              className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 focus-visible:outline-none"
+              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 focus-visible:outline-none"
             >
               {lang === 'en' ? 'Got It' : 'বুঝেছি'}
             </button>
