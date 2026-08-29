@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { createOrder } from '@/app/actions/checkout';
@@ -173,29 +174,6 @@ function IconArrowLeft() {
   );
 }
 
-// কুরিয়ার ডেলিভারি ভেক্টর লাইন-আর্ট প্লেসহোল্ডার
-function DeliveryCourierIllustration() {
-  return (
-    <svg width="78" height="78" viewBox="0 0 24 24" fill="none" stroke="#0058C7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 drop-shadow-sm">
-      <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v2" />
-      <path d="M16 8h4l3 3v5h-7" />
-      <circle cx="5.5" cy="18.5" r="2.5" fill="#C3DEFC" stroke="#0058C7" />
-      <circle cx="18.5" cy="18.5" r="2.5" fill="#C3DEFC" stroke="#0058C7" />
-      <path d="M9 10h4M9 13h2" />
-    </svg>
-  );
-}
-
-// হাতে মোবাইল স্ক্যান ভেক্টর প্লেসহোল্ডার
-function MobileScanIllustration() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#E11D48" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-      <rect x="5" y="2" width="14" height="20" rx="3" fill="#FFE4E6" stroke="#E11D48" />
-      <path d="M9 6h6M9 10h2M13 10h2M9 14h6M12 18h.01" />
-    </svg>
-  );
-}
-
 function DesktopSideDecor() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">
@@ -231,7 +209,6 @@ export default function CheckoutPage() {
   const [selectedShip, setSelectedShip] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
 
-  // পেমেন্ট ইনপুট মোড সুইচ: 'txn' অথবা 'last4' (ডিফল্ট: 'txn')
   const [paymentInputMode, setPaymentInputMode] = useState<'txn' | 'last4'>('txn');
   const [txn, setTxn] = useState('');
   const [last4, setLast4] = useState('');
@@ -313,7 +290,6 @@ export default function CheckoutPage() {
     // ─────────────────────────────────────────────────────────────
     let draftLoaded = false;
     try {
-      // Priority 1: সদ্য টাইপ করা ড্রাফট (রিফ্রেশ দেওয়ার আগের তথ্য সবার আগে থাকবে)
       const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
       const persistentDraft = getDraft();
       const activeDraft = sessionDraft || persistentDraft;
@@ -334,7 +310,6 @@ export default function CheckoutPage() {
       draftLoaded = false;
     }
 
-    // Priority 2 & 3: যদি সদ্য কোনো ড্রাফট না থাকে, তখন লগইন ইউজার হিস্টোরি ও প্রোফাইল থেকে আনবে
     if (!draftLoaded) {
       const user = useAuthStore.getState().currentUser;
       if (user?.id) {
@@ -749,7 +724,7 @@ export default function CheckoutPage() {
           {/* টপ হেডার বার সম্পূর্ণ অপসারিত — এখন সরাসরি ফ্রেশ স্টেপার ও ব্যাক বাটন */}
           {/* ========================================================================= */}
           <div className="relative px-6 pt-5 pb-2">
-            {/* ফ্লোটিং নেভিগেশন বাটন (বন্ধ বা পেছনে যাওয়ার জন্য) */}
+            {/* ফ্লোটিং নেভিগেশন বাটন */}
             <div className="absolute right-5 top-5 z-20">
               {step === 1 ? (
                 <Link
@@ -868,7 +843,7 @@ export default function CheckoutPage() {
                 {errors.eP && <div className={fieldErrClass}><IconWarning />{errors.eP}</div>}
               </div>
 
-              {/* জেলা ড্রপডাউন: ভাষা অনুযায়ী বাংলা বা ইংরেজি */}
+              {/* জেলা ড্রপডাউন */}
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('জেলা')}</label>
                 <div className="relative">
@@ -925,7 +900,7 @@ export default function CheckoutPage() {
                 {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
 
-              {/* শিপিং অপশন — পরিষ্কার স্ট্যান্ডার্ড রেডিও সিলেকশন */}
+              {/* শিপিং অপশন */}
               {shipOptions.length > 0 && (
                 <div className="mb-4">
                   <label className={fieldLabelClass}>{t('শিপিং')}</label>
@@ -966,19 +941,19 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট — আপনার ড্রয়িং অনুযায়ী সম্পূর্ণ নতুন মাস্টারপিস রিডিজাইন */}
+          {/* স্টেপ ২: পেমেন্ট — রিয়েল ফটো ফ্রেমিং ও ওয়াটারমার্ক ক্রপ সাপোর্ট */}
           {/* ========================================================================= */}
           {step === 2 && (
             <div className="px-6 py-3.5">
               
-              {/* ১. কাস্টমার ট্রাস্ট ও ডেলিভারি কার্ড (টপ কার্ড) */}
-              <div className="mb-3.5 flex items-center justify-between gap-3.5 rounded-[20px] border border-brand-light/30 bg-gradient-to-br from-white/95 via-[#F0F7FF] to-[#E0F2FE]/80 p-4.5 shadow-xs backdrop-blur-md">
-                <div className="flex-1">
-                  <div className="mb-1 flex items-center gap-1.5 font-body text-[13px] font-bold text-brand-primary">
+              {/* ১. কাস্টমার ট্রাস্ট ও পাঠাও ডেলিভারিম্যান ফটো কার্ড (টপ কার্ড) */}
+              <div className="mb-3.5 flex items-center justify-between gap-2.5 rounded-[20px] border border-brand-light/30 bg-gradient-to-br from-white/95 via-[#F0F7FF] to-[#E0F2FE]/80 p-3.5 sm:p-4 shadow-xs backdrop-blur-md overflow-hidden">
+                <div className="flex-1 pr-1">
+                  <div className="mb-1 flex items-center gap-1.5 font-body text-[12.5px] sm:text-[13px] font-bold text-brand-primary">
                     <span>📦</span>
                     <span>{lang === 'en' ? 'To prevent fake bookings & delivery risks' : 'ফেক বুকিং ও ডেলিভারি ঝুঁকি এড়াতে'}</span>
                   </div>
-                  <p className="font-body text-[12px] leading-relaxed text-ink/80">
+                  <p className="font-body text-[11.5px] sm:text-[12px] leading-relaxed text-ink/85">
                     {lang === 'en' ? (
                       <>We only take a minimum <strong className="font-bold text-brand-primary">200 Taka advance</strong> for delivery charges.<br />💵 <strong className="font-bold text-ink">Pay the remaining balance</strong> to the delivery person upon receiving your parcel.</>
                     ) : (
@@ -986,17 +961,34 @@ export default function CheckoutPage() {
                     )}
                   </p>
                 </div>
-                <div className="shrink-0 flex items-center justify-center">
-                  <DeliveryCourierIllustration />
+                
+                {/* ডেলিভারিম্যান ফটো ফ্রেম — নিচের বাম কোণার ওয়াটারমার্ক ১০০% বাদ দিয়ে পার্সেল ও ডেলিভারিম্যানের মূল অংশ ফোকাস */}
+                <div className="relative h-[90px] w-[95px] sm:h-[105px] sm:w-[115px] shrink-0 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-xs">
+                  <Image
+                    src="/delivery-courier.png"
+                    alt="Pathao Delivery Courier"
+                    fill
+                    sizes="120px"
+                    className="object-cover object-[75%_25%] scale-[1.25] select-none"
+                    priority
+                  />
                 </div>
               </div>
 
-              {/* ২. বিকাশ পেমেন্ট কার্ড + কিউআর স্ক্যান বাটন */}
-              <div className="mb-4 rounded-[20px] border border-border-base bg-white p-4.5 shadow-xs">
+              {/* ২. বিকাশ পেমেন্ট কার্ড + আইফোন স্ক্যান ফটো */}
+              <div className="mb-4 rounded-[20px] border border-border-base bg-white p-4 sm:p-4.5 shadow-xs">
                 <div className="flex items-center justify-between gap-3 pb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50/70 p-1">
-                      <MobileScanIllustration />
+                    {/* আইফোন কিউআর স্ক্যান রিয়েল ফটো ফ্রেম */}
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-rose-100 bg-rose-50/70 shadow-xs">
+                      <Image
+                        src="/bkash-scan-hand.png"
+                        alt="bKash Scan Hand"
+                        fill
+                        sizes="48px"
+                        className="object-cover object-center select-none"
+                        priority
+                      />
                     </div>
                     <div>
                       <div className="mb-0.5 font-body text-[10px] font-bold uppercase tracking-wide text-muted">bKash Send Money</div>
@@ -1046,7 +1038,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* ৩. ইন্টারেক্টিভ ট্যাব সুইচার: ট্রানজেকশন আইডি বনাম শেষ ৪ ডিজিট */}
+              {/* ৩. ইন্টারেক্টিভ ট্যাব সুইচার */}
               <div className="mb-2 text-center font-body text-[12px] font-bold text-ink">
                 {lang === 'en' ? 'Provide any one below (Mandatory)' : 'নিচের যেকোনো একটি তথ্য দিন (বাধ্যতামূলক)'}
               </div>
