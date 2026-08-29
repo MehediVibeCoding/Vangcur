@@ -29,7 +29,7 @@ function ClearTrackSvgIcon({ className = '' }: { className?: string }) {
 function ReceiptEmptySvgIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
       <path d="M8 7h8M8 11h8M8 15h5" />
     </svg>
   );
@@ -78,6 +78,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   useEffect(() => {
     if (!isOpen) return;
 
+    // দৃশ্যপট ৩ ও ৪: লগইন থাকলে সরাসরি একাউন্ট অর্ডার পেজে পাঠানো
     if (currentUser) {
       onClose();
       router.push('/account/orders');
@@ -88,6 +89,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setNotFound(false);
     setOrders([]);
 
+    // দৃশ্যপট ১ ও ২: আন-লগইন কাস্টমারের লোকাল সবকটি অর্ডার ফেচ করা
     const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
       try {
         const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
@@ -148,7 +150,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
         onClick={onClose}
       />
 
-      {/* Centered Aesthetic Modal Dialog */}
+      {/* Centered Aesthetic Modal Dialog on Seamless Gradient */}
       <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
         <div className="relative flex max-h-[88vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
@@ -174,7 +176,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
             </div>
           </div>
 
-          {/* Content Body */}
+          {/* Content Body on Unified Seamless Canvas */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {/* Loading State */}
             {loading && (
@@ -216,12 +218,12 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                   ))}
                 </div>
 
-                {/* হাই-কন্ট্রাস্ট সাইকোলজিক্যাল ভ্যালু লগইন কার্ড (কার্ড তালিকার একদম নিচে) */}
-                <div className="rounded-[24px] border-[1.5px] border-brand-light/40 bg-white/95 p-4.5 shadow-md backdrop-blur-sm">
+                {/* হাই-কনভার্শন সাইকোলজিক্যাল ভ্যালু লগইন কার্ড (সফট ফ্রস্টেড গ্লাস) */}
+                <div className="rounded-[22px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
                   <div className="flex items-start gap-3">
                     <SparklesCrownSvgIcon />
                     <div className="flex-1">
-                      <div className="mb-1.5 font-body text-[13.5px] font-extrabold text-ink">
+                      <div className="mb-1 font-body text-[13.5px] font-extrabold text-ink">
                         {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
                       </div>
                       <p className="font-body text-[12px] leading-[1.7] text-ink/75">
@@ -231,7 +233,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                       </p>
                       <button
                         onClick={handleOpenLogin}
-                        className="mt-3 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
+                        className="mt-2.5 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
                       >
                         <span>{lang === 'en' ? 'Login to Account →' : 'অ্যাকাউন্টে লগইন করুন →'}</span>
                       </button>
