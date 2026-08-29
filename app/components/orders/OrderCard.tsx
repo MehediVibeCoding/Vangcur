@@ -5,15 +5,24 @@ import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 
 export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
-  pending: 'bg-amber-100 text-amber-900 border border-amber-200/80',
-  confirmed: 'bg-emerald-100 text-emerald-900 border border-emerald-200/80',
-  shipped: 'bg-sky-100 text-sky-900 border border-sky-200/80',
-  delivered: 'bg-blue-100 text-blue-900 border border-blue-200/80',
-  cancelled: 'bg-red-100 text-red-900 border border-red-200/80',
-  rejected: 'bg-red-100 text-red-900 border border-red-200/80',
+  pending: 'bg-amber-50 text-amber-800 border-amber-200/80',
+  confirmed: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+  shipped: 'bg-sky-50 text-sky-800 border-sky-200/80',
+  delivered: 'bg-blue-50 text-blue-800 border-blue-200/80',
+  cancelled: 'bg-red-50 text-red-800 border-red-200/80',
+  rejected: 'bg-red-50 text-red-800 border-red-200/80',
 };
 
-// শতভাগ ইমোজি-মুক্ত পরিষ্কার ইংরেজি ও বাংলা স্ট্যাটাস লেবেল
+export const ORDER_STATUS_DOT: Record<OrderStatus, string> = {
+  pending: 'bg-amber-500',
+  confirmed: 'bg-emerald-500',
+  shipped: 'bg-sky-500',
+  delivered: 'bg-blue-600',
+  cancelled: 'bg-red-500',
+  rejected: 'bg-red-500',
+};
+
+// ১০০% ইমোজি-মুক্ত পরিষ্কার ইংরেজি ও বাংলা স্ট্যাটাস লেবেল
 export const ORDER_STATUS_LABEL_EN: Record<OrderStatus, string> = {
   pending: 'Pending',
   confirmed: 'Confirmed',
@@ -36,7 +45,7 @@ export const ORDER_STATUS_LABEL = ORDER_STATUS_LABEL_EN;
 
 function DocumentSvgIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-primary">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -62,7 +71,7 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
       <img
         src={optimizeCloudinaryUrl(imgVal, 120)}
         alt=""
-        className="h-10 w-10 shrink-0 rounded-xl border border-border-base object-cover shadow-xs"
+        className="h-11 w-11 shrink-0 rounded-[12px] border border-white/80 bg-white object-cover shadow-xs"
         loading="lazy"
         decoding="async"
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -70,7 +79,7 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
     );
   }
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-base bg-brand-bg/30 shadow-xs">
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] border border-white/80 bg-brand-bg/30 text-brand-light shadow-xs">
       <PackageFallbackIcon />
     </div>
   );
@@ -93,25 +102,29 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
     ? (ORDER_STATUS_LABEL_EN[o.status] || ORDER_STATUS_LABEL_EN.pending)
     : (ORDER_STATUS_LABEL_BN[o.status] || ORDER_STATUS_LABEL_BN.pending);
 
+  const dotClass = ORDER_STATUS_DOT[o.status] || 'bg-amber-500';
+
   return (
-    <div className="rounded-[20px] border border-border-base bg-white shadow-sm transition-brand hover:border-brand-light/40 overflow-hidden">
-      {/* Top Header: স্কাই-ব্লু সফট গ্রেডিয়েন্ট বার + অর্ডার নম্বর + ইমোজি-মুক্ত স্ট্যাটাস ব্যাজ */}
-      <div className="flex items-center justify-between border-b border-border-base/70 bg-gradient-to-r from-brand-bg/35 via-[#DCEBFD]/30 to-white px-4 py-3">
-        <span className="font-body text-[13.5px] font-extrabold text-ink">{o.orderNum}</span>
+    <div className="overflow-hidden rounded-[22px] border border-white/80 bg-white/90 shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-brand-light/40 hover:shadow-sh1">
+      {/* Top Header: সফট স্কাই শিমার বার + অর্ডার নং + গ্লোয়িং ডট স্ট্যাটাস ব্যাজ */}
+      <div className="flex items-center justify-between border-b border-border-base/60 bg-gradient-to-r from-brand-bg/30 via-white/80 to-brand-bg/20 px-4 py-3">
+        <div className="flex items-center gap-1.5">
+          <span className="font-body text-[14px] font-extrabold text-ink tracking-tight">{o.orderNum}</span>
+        </div>
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-body text-[11px] font-bold shadow-xs ${
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-body text-[11px] font-extrabold shadow-xs ${
             ORDER_STATUS_CLASS[o.status] || ORDER_STATUS_CLASS.pending
           }`}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+          <span className={`h-1.5 w-1.5 rounded-full ${dotClass} animate-pulse`} />
           <span>{statusLabel}</span>
         </span>
       </div>
 
       {/* Card Content Body */}
       <div className="p-4">
-        {/* Meta Info: 📅 ও 👤 ইমোজি সহ পরিষ্কার মেটা লাইন */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-[11.5px] text-muted">
+        {/* Meta Info: 📅 ও 👤 ইমোজি সহ প্রিমিয়াম মেটা বার */}
+        <div className="mb-3.5 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-[11.5px] text-muted">
           <div className="flex items-center gap-1.5">
             <span>📅</span>
             <span>{dateStr}</span>
@@ -119,7 +132,7 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
           <span className="text-border-base">|</span>
           <div className="flex items-center gap-1.5">
             <span>👤</span>
-            <span>{o.customer?.name || '-'}</span>
+            <span className="font-medium text-ink/80">{o.customer?.name || '-'}</span>
           </div>
         </div>
 
@@ -138,19 +151,19 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
           ))}
         </div>
 
-        {/* Card Footer: Total & Invoice Button */}
-        <div className="mt-4 flex items-center justify-between border-t border-border-base/70 pt-3">
+        {/* Card Footer: Total & Gradient Invoice Button */}
+        <div className="mt-4 flex items-center justify-between border-t border-border-base/60 pt-3">
           <div className="font-body text-[13px] font-bold text-ink">
             <span>{t('মোট:')} </span>
-            <span className="text-[14.5px] font-extrabold text-brand-light">
+            <span className="text-[15px] font-extrabold text-brand-light">
               ৳{(o.total || 0).toLocaleString('en-US')}
             </span>
-            <span className="ml-1 text-[11px] font-normal text-muted">({t('শিপিং সহ')})</span>
+            <span className="ml-1 text-[10.5px] font-normal text-muted">({t('শিপিং সহ')})</span>
           </div>
 
           <button
             onClick={() => onInvoice(o.id)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-brand-bg/30 px-3.5 py-1.5 font-body text-xs font-bold text-brand-primary transition-colors hover:bg-brand-bg/60 active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
           >
             <DocumentSvgIcon />
             <span>{lang === 'en' ? 'Invoice' : 'ইনভয়েস'}</span>
