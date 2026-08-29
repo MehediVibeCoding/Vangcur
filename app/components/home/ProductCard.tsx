@@ -148,8 +148,9 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-ink/80 px-2.5 py-1 text-[10px] font-bold text-white/90 backdrop-blur-xs">
-            {lang === 'en' ? 'Out of Stock' : 'স্টক শেষ'}
+          /* ১ম ছবির মতো নিখুঁত সফট স্লেট-অ্যাশ কালারের Sold Out ব্যাজ */
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-[#5A6578] px-2.5 py-1 text-[10.5px] font-bold text-white shadow-xs">
+            {lang === 'en' ? 'Sold Out' : 'স্টক শেষ'}
           </div>
         ) : p.badge && (
           <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light px-2.5 py-1 text-[10px] font-bold text-white shadow-sh1">
@@ -195,11 +196,11 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
           <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
-              /* গ্রিড কার্ডে পরিষ্কার ছাই রঙের মিউটেড স্টক শেষ বাটন */
+              /* গ্রিড কার্ডে পরিষ্কার সফট স্লেট-অ্যাশ ডিসেবলড বাটন */
               <button
                 type="button"
                 disabled
-                className="flex h-8 w-full min-w-0 items-center justify-center rounded-full border border-white/20 bg-black/40 font-body text-[11px] font-bold text-white/75 backdrop-blur-[6px] cursor-not-allowed select-none sm:h-9 sm:text-xs lg:h-10"
+                className="flex h-8 w-full min-w-0 items-center justify-center rounded-full border border-white/20 bg-[#5A6578] font-body text-[11.5px] font-bold text-white shadow-xs cursor-not-allowed select-none sm:h-9 sm:text-xs lg:h-10"
               >
                 {lang === 'en' ? 'Out of Stock' : 'স্টক শেষ'}
               </button>
