@@ -44,7 +44,7 @@ function TrashIcon() {
 
 function CouponSvgIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
       <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
       <line x1="12" y1="9" x2="12" y2="15" strokeDasharray="2 2" />
     </svg>
@@ -145,8 +145,8 @@ export default function QuickOrderModal() {
         onClick={() => setOpen(false)}
       />
 
-      {/* Modal / Bottom Sheet with LoginModal's Authentic Unified Gradient */}
-      <div className="fixed inset-x-0 bottom-0 z-[980] mx-auto flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
+      {/* Modal / Bottom Sheet */}
+      <div className="fixed inset-x-0 bottom-0 z-[980] mx-auto flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
         {/* Header with Full-Width Bottom Black Hairline Divider */}
         <div className="relative overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
           <HeaderDecor />
@@ -192,7 +192,7 @@ export default function QuickOrderModal() {
                   ৳{item.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'}
                 </div>
 
-                {/* No White Background: Pure Transparent Black Border Circles */}
+                {/* Minimalist Transparent Black Border Circles */}
                 <div className="mt-2.5 flex items-center gap-2">
                   <button
                     type="button"
@@ -216,7 +216,7 @@ export default function QuickOrderModal() {
                 </div>
               </div>
 
-              {/* Total Item Price & Soft Red Trash Button */}
+              {/* Total Item Price & Subtle Muted Trash Button (No Red Block Distraction) */}
               <div className="flex flex-col items-end justify-between self-stretch pl-1">
                 <div className="font-body text-[14px] font-bold text-ink">
                   ৳{(item.price * item.qty).toLocaleString('en-US')}
@@ -225,7 +225,7 @@ export default function QuickOrderModal() {
                   type="button"
                   onClick={() => handleRemove(item.id)}
                   title={t('সরান')}
-                  className="mt-2 flex h-7 w-7 items-center justify-center rounded-[9px] bg-[#FEF2F2] text-[#EF4444] shadow-xs transition-brand hover:bg-[#FEE2E2] active:scale-90"
+                  className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
                 >
                   <TrashIcon />
                 </button>
@@ -233,46 +233,49 @@ export default function QuickOrderModal() {
             </div>
           ))}
 
-          {/* Coupon Code Section matching Reference 2 */}
+          {/* Full-Width Black Hairline Divider above Coupon Section */}
           <div className="pt-2">
-            <div className="mb-1.5 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
+            <div className="mb-3.5 border-t border-ink/10" />
+
+            <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
               <CouponSvgIcon />
               <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
             </div>
-            {/* Transparent input with subtle border & embedded text action button (Reference 2) */}
+
+            {/* Transparent input with Sky-Blue focus & Sky-Blue text button */}
             <form onSubmit={handleApplyCoupon} className="relative flex items-center">
               <input
                 type="text"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                 placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-primary"
+                className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
               />
               <button
                 type="submit"
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-primary transition-opacity hover:opacity-80 active:scale-95"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
               >
-                {lang === 'en' ? 'Add' : 'প্রয়োগ'}
+                {lang === 'en' ? 'Apply' : 'প্রয়োগ'}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Footer seamlessly on the same gradient canvas */}
-        <div className="px-6 pb-6 pt-3">
-          <div className="mb-3.5 flex items-center justify-between">
-            <span className="font-body text-[14px] font-bold text-muted">
+        {/* Footer with Generous Negative Space & Clear Focus on CTA */}
+        <div className="px-6 pb-6 pt-4">
+          <div className="mb-5 flex items-center justify-between">
+            <span className="font-body text-[14.5px] font-bold text-muted">
               {t('মোট')}:
             </span>
-            <span className="font-body text-xl font-extrabold text-brand-light">
+            <span className="font-body text-2xl font-extrabold text-brand-light">
               ৳{total.toLocaleString('en-US')}
             </span>
           </div>
 
-          {/* LoginModal's Signature Primary CTA Button */}
+          {/* LoginModal's Signature Primary CTA Button with Top Breathing Room */}
           <button
             onClick={handleConfirmOrder}
-            className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:scale-95"
+            className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[14px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:scale-95"
           >
             {lang === 'en' ? 'Confirm Order' : 'অর্ডার নিশ্চিত করুন'}
           </button>
