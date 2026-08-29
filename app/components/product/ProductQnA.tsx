@@ -29,7 +29,7 @@ function SolidChatQuestionIcon({ className = '' }: { className?: string }) {
 
 function PlusIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
@@ -251,20 +251,34 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
   return (
     <div className="py-2">
-      {/* Header Block — বর্ডার দাগ ছাড়া পরিষ্কার আধুনিক স্পেসিং */}
-      <div className="mb-5 flex flex-col gap-1">
-        <div className="flex items-center gap-2.5 font-body text-lg font-bold text-ink">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
-            <SolidChatQuestionIcon />
-          </span>
-          <span>
-            {lang === 'en' ? (
-              <>Customer <span className="text-brand-light">Q&A</span></>
-            ) : (
-              <>কাস্টমার <span className="text-brand-light">প্রশ্নোত্তর (Q&A)</span></>
-            )}
-          </span>
+      {/* Header Block — প্রশ্ন থাকলে বাটন হেডারের ডানে থাকবে, প্রশ্ন না থাকলে নিচে */}
+      <div className="mb-5 flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 font-body text-lg font-bold text-ink">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+              <SolidChatQuestionIcon />
+            </span>
+            <span>
+              {lang === 'en' ? (
+                <>Customer <span className="text-brand-light">Q&A</span></>
+              ) : (
+                <>কাস্টমার <span className="text-brand-light">প্রশ্নোত্তর (Q&A)</span></>
+              )}
+            </span>
+          </div>
+
+          {/* প্রশ্ন থাকা অবস্থায় হেডারের ডানপাশের বাটন */}
+          {hasQuestions && (
+            <button
+              onClick={openAskModal}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-light px-4 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
+            >
+              <PlusIcon />
+              <span>{lang === 'en' ? 'Ask a New Question' : 'নতুন প্রশ্ন করুন'}</span>
+            </button>
+          )}
         </div>
+
         <p className="font-body text-[12.5px] text-muted">
           {lang === 'en'
             ? `Have a question about ${productName}? Ask now and get answers from our team.`
@@ -280,7 +294,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State — প্রশ্ন না থাকলে বাটন মাঝখানে থাকবে */}
       {!loading && !hasQuestions && (
         <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-border-base bg-surface-muted/50 p-6 text-center">
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-light text-white">
@@ -299,7 +313,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         </div>
       )}
 
-      {/* Questions List & Bottom Button */}
+      {/* Questions List */}
       {!loading && hasQuestions && (
         <div className="flex flex-col gap-4">
           {questions.map((q) => {
@@ -379,7 +393,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                     </div>
                   </div>
                 ) : (
-                  // সাধারণ ইউজারের ক্ষেত্রে লেখা হাইড থাকবে, শুধু এডমিন/মডারেটরকে উত্তর বাটন দেখাবে
+                  // সাধারণ ইউজারের ক্ষেত্রে টেক্সট হাইড থাকবে, শুধু এডমিন/মডারেটরকে বাটন দেখাবে
                   canAdminAnswer && (
                     <div className="mt-3 flex justify-end pt-1 sm:ml-9">
                       <button
@@ -440,16 +454,6 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               </div>
             );
           })}
-
-          {/* Bottom Button */}
-          <div className="mt-2 flex justify-center pt-2">
-            <button
-              onClick={openAskModal}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
-            >
-              <PlusIcon /> {t('নতুন প্রশ্ন করুন')}
-            </button>
-          </div>
         </div>
       )}
 
