@@ -36,7 +36,7 @@ function WishImg({ emoji }: { emoji?: string }) {
 function HeartEmptySvgIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
     </svg>
   );
 }
@@ -134,7 +134,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
         onClick={onClose}
       />
 
-      {/* Centered Aesthetic Window (No Fullscreen) */}
+      {/* Centered Aesthetic Window */}
       <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
         <div className="relative flex max-h-[86vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
@@ -191,7 +191,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                       idx !== items.length - 1 ? 'border-b border-ink/10' : ''
                     }`}
                   >
-                    {/* Top Row: Thumbnail + Multi-Line Title + Price + Delete Button */}
+                    {/* Top Row: Thumbnail + Multi-Line Title + Price + Subtle Muted Delete Button */}
                     <div className="flex items-start gap-3">
                       <div
                         className="cursor-pointer shrink-0"
@@ -214,12 +214,12 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                         </div>
                       </div>
 
-                      {/* Subtle Glass Delete Button */}
+                      {/* Subtle & Discreet Trash Button (No Visual Competition with Close Button) */}
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
                         title={t('Wishlist থেকে সরান')}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/70 text-muted/40 shadow-xs transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-transparent text-muted/35 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
                       >
                         <TrashIcon />
                       </button>
