@@ -146,7 +146,7 @@ export default function QuickOrderModal() {
       />
 
       {/* Modal / Bottom Sheet */}
-      <div className="fixed inset-x-0 bottom-0 z-[980] mx-auto flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
+      <div className="fixed inset-x-0 bottom-0 z-[980] mx-auto flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
         {/* Header with Full-Width Bottom Black Hairline Divider */}
         <div className="relative overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
           <HeaderDecor />
@@ -171,19 +171,17 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Content List on Unified Background */}
+        {/* Content List — প্রতিটি আইটেমের মাঝে শতভাগ সমান ডিভাইডার স্পেসিং */}
         <div className="flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
-          {cart.map((item, idx) => (
+          {cart.map((item) => (
             <div
               key={item.id}
-              className={`flex items-start gap-3.5 pb-3.5 ${
-                idx !== cart.length - 1 ? 'border-b border-ink/10' : ''
-              }`}
+              className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
             >
               {/* Thumbnail */}
               <CartItemThumb emoji={item.emoji} />
 
-              {/* Title, Price per Piece & Minimalist Transparent Quantity Buttons */}
+              {/* Title, Unit Price & Quantity Buttons */}
               <div className="min-w-0 flex-1">
                 <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
                   {item.name}
@@ -216,7 +214,7 @@ export default function QuickOrderModal() {
                 </div>
               </div>
 
-              {/* Total Item Price & Subtle Muted Trash Button (No Red Block Distraction) */}
+              {/* Total Item Price & Subtle Muted Trash Button */}
               <div className="flex flex-col items-end justify-between self-stretch pl-1">
                 <div className="font-body text-[14px] font-bold text-ink">
                   ৳{(item.price * item.qty).toLocaleString('en-US')}
@@ -233,16 +231,14 @@ export default function QuickOrderModal() {
             </div>
           ))}
 
-          {/* Full-Width Black Hairline Divider above Coupon Section */}
-          <div className="pt-2">
-            <div className="mb-3.5 border-t border-ink/10" />
-
+          {/* Coupon Code Section (সমানুপাতিক গ্যাপে অবস্থিত) */}
+          <div className="pt-0.5">
             <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
               <CouponSvgIcon />
               <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
             </div>
 
-            {/* Transparent input with Sky-Blue focus & Sky-Blue text button */}
+            {/* Transparent input with Sky-Blue focus & text button */}
             <form onSubmit={handleApplyCoupon} className="relative flex items-center">
               <input
                 type="text"
@@ -261,21 +257,23 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Footer with Generous Negative Space & Clear Focus on CTA */}
-        <div className="px-6 pb-6 pt-4">
-          <div className="mb-5 flex items-center justify-between">
-            <span className="font-body text-[14.5px] font-bold text-muted">
+        {/* Footer with Inset Alignment & Balanced Negative Space */}
+        <div className="px-6 pb-6 pt-3">
+          {/* মোট ও প্রাইসকে বাটনের কার্ভের সাথে সামঞ্জস্য রেখে ইনডেন্ট (px-2) করা হয়েছে */}
+          <div className="mb-4 flex items-center justify-between px-2">
+            <span className="font-body text-[13.5px] font-bold text-muted">
               {t('মোট')}:
             </span>
-            <span className="font-body text-2xl font-extrabold text-brand-light">
+            {/* পরিমিত সুন্দর সাইজের প্রাইস */}
+            <span className="font-body text-[18px] font-extrabold text-brand-light">
               ৳{total.toLocaleString('en-US')}
             </span>
           </div>
 
-          {/* LoginModal's Signature Primary CTA Button with Top Breathing Room */}
+          {/* Primary CTA Button */}
           <button
             onClick={handleConfirmOrder}
-            className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[14px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:scale-95"
+            className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:scale-95"
           >
             {lang === 'en' ? 'Confirm Order' : 'অর্ডার নিশ্চিত করুন'}
           </button>
