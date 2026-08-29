@@ -105,10 +105,12 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
   const dotClass = ORDER_STATUS_DOT[o.status] || 'bg-amber-500';
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-white/90 bg-white/95 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-brand-light/40 hover:shadow-sh1">
-      {/* Top Header: সফট স্কাই শিমার বার + ক্রিস্প অর্ডার নং + গ্লোয়িং ডট স্ট্যাটাস ব্যাজ */}
-      <div className="flex items-center justify-between border-b border-ink/[0.06] bg-gradient-to-r from-brand-bg/30 via-white to-brand-bg/20 px-4.5 py-3">
-        <span className="font-body text-[14px] font-extrabold text-ink tracking-tight">{o.orderNum}</span>
+    <div className="pb-4 border-b border-ink/10 last:border-b-0 last:pb-0">
+      {/* Top Header Row: অর্ডার নং + গ্লোয়িং ডট স্ট্যাটাস ব্যাজ (No Stark Box) */}
+      <div className="flex items-center justify-between pb-2">
+        <span className="font-body text-[15px] font-extrabold text-ink tracking-tight">
+          {o.orderNum}
+        </span>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 font-body text-[11px] font-extrabold shadow-xs ${
             ORDER_STATUS_CLASS[o.status] || ORDER_STATUS_CLASS.pending
@@ -119,66 +121,63 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
         </span>
       </div>
 
-      {/* Card Content Body */}
-      <div className="p-4.5">
-        {/* Meta Info: 📅 ও 👤 ইমোজি সহ প্রিমিয়াম মেটা বার */}
-        <div className="mb-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-body text-[11.5px] text-muted">
-          <div className="flex items-center gap-1.5">
-            <span>📅</span>
-            <span>{dateStr}</span>
-          </div>
-          <span className="text-ink/10">|</span>
-          <div className="flex items-center gap-1.5">
-            <span>👤</span>
-            <span className="font-semibold text-ink/80">{o.customer?.name || '-'}</span>
-          </div>
+      {/* Meta Info Line */}
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-body text-[11.5px] text-muted">
+        <div className="flex items-center gap-1.5">
+          <span>📅</span>
+          <span>{dateStr}</span>
         </div>
+        <span className="text-ink/10">|</span>
+        <div className="flex items-center gap-1.5">
+          <span>👤</span>
+          <span className="font-semibold text-ink/80">{o.customer?.name || '-'}</span>
+        </div>
+      </div>
 
-        {/* Ordered Items List — উইশলিস্ট ও কুইক অর্ডারের মতো সুন্দর বিন্যাস */}
-        <div className="space-y-3">
-          {(o.items || []).map((i, idx) => (
-            <div key={idx} className="flex items-start gap-3 border-b border-ink/[0.05] pb-3 last:border-b-0 last:pb-0">
-              <ItemThumb imgVal={(i.imgs || [''])[0]} />
-              
-              {/* Product Title (2-Line readable) & Quantity */}
-              <div className="min-w-0 flex-1">
-                <div className="line-clamp-2 font-body text-[13.5px] font-bold leading-snug text-ink">
-                  {i.name}
-                </div>
-                <div className="mt-1 font-body text-[11.5px] font-semibold text-muted">
-                  {lang === 'en' ? `Qty: ${i.qty} Pcs` : `পরিমাণ: ${i.qty} পিছ`}
-                </div>
+      {/* Ordered Items List — QuickOrderModal-এর মতো পরিষ্কার বিন্যাস */}
+      <div className="space-y-3">
+        {(o.items || []).map((i, idx) => (
+          <div key={idx} className="flex items-start gap-3">
+            <ItemThumb imgVal={(i.imgs || [''])[0]} />
+            
+            {/* Product Title & Unit Price/Qty */}
+            <div className="min-w-0 flex-1">
+              <div className="line-clamp-2 font-body text-[13.5px] font-bold leading-snug text-ink">
+                {i.name}
               </div>
-
-              {/* Product Price on Right (Sky Blue) */}
-              <div className="shrink-0 text-right">
-                <div className="font-body text-[13.5px] font-extrabold text-brand-light">
-                  ৳{(i.price * i.qty).toLocaleString('en-US')}
-                </div>
+              <div className="mt-0.5 font-body text-[11.5px] text-muted">
+                ৳{i.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'} &nbsp;·&nbsp; {lang === 'en' ? `Qty: ${i.qty}` : `পরিমাণ: ${i.qty}`}
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Card Footer: Total & Sky-Blue Gradient Invoice Button */}
-        <div className="mt-4 flex items-center justify-between border-t border-ink/[0.06] pt-3">
-          <div className="font-body text-[13px] font-bold text-ink">
-            <span>{t('মোট:')} </span>
-            <span className="text-[15.5px] font-extrabold text-brand-light">
-              ৳{(o.total || 0).toLocaleString('en-US')}
-            </span>
-            <span className="ml-1 text-[10.5px] font-normal text-muted">({t('শিপিং সহ')})</span>
+            {/* Total Price for this item on Right */}
+            <div className="shrink-0 text-right">
+              <div className="font-body text-[13.5px] font-extrabold text-brand-light">
+                ৳{(i.price * i.qty).toLocaleString('en-US')}
+              </div>
+            </div>
           </div>
+        ))}
+      </div>
 
-          {/* 100% Sky Blue Gradient Invoice Button */}
-          <button
-            onClick={() => onInvoice(o.id)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
-          >
-            <DocumentSvgIcon />
-            <span>{lang === 'en' ? 'Invoice' : 'ইনভয়েস'}</span>
-          </button>
+      {/* Card Footer: Total & Sky-Blue Gradient Invoice Button */}
+      <div className="mt-3.5 flex items-center justify-between pt-2">
+        <div className="font-body text-[13px] font-bold text-ink">
+          <span>{t('মোট:')} </span>
+          <span className="text-[15.5px] font-extrabold text-brand-light">
+            ৳{(o.total || 0).toLocaleString('en-US')}
+          </span>
+          <span className="ml-1 text-[10.5px] font-normal text-muted">({t('শিপিং সহ')})</span>
         </div>
+
+        {/* 100% Sky-Blue Gradient Invoice Button */}
+        <button
+          onClick={() => onInvoice(o.id)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
+        >
+          <DocumentSvgIcon />
+          <span>{lang === 'en' ? 'Invoice' : 'ইনভয়েস'}</span>
+        </button>
       </div>
     </div>
   );
