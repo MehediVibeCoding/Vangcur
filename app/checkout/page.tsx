@@ -336,6 +336,16 @@ export default function CheckoutPage() {
     router.prefetch('/');
   }, [router]);
 
+  // স্টেপ ট্র্যাকার সিঙ্ক
+  const updateStep = (n: number) => {
+    setStep(n);
+    try {
+      sessionStorage.setItem('vc_checkout_step', String(n));
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     let hasItems = false;
     let loadedItems: CartItem[] = [];
@@ -377,32 +387,93 @@ export default function CheckoutPage() {
       );
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // 🌟 স্মার্ট ৩-ধাপের অটোফিল লজিক (Autofill Hierarchy Priority)
+    // ─────────────────────────────────────────────────────────────
+    let draftLoaded = false;
     try {
-      const draft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
-      if (draft) {
-        if (draft.name) setName(draft.name);
-        if (draft.phone) setPhone(draft.phone);
-        if (draft.dist) setDist(draft.dist);
-        if (draft.addr) setAddr(draft.addr);
-        if (draft.email) setEmail(draft.email);
-        if (draft.txn) setTxn(draft.txn);
-        if (draft.l4) setLast4(draft.l4);
-      } else {
-        const saved = getDraft();
-        if (saved) {
-          if (saved.name) setName(saved.name);
-          if (saved.phone) setPhone(saved.phone);
-          if (saved.dist) setDist(saved.dist);
-          if (saved.addr) setAddr(saved.addr);
-          if (saved.email) setEmail(saved.email);
-          if (saved.ship) setSelectedShip(saved.ship);
+      // Priority 1: সদ্য টাইপ করা ড্রাফট (রিফ্রেশ দেওয়ার আগের তথ্য সবার আগে থাকবে)
+      const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
+      const persistentDraft = getDraft();
+      const activeDraft = sessionDraft || persistentDraft;
+
+      if (activeDraft && (activeDraft.name || activeDraft.phone || activeDraft.addr)) {
+        draftLoaded = true;
+        if (activeDraft.name) setName(activeDraft.name);
+        if (activeDraft.phone) setPhone(activeDraft.phone);
+        if (activeDraft.dist) setDist(activeDraft.dist);
+        if (activeDraft.addr) setAddr(activeDraft.addr);
+        if (activeDraft.email) setEmail(activeDraft.email);
+        if (activeDraft.txn) setTxn(activeDraft.txn);
+        if (activeDraft.l4) setLast4(activeDraft.l4);
+        if (activeDraft.ship) setSelectedShip(activeDraft.ship);
+      }
+    } catch {
+      draftLoaded = false;
+    }
+
+    // Priority 2 & 3: যদি সদ্য কোনো ড্রাফট না থাকে, তখন লগইন ইউজার হিস্টোরি ও প্রোফাইল থেকে আনবে
+    if (!draftLoaded) {
+      const user = useAuthStore.getState().currentUser;
+      if (user?.id) {
+        // প্রোফাইল থেকে বেসিক ডাটা বসানো
+        if (user.name) setName(user.name);
+        if (user.email) setEmail(user.email);
+        if (user.phone) setPhone(user.phone);
+
+        // অতীতে কোনো সফল অর্ডার থাকলে সর্বশেষ ডেলিভারি ঠিকানা আনা
+        (async () => {
+          try {
+            const { data: pastOrders } = await supabase
+              .from('orders')
+              .select('customer_name, customer_phone, customer_district, customer_address, customer_email, shipping')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (pastOrders && pastOrders.length > 0) {
+              const last = pastOrders[0];
+              setName((prev) => prev || last.customer_name || user.name || '');
+              setPhone((prev) => prev || last.customer_phone || user.phone || '');
+              setDist((prev) => prev || last.customer_district || '');
+              setAddr((prev) => prev || last.customer_address || '');
+              setEmail((prev) => prev || last.customer_email || user.email || '');
+              if (last.shipping) setSelectedShip((prev) => prev || last.shipping);
+            }
+          } catch {
+            // ignore
+          }
+        })();
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 🛡️ রিফ্রেশে সুরক্ষিত স্টেপ ২/৩ রিস্টোরেশন (Safe Step Preservation)
+    // ─────────────────────────────────────────────────────────────
+    try {
+      const savedStep = parseInt(sessionStorage.getItem('vc_checkout_step') || '1', 10);
+      if (savedStep === 2 || savedStep === 3) {
+        const sDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null') || getDraft();
+        const dName = sDraft?.name || '';
+        const dPhone = sDraft?.phone || '';
+        const dDist = sDraft?.dist || '';
+        const dAddr = sDraft?.addr || '';
+
+        // যদি ১ম ধাপের তথ্য সত্যই সঠিক থাকে তবেই কেবল স্টেপ ২ বা ৩-তে রাখবে
+        if (validateName(dName) && validatePhone(dPhone) && dDist && validateAddress(dAddr)) {
+          setStep(savedStep);
+        } else {
+          setStep(1);
+          sessionStorage.setItem('vc_checkout_step', '1');
         }
       }
-      const savedShip = sessionStorage.getItem('vc_ship');
-      if (savedShip) setSelectedShip(savedShip);
     } catch {
-      // ignore
+      setStep(1);
     }
+
+    const savedShip = sessionStorage.getItem('vc_ship');
+    if (savedShip) setSelectedShip(savedShip);
+
     fetchBkashNumber(supabase).then(setBkashNum);
     fetchShipConfig(supabase).then(setShipCfg);
     getFingerprintId().then((id) => { fingerprintIdRef.current = id; });
@@ -549,9 +620,9 @@ export default function CheckoutPage() {
     setErrors(nextErrors);
     
     if (Object.keys(nextErrors).length === 0) {
-      // ধাপ ১ সফল হলে তৎক্ষণাৎ ব্যাকগ্রাউন্ডে গুগল শিটে লিড সংরক্ষণ
+      // ধাপ ১ সফল হলে তৎক্ষণাৎ গুগল শিটে লিড সংরক্ষণ
       fireLeadSafe();
-      setStep(2);
+      updateStep(2);
     }
   };
 
@@ -574,10 +645,10 @@ export default function CheckoutPage() {
       return;
     }
     setErrors((e) => ({ ...e, eTxn: undefined, eL4: undefined }));
-    setStep(3);
+    updateStep(3);
   };
 
-  const goBack = (n: number) => setStep(n);
+  const goBack = (n: number) => updateStep(n);
 
   const toggleTerms = () => {
     setTermsChecked((v) => !v);
@@ -676,6 +747,7 @@ export default function CheckoutPage() {
         sessionStorage.removeItem('vc_form_draft');
         sessionStorage.removeItem('vc_lead_id');
         sessionStorage.removeItem('vc_quick_order_items');
+        sessionStorage.removeItem('vc_checkout_step');
         localStorage.setItem('vc_pending_ls', String(orderId));
         localStorage.setItem('vc_pending_num_ls', num);
         localStorage.setItem('vc_pending_phone_ls', phone.trim());
@@ -785,17 +857,22 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
+          {/* আপনার অর্ডার মেমো কার্ড: প্রিমিয়াম ফ্রস্টেড গ্লাস ও ডিস্টিঙ্কট হাইলাইট */}
           {step === 1 && cartItems.length === 1 && (
-            <div className="mx-6 mb-1 mt-4 rounded-[18px] border border-white/90 bg-gradient-to-br from-white/90 via-brand-bg/40 to-white/75 px-4 py-3.5 shadow-xs backdrop-blur-[8px]">
-              <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-brand-light">
-                <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
+            <div className="mx-6 mb-1 mt-4 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
+                  <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
+                </div>
+                <span className="rounded-full bg-brand-bg/40 px-2 py-0.5 font-body text-[10.5px] font-bold text-brand-primary">
+                  1 {lang === 'en' ? 'Item' : 'টি প্রোডাক্ট'}
+                </span>
               </div>
-              <div className="flex flex-col gap-[5px] text-ink">
+              <div className="flex flex-col gap-1 text-ink">
                 {cartItems.map((i) => (
-                  <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
+                  <div key={i.id} className="flex items-center justify-between gap-3 font-body text-[13.5px] font-bold">
                     <span className="truncate">{i.name} × {i.qty}</span>
-                    <span className="shrink-0 font-bold text-brand-light">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
+                    <span className="shrink-0 font-extrabold text-brand-light">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                   </div>
                 ))}
               </div>
@@ -926,6 +1003,7 @@ export default function CheckoutPage() {
                 {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
 
+              {/* শিপিং অপশন — পরিষ্কার স্ট্যান্ডার্ড রেডিও সিলেকশন */}
               {shipOptions.length > 0 && (
                 <div className="mb-4">
                   <label className={fieldLabelClass}>{t('শিপিং')}</label>
@@ -936,7 +1014,13 @@ export default function CheckoutPage() {
                         className={`flex cursor-pointer items-center gap-3 rounded-[14px] border-[1.5px] px-3.5 py-3 transition-brand duration-brand ${selectedShip === opt.key ? 'border-brand-light bg-brand-bg/25 ring-1 ring-brand-light/30' : 'border-border-base bg-white/70 hover:bg-white'}`}
                         onClick={() => selectShip(opt.key)}
                       >
-                        <input type="radio" name="ship" checked={selectedShip === opt.key} readOnly className="accent-brand-light" />
+                        <input
+                          type="radio"
+                          name="ship"
+                          checked={selectedShip === opt.key}
+                          onChange={() => selectShip(opt.key)}
+                          className="h-4 w-4 accent-brand-light cursor-pointer"
+                        />
                         <div>
                           <div className="font-body text-[13px] font-bold text-ink">{lang === 'en' ? opt.nameEn : opt.name}</div>
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
@@ -959,29 +1043,29 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* স্টেপ ২: bKash পেমেন্ট */}
+          {/* স্টেপ ২: পেমেন্ট (অপরিবর্তিত রাখা হয়েছে — পরবর্তী ধাপে নতুন করে ডিজাইন হবে) */}
           {step === 2 && (
             <div className="px-6 py-5">
-              <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
-                <div className="mb-3 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
-                  <span className="text-brand-light"><IconCard /></span>
-                  {t('এডভান্স পেমেন্ট')} <span className="font-body text-base font-extrabold text-brand-light">৳{lang === 'en' ? '200' : '২০০'}</span>
+              <div className="mb-4 rounded-[16px] border border-border-base bg-white p-5 shadow-sh2">
+                <div className="mb-3.5 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
+                  <span className="text-info"><IconCard /></span>
+                  {t('এডভান্স পেমেন্ট')} <span className="font-body text-base font-extrabold text-info">৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
-                <p className="mb-3.5 font-body text-[12.5px] leading-[1.65] text-muted">{t('অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।')}</p>
-                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border border-brand-light/30 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD]/80 p-4">
+                <p className="mb-3.5 font-body text-[13px] leading-[1.6] text-muted">{t('অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।')}</p>
+                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border-[1.5px] border-info/25 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/80 p-1.5 shadow-xs">
+                      <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-white/70 bg-white/60 p-1.5">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-logo-icon_beuxfl.png" alt="bKash" className="h-9 w-9 shrink-0 object-contain" />
                       </div>
                       <div>
-                        <div className="mb-0.5 font-body text-[10px] font-bold uppercase tracking-wide text-muted">bKash Send Money</div>
+                        <div className="mb-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-muted">bKash Send Money</div>
                         <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-brand-primary">{bkashNum}</div>
                       </div>
                     </div>
                     <button
-                      className="flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-4 py-2 font-body text-xs font-bold text-brand-primary transition-colors duration-200 hover:bg-brand-light hover:text-white"
+                      className="flex items-center gap-1.5 rounded-full border-[1.5px] border-info/25 bg-info/10 px-4 py-2 font-body text-xs font-bold text-brand-primary transition-colors duration-200 hover:bg-info hover:text-white"
                       onClick={copyBkash}
                       style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
                     >
@@ -993,17 +1077,17 @@ export default function CheckoutPage() {
                       {copyLabel}
                     </button>
                   </div>
-                  <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/40 bg-white/50 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-primary transition-colors duration-200 hover:bg-white" onClick={() => setQrOpen((v) => !v)}>
+                  <button className="mt-2.5 flex items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-info/30 bg-white/40 px-3.5 py-2.5 font-body text-[12.5px] text-brand-primary transition-colors duration-200 hover:bg-white/70" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
                     <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
                     <IconChevronDown open={qrOpen} />
                   </button>
-                  <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-2 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex items-start gap-3.5 rounded-[12px] border border-white/80 bg-white/90 p-3.5">
+                  <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-2.5 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="flex items-start gap-3.5 rounded-[10px] border border-white/70 bg-white/85 p-3.5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-payment-qr_zmr6dz.jpg" alt="bKash QR" className="h-[140px] w-[140px] shrink-0 rounded-md object-cover" />
                       <div className="pt-0.5">
-                        <div className="mb-2 font-body text-[12.5px] font-bold text-[#1F6B3A]">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
+                        <div className="mb-2 font-body text-[12.5px] font-semibold text-[#1F6B3A]">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
                         <div className="font-body text-[11.5px] leading-[1.9] text-[#374151]">
                           {lang === 'en' ? (
                             <>1. Open the bKash app<br />2. Click the QR scan button<br />3. Scan this QR code<br />4. Enter the amount 200 Taka<br />5. Complete the payment</>
@@ -1016,17 +1100,15 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 <p className="mb-0 font-body text-[11.5px] text-muted">{t('Personal নম্বরে Send Money করুন (Payment নয়)')}</p>
-                <div className="mt-3 flex items-start gap-2.5 rounded-r-xl border-l-[3px] border-brand-light bg-brand-bg/30 px-3.5 py-2.5 font-body text-xs leading-[1.6] text-ink">
-                  <span className="mt-0.5 text-brand-light"><IconInfo /></span>
+                <div className="mt-3.5 flex items-start gap-2.5 rounded-r-lg border-l-[3px] border-info bg-info/10 px-[13px] py-2.5 font-body text-xs leading-[1.6] text-ink">
+                  <span className="mt-0.5 text-info"><IconInfo /></span>
                   <span>{t('ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।')}</span>
                 </div>
               </div>
-
               <div className="mb-3 text-center font-body text-[13px] font-bold text-ink">
                 {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
               </div>
-
-              <div className="mb-3.5">
+              <div className="mb-[15px]">
                 <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>{t('(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)')}</span></label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconDoc /></span>
@@ -1034,10 +1116,8 @@ export default function CheckoutPage() {
                 </div>
                 {errors.eTxn && <div className={fieldErrClass}><IconWarning />{errors.eTxn}</div>}
               </div>
-
               <div className="my-4 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">{t('অথবা')}</div>
-
-              <div className="mb-3.5">
+              <div className="mb-[15px]">
                 <label className={fieldLabelClass}>{t('Send Money করা bKash নম্বরের শেষ ৪ ডিজিট')}</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPhone /></span>
@@ -1045,7 +1125,6 @@ export default function CheckoutPage() {
                 </div>
                 {errors.eL4 && <div className={fieldErrClass}><IconWarning />{errors.eL4}</div>}
               </div>
-
               <div className="pt-2">
                 <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={goToStep3}>
                   <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
@@ -1055,16 +1134,16 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ */}
+          {/* স্টেপ ৩: নিশ্চিতকরণ (অপরিবর্তিত রাখা হয়েছে) */}
           {step === 3 && (
             <div className="px-6 py-5">
-              <div className="relative mb-5 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
-                <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-brand-light">{t('অর্ডার মেমো (Invoice)')}</span>
+              <div className="relative mb-5 rounded-[16px] border border-border-base bg-white p-[18px] shadow-sh2">
+                <span className="mb-3 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">{t('অর্ডার মেমো (Invoice)')}</span>
                 <div>
                   {cartItems.map((i) => (
-                    <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/85">
-                      <span className="truncate">{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
-                      <span className="font-bold">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
+                    <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/80">
+                      <span>{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
+                      <span>৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                     </div>
                   ))}
                 </div>
@@ -1072,29 +1151,29 @@ export default function CheckoutPage() {
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{t('ডেলিভারি চার্জ (Shipping)')}</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
                 <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>{t('সর্বমোট বিল (Total)')}</span><span>৳{total.toLocaleString('en-US')}</span></div>
-                <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-bold text-brand-light">
-                  <span className="flex items-center gap-1.5"><IconCheck /> {lang === 'en' ? 'Paid (bKash Advance)' : 'পরিশোধিত (বিকাশ অগ্রিম)'}</span>
+                <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-ink">
+                  <span className="flex items-center gap-1.5 text-info"><IconCheck /> {lang === 'en' ? 'Paid (bKash Advance)' : 'পরিশোধিত (বিকাশ অগ্রিম)'}</span>
                   <span>- ৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[13.5px] font-extrabold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-brand-primary">৳{balance.toLocaleString('en-US')}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-info">৳{balance.toLocaleString('en-US')}</span></div>
 
                 <div className="my-4 h-px bg-border-base" />
 
-                <span className="mb-2.5 block font-body text-[11px] font-bold uppercase tracking-wide text-brand-light">{t('ডেলিভারি লেবেল (Shipping Label)')}</span>
-                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 shrink-0 justify-center text-brand-light"><IconUser /></div><div className="font-bold">{name}</div></div>
-                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 shrink-0 justify-center text-brand-light"><IconPhone /></div><div>{phone}</div></div>
+                <span className="mb-2.5 block font-body text-[11px] font-bold uppercase tracking-wide text-muted">{t('ডেলিভারি লেবেল (Shipping Label)')}</span>
+                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 shrink-0 justify-center text-info"><IconUser /></div><div>{name}</div></div>
+                <div className="flex items-center gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80"><div className="flex w-5 shrink-0 justify-center text-info"><IconPhone /></div><div>{phone}</div></div>
                 <div className="flex items-start gap-2 py-0.5 font-body text-[12.5px] leading-[1.8] text-ink/80">
-                  <div className="flex w-5 shrink-0 justify-center pt-1 text-brand-light"><IconPin /></div>
+                  <div className="flex w-5 shrink-0 justify-center pt-1 text-info"><IconPin /></div>
                   <div className="min-w-0 break-words">{dist && dist !== 'ঢাকা' ? `${getDistrictLabel(dist, lang)}, ${addr}` : addr}</div>
                 </div>
               </div>
 
               <div
-                className={`flex cursor-pointer items-start gap-2.5 rounded-[14px] border bg-surface-muted/70 px-3.5 py-3 transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-red-500 bg-red-50/50' : 'border-border-base hover:bg-surface-muted'}`}
+                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border bg-surface-muted px-3.5 py-3 transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-red-500' : 'border-border-base'}`}
                 onClick={toggleTerms}
               >
-                <div className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-brand duration-brand ${termsChecked ? 'border-brand-light bg-brand-light text-white' : 'border-border-base bg-white'}`}>
-                  {termsChecked && <IconCheck />}
+                <div className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-brand duration-brand ${termsChecked ? 'border-info bg-info' : 'border-border-base bg-white'}`}>
+                  {termsChecked && <span className="text-white"><IconCheck /></span>}
                 </div>
                 <div className="font-body text-xs leading-[1.6] text-ink">
                   {lang === 'en' ? (
@@ -1102,7 +1181,7 @@ export default function CheckoutPage() {
                       I have read and agree to Vangcur&apos;s{' '}
                       <span
                         onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
-                        className="cursor-pointer font-bold text-brand-primary underline"
+                        className="cursor-pointer font-semibold text-info underline"
                       >
                         Terms &amp; Conditions
                       </span>.
@@ -1112,7 +1191,7 @@ export default function CheckoutPage() {
                       আমি ভাঙচুরের সকল{' '}
                       <span
                         onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
-                        className="cursor-pointer font-bold text-brand-primary underline"
+                        className="cursor-pointer font-semibold text-info underline"
                       >
                         নীতিমালা ও শর্তাবলী
                       </span>{' '}
