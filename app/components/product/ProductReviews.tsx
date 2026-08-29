@@ -501,7 +501,7 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* 3D Coverflow Review Gallery — ফিজিক্যাল সেন্টার পজিশনিং ও মসৃণ হালকা শ্যাডো */}
+      {/* 3D Coverflow Review Gallery — ফিজিক্যাল সেন্টার পজিশনিং ও সাইড কার্ডে ক্লিকে স্লাইড */}
       {!loading && galleryItems.length > 0 && (
         <div className="mb-1">
           <div
@@ -522,20 +522,28 @@ export default function ProductReviews({
                 return (
                   <div
                     key={item.id}
-                    onClick={() => setActiveCardIdx(idx)}
-                    className={`relative h-[390px] w-[245px] shrink-0 select-none overflow-hidden rounded-[20px] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[280px] ${
+                    onClick={() => {
+                      // যদি সাইড কার্ড হয়, তাহলে যেখান থেকেই ক্লিক হোক সরাসরি সেন্টারে স্লাইড হবে
+                      if (!isCenter) {
+                        setActiveCardIdx(idx);
+                      }
+                    }}
+                    className={`relative h-[390px] w-[225px] shrink-0 select-none overflow-hidden rounded-[20px] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[260px] md:w-[280px] ${
                       isCenter
                         ? 'z-10 scale-100 opacity-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] ring-1 ring-brand-light/30'
-                        : 'z-0 scale-[0.85] opacity-60 cursor-pointer hover:opacity-80'
+                        : 'z-0 scale-[0.85] opacity-60 cursor-pointer hover:opacity-85'
                     }`}
                   >
                     {/* ফটো রিভিউ বনাম ফ্রস্টেড গ্লাস টেক্সট রিভিউ */}
                     {item.imageUrl ? (
                       <div
-                        className="group relative h-full w-full cursor-zoom-in"
+                        className={`group relative h-full w-full ${isCenter ? 'cursor-zoom-in' : 'cursor-pointer'}`}
                         onClick={(e) => {
-                          e.stopPropagation();
-                          setZoomImageUrl(item.imageUrl!);
+                          // শুধুমাত্র মাঝখানের এক্টিভ কার্ডের ছবিতে ক্লিক করলেই জুম হবে
+                          if (isCenter) {
+                            e.stopPropagation();
+                            setZoomImageUrl(item.imageUrl!);
+                          }
                         }}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -956,4 +964,4 @@ export default function ProductReviews({
       )}
     </div>
   );
-}
+      }
