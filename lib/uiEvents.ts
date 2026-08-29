@@ -7,12 +7,9 @@ export const OPEN_CART_EVENT = 'vc:openCart';
 export const OPEN_WISHLIST_EVENT = 'vc:openWishlist';
 
 // প্রোডাক্ট কার্ড/প্রোডাক্ট পেজের হার্ট আইকনে ক্লিক করে wishlist-এ কিছু যোগ
-// করার সাথে সাথে ডিসপ্যাচ হয় (detail: { x, y } — ক্লিক করা হার্ট বাটনের কেন্দ্রের
-// viewport কো-অর্ডিনেট) — WishlistFlyOverlay এটা শুনে ওই বিন্দু থেকে Navbar-এর
-// wishlist আইকন পর্যন্ত একটা উড়ন্ত হার্ট এনিমেট করে।
+// করার সাথে সাথে ডিসপ্যাচ হয়
 export const WISHLIST_FLY_EVENT = 'vc:wishlistFly';
-// উড়ন্ত হার্টটা Navbar আইকনে "হিট" করার মুহূর্তে ডিসপ্যাচ হয় — Navbar এটা শুনে
-// তার wishlist আইকনে জিগল + লিকুইড-ফিল এনিমেশন চালায়।
+// উড়ন্ত হার্টটা Navbar আইকনে "হিট" করার মুহূর্তে ডিসপ্যাচ হয়
 export const WISHLIST_NAV_HIT_EVENT = 'vc:wishlistNavHit';
 
 export const OPEN_WAIT_OVERLAY_EVENT = 'vc:openWaitOverlay';
@@ -21,3 +18,6 @@ export const GENERATE_INVOICE_EVENT = 'vc:generateInvoice';
 export const OPEN_MEMBERSHIP_EVENT = 'vc:openMembership';
 export const OPEN_ORDER_FORM_EVENT = 'vc:openOrderForm';
 export const SHOW_POST_RECEIVE_INFO_EVENT = 'vc:showPostReceiveInfo';
+
+// ফ্লোটিং শপিং কার্ট বটম শিট ওপেন করার ইভেন্ট
+export const OPEN_QUICK_CART_MODAL_EVENT = 'vc:openQuickCartModal';
