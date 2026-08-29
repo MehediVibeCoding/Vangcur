@@ -13,7 +13,7 @@ export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
   rejected: 'bg-red-100 text-red-900 border border-red-200/80',
 };
 
-// ১০০% ইমোজি-মুক্ত পরিষ্কার ইংরেজি ও বাংলা স্ট্যাটাস লেবেল
+// শতভাগ ইমোজি-মুক্ত পরিষ্কার ইংরেজি ও বাংলা স্ট্যাটাস লেবেল
 export const ORDER_STATUS_LABEL_EN: Record<OrderStatus, string> = {
   pending: 'Pending',
   confirmed: 'Confirmed',
@@ -33,26 +33,6 @@ export const ORDER_STATUS_LABEL_BN: Record<OrderStatus, string> = {
 };
 
 export const ORDER_STATUS_LABEL = ORDER_STATUS_LABEL_EN;
-
-function CalendarSvgIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
-}
-
-function UserSvgIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
 
 function DocumentSvgIcon() {
   return (
@@ -114,9 +94,9 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
     : (ORDER_STATUS_LABEL_BN[o.status] || ORDER_STATUS_LABEL_BN.pending);
 
   return (
-    <div className="rounded-[20px] border border-border-base bg-white shadow-sm transition-brand hover:border-brand-light/40">
-      {/* Top Header: Order Number + Status Badge */}
-      <div className="flex items-center justify-between border-b border-border-base/70 px-4 py-3">
+    <div className="rounded-[20px] border border-border-base bg-white shadow-sm transition-brand hover:border-brand-light/40 overflow-hidden">
+      {/* Top Header: স্কাই-ব্লু সফট গ্রেডিয়েন্ট বার + অর্ডার নম্বর + ইমোজি-মুক্ত স্ট্যাটাস ব্যাজ */}
+      <div className="flex items-center justify-between border-b border-border-base/70 bg-gradient-to-r from-brand-bg/35 via-[#DCEBFD]/30 to-white px-4 py-3">
         <span className="font-body text-[13.5px] font-extrabold text-ink">{o.orderNum}</span>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-body text-[11px] font-bold shadow-xs ${
@@ -130,14 +110,15 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
 
       {/* Card Content Body */}
       <div className="p-4">
-        {/* Meta Info (SVG Icons) */}
+        {/* Meta Info: 📅 ও 👤 ইমোজি সহ পরিষ্কার মেটা লাইন */}
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-[11.5px] text-muted">
           <div className="flex items-center gap-1.5">
-            <CalendarSvgIcon />
+            <span>📅</span>
             <span>{dateStr}</span>
           </div>
+          <span className="text-border-base">|</span>
           <div className="flex items-center gap-1.5">
-            <UserSvgIcon />
+            <span>👤</span>
             <span>{o.customer?.name || '-'}</span>
           </div>
         </div>
@@ -151,7 +132,7 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
                 {i.name}
               </div>
               <div className="whitespace-nowrap font-body text-[12.5px] font-semibold text-muted">
-                {i.qty} × ৳{i.price.toLocaleString('en-US')}
+                × {i.qty} — ৳{(i.price * i.qty).toLocaleString('en-US')}
               </div>
             </div>
           ))}
