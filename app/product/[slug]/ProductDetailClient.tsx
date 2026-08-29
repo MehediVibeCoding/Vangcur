@@ -867,15 +867,15 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* স্পেসিফিকেশন টেবিল — Apple-Style স্কাই-ব্লু ফ্রস্টেড গ্লাস ব্যাকগ্রাউন্ড */}
+        {/* স্পেসিফিকেশন টেবিল — Apple-Style স্কাই-ব্লু ফ্রস্টেড গ্লাস ও এজ-টু-এজ ১০০% ফিল */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<SolidWrenchIcon />}>
             {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
           </SectionHeading>
-          <div className="w-full overflow-x-auto rounded-brand border border-white/80 bg-gradient-to-br from-[#E0F2FE]/70 via-white/95 to-[#F0F9FF]/80 p-1 shadow-sh1 backdrop-blur-sm">
+          <div className="w-full overflow-hidden rounded-brand border border-white/90 bg-gradient-to-br from-[#E0F2FE]/70 via-white/95 to-[#F0F9FF]/80 shadow-sh1 backdrop-blur-sm">
             <table className="w-full border-collapse text-[14px]">
               <thead>
-                <tr className="bg-brand-bg/30">
+                <tr className="bg-brand-bg/35">
                   <th className="w-[38%] px-4 py-3 text-left font-bold text-ink">{t('বিবরণ')}</th>
                   <th className="px-4 py-3 text-left font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>
@@ -987,7 +987,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* একই ক্যাটাগরির আরও পণ্য — pb-32 দিয়ে নিচে পর্যাপ্ত বাফার রাখা হয়েছে যাতে বটম বার কখনোই পেছনের বাটন না ঢাকে */}
+      {/* একই ক্যাটাগরির আরও পণ্য — iPhone 7 ভিজিবিলিটি ফিক্স ও pb-32 সেফটি প্যাডিং */}
       {related.length > 0 && (
         <div className="mx-auto max-w-[1100px] px-4 pb-32 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
@@ -1043,4 +1043,4 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       </div>
     </div>
   );
-      }
+}
