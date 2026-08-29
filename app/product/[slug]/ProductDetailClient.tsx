@@ -1,3 +1,4 @@
+// [REPLACE] ফাইলের পাথ: app/product/[slug]/ProductDetailClient.tsx
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -99,8 +100,8 @@ function CartIcon({ className = '' }: { className?: string }) {
 
 function BellIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
   );
@@ -367,6 +368,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
 
+  // স্টক নোটিফিকেশন সাবস্ক্রিপশন স্টেট (ইউজার রিকোয়েস্ট জমা দিয়েছে কি না)
+  const [isStockNotified, setIsStockNotified] = useState(false);
+
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
   const [msgLink, setMsgLink] = useState<string | null>(DEFAULT_MSG_LINK);
 
@@ -384,6 +388,26 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
     return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
   }, []);
+
+  // চেক করা যে এই প্রোডাক্টে ইউজার ইতিমধ্যে নোটিফিকেশন চেয়ে রেখেছে কি না
+  useEffect(() => {
+    if (!prod?.id) return;
+    try {
+      const isSaved = !!localStorage.getItem(`vc_sn_${prod.id}`);
+      setIsStockNotified(isSaved);
+    } catch {
+      setIsStockNotified(false);
+    }
+
+    const onSubscribed = (e: Event) => {
+      const d = (e as CustomEvent<{ id: string | number }>).detail;
+      if (d && String(d.id) === String(prod.id)) {
+        setIsStockNotified(true);
+      }
+    };
+    window.addEventListener('vc:stockSubscribed', onSubscribed);
+    return () => window.removeEventListener('vc:stockSubscribed', onSubscribed);
+  }, [prod?.id]);
 
   const touchRef = useRef({ x: 0, y: 0 });
   const tabsWrapRef = useRef<HTMLDivElement>(null);
@@ -472,9 +496,43 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     startQuickOrder(router, prod, qty);
   };
 
+  // 🔔 অথ-গার্ডযুক্ত স্টক নোটিফিকেশন হ্যান্ডলার
   const notifyStock = () => {
     if (!prod) return;
+    
+    if (isStockNotified) {
+      showToast(lang === 'en' ? '✅ You have already requested notification for this product.' : '✅ আপনি ইতিমধ্যে এই প্রোডাক্টের নোটিফিকেশন রিকোয়েস্ট জমা দিয়েছেন।');
+      return;
+    }
+
+    if (!currentUser) {
+      try {
+        sessionStorage.setItem('vc_auth_stock_notify_prod', JSON.stringify({ id: prod.id, name: prod.name }));
+      } catch {
+        // ignore
+      }
+      showToast(lang === 'en' ? 'Please login first to request stock notification' : 'স্টক নোটিফিকেশন পেতে অনুগ্রহ করে আগে লগইন করুন');
+      setLoginOpen(true);
+      return;
+    }
+
     window.dispatchEvent(new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: prod.id, name: prod.name } }));
+  };
+
+  const handleAuthSuccess = () => {
+    setLoginOpen(false);
+    try {
+      const raw = sessionStorage.getItem('vc_auth_stock_notify_prod');
+      if (raw) {
+        sessionStorage.removeItem('vc_auth_stock_notify_prod');
+        const pData = JSON.parse(raw);
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent(STOCK_NOTIFY_EVENT, { detail: pData }));
+        }, 350);
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const toggleWishFromPP = () => {
@@ -559,7 +617,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-light/25 border-t-brand-light" />
             {t('লোড হচ্ছে...')}
           </div>
-          <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+          <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
           <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
         </div>
       );
@@ -584,7 +642,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             <ArrowIcon dir="right" className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+        <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
         <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
       </div>
     );
@@ -800,9 +858,27 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
           <div className="flex flex-col gap-2.5">
             {sold ? (
-              <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-gold py-3.5 text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
-                <BellIcon /> {t('স্টকে আসলে আমাকে জানান')}
-              </button>
+              isStockNotified ? (
+                /* ✅ ইতিমধ্যে রিকোয়েস্ট জমা দেওয়া অবস্থা */
+                <button
+                  type="button"
+                  disabled
+                  className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-emerald-300 bg-emerald-50 py-3.5 font-body text-sm font-bold text-emerald-700 shadow-xs cursor-default select-none"
+                >
+                  <CheckBadgeIcon className="h-4 w-4 bg-transparent text-emerald-600" />
+                  <span>{lang === 'en' ? 'You will be notified when back in stock' : 'স্টকে আসলে আপনাকে জানানো হবে'}</span>
+                </button>
+              ) : (
+                /* 🔔 ফ্রেশ স্কাই-ব্লু স্টক নোটিফিকেশন বাটন */
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-light/60 bg-gradient-to-r from-brand-bg/50 via-white to-brand-bg/40 py-3.5 font-body text-sm font-bold text-brand-primary shadow-xs transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg/70 active:scale-98"
+                  onClick={notifyStock}
+                >
+                  <BellIcon className="text-brand-light" />
+                  <span>{lang === 'en' ? 'Notify Me When in Stock' : 'স্টকে আসলে আমাকে জানান'}</span>
+                </button>
+              )
             ) : (
               <>
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 py-3.5 text-sm font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
@@ -817,7 +893,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* Sticky Tab Bar — z-30 এবং ফ্রস্টেড ব্যাকগ্রাউন্ড যাতে স্ক্রলিং কনটেন্ট এর নিচে যায় */}
+      {/* Sticky Tab Bar */}
       <div className="sticky top-0 z-30 border-b border-border-base bg-white/95 backdrop-blur-md" ref={tabsWrapRef}>
         <div
           className="no-scrollbar mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
@@ -867,7 +943,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* স্পেসিফিকেশন টেবিল — Apple-Style স্কাই-ব্লু ফ্রস্টেড গ্লাস ও এজ-টু-এজ ১০০% ফিল */}
+        {/* স্পেসিফিকেশন টেবিল */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<SolidWrenchIcon />}>
             {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
@@ -972,11 +1048,10 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             </div>
           )}
 
-          {/* লাইভ কাস্টমার প্রশ্নোত্তর */}
           <ProductQnA productId={prod.id} productName={prod.name} />
         </div>
 
-        {/* ৩D কভারফ্লো কাস্টমার রিভিউ গ্যালারি সেকশন */}
+        {/* ৩D কভারফ্লো রিভিউ গ্যালারি */}
         <div className="pt-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
           <ProductReviews
             productId={prod.id}
@@ -987,7 +1062,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* একই ক্যাটাগরির আরও পণ্য — iPhone 7 ভিজিবিলিটি ফিক্স ও pb-32 সেফটি প্যাডিং */}
+      {/* একই ক্যাটাগরির আরও পণ্য */}
       {related.length > 0 && (
         <div className="mx-auto max-w-[1100px] px-4 pb-32 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
@@ -1008,10 +1083,10 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       )}
 
       <WarrantyModal isOpen={warrantyOpen} onClose={() => setWarrantyOpen(false)} warrantyText={prod.warranty} />
-      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
       <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
 
-      {/* স্টিকি বটম বার: স্কাই-ব্লু প্রাইস কালার এবং নিখুঁত প্রাইস ও পিছ ফরম্যাট */}
+      {/* স্টিকি বটম বার */}
       <div className={`fixed inset-x-0 bottom-0 z-30 border-t border-border-base bg-white/95 shadow-sh3 backdrop-blur transition-transform duration-brand ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-2.5 md:px-8">
           <div className="min-w-0 flex flex-1 flex-col justify-center pr-2">
@@ -1025,9 +1100,25 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {sold ? (
-              <button className="flex items-center gap-1.5 rounded-[10px] border-none bg-gold px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:brightness-95" onClick={notifyStock}>
-                <BellIcon /> {t('জানান')}
-              </button>
+              isStockNotified ? (
+                <button
+                  type="button"
+                  disabled
+                  className="flex items-center gap-1.5 rounded-[10px] border border-emerald-300 bg-emerald-50 px-3.5 py-2.5 text-[12.5px] font-bold text-emerald-700 shadow-xs cursor-default select-none"
+                >
+                  <CheckBadgeIcon className="h-3.5 w-3.5 bg-transparent text-emerald-600" />
+                  <span>{lang === 'en' ? 'Notified' : 'জানানো হবে'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-[10px] border border-brand-light/60 bg-brand-bg/40 px-4 py-2.5 text-[13px] font-bold text-brand-primary shadow-xs transition-brand duration-brand hover:bg-brand-bg active:scale-95"
+                  onClick={notifyStock}
+                >
+                  <BellIcon className="text-brand-light" />
+                  <span>{lang === 'en' ? 'Notify' : 'জানান'}</span>
+                </button>
+              )
             ) : (
               <>
                 <button className="flex items-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover" onClick={orderNow}>
