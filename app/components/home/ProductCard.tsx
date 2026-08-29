@@ -1,3 +1,4 @@
+// [REPLACE] ফাইলের পাথ: app/components/home/ProductCard.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -5,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   productHref,
-  startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
+  startQuickOrder, QUICK_CART_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
@@ -50,7 +51,7 @@ function CartIcon() {
   return (
     <svg width="46%" height="46%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
     </svg>
   );
 }
@@ -85,7 +86,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
-  const { t } = useT();
+  const { lang } = useT();
   const router = useRouter();
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
@@ -147,7 +148,9 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         />
 
         {sold ? (
-          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-white sm:px-2.5">Sold Out</div>
+          <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-ink/80 px-2.5 py-1 text-[10px] font-bold text-white/90 backdrop-blur-xs">
+            {lang === 'en' ? 'Out of Stock' : 'স্টক শেষ'}
+          </div>
         ) : p.badge && (
           <div className="absolute left-[4.5%] top-[4.5%] z-[2] animate-badge-hot-glow rounded-full bg-brand-light px-2.5 py-1 text-[10px] font-bold text-white shadow-sh1">
             {p.badge}
@@ -189,22 +192,23 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
               </>
             )}
           </div>
+
           <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
+              /* গ্রিড কার্ডে পরিষ্কার ছাই রঙের মিউটেড স্টক শেষ বাটন */
               <button
-                className="relative flex h-8 w-full min-w-0 items-center justify-center overflow-hidden rounded-full border-none bg-[#F59E0B] font-body text-[10.5px] font-bold text-white shadow-sm transition-colors hover:brightness-95 sm:h-9 sm:text-xs lg:h-10"
-                onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(
-                  new CustomEvent(STOCK_NOTIFY_EVENT, { detail: { id: p.id, name: p.name } }),
-                ))}
+                type="button"
+                disabled
+                className="flex h-8 w-full min-w-0 items-center justify-center rounded-full border border-white/20 bg-black/40 font-body text-[11px] font-bold text-white/75 backdrop-blur-[6px] cursor-not-allowed select-none sm:h-9 sm:text-xs lg:h-10"
               >
-                🔔 {t('স্টকে আসলে জানান')}
+                {lang === 'en' ? 'Out of Stock' : 'স্টক শেষ'}
               </button>
             ) : (
               <>
                 <button
                   className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10"
-                  title={t('কার্টে যোগ করুন')}
-                  aria-label={t('কার্টে যোগ করুন')}
+                  title="Add to Cart"
+                  aria-label="Add to Cart"
                   onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } })))}
                 >
                   <CartIcon />
@@ -216,7 +220,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
                   }}
                   onClick={(e) => handleCtaClick(e, () => startQuickOrder(router, p, 1))}
                 >
-                  {t('অর্ডার করুন')}
+                  {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
                 </button>
               </>
             )}
