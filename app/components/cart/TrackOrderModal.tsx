@@ -37,7 +37,7 @@ function ReceiptEmptySvgIcon({ className = '' }: { className?: string }) {
 
 function SparklesCrownSvgIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-primary">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
       <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
     </svg>
   );
@@ -78,7 +78,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   useEffect(() => {
     if (!isOpen) return;
 
-    // দৃশ্যপট ৩ ও ৪: লগইন থাকলে সরাসরি একাউন্ট অর্ডার পেজে পাঠানো
     if (currentUser) {
       onClose();
       router.push('/account/orders');
@@ -89,7 +88,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setNotFound(false);
     setOrders([]);
 
-    // দৃশ্যপট ১ ও ২: আন-লগইন কাস্টমারের লোকাল সবকটি অর্ডার ফেচ করা
     const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
       try {
         const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
@@ -218,22 +216,22 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                   ))}
                 </div>
 
-                {/* সাইকোলজিক্যাল ভ্যালু লগইন প্রম্পট বক্স (কার্ড তালিকার একদম নিচে) */}
-                <div className="rounded-[22px] border border-brand-light/35 bg-gradient-to-br from-[#EFF6FF] via-[#F0F9FF] to-white p-4 shadow-xs backdrop-blur-sm">
-                  <div className="flex items-start gap-2.5">
+                {/* হাই-কন্ট্রাস্ট সাইকোলজিক্যাল ভ্যালু লগইন কার্ড (কার্ড তালিকার একদম নিচে) */}
+                <div className="rounded-[24px] border-[1.5px] border-brand-light/40 bg-white/95 p-4.5 shadow-md backdrop-blur-sm">
+                  <div className="flex items-start gap-3">
                     <SparklesCrownSvgIcon />
                     <div className="flex-1">
-                      <div className="mb-1 font-body text-[13px] font-bold text-ink">
+                      <div className="mb-1.5 font-body text-[13.5px] font-extrabold text-ink">
                         {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
                       </div>
-                      <p className="font-body text-[11.5px] leading-relaxed text-ink/75">
+                      <p className="font-body text-[12px] leading-[1.7] text-ink/75">
                         {lang === 'en'
-                          ? 'This order is stored temporarily in this browser. Log in to manage orders across all devices, save invoice history, and unlock exclusive VIP membership discounts & coupons.'
-                          : 'এই অর্ডারের তথ্য সাময়িকভাবে এই ব্রাউজারে সংরক্ষিত। যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও হিস্টোরি সংরক্ষণ, মেম্বারশিপ রিওয়ার্ড ও স্পেশাল কুপন ডিসকাউন্ট আনলক করতে এখনই লগইন করুন।'}
+                          ? 'This order information is temporarily stored in this browser. Log in now to track & manage orders across all devices, switch languages (Bangla/English), save invoice history, and unlock VIP membership rewards & exclusive coupon discounts.'
+                          : 'এই অর্ডারের তথ্য শুধুমাত্র সাময়িক সময়ের জন্য এই ব্রাউজারে সংরক্ষিত রয়েছে। যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও হিস্টোরি সংরক্ষণ, ভাষা পরিবর্তন (বাংলা/English), মেম্বারশিপ রিওয়ার্ড ও স্পেশাল কুপন ডিসকাউন্ট সুবিধা পেতে এখনই অ্যাকাউন্টে লগইন করে নিন।'}
                       </p>
                       <button
                         onClick={handleOpenLogin}
-                        className="mt-2.5 inline-flex items-center gap-1 font-body text-[12px] font-bold text-brand-primary hover:underline active:scale-95"
+                        className="mt-3 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
                       >
                         <span>{lang === 'en' ? 'Login to Account →' : 'অ্যাকাউন্টে লগইন করুন →'}</span>
                       </button>
