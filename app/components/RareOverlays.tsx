@@ -7,6 +7,7 @@ import MembershipModal from './modals/MembershipModal';
 import InvoiceModal from './modals/InvoiceModal';
 import OfferPopup from './modals/OfferPopup';
 import RecoveryToast from './modals/RecoveryToast';
+import QuickOrderModal from './cart/QuickOrderModal';
 
 export default function RareOverlays() {
   return (
@@ -20,6 +21,7 @@ export default function RareOverlays() {
       <InvoiceModal />
       <OfferPopup />
       <RecoveryToast />
+      <QuickOrderModal />
     </>
   );
 }
