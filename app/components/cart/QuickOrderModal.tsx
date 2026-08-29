@@ -231,7 +231,7 @@ export default function QuickOrderModal() {
             </div>
           ))}
 
-          {/* Coupon Code Section (সমানুপাতিক গ্যাপে অবস্থিত) */}
+          {/* Coupon Code Section */}
           <div className="pt-0.5">
             <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
               <CouponSvgIcon />
@@ -257,23 +257,22 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Footer with Inset Alignment & Balanced Negative Space */}
+        {/* Footer with Inset Alignment & Soft Natural Shadow Button (matching CartSidebar) */}
         <div className="px-6 pb-6 pt-3">
-          {/* মোট ও প্রাইসকে বাটনের কার্ভের সাথে সামঞ্জস্য রেখে ইনডেন্ট (px-2) করা হয়েছে */}
+          {/* ইনসেট এলাইনমেন্ট */}
           <div className="mb-4 flex items-center justify-between px-2">
             <span className="font-body text-[13.5px] font-bold text-muted">
               {t('মোট')}:
             </span>
-            {/* পরিমিত সুন্দর সাইজের প্রাইস */}
             <span className="font-body text-[18px] font-extrabold text-brand-light">
               ৳{total.toLocaleString('en-US')}
             </span>
           </div>
 
-          {/* Primary CTA Button */}
+          {/* CartSidebar-এর মতো হুবহু সফট shadow-sh2 বাটন */}
           <button
             onClick={handleConfirmOrder}
-            className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-brand duration-brand hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(0,88,199,.38)] active:translate-y-0 active:scale-95"
+            className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95"
           >
             {lang === 'en' ? 'Confirm Order' : 'অর্ডার নিশ্চিত করুন'}
           </button>
