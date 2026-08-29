@@ -1,7 +1,8 @@
-// [NEW FILE] ফাইলের পাথ: app/components/modals/OrderRateLimitModal.tsx
+// [REPLACE] ফাইলের পাথ: app/components/modals/OrderRateLimitModal.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_ORDER_LIMIT_EVENT } from '@/lib/uiEvents';
@@ -57,6 +58,7 @@ function HeaderDecor() {
 
 export default function OrderRateLimitModal() {
   const { t, lang } = useT();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
 
@@ -96,10 +98,13 @@ export default function OrderRateLimitModal() {
     };
   }, [supabase]);
 
-  const close = () => setOpen(false);
+  const closeAndGoHome = () => {
+    setOpen(false);
+    router.push('/');
+  };
 
   const handleWhatsAppClick = () => {
-    close();
+    setOpen(false);
     const msg = lang === 'en'
       ? 'Hello Vangcur Support! I have reached the daily order limit of 3 orders. I need to place an urgent order. Please assist me.'
       : 'হ্যালো Vangcur সাপোর্ট! আমার দৈনিক ৩টি অর্ডারের লিমিট পূর্ণ হয়ে গেছে। আমার একটি জরুরী অর্ডার প্রয়োজন, অনুগ্রহ করে সহযোগিতা করুন।';
@@ -113,22 +118,15 @@ export default function OrderRateLimitModal() {
       {/* ব্যাকড্রপ ব্লার */}
       <div
         className="fixed inset-0 z-[1300] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={close}
+        onClick={closeAndGoHome}
       />
 
       {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
       <div className="fixed inset-0 z-[1305] flex items-center justify-center p-4">
         <div className="relative flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 text-center shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
-          {/* হেডার ডেকোর ও ক্লোজ বাটন */}
+          {/* হেডার ডেকোর */}
           <HeaderDecor />
-          <button
-            onClick={close}
-            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-            aria-label={t('বন্ধ করুন')}
-          >
-            ✕
-          </button>
 
           {/* ওয়ার্নিং শিল্ড ব্যাজ */}
           <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-amber-200/80 bg-amber-50 text-amber-600 shadow-xs">
@@ -140,12 +138,12 @@ export default function OrderRateLimitModal() {
             {lang === 'en' ? 'Daily Order Limit Reached' : 'দৈনিক অর্ডার সীমা পূর্ণ হয়েছে'}
           </h3>
 
-          {/* মূল বক্তব্য */}
+          {/* মূল বক্তব্য — স্কাই-ব্লু হাইলাইট */}
           <p className="relative z-10 mt-2 font-body text-[12.5px] leading-relaxed text-ink/80">
             {lang === 'en' ? (
-              <>You have completed the maximum of <strong className="font-bold text-brand-primary">3 orders within the last 24 hours</strong>. To prevent spam and fake bookings, a maximum of 3 orders are permitted per device or number per day.</>
+              <>You have completed the maximum of <strong className="font-bold text-brand-light">3 orders within the last 24 hours</strong>. To prevent spam and fake bookings, a maximum of 3 orders are permitted per device or number per day.</>
             ) : (
-              <>আপনি গত ২৪ ঘণ্টায় সর্বোচ্চ <strong className="font-bold text-brand-primary">৩টি অর্ডার সম্পন্ন করেছেন</strong>। স্প্যাম ও ফেক অর্ডার প্রতিরোধে একই ডিভাইস বা নম্বর থেকে ২৪ ঘণ্টায় সর্বোচ্চ ৩টি অর্ডার গ্রহণ করা হয়।</>
+              <>আপনি গত ২৪ ঘণ্টায় সর্বোচ্চ <strong className="font-bold text-brand-light">৩টি অর্ডার সম্পন্ন করেছেন</strong>। স্প্যাম ও ফেক অর্ডার প্রতিরোধে একই ডিভাইস বা নম্বর থেকে ২৪ ঘণ্টায় সর্বোচ্চ ৩টি অর্ডার গ্রহণ করা হয়।</>
             )}
           </p>
 
@@ -171,12 +169,12 @@ export default function OrderRateLimitModal() {
               <span>{lang === 'en' ? 'Contact via WhatsApp' : 'WhatsApp এ যোগাযোগ করুন'}</span>
             </button>
 
-            {/* ক্লোজ বাটন */}
+            {/* বুঝেছি বাটন — ক্লিক করলেই সরাসরি হোমপেজে রিডাইরেক্ট */}
             <button
-              onClick={close}
+              onClick={closeAndGoHome}
               className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12.5px] font-body text-[14px] font-bold text-white shadow-sh1 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
             >
-              {lang === 'en' ? 'Got It / Close' : 'বুঝেছি'}
+              {lang === 'en' ? 'Got It / Go Home' : 'বুঝেছি'}
             </button>
           </div>
 
@@ -184,4 +182,4 @@ export default function OrderRateLimitModal() {
       </div>
     </>
   );
-            }
+}
