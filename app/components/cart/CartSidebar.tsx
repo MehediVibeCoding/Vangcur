@@ -5,71 +5,62 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
-import { useCartStore, cartTotal } from '@/lib/store/cartStore';
+import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
-function CartImg({ emoji }: { emoji?: string }) {
-  const [broken, setBroken] = useState(false);
+function CartItemThumb({ emoji }: { emoji?: string }) {
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
-  if (!emoji) return <span className="text-2xl">📦</span>;
-  if (isUrl && !broken) {
+  if (isUrl) {
     return (
       <img
-        src={optimizeCloudinaryUrl(emoji, 150)}
+        src={optimizeCloudinaryUrl(emoji, 120)}
         alt=""
-        className="block h-full w-full rounded-[11px] object-cover"
+        className="h-12 w-12 shrink-0 rounded-xl border border-white/80 bg-white object-cover shadow-xs"
         loading="lazy"
         decoding="async"
-        onError={() => setBroken(true)}
       />
     );
   }
-  return <span className="text-2xl">{emoji}</span>;
+  return (
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-2xl shadow-xs">
+      {emoji || '📦'}
+    </span>
+  );
 }
 
-function IconBag() {
+function NavCartSvgIcon({ className = '' }: { className?: string }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6.3 8h11.4l-.95 12.15a1.6 1.6 0 0 1-1.6 1.45H8.85a1.6 1.6 0 0 1-1.6-1.45L6.3 8Z" />
-      <path d="M9 8V6.2a3 3 0 0 1 6 0V8" />
+    <svg className={className} width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
     </svg>
   );
 }
-function IconClose() {
+
+function TrashIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
-      <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
   );
 }
-function IconMinus() {
+
+function CouponSvgIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-      <path d="M5 12h14" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
+      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+      <line x1="12" y1="9" x2="12" y2="15" strokeDasharray="2 2" />
     </svg>
   );
 }
-function IconPlus() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-function IconTrash() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 7h16" />
-      <path d="M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7" />
-      <path d="M6.5 7 7.3 19a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9L17.5 7" />
-      <path d="M10.2 11v6M13.8 11v6" />
-    </svg>
-  );
-}
-function IconLock() {
+
+function LockSecurityIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="5" y="10.5" width="14" height="10" rx="3" />
@@ -77,20 +68,21 @@ function IconLock() {
     </svg>
   );
 }
-function IconArrowRight() {
+
+function HeaderDecor() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4.5 12h15M13 5.5 20 12l-7 6.5" />
-    </svg>
-  );
-}
-function IconCartEmpty() {
-  return (
-    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6.3 8h11.4l-.95 12.15a1.6 1.6 0 0 1-1.6 1.45H8.85a1.6 1.6 0 0 1-1.6-1.45L6.3 8Z" />
-      <path d="M9 8V6.2a3 3 0 0 1 6 0V8" />
-      <path d="M9.8 12.5h.01M14.2 12.5h.01" strokeWidth="2.2" />
-    </svg>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
+      <svg width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 13a8 8 0 0 1 16 0" />
+        <rect x="3" y="13" width="4" height="6" rx="1.5" />
+        <rect x="17" y="13" width="4" height="6" rx="1.5" />
+      </svg>
+      <svg width="26" height="26" className="absolute right-14 top-3 rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="7" y="2.5" width="10" height="15" rx="3" />
+        <path d="M10 5.5h4" />
+        <circle cx="12" cy="20" r="1.6" />
+      </svg>
+    </div>
   );
 }
 
@@ -105,8 +97,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const supabase = useRef(createClient()).current;
   const cart = useCartStore((s) => s.cart);
   const prodsRef = useRef<Product[]>([]);
+  const [couponCode, setCouponCode] = useState('');
 
-  // ইনস্ট্যান্ট নেভিগেশনের জন্য চেকআউট প্রি-ফেচ
   useEffect(() => {
     router.prefetch('/checkout');
     router.prefetch('/');
@@ -149,10 +141,28 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   const handleRemove = (id: number | string) => {
     useCartStore.getState().removeItem(id);
+    showToast(t('কার্ট থেকে সরানো হয়েছে'));
+  };
+
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim()) {
+      showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
+      return;
+    }
+    showToast(lang === 'en' ? 'Coupon verification is in progress...' : 'কুপন কোড যাচাই করা হচ্ছে...');
   };
 
   const handleCheckout = () => {
-    if (!cart.length) { showToast(t('কার্ট খালি!')); return; }
+    if (!cart.length) {
+      showToast(t('কার্ট খালি!'));
+      return;
+    }
+    try {
+      sessionStorage.removeItem('vc_quick_order_items');
+    } catch {
+      // ignore
+    }
     onClose();
     router.push('/checkout');
   };
@@ -163,116 +173,190 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   };
 
   const total = cartTotal(cart);
+  const totalCount = cartCount(cart);
 
   return (
     <>
+      {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[960] bg-ink/50 backdrop-blur-[2px] transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+        className={`fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand ${
+          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
         onClick={onClose}
       />
+
+      {/* Main Cart Slide-Over Drawer with Unified Gradient Background */}
       <div
-        className={`fixed inset-y-0 right-0 z-[965] flex w-full max-w-[400px] flex-col bg-white shadow-sh3 transition-transform duration-brand sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:rounded-[20px]${isOpen ? ' translate-x-0' : ' translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 z-[965] flex w-full max-w-[440px] flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:rounded-[28px] ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-brand-bg/60 via-white to-white px-5 pb-4 pt-5 sm:rounded-t-[20px]">
-          <div className="flex items-center justify-between gap-3">
+        {/* Header with Website's Original Cart SVG Icon & Full-Width Black Hairline Divider */}
+        <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
+          <HeaderDecor />
+          <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-info to-brand-light text-white shadow-sh1">
-                <IconBag />
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                <NavCartSvgIcon />
               </span>
               <div>
-                <h3 className="font-display text-base font-bold leading-tight text-ink">{t('আপনার কার্ট')}</h3>
+                <h3 className="font-body text-[17px] font-extrabold text-ink">
+                  {lang === 'en' ? 'Your Cart' : 'আপনার কার্ট'}
+                </h3>
                 {cart.length > 0 && (
-                  <p className="font-body text-[11.5px] font-semibold text-muted">{cart.length} {t('টি পণ্য')}</p>
+                  <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
+                    {lang === 'en'
+                      ? `${totalCount} item(s) selected`
+                      : `${totalCount}টি প্রোডাক্ট নির্বাচিত`}
+                  </p>
                 )}
               </div>
             </div>
             <button
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-muted transition-brand duration-brand hover:bg-surface-muted hover:text-ink"
               onClick={onClose}
-              aria-label={t('বন্ধ করুন')}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
+              aria-label="Close"
             >
-              <IconClose />
+              ✕
             </button>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-brand-bg via-info to-brand-light" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        {/* Body / Scrollable Cart Items */}
+        <div className="flex-1 overflow-y-auto px-6 py-3.5">
           {cart.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
-                <IconCartEmpty />
+            <div className="flex h-full flex-col items-center justify-center text-center py-10">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
+                <NavCartSvgIcon className="h-7 w-7" />
               </div>
-              <p className="mb-1 font-body text-sm font-bold text-ink">{t('আপনার কার্ট খালি')}</p>
-              <p className="mb-5 font-body text-[12.5px] text-muted">{t('পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন')}</p>
+              <p className="mb-1 font-body text-[15px] font-bold text-ink">
+                {t('আপনার কার্ট খালি')}
+              </p>
+              <p className="mb-5 max-w-xs font-body text-[12.5px] text-muted">
+                {t('পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন')}
+              </p>
               <button
                 onClick={goToProducts}
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+                className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
               >
-                {t('প্রোডাক্ট দেখুন')} <IconArrowRight />
+                {t('প্রোডাক্ট দেখুন')} →
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <div className="space-y-3.5">
               {cart.map((item) => (
                 <div
-                  className="flex gap-3 rounded-[14px] border border-border-base/70 bg-white p-2.5 transition-brand duration-brand hover:border-info/30 hover:shadow-sh1"
                   key={item.id}
+                  className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
                 >
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[12px] border border-border-base/60 bg-gradient-to-br from-brand-bg/30 to-surface-muted">
-                    <CartImg emoji={item.emoji} />
-                  </div>
+                  {/* Thumbnail */}
+                  <CartItemThumb emoji={item.emoji} />
+
+                  {/* Title, Unit Price & Transparent Quantity Buttons */}
                   <div className="min-w-0 flex-1">
-                    <div className="mb-0.5 flex items-start justify-between gap-2">
-                      <div className="truncate font-body text-[13px] font-semibold text-ink">{item.name}</div>
+                    <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
+                      {item.name}
+                    </div>
+                    <div className="mt-0.5 font-body text-[12px] text-muted">
+                      ৳{item.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'}
+                    </div>
+
+                    {/* Minimalist Transparent Black Border Circles */}
+                    <div className="mt-2.5 flex items-center gap-2">
                       <button
-                        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-muted/70 transition-brand duration-brand hover:bg-red-50 hover:text-red-500"
-                        onClick={() => handleRemove(item.id)}
-                        aria-label={t('সরান')}
-                        title={t('সরান')}
+                        type="button"
+                        onClick={() => handleQty(item.id, -1)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
+                        aria-label="Decrease"
                       >
-                        <IconTrash />
+                        −
+                      </button>
+                      <span className="min-w-[18px] text-center font-body text-xs font-bold text-ink">
+                        {item.qty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleQty(item.id, 1)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
+                        aria-label="Increase"
+                      >
+                        +
                       </button>
                     </div>
-                    <div className="mb-2 font-body text-[13.5px] font-extrabold text-brand-light">
+                  </div>
+
+                  {/* Total Item Price & Subtle Muted Trash Button */}
+                  <div className="flex flex-col items-end justify-between self-stretch pl-1">
+                    <div className="font-body text-[14px] font-bold text-ink">
                       ৳{(item.price * item.qty).toLocaleString('en-US')}
                     </div>
-                    <div className="inline-flex items-center gap-0.5 rounded-full border border-border-base bg-surface-muted/70 p-[3px]">
-                      <button
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-sh1 transition-brand duration-brand hover:text-brand-light"
-                        onClick={() => handleQty(item.id, -1)}
-                      >
-                        <IconMinus />
-                      </button>
-                      <span className="min-w-[22px] text-center font-body text-[12.5px] font-bold text-ink">{item.qty}</span>
-                      <button
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-ink shadow-sh1 transition-brand duration-brand hover:text-brand-light"
-                        onClick={() => handleQty(item.id, 1)}
-                      >
-                        <IconPlus />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item.id)}
+                      title={t('সরান')}
+                      className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
+                    >
+                      <TrashIcon />
+                    </button>
                   </div>
                 </div>
               ))}
+
+              {/* Coupon Code Section matching QuickOrderModal */}
+              <div className="pt-0.5">
+                <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
+                  <CouponSvgIcon />
+                  <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
+                </div>
+
+                <form onSubmit={handleApplyCoupon} className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                    className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover active:scale-95"
+                  >
+                    {lang === 'en' ? 'Apply' : 'প্রয়োগ'}
+                  </button>
+                </form>
+              </div>
             </div>
           )}
         </div>
 
+        {/* Footer with Inset Alignment, Checkout CTA & Security Badge */}
         {cart.length > 0 && (
-          <div className="shrink-0 border-t border-border-base bg-gradient-to-b from-white to-brand-bg/15 px-5 py-4 sm:rounded-b-[20px]">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="font-body text-[13px] font-semibold text-muted">{t('সর্বমোট')}</span>
-              <span className="font-body text-lg font-extrabold text-ink">৳{total.toLocaleString('en-US')}</span>
+          <div className="shrink-0 px-6 pb-6 pt-3">
+            <div className="mb-4 flex items-center justify-between px-2">
+              <span className="font-body text-[13.5px] font-bold text-muted">
+                {t('মোট')}:
+              </span>
+              <span className="font-body text-[18px] font-extrabold text-brand-light">
+                ৳{total.toLocaleString('en-US')}
+              </span>
             </div>
+
+            {/* Primary Action Button: "চেকআউট করুন" */}
             <button
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
               onClick={handleCheckout}
+              className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95"
             >
-              {t('চেকআউট করুন')} <IconArrowRight />
+              {lang === 'en' ? 'Checkout' : 'চেকআউট করুন'}
             </button>
+
+            {/* 100% Safe & Secure Checkout Trust Line */}
             <div className="mt-2.5 flex items-center justify-center gap-1.5 font-body text-[11px] font-medium text-muted">
-              <IconLock /> {lang === 'en' ? '100% Safe & Secure Checkout' : '১০০% নিরাপদ ও সুরক্ষিত চেকআউট'}
+              <LockSecurityIcon />
+              <span>
+                {lang === 'en'
+                  ? '100% Safe & Secure Checkout'
+                  : '১০০% নিরাপদ ও সুরক্ষিত চেকআউট'}
+              </span>
             </div>
           </div>
         )}
