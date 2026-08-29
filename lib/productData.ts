@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
+import { useCartStore } from './store/cartStore';
+import { OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
 
 interface MinimalRouter {
   push: (href: string) => void;
@@ -109,28 +111,8 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
 }
 
 const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
-// 🆕 SEO মেটা ফিল্ড + quick_specs_text + packaging_content শুধু detail
-// (single product) query-তে লাগে — grid লিস্টিং-এ না, তাই বাকি bandwidth-
-// optimization নীতির (lib/productData.ts-এর ওপরের নোট) সাথে মিলিয়ে শুধু
-// DETAIL_COLS-এ যোগ করা হলো।
 const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,power_info,info_boxes,seo_h1,meta_title,meta_description,og_description,quick_specs_text,packaging_content`;
 
-// ⚠️ sync-gap ফিক্স — admin panel-এর প্রোডাক্ট পেজে drag করে সাজানো অর্ডার
-// store_settings key 'vc_prod_order'-এ (product id-র একটা JSON অ্যারে,
-// ক্রম অনুযায়ী) সেভ হয়। applyProdOrder() ফাংশন আগে থেকেই এখানে ছিল কিন্তু
-// কোথাও কল হতো না — admin যতই রিঅর্ডার করুক, storefront সবসময় শুধু
-// `id ascending`-এই দেখাত। এখন fetchCustomProducts()-এর ভেতরেই এই order
-// fetch করে apply করা হয়, তাই home/category/search — যেখানেই
-// fetchCustomProducts() ব্যবহার হয় সবখানে স্বয়ংক্রিয়ভাবে সঠিক অর্ডার আসবে,
-// আলাদা করে প্রতিটা call site বদলাতে হয়নি।
-// ⚠️ #419 ফিক্স — এই কুয়েরিগুলোর কোনো টাইমআউট ছিল না, তাই Supabase একটু
-// ধীর হলেও (এরর না দিয়ে) এই কল অনির্দিষ্টকালের জন্য ঝুলে থাকতে পারত।
-// রুট লেআউট প্রতি রিকোয়েস্টে কুকি পড়ে বলে হোমপেজ সবসময় dynamic SSR-এ
-// রেন্ডার হয়, ফলে এমন একটা ঝুলে-থাকা কল Vercel-এর ফাংশন টাইম-বাজেট পার
-// করে দিতে পারত — এটাই React error #419-এর ("Suspense boundary couldn't
-// finish on the server") মূল কারণ ছিল। এখন প্রতিটা কুয়েরিতে
-// abortSignal(AbortSignal.timeout(...)) দিয়ে একটা হার্ড ডেডলাইন বসানো
-// হয়েছে, তাই ওয়ার্স্ট-কেস ওয়েট টাইম এখন বাউন্ডেড ও প্রেডিক্টেবল।
 const QUERY_TIMEOUT_MS = 3500;
 const RETRY_DELAY_MS = 400;
 
@@ -144,17 +126,11 @@ async function fetchProdOrder(supabase: SupabaseClient): Promise<unknown> {
       .maybeSingle();
     return data?.setting_value ?? null;
   } catch {
-    // order fetch ব্যর্থ হলেও প্রোডাক্ট লিস্ট দেখানো বন্ধ হবে না, শুধু
-    // ডিফল্ট (id ascending) অর্ডারে থাকবে — applyProdOrder()-ও একই আচরণ করে
-    // (খালি/অবৈধ order পেলে ইনপুট অপরিবর্তিত রেখে দেয়)
     return null;
   }
 }
 
 export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Product[]> {
-  // fetchProdOrder() স্বাধীন একটা কুয়েরি — মূল products কুয়েরির সাথে
-  // sequentially await না করে সমান্তরালে শুরু করা হচ্ছে, যাতে এটা মোট
-  // ওয়েট টাইমে আলাদা করে যোগ না হয় (নিজের ৩৫০০ms বাজেটের মধ্যেই থাকে)।
   const orderPromise = fetchProdOrder(supabase);
   let attempt = 0;
   const MAX_ATTEMPTS = 2;
@@ -208,15 +184,6 @@ export async function fetchProductById(supabase: SupabaseClient, id: number | st
   }
 }
 
-// 🆕 (২০২৬-০৮, খালি-কনটেন্ট বাগ ফিক্স): Product Detail পেজ প্রথমে সম্পূর্ণ
-// ডেটা-সহ (DETAIL_COLS) initialProduct নিয়ে render হয়, কিন্তু তারপরেই
-// fetchCustomProducts() (শুধু GRID_COLS — desc/features/faqs/power_info/
-// info_boxes নেই) চলে related/অন্যান্য প্রোডাক্ট লোড করার জন্য, আর সেই
-// ফলাফল আগে এখানে blind spread দিয়ে merge হতো — ফলে সম্পূর্ণ detail object-টা
-// একটা আংশিক (grid-only) কপি দিয়ে চাপা পড়ে যেত, description/features/FAQ/
-// power info/extra info সব খালি হয়ে যেত, অথচ specs/price/stock ঠিক থাকত
-// (কারণ ওগুলো GRID_COLS-এই আছে)। এখন detail-only ফিল্ডগুলো আলাদা করে
-// preserve করা হচ্ছে যদি আগের entry-টা আগেই পুরোপুরি লোড হয়ে থাকে।
 const DETAIL_ONLY_FIELDS = [
   'desc', 'longDesc', 'features', 'faqs', 'closing', 'powerInfo', 'infoBoxes',
   'seoH1', 'metaTitle', 'metaDescription', 'ogDescription', 'quickSpecsText', 'packagingContent',
@@ -229,10 +196,6 @@ export function mergeCustomProducts(defaults: Product[], customRows: Product[]):
     if (idx === -1) { list.push(mapped); return; }
     const existing = list[idx];
     if (existing._detailLoaded && !mapped._detailLoaded) {
-      // existing-এ আগে থেকেই পূর্ণাঙ্গ detail আছে, mapped একটা partial
-      // (grid-only) রিফ্রেশ — তাই বাকি সব ফিল্ড (price/stock/specs/imgs
-      // ইত্যাদি) mapped থেকে fresh নেওয়া হচ্ছে, কিন্তু detail-only
-      // ফিল্ডগুলো existing থেকেই রাখা হচ্ছে যাতে খালি হয়ে না যায়।
       const preserved = Object.fromEntries(DETAIL_ONLY_FIELDS.map((k) => [k, existing[k]]));
       list[idx] = { ...existing, ...mapped, ...preserved, _detailLoaded: true };
     } else {
@@ -274,20 +237,40 @@ export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
 
 export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): void {
   if (!prod || prod.stock <= 0) return;
-  const item: CartItem = {
-    id: prod.id,
-    name: prod.name,
-    emoji: (prod.imgs || ['📦'])[0],
-    price: prod.price,
-    qty: Math.max(1, Math.min(qty, prod.stock, 99)),
-    cat: prod.cat,
-  };
-  try {
-    sessionStorage.setItem('vc_quick_order_items', JSON.stringify([item]));
-  } catch {
-    // storage unavailable, ignore
+
+  const currentCart = useCartStore.getState().cart;
+  const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
+
+  // কেস ১: কার্ট খালি থাকলে সরাসরি সিঙ্গেল প্রোডাক্ট চেকআউট
+  if (!currentCart || currentCart.length === 0) {
+    const item: CartItem = {
+      id: prod.id,
+      name: prod.name,
+      emoji: (prod.imgs || ['📦'])[0],
+      price: prod.price,
+      qty: safeQty,
+      cat: prod.cat,
+    };
+    try {
+      sessionStorage.setItem('vc_quick_order_items', JSON.stringify([item]));
+    } catch {
+      // storage unavailable, ignore
+    }
+    router.push('/checkout');
+    return;
   }
-  router.push('/checkout');
+
+  // কেস ২: কার্টে ইতিমধ্যে পণ্য থাকলে এটিকে কার্টে যুক্ত করে ফ্লোটিং শপিং কার্ট মডাল ওপেন করা
+  useCartStore.getState().addToCart([prod], prod.id, safeQty);
+  try {
+    sessionStorage.removeItem('vc_quick_order_items');
+  } catch {
+    // ignore
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(OPEN_QUICK_CART_MODAL_EVENT));
+  }
 }
 
 export function makeSlug(str: string): string {
