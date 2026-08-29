@@ -6,22 +6,45 @@ import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/app/components/layout/Navbar';
 import Footer from '@/app/components/layout/Footer';
-import { fetchFullOrder, readPendingOrder, readLatestGuestOrder, ORDER_TRACK_STEPS } from '@/lib/orderStatus';
+import { fetchFullOrder, readPendingOrder, readLatestGuestOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
+import OrderCard from '@/app/components/orders/OrderCard';
 import type { Order } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
-// এই পেজও TrackOrderModal-এর মতো একই ৪-স্টেট লজিক অনুসরণ করে — লগইন থাকলে
-// /account/orders এ পাঠিয়ে দেয় (state ৩/৪), না থাকলে এই ব্রাউজারে
-// সেভ থাকা সাম্প্রতিক guest অর্ডার automatic দেখায় (state ১/২)। এখানেও
-// ইচ্ছাকৃতভাবে কোনো phone-সার্চ ইনপুট নেই।
+function ClearTrackSvgIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </svg>
+  );
+}
+
+function ReceiptEmptySvgIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+      <path d="M8 7h8M8 11h8M8 15h5" />
+    </svg>
+  );
+}
+
+function SparklesCrownSvgIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-primary">
+      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+    </svg>
+  );
+}
+
 export default function TrackOrderClient() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -34,7 +57,7 @@ export default function TrackOrderClient() {
   const [accountOpen, setAccountOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -53,38 +76,55 @@ export default function TrackOrderClient() {
     }
     setLoading(true);
     setNotFound(false);
-    setOrder(null);
+    setOrders([]);
 
-    const guest = readLatestGuestOrder() || (() => {
-      const p = readPendingOrder();
-      return p && p.phone ? { id: p.id, orderNum: p.orderNum, phone: p.phone } : null;
+    const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
+      try {
+        const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
+        if (Array.isArray(list) && list.length > 0) return list;
+      } catch {
+        // ignore
+      }
+      const pending = readPendingOrder();
+      if (pending && pending.phone) return [pending];
+      const latest = readLatestGuestOrder();
+      if (latest && latest.phone) return [latest];
+      return [];
     })();
 
-    if (!guest) {
+    if (guestList.length === 0) {
       setLoading(false);
       setNotFound(true);
       return;
     }
 
-    fetchFullOrder(supabase, guest.id, guest.phone).then((data) => {
-      if (data) {
-        setOrder(mapSupabaseOrderRow(data as Record<string, unknown>));
+    (async () => {
+      const fetched: Order[] = [];
+      for (const g of guestList) {
+        if (!g.id || !g.phone) continue;
+        const data = await fetchFullOrder(supabase, String(g.id), g.phone);
+        if (data) {
+          fetched.push(mapSupabaseOrderRow(data as Record<string, unknown>));
+        }
+      }
+
+      if (fetched.length > 0) {
+        setOrders(fetched);
       } else {
         setNotFound(true);
       }
       setLoading(false);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+    })();
+  }, [currentUser, router, supabase]);
 
-  const isCancelled = order && (order.status === 'cancelled' || order.status === 'rejected');
-  const currentStepIdx = order ? ORDER_TRACK_STEPS.findIndex((s) => s.key === order.status) : -1;
-
-  const openInvoice = () => {
-    if (!order) return;
+  const openInvoice = (orderId: string | number) => {
     window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
-      detail: { orderId: order.id, phone: order.customer?.phone, ctx: 'guest-track' },
+      detail: { orderId, ctx: 'guest-track' },
     }));
+  };
+
+  const handleOpenLogin = () => {
+    setLoginOpen(true);
   };
 
   if (currentUser) return null;
@@ -103,92 +143,83 @@ export default function TrackOrderClient() {
         onAccountClick={() => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT))}
       />
 
-      <div className="mx-auto w-full max-w-[480px] px-5 pb-16 pt-8">
-        <h1 className="mb-1.5 text-center font-display text-xl font-bold text-ink">{t('📦 অর্ডার ট্র্যাক করুন')}</h1>
-        <p className="mb-6 text-center font-body text-[13px] text-muted">
-          {t('আপনি এই ব্রাউজারে যে অর্ডার করেছেন সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।')}
-        </p>
+      <div className="mx-auto w-full max-w-[500px] px-5 pb-16 pt-8">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+            <ClearTrackSvgIcon />
+          </div>
+          <h1 className="font-body text-xl font-extrabold text-ink">
+            {lang === 'en' ? 'Track Your Order' : 'অর্ডার ট্র্যাক করুন'}
+          </h1>
+          <p className="mt-1 font-body text-[13px] text-muted">
+            {lang === 'en'
+              ? 'Orders placed in this browser will appear here automatically.'
+              : 'আপনি এই ব্রাউজারে যে অর্ডার করেছেন সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।'}
+          </p>
+        </div>
 
-        <div className="rounded-brand border border-border-base bg-white p-5 shadow-sh1">
+        {/* Main Card Container */}
+        <div className="rounded-[28px] border border-white/80 bg-gradient-to-b from-brand-bg/40 via-[#EFF6FE] to-white p-6 shadow-sh3">
           {loading && (
-            <div className="py-8 text-center font-body text-[13px] text-muted">{t('⏳ লোড হচ্ছে...')}</div>
+            <div className="py-12 text-center font-body text-[13px] text-muted">
+              <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
+              {t('লোড হচ্ছে...')}
+            </div>
           )}
 
           {!loading && notFound && (
-            <div className="py-6 text-center">
-              <div className="mb-2 text-3xl">🧾</div>
-              <div className="mb-2 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার করেননি')}</div>
-              <p className="font-body text-[12.5px] leading-[1.7] text-muted">
-                {t('অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।')}<br />
-                {t('ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে')} <strong>{t('লগইন')}</strong> {t('করে রাখুন।')}
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white text-brand-light shadow-sm">
+                <ReceiptEmptySvgIcon className="h-8 w-8 text-brand-light" />
+              </div>
+              <div className="mb-1.5 font-body text-[16px] font-bold text-ink">
+                {lang === 'en' ? 'No orders placed yet' : 'এখনো কোনো অর্ডার করেননি'}
+              </div>
+              <p className="mx-auto mb-5 max-w-xs font-body text-[12.5px] leading-relaxed text-muted">
+                {lang === 'en'
+                  ? 'Orders will appear here automatically once placed. Log in to track from any device.'
+                  : 'অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে। ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে লগইন করে রাখুন।'}
               </p>
               <button
-                onClick={() => setLoginOpen(true)}
-                className="mt-4 rounded-full bg-ink px-5 py-2.5 font-body text-[13px] font-bold text-white hover:bg-brand-light"
+                onClick={handleOpenLogin}
+                className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-7 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
               >
                 {t('লগইন করুন')}
               </button>
             </div>
           )}
 
-          {!loading && order && (
-            <>
-              <div className="mb-3.5 rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] px-3.5 py-[10px] font-body text-[11.5px] leading-[1.6] text-[#92400E]">
-                {t('⚠️ এই অর্ডারের তথ্য শুধু এই ব্রাউজারে সংরক্ষিত আছে। অন্য ডিভাইসে ট্র্যাক করতে লগইন করুন, অথবা WhatsApp-এ যোগাযোগ করুন।')}
+          {!loading && orders.length > 0 && (
+            <div className="space-y-4">
+              <div className="space-y-3.5">
+                {orders.map((o) => (
+                  <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                ))}
               </div>
 
-              <div className="mb-4 flex items-center justify-between rounded-[12px] bg-surface-muted px-4 py-3">
-                <div>
-                  <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
-                  <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                </div>
-                <button onClick={openInvoice} className="font-body text-[12px] font-semibold text-brand-light hover:underline">{t('ইনভয়েস')}</button>
-              </div>
-
-              {isCancelled ? (
-                <div className="mb-4 rounded-[12px] bg-[#FEE2E2] px-4 py-4 text-center">
-                  <div className="mb-1 text-2xl">❌</div>
-                  <div className="font-body text-sm font-bold text-[#991B1B]">
-                    {t(order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে')}
+              {/* সাইকোলজিক্যাল ভ্যালু লগইন প্রম্পট বক্স */}
+              <div className="rounded-[22px] border border-brand-light/35 bg-gradient-to-br from-[#EFF6FF] via-[#F0F9FF] to-white p-4 shadow-xs backdrop-blur-sm">
+                <div className="flex items-start gap-2.5">
+                  <SparklesCrownSvgIcon />
+                  <div className="flex-1">
+                    <div className="mb-1 font-body text-[13px] font-bold text-ink">
+                      {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
+                    </div>
+                    <p className="font-body text-[11.5px] leading-relaxed text-ink/75">
+                      {lang === 'en'
+                        ? 'This order is stored temporarily in this browser. Log in to manage orders across all devices, save invoice history, and unlock exclusive VIP membership discounts & coupons.'
+                        : 'এই অর্ডারের তথ্য সাময়িকভাবে এই ব্রাউজারে সংরক্ষিত। যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও হিস্টোরি সংরক্ষণ, মেম্বারশিপ রিওয়ার্ড ও স্পেশাল কুপন ডিসকাউন্ট আনলক করতে এখনই লগইন করুন।'}
+                    </p>
+                    <button
+                      onClick={handleOpenLogin}
+                      className="mt-2.5 inline-flex items-center gap-1 font-body text-[12px] font-bold text-brand-primary hover:underline active:scale-95"
+                    >
+                      <span>{lang === 'en' ? 'Login to Account →' : 'অ্যাকাউন্টে লগইন করুন →'}</span>
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <div className="mb-4 flex flex-col gap-0">
-                  {ORDER_TRACK_STEPS.map((step, idx) => {
-                    const done = idx <= currentStepIdx;
-                    const isLast = idx === ORDER_TRACK_STEPS.length - 1;
-                    return (
-                      <div key={step.key} className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${done ? 'bg-brand-light text-white' : 'bg-surface-muted text-muted'}`}>
-                            {step.icon}
-                          </div>
-                          {!isLast && <div className={`w-[2px] flex-1 ${idx < currentStepIdx ? 'bg-brand-light' : 'bg-border-base'}`} style={{ minHeight: 24 }} />}
-                        </div>
-                        <div className={`pb-6 pt-1 font-body text-[13px] font-semibold ${done ? 'text-ink' : 'text-muted'}`}>
-                          {t(step.label)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div className="rounded-[12px] border border-border-base p-3">
-                <div className="mb-2 font-body text-[12px] font-bold text-ink">{t('অর্ডার সারমর্ম')}</div>
-                <div className="flex flex-col gap-1.5">
-                  {(order.items || []).map((i, idx) => (
-                    <div key={idx} className="flex items-center justify-between font-body text-[12.5px] text-ink">
-                      <span className="min-w-0 flex-1 truncate">{i.name}</span>
-                      <span className="ml-2 whitespace-nowrap font-semibold">{i.qty} × ৳{i.price.toLocaleString('en-US')}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-2 flex items-center justify-between border-t border-border-base pt-2 font-body text-[13px] font-bold text-ink">
-                  <span>{t('মোট (শিপিং সহ):')}</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
-                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
