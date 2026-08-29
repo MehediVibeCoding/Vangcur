@@ -33,10 +33,10 @@ function CartItemThumb({ emoji }: { emoji?: string }) {
 
 function NavCartSvgIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="9" cy="21" r="1" />
       <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
     </svg>
   );
 }
@@ -185,32 +185,25 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         onClick={onClose}
       />
 
-      {/* Main Cart Slide-Over Drawer with Unified Gradient Background */}
+      {/* Main Cart Drawer: মোবাইলে সম্পূর্ণ ফুল-স্ক্রিন (fixed inset-0), ডেস্কে ডানপাশে স্লাইড-ওভার উইন্ডো */}
       <div
-        className={`fixed inset-y-0 right-0 z-[965] flex w-full max-w-[440px] flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:rounded-[28px] ${
+        className={`fixed inset-0 z-[965] flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:inset-y-0 sm:left-auto sm:right-0 sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:max-w-[440px] sm:rounded-[28px] ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* Header with Website's Original Cart SVG Icon & Full-Width Black Hairline Divider */}
+        {/* Header matching QuickOrderModal exactly */}
         <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
           <HeaderDecor />
           <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
-                <NavCartSvgIcon />
-              </span>
-              <div>
-                <h3 className="font-body text-[17px] font-extrabold text-ink">
-                  {lang === 'en' ? 'Your Cart' : 'আপনার কার্ট'}
-                </h3>
-                {cart.length > 0 && (
-                  <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
-                    {lang === 'en'
-                      ? `${totalCount} item(s) selected`
-                      : `${totalCount}টি প্রোডাক্ট নির্বাচিত`}
-                  </p>
-                )}
-              </div>
+            <div>
+              <h3 className="font-body text-[17px] font-extrabold text-ink">
+                🛒 {lang === 'en' ? 'Your Cart' : 'আপনার কার্ট'}
+              </h3>
+              <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
+                {lang === 'en'
+                  ? `${totalCount} item(s) selected`
+                  : `${totalCount}টি প্রোডাক্ট নির্বাচিত`}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -227,7 +220,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           {cart.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center py-10">
               <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
-                <NavCartSvgIcon className="h-7 w-7" />
+                <NavCartSvgIcon className="h-8 w-8" />
               </div>
               <p className="mb-1 font-body text-[15px] font-bold text-ink">
                 {t('আপনার কার্ট খালি')}
@@ -302,7 +295,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 </div>
               ))}
 
-              {/* Coupon Code Section matching QuickOrderModal */}
+              {/* Coupon Code Section */}
               <div className="pt-0.5">
                 <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                   <CouponSvgIcon />
