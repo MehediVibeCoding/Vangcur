@@ -4,27 +4,122 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { fetchFullOrder, readPendingOrder, readLatestGuestOrder, ORDER_TRACK_STEPS } from '@/lib/orderStatus';
+import { fetchFullOrder, readPendingOrder, readLatestGuestOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
-import { GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
+import { GENERATE_INVOICE_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
+
+function PackageSvgIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16.5 9.4 7.55 4.24a1.8 1.8 0 0 0-1.8 0L2.5 6.1a1.8 1.8 0 0 0-.9 1.56v8.68a1.8 1.8 0 0 0 .9 1.56l3.25 1.86a1.8 1.8 0 0 0 1.8 0l8.95-5.16a1.8 1.8 0 0 0 .9-1.56V9.4z" />
+      <polyline points="3.29 7 12 12 20.71 7" />
+      <line x1="12" y1="22" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function ReceiptEmptySvgIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+      <path d="M8 7h8M8 11h8M8 15h5" />
+    </svg>
+  );
+}
+
+function AlertTriangleSvgIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-amber-700">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+function StepReceivedSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  );
+}
+
+function StepConfirmedSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
+}
+
+function StepShippedSvg() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="3" width="15" height="13" rx="1" />
+      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+    </svg>
+  );
+}
+
+function StepDeliveredSvg() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function CrossCancelSvg() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+  );
+}
+
+function HeaderDecor() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
+      <svg width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 13a8 8 0 0 1 16 0" />
+        <rect x="3" y="13" width="4" height="6" rx="1.5" />
+        <rect x="17" y="13" width="4" height="6" rx="1.5" />
+      </svg>
+      <svg width="26" height="26" className="absolute right-14 top-3 rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="7" y="2.5" width="10" height="15" rx="3" />
+        <path d="M10 5.5h4" />
+        <circle cx="12" cy="20" r="1.6" />
+      </svg>
+    </div>
+  );
+}
+
+const TIMELINE_STEPS = [
+  { key: 'pending', label: 'অর্ডার গ্রহণ করা হয়েছে', icon: StepReceivedSvg },
+  { key: 'confirmed', label: 'কনফার্ম হয়েছে', icon: StepConfirmedSvg },
+  { key: 'shipped', label: 'পাঠানো হয়েছে', icon: StepShippedSvg },
+  { key: 'delivered', label: 'ডেলিভারি সম্পন্ন', icon: StepDeliveredSvg },
+];
 
 interface TrackOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// এই মডালটা এখন লগইন-স্ট্যাটাস অনুযায়ী ৪টা অবস্থা হ্যান্ডেল করে:
-// ১. লগইন নেই + কখনো অর্ডার করেনি      → "এখনো অর্ডার করেননি" নোটিশ
-// ২. লগইন নেই + এই ব্রাউজারে অর্ডার আছে → সেই অর্ডার automatic দেখায়
-// ৩ ও ৪. লগইন আছে (অর্ডার থাকুক বা না থাকুক) → /account/orders এ রিডাইরেক্ট
-//        (ওখানে state ৩/৪ already সঠিকভাবে হ্যান্ডেল করা আছে)
-//
-// ইচ্ছাকৃতভাবে কোনো phone-সার্চ ইনপুট নেই — guest-এর নিজের অর্ডার automatic
-// শনাক্ত হয় (checkout করার সময় স্থানীয়ভাবে সেভ হওয়া phone দিয়ে, একটা
-// SECURITY DEFINER RPC-এর মাধ্যমে), ইউজারকে টাইপ করতে হয় না।
 export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProps) {
   const { t, lang } = useT();
   const router = useRouter();
@@ -37,11 +132,13 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   useEffect(() => {
     if (isOpen) lockBody();
     else unlockBody();
+    return () => unlockBody();
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
 
+    // দৃশ্যপট ৩ ও ৪: লগইন থাকা অবস্থায় ইউজারকে সরাসরি একাউন্ট অর্ডার লিস্টে পাঠানো
     if (currentUser) {
       onClose();
       router.push('/account/orders');
@@ -52,6 +149,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setNotFound(false);
     setOrder(null);
 
+    // দৃশ্যপট ১ ও ২: আন-লগইন কাস্টমারের লোকাল অর্ডার অনুসন্ধান
     const guest = readLatestGuestOrder() || (() => {
       const p = readPendingOrder();
       return p && p.phone ? { id: p.id, orderNum: p.orderNum, phone: p.phone } : null;
@@ -71,11 +169,10 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
       }
       setLoading(false);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser, router, supabase, onClose]);
 
   const isCancelled = order && (order.status === 'cancelled' || order.status === 'rejected');
-  const currentStepIdx = order ? ORDER_TRACK_STEPS.findIndex((s) => s.key === order.status) : -1;
+  const currentStepIdx = order ? TIMELINE_STEPS.findIndex((s) => s.key === order.status) : -1;
 
   const openInvoice = () => {
     if (!order) return;
@@ -84,102 +181,185 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     }));
   };
 
-  if (currentUser) return null;
+  const handleOpenLogin = () => {
+    onClose();
+    window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
+  };
+
+  if (currentUser || !isOpen) return null;
 
   return (
     <>
+      {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[70] bg-black/50 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+        className="fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
         onClick={onClose}
       />
-      <div
-        className={`fixed inset-0 z-[75] flex items-center justify-center p-4 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
-      >
-        <div className="max-h-[90vh] w-full max-w-[420px] overflow-y-auto rounded-brand bg-white shadow-sh3">
-          <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
-            <h3 className="font-display text-base font-bold text-ink">{t('📦 অর্ডার ট্র্যাক করুন')}</h3>
-            <button className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted hover:bg-surface-muted" onClick={onClose}>✕</button>
+
+      {/* Centered Aesthetic Modal Dialog */}
+      <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
+        <div className="relative flex max-h-[88vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
+          
+          {/* Header */}
+          <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
+            <HeaderDecor />
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                  <PackageSvgIcon />
+                </span>
+                <h3 className="font-body text-[17px] font-extrabold text-ink">
+                  {lang === 'en' ? 'Track Order' : 'অর্ডার ট্র্যাক করুন'}
+                </h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
-          <div className="px-5 py-4">
+          {/* Content Body */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {/* Loading State */}
             {loading && (
-              <div className="py-8 text-center font-body text-[13px] text-muted">{t('⏳ লোড হচ্ছে...')}</div>
-            )}
-
-            {!loading && notFound && (
-              <div className="py-6 text-center">
-                <div className="mb-2 text-3xl">🧾</div>
-                <div className="mb-2 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার করেননি')}</div>
-                <p className="font-body text-[12.5px] leading-[1.7] text-muted">
-                  {t('অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে।')}<br />
-                  {t('ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে ওয়েবসাইটের')}{' '}
-                  <strong>{t('লগইন বাটন')}</strong>{t('-এ ক্লিক করে লগইন করে রাখুন।')}
-                </p>
+              <div className="py-12 text-center font-body text-[13px] text-muted">
+                <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
+                {t('লোড হচ্ছে...')}
               </div>
             )}
 
+            {/* দৃশ্যপট ১: আন-লগইন + কোনো অর্ডার নেই */}
+            {!loading && notFound && (
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
+                  <ReceiptEmptySvgIcon className="h-8 w-8 text-brand-light" />
+                </div>
+                <div className="mb-1.5 font-body text-[16px] font-bold text-ink">
+                  {lang === 'en' ? 'No orders placed yet' : 'এখনো কোনো অর্ডার করেননি'}
+                </div>
+                <p className="mx-auto mb-5 max-w-xs font-body text-[12.5px] leading-relaxed text-muted">
+                  {lang === 'en'
+                    ? 'Orders will appear here automatically once placed. Log in to track from any device.'
+                    : 'অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে। ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে লগইন করে রাখুন।'}
+                </p>
+                <button
+                  onClick={handleOpenLogin}
+                  className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-7 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
+                >
+                  {t('লগইন করুন')}
+                </button>
+              </div>
+            )}
+
+            {/* দৃশ্যপট ২: আন-লগইন + এই ব্রাউজারে অর্ডার আছে */}
             {!loading && order && (
-              <>
-                <div className="mb-3.5 rounded-[10px] border border-[#FED7AA] bg-[#FFF7ED] px-3.5 py-[10px] font-body text-[11.5px] leading-[1.6] text-[#92400E]">
-                  {t('⚠️ এই অর্ডারের তথ্য শুধু এই ব্রাউজারে সংরক্ষিত আছে। অন্য ডিভাইসে ট্র্যাক করতে লগইন করুন, অথবা WhatsApp-এ যোগাযোগ করুন।')}
-                </div>
-
-                <div className="mb-4 flex items-center justify-between rounded-[12px] bg-surface-muted px-4 py-3">
+              <div className="space-y-4">
+                {/* Notice Box with SVG Alert */}
+                <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200/80 bg-[#FFF7ED]/90 p-3.5 font-body text-[12px] leading-relaxed text-amber-900 shadow-xs backdrop-blur-sm">
+                  <AlertTriangleSvgIcon />
                   <div>
-                    <div className="font-body text-sm font-bold text-ink">{order.orderNum}</div>
-                    <div className="font-body text-[11.5px] text-muted">{new Date(order.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    {lang === 'en'
+                      ? 'This order information is stored only in this browser. Please log in to track from other devices.'
+                      : 'এই অর্ডারের তথ্য শুধু এই ব্রাউজারে সংরক্ষিত আছে। অন্য ডিভাইসে ট্র্যাক করতে অ্যাকাউন্টে লগইন করুন।'}
                   </div>
-                  <button onClick={openInvoice} className="font-body text-[12px] font-semibold text-brand-light hover:underline">{t('ইনভয়েস')}</button>
                 </div>
 
-                {isCancelled ? (
-                  <div className="mb-4 rounded-[12px] bg-[#FEE2E2] px-4 py-4 text-center">
-                    <div className="mb-1 text-2xl">❌</div>
-                    <div className="font-body text-sm font-bold text-[#991B1B]">
-                      {t(order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে')}
+                {/* Order Meta Box */}
+                <div className="flex items-center justify-between rounded-2xl border border-white/80 bg-white/90 p-3.5 shadow-xs backdrop-blur-sm">
+                  <div>
+                    <div className="font-body text-[14px] font-bold text-ink">{order.orderNum}</div>
+                    <div className="mt-0.5 font-body text-[11.5px] text-muted">
+                      {new Date(order.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                      })}
                     </div>
                   </div>
+                  <button
+                    onClick={openInvoice}
+                    className="rounded-full border border-brand-light/40 bg-brand-bg/30 px-3.5 py-1.5 font-body text-xs font-bold text-brand-primary transition-colors hover:bg-brand-bg/60"
+                  >
+                    {lang === 'en' ? 'Invoice' : 'ইনভয়েস'}
+                  </button>
+                </div>
+
+                {/* Cancelled Alert or 4-Step Timeline */}
+                {isCancelled ? (
+                  <div className="flex items-center justify-center gap-2.5 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-center font-body text-sm font-bold text-red-700">
+                    <CrossCancelSvg />
+                    <span>
+                      {t(order.status === 'rejected' ? 'অর্ডারটি বাতিল করা হয়েছে' : 'অর্ডারটি ক্যান্সেল করা হয়েছে')}
+                    </span>
+                  </div>
                 ) : (
-                  <div className="mb-4 flex flex-col gap-0">
-                    {ORDER_TRACK_STEPS.map((step, idx) => {
-                      const done = idx <= currentStepIdx;
-                      const isLast = idx === ORDER_TRACK_STEPS.length - 1;
-                      return (
-                        <div key={step.key} className="flex gap-3">
-                          <div className="flex flex-col items-center">
-                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${done ? 'bg-brand-light text-white' : 'bg-surface-muted text-muted'}`}>
-                              {step.icon}
+                  <div className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-xs backdrop-blur-sm">
+                    <div className="space-y-0">
+                      {TIMELINE_STEPS.map((step, idx) => {
+                        const done = idx <= currentStepIdx;
+                        const isLast = idx === TIMELINE_STEPS.length - 1;
+                        const StepIconComponent = step.icon;
+
+                        return (
+                          <div key={step.key} className="flex items-start gap-3.5">
+                            <div className="flex flex-col items-center">
+                              <div
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
+                                  done
+                                    ? 'bg-brand-light text-white shadow-xs'
+                                    : 'border border-border-base bg-surface-muted text-muted/50'
+                                }`}
+                              >
+                                <StepIconComponent />
+                              </div>
+                              {!isLast && (
+                                <div
+                                  className={`w-[2px] ${
+                                    idx < currentStepIdx ? 'bg-brand-light' : 'bg-border-base/70'
+                                  }`}
+                                  style={{ minHeight: 24 }}
+                                />
+                              )}
                             </div>
-                            {!isLast && <div className={`w-[2px] flex-1 ${idx < currentStepIdx ? 'bg-brand-light' : 'bg-border-base'}`} style={{ minHeight: 24 }} />}
+                            <div className={`pb-6 pt-1 font-body text-[13px] font-bold ${done ? 'text-ink' : 'text-muted'}`}>
+                              {t(step.label)}
+                            </div>
                           </div>
-                          <div className={`pb-6 pt-1 font-body text-[13px] font-semibold ${done ? 'text-ink' : 'text-muted'}`}>
-                            {t(step.label)}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 
-                <div className="rounded-[12px] border border-border-base p-3">
-                  <div className="mb-2 font-body text-[12px] font-bold text-ink">{t('অর্ডার সারমর্ম')}</div>
-                  <div className="flex flex-col gap-1.5">
+                {/* Order Summary Card */}
+                <div className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-xs backdrop-blur-sm">
+                  <div className="mb-2.5 font-body text-[12.5px] font-bold text-ink">
+                    {t('অর্ডার সারমর্ম')}
+                  </div>
+                  <div className="space-y-2">
                     {(order.items || []).map((i, idx) => (
                       <div key={idx} className="flex items-center justify-between font-body text-[12.5px] text-ink">
                         <span className="min-w-0 flex-1 truncate">{i.name}</span>
-                        <span className="ml-2 whitespace-nowrap font-semibold">{i.qty} × ৳{i.price.toLocaleString('en-US')}</span>
+                        <span className="ml-2 shrink-0 font-semibold text-muted">
+                          {i.qty} × ৳{i.price.toLocaleString('en-US')}
+                        </span>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-2 flex items-center justify-between border-t border-border-base pt-2 font-body text-[13px] font-bold text-ink">
-                    <span>{t('মোট (শিপিং সহ):')}</span><span>৳{(order.total || 0).toLocaleString('en-US')}</span>
+                  <div className="mt-3 flex items-center justify-between border-t border-border-base/70 pt-2.5 font-body text-[13.5px] font-bold text-ink">
+                    <span>{t('মোট (শিপিং সহ):')}</span>
+                    <span className="text-brand-light font-extrabold">
+                      ৳{(order.total || 0).toLocaleString('en-US')}
+                    </span>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
       </div>
     </>
   );
-}
+                }
