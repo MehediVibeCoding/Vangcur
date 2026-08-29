@@ -18,14 +18,24 @@ export async function checkIsReviewAdminOrMod(
   let userEmail: string | null = null;
 
   try {
-    const { data } = await supabase.auth.getSession();
-    if (!targetId) targetId = data?.session?.user?.id || null;
-    userEmail = data?.session?.user?.email || null;
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!targetId) targetId = sessionData?.session?.user?.id || null;
+    userEmail = sessionData?.session?.user?.email || null;
   } catch {
     // fallback
   }
 
-  // ১. সরাসরি অথরাইজড মডারেটর জিমেইল যাচাই
+  if (!userEmail && typeof window !== 'undefined') {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('vc_user') || '{}');
+      if (localUser?.email) userEmail = localUser.email;
+      if (!targetId && localUser?.id) targetId = localUser.id;
+    } catch {
+      // ignore
+    }
+  }
+
+  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই
   if (userEmail && userEmail.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) {
     return true;
   }
@@ -35,15 +45,15 @@ export async function checkIsReviewAdminOrMod(
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('is_admin, role, email')
+      .select('*')
       .eq('id', targetId)
       .maybeSingle();
 
     if (error || !data) return false;
 
-    if (data.email && data.email.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) return true;
+    if (data.is_admin === true) return true;
     if (data.role && ['admin', 'super_admin', 'moderator'].includes(data.role)) return true;
-    return !!data.is_admin;
+    return false;
   } catch {
     return false;
   }
