@@ -1,3 +1,5 @@
+// [REPLACE] ফাইলের পাথ: app/components/RareOverlays.tsx
+
 import WaitingOverlay from './checkout/WaitingOverlay';
 import BgConfirmPopup from './checkout/BgConfirmPopup';
 import PostReceiveInfoModal from './checkout/PostReceiveInfoModal';
@@ -8,6 +10,7 @@ import InvoiceModal from './modals/InvoiceModal';
 import OfferPopup from './modals/OfferPopup';
 import RecoveryToast from './modals/RecoveryToast';
 import QuickOrderModal from './cart/QuickOrderModal';
+import OrderRateLimitModal from './modals/OrderRateLimitModal';
 
 export default function RareOverlays() {
   return (
@@ -22,6 +25,7 @@ export default function RareOverlays() {
       <OfferPopup />
       <RecoveryToast />
       <QuickOrderModal />
+      <OrderRateLimitModal />
     </>
   );
 }
