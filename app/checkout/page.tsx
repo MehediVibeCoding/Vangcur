@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import { createOrder } from '@/app/actions/checkout';
@@ -70,6 +69,13 @@ const fieldErrClass = 'mt-1.5 flex items-center gap-1 font-body text-[11.5px] fo
 const btnNextClass =
   'w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-60';
 
+function IconLock() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2a4.5 4.5 0 0 0-4.5 4.5V9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-.5V6.5A4.5 4.5 0 0 0 12 2Zm0 2.1A2.4 2.4 0 0 1 14.4 6.5V9H9.6V6.5A2.4 2.4 0 0 1 12 4.1ZM12 13.4a1.5 1.5 0 0 1 .82 2.76l-.17 2.24a.65.65 0 0 1-1.3 0l-.17-2.24A1.5 1.5 0 0 1 12 13.4Z" />
+    </svg>
+  );
+}
 function IconClose() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
@@ -138,6 +144,15 @@ function IconHome() {
     </svg>
   );
 }
+function IconInfo() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" className="shrink-0">
+      <circle cx="12" cy="12" r="12" fill="currentColor" />
+      <rect x="10.85" y="10.3" width="2.3" height="7.3" rx="1.15" fill="white" />
+      <circle cx="12" cy="6.9" r="1.4" fill="white" />
+    </svg>
+  );
+}
 function IconMail() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -156,6 +171,13 @@ function IconDoc() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
       <path d="M6.5 2.5A1.5 1.5 0 0 0 5 4v16a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 20V8.5L13 2.5H6.5Zm6.5.94L18.06 8.5H14a1 1 0 0 1-1-1V3.44ZM8 12.75h8v1.5H8v-1.5Zm0 3.5h8v1.5H8v-1.5Zm0-7h4v1.5H8v-1.5Z" />
+    </svg>
+  );
+}
+function IconCard() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3.5 5.5A2 2 0 0 1 5.5 3.5h13a2 2 0 0 1 2 2V8h-19V5.5Zm0 5.25V18a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-7.25h-17ZM6 14h4.5v1.75H6V14Z" />
     </svg>
   );
 }
@@ -209,7 +231,6 @@ export default function CheckoutPage() {
   const [selectedShip, setSelectedShip] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
 
-  const [paymentInputMode, setPaymentInputMode] = useState<'txn' | 'last4'>('txn');
   const [txn, setTxn] = useState('');
   const [last4, setLast4] = useState('');
   const [qrOpen, setQrOpen] = useState(false);
@@ -290,6 +311,7 @@ export default function CheckoutPage() {
     // ─────────────────────────────────────────────────────────────
     let draftLoaded = false;
     try {
+      // Priority 1: সদ্য টাইপ করা ড্রাফট (রিফ্রেশ দেওয়ার আগের তথ্য সবার আগে থাকবে)
       const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
       const persistentDraft = getDraft();
       const activeDraft = sessionDraft || persistentDraft;
@@ -304,12 +326,12 @@ export default function CheckoutPage() {
         if (activeDraft.txn) setTxn(activeDraft.txn);
         if (activeDraft.l4) setLast4(activeDraft.l4);
         if (activeDraft.ship) setSelectedShip(activeDraft.ship);
-        if (activeDraft.l4 && !activeDraft.txn) setPaymentInputMode('last4');
       }
     } catch {
       draftLoaded = false;
     }
 
+    // Priority 2 & 3: যদি সদ্য কোনো ড্রাফট না থাকে, তখন লগইন ইউজার হিস্টোরি ও প্রোফাইল থেকে আনবে
     if (!draftLoaded) {
       const user = useAuthStore.getState().currentUser;
       if (user?.id) {
@@ -520,29 +542,23 @@ export default function CheckoutPage() {
   };
 
   const goToStep3 = () => {
-    const nextErrors: CheckoutErrors = {};
     const txnUpper = txn.trim().toUpperCase();
     const l4 = last4.trim();
-
-    if (paymentInputMode === 'txn') {
-      if (!txnUpper) {
-        nextErrors.eTxn = t('১০ সংখ্যার বিকাশ ট্রানজেকশন আইডি দিন');
-      } else if (!validateTxnId(txnUpper)) {
-        nextErrors.eTxn = t('দয়া করে সঠিক ১০ সংখ্যার বিকাশ ট্রানজেকশন আইডি দিন');
-      }
-    } else {
-      if (!l4) {
-        nextErrors.eL4 = t('Send Money করা নম্বরের শেষ ৪ ডিজিট দিন');
-      } else if (l4.length !== 4) {
-        nextErrors.eL4 = t('সঠিক শেষ ৪ ডিজিট দিন');
-      }
-    }
-
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors((e) => ({ ...e, ...nextErrors }));
+    if (!txnUpper && !l4) {
+      setErrors((e) => ({ ...e, eTxn: t('ট্রানজেকশন আইডি অবশ্যই ১০ ক্যারেক্টার হতে হবে'), eL4: t('Transaction ID অথবা শেষ ৪ ডিজিট দিন') }));
       return;
     }
-
+    if (txnUpper) {
+      if (!validateTxnId(txnUpper)) {
+        setErrors((e) => ({ ...e, eTxn: t('দয়া করে সঠিক ১০ সংখ্যার বিকাশ ট্রানজেকশন আইডি দিন') }));
+        return;
+      }
+      setTxn(txnUpper);
+    }
+    if (l4 && l4.length !== 4) {
+      setErrors((e) => ({ ...e, eL4: t('Transaction ID অথবা শেষ ৪ ডিজিট দিন') }));
+      return;
+    }
     setErrors((e) => ({ ...e, eTxn: undefined, eL4: undefined }));
     updateStep(3);
   };
@@ -717,15 +733,22 @@ export default function CheckoutPage() {
       <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white py-2 sm:py-6">
         <DesktopSideDecor />
         
-        {/* মেইন কন্টেইনার — ক্লাসিক রাউন্ডেড উইন্ডো */}
-        <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden rounded-[28px] bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 ring-1 ring-white/80 sm:min-h-0">
+        {/* মেইন কন্টেইনার */}
+        <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 sm:min-h-0 sm:rounded-[28px] sm:ring-1 sm:ring-white/80">
           
           {/* ========================================================================= */}
-          {/* টপ হেডার বার সম্পূর্ণ অপসারিত — এখন সরাসরি ফ্রেশ স্টেপার ও ব্যাক বাটন */}
+          {/* টপ হেডার বার: উপরে ফ্ল্যাট ও নিচে rounded-b-[22px] প্রিমিয়াম কার্ভ */}
           {/* ========================================================================= */}
-          <div className="relative px-6 pt-5 pb-2">
-            {/* ফ্লোটিং নেভিগেশন বাটন */}
-            <div className="absolute right-5 top-5 z-20">
+          <div className="rounded-b-[22px] rounded-t-none bg-gradient-to-br from-[#85C2FA] to-brand-light px-5 pb-3.5 pt-3.5 shadow-xs">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-brand-light shadow-xs">
+                  <IconLock />
+                </span>
+                <h2 className="font-body text-[15.5px] font-extrabold text-white">
+                  {step === 1 ? t('নিরাপদ চেকআউট') : step === 2 ? t('নিরাপদ পেমেন্ট') : t('নিরাপদ নিশ্চিতকরণ')}
+                </h2>
+              </div>
               {step === 1 ? (
                 <Link
                   href="/"
@@ -735,7 +758,7 @@ export default function CheckoutPage() {
                   onClick={() => {
                     try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border-base bg-white text-muted shadow-xs transition-brand hover:border-brand-light hover:text-ink"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45 no-underline"
                 >
                   <IconClose />
                 </Link>
@@ -744,51 +767,17 @@ export default function CheckoutPage() {
                   onClick={() => goBack(step - 1)}
                   aria-label={t('আগের ধাপে যান')}
                   title={t('আগের ধাপে যান')}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border-base bg-white text-muted shadow-xs transition-brand hover:border-brand-light hover:text-ink"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45"
                 >
                   <IconArrowLeft />
                 </button>
               )}
             </div>
-
-            {/* ৩-ধাপের স্টেপার — ফ্রেশ স্কাই-ব্লু কালার থিম */}
-            <div className="flex pr-10 pb-2">
-              {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
-                const isDone = step > s.n;
-                const isActive = step === s.n;
-                return (
-                  <div
-                    key={s.n}
-                    className={`relative flex-1 text-center font-body text-[11.5px] font-semibold after:absolute after:left-1/2 after:top-3 after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink font-bold' : 'text-muted'} ${isDone ? 'after:bg-brand-light' : 'after:bg-brand-light/20'}`}
-                  >
-                    <div
-                      className={`relative z-10 mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-body text-[11px] font-bold transition-all duration-300 ${isDone || isActive ? 'border-brand-light bg-brand-light text-white shadow-xs' : 'border-brand-light/40 bg-white text-brand-light'}`}
-                    >
-                      {isDone ? <IconCheck /> : s.n}
-                    </div>
-                    <div>{s.label}</div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* প্রোগ্রেস বার */}
-            <div className="pt-1">
-              <div className="mb-1 h-1.5 overflow-hidden rounded-full bg-brand-light/15">
-                <div
-                  className="h-full rounded-full bg-brand-light transition-[width] duration-300"
-                  style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
-                />
-              </div>
-              <div className="text-right font-body text-[11px] font-bold text-brand-light">
-                {step === 3 ? t('প্রায় সম্পন্ন!') : step === 2 ? t('আর মাত্র ১ ধাপ!') : t('আর মাত্র ২ ধাপ!')}
-              </div>
-            </div>
           </div>
 
           {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
           {step === 1 && cartItems.length === 1 && (
-            <div className="mx-6 mb-1 mt-2 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
+            <div className="mx-6 mb-1 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
                   <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
@@ -807,6 +796,40 @@ export default function CheckoutPage() {
               </div>
             </div>
           )}
+
+          {/* ৩-ধাপের স্টেপার — ফ্রেশ স্কাই-ব্লু কালার থিম */}
+          <div className="flex px-6 pb-2 pt-4">
+            {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
+              const isDone = step > s.n;
+              const isActive = step === s.n;
+              return (
+                <div
+                  key={s.n}
+                  className={`relative flex-1 text-center font-body text-[11.5px] font-semibold after:absolute after:left-1/2 after:top-3 after:z-[1] after:h-[2px] after:w-full after:content-[''] last:after:hidden ${isActive || isDone ? 'text-ink font-bold' : 'text-muted'} ${isDone ? 'after:bg-brand-light' : 'after:bg-brand-light/20'}`}
+                >
+                  <div
+                    className={`relative z-10 mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full border-[1.5px] font-body text-[11px] font-bold transition-all duration-300 ${isDone || isActive ? 'border-brand-light bg-brand-light text-white shadow-xs' : 'border-brand-light/40 bg-white text-brand-light'}`}
+                  >
+                    {isDone ? <IconCheck /> : s.n}
+                  </div>
+                  <div>{s.label}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* প্রোগ্রেস বার */}
+          <div className="px-6 pb-1 pt-1">
+            <div className="mb-1 h-1.5 overflow-hidden rounded-full bg-brand-light/15">
+              <div
+                className="h-full rounded-full bg-brand-light transition-[width] duration-300"
+                style={{ width: `${{ 1: 33, 2: 66, 3: 100 }[step]}%` }}
+              />
+            </div>
+            <div className="text-right font-body text-[11px] font-bold text-brand-light">
+              {step === 3 ? t('প্রায় সম্পন্ন!') : step === 2 ? t('আর মাত্র ১ ধাপ!') : t('আর মাত্র ২ ধাপ!')}
+            </div>
+          </div>
 
           {/* ========================================================================= */}
           {/* স্টেপ ১: গ্রাহকের তথ্য */}
@@ -941,168 +964,122 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট — রিয়েল ফটো ফ্রেমিং ও ওয়াটারমার্ক ক্রপ সাপোর্ট */}
+          {/* স্টেপ ২: পেমেন্ট — পরীক্ষিত ও ক্লিন ইউনিভার্সাল ডিজাইন */}
           {/* ========================================================================= */}
           {step === 2 && (
-            <div className="px-6 py-3.5">
-              
-              {/* ১. কাস্টমার ট্রাস্ট ও পাঠাও ডেলিভারিম্যান ফটো কার্ড (টপ কার্ড) */}
-              <div className="mb-3.5 flex items-center justify-between gap-2.5 rounded-[20px] border border-brand-light/30 bg-gradient-to-br from-white/95 via-[#F0F7FF] to-[#E0F2FE]/80 p-3.5 sm:p-4 shadow-xs backdrop-blur-md overflow-hidden">
-                <div className="flex-1 pr-1">
-                  <div className="mb-1 flex items-center gap-1.5 font-body text-[12.5px] sm:text-[13px] font-bold text-brand-primary">
-                    <span>📦</span>
-                    <span>{lang === 'en' ? 'To prevent fake bookings & delivery risks' : 'ফেক বুকিং ও ডেলিভারি ঝুঁকি এড়াতে'}</span>
-                  </div>
-                  <p className="font-body text-[11.5px] sm:text-[12px] leading-relaxed text-ink/85">
-                    {lang === 'en' ? (
-                      <>We only take a minimum <strong className="font-bold text-brand-primary">200 Taka advance</strong> for delivery charges.<br />💵 <strong className="font-bold text-ink">Pay the remaining balance</strong> to the delivery person upon receiving your parcel.</>
-                    ) : (
-                      <>আমরা শুধুমাত্র ডেলিভারি চার্জ বাবদ সর্বনিম্ন <strong className="font-bold text-brand-primary">২০০ টাকা অগ্রিম</strong> গ্রহণ করি।<br />💵 <strong className="font-bold text-ink">বাকি সম্পূর্ণ টাকা</strong> পার্সেল হাতে পেয়ে ডেলিভারিম্যানকে পরিশোধ করবেন।</>
-                    )}
-                  </p>
+            <div className="px-6 py-4">
+              <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
+                <div className="mb-3 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
+                  <span className="text-brand-light"><IconCard /></span>
+                  {t('এডভান্স পেমেন্ট')} <span className="font-body text-base font-extrabold text-brand-light">৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
                 
-                {/* ডেলিভারিম্যান ফটো ফ্রেম — নিচের বাম কোণার ওয়াটারমার্ক ১০০% বাদ দিয়ে পার্সেল ও ডেলিভারিম্যানের মূল অংশ ফোকাস */}
-                <div className="relative h-[90px] w-[95px] sm:h-[105px] sm:w-[115px] shrink-0 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-xs">
-                  <Image
-                    src="/delivery-courier.png"
-                    alt="Pathao Delivery Courier"
-                    fill
-                    sizes="120px"
-                    className="object-cover object-[75%_25%] scale-[1.25] select-none"
-                    priority
-                  />
-                </div>
-              </div>
+                {/* ট্রাস্ট-বিল্ডিং ও স্পষ্ট নির্দেশিকা */}
+                <p className="mb-3.5 font-body text-[12.5px] leading-[1.65] text-ink/80">
+                  {lang === 'en' ? (
+                    <>To prevent fake bookings &amp; delivery risks, please <strong className="text-brand-primary">Send Money 200 Taka</strong> advance to our bKash number below. Pay the remaining balance upon delivery.</>
+                  ) : (
+                    <>ফেক বুকিং ও ডেলিভারি ঝুঁকি এড়াতে নিচের bKash নম্বরে <strong className="text-brand-primary">২০০ টাকা Send Money</strong> করুন। বাকি টাকা ডেলিভারির সময় পরিশোধ করবেন।</>
+                  )}
+                </p>
 
-              {/* ২. বিকাশ পেমেন্ট কার্ড + আইফোন স্ক্যান ফটো */}
-              <div className="mb-4 rounded-[20px] border border-border-base bg-white p-4 sm:p-4.5 shadow-xs">
-                <div className="flex items-center justify-between gap-3 pb-3">
-                  <div className="flex items-center gap-3">
-                    {/* আইফোন কিউআর স্ক্যান রিয়েল ফটো ফ্রেম */}
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-rose-100 bg-rose-50/70 shadow-xs">
-                      <Image
-                        src="/bkash-scan-hand.png"
-                        alt="bKash Scan Hand"
-                        fill
-                        sizes="48px"
-                        className="object-cover object-center select-none"
-                        priority
-                      />
+                {/* বিকাশ নম্বর বক্স */}
+                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border border-brand-light/30 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD]/80 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/80 p-1.5 shadow-xs">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-logo-icon_beuxfl.png" alt="bKash" className="h-9 w-9 shrink-0 object-contain" />
+                      </div>
+                      <div>
+                        <div className="mb-0.5 font-body text-[10px] font-bold uppercase tracking-wide text-muted">bKash Send Money</div>
+                        <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-brand-primary">{bkashNum}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="mb-0.5 font-body text-[10px] font-bold uppercase tracking-wide text-muted">bKash Send Money</div>
-                      <div className="font-body text-[18px] font-extrabold leading-none tracking-wide text-brand-primary">{bkashNum}</div>
-                    </div>
+                    <button
+                      className="flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-4 py-2 font-body text-xs font-bold text-brand-primary transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95"
+                      onClick={copyBkash}
+                      style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
+                    >
+                      {copyLabel === 'Copy' ? (
+                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                      ) : (
+                        <IconCheck />
+                      )}
+                      {copyLabel}
+                    </button>
                   </div>
-                  <button
-                    className="flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white px-4 py-2 font-body text-xs font-bold text-brand-primary shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
-                    onClick={copyBkash}
-                    style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
-                  >
-                    {copyLabel === 'Copy' ? (
-                      <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
-                    ) : (
-                      <IconCheck />
-                    )}
-                    {copyLabel}
+                  
+                  {/* কিউআর কোড অ্যাকর্ডিয়ন বাটন */}
+                  <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/40 bg-white/50 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-primary transition-colors duration-200 hover:bg-white active:scale-98" onClick={() => setQrOpen((v) => !v)}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
+                    <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
+                    <IconChevronDown open={qrOpen} />
                   </button>
-                </div>
 
-                {/* কিউআর কোড অ্যাকর্ডিয়ন বাটন */}
-                <button
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/50 bg-brand-bg/20 py-2.5 font-body text-[12.5px] font-bold text-brand-primary transition-colors hover:bg-brand-bg/35 active:scale-98"
-                  onClick={() => setQrOpen((v) => !v)}
-                >
-                  <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
-                  <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
-                  <IconChevronDown open={qrOpen} />
-                </button>
-
-                {/* কিউআর কোড বিস্তারিত ড্রপডাউন */}
-                <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-3 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="flex items-start gap-3.5 rounded-[14px] border border-border-base bg-[#F8FAFC] p-3.5">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-payment-qr_zmr6dz.jpg" alt="bKash QR" className="h-[130px] w-[130px] shrink-0 rounded-xl border border-border-base object-cover shadow-xs" />
-                    <div className="pt-0.5">
-                      <div className="mb-1.5 font-body text-[12.5px] font-bold text-[#1F6B3A]">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
-                      <div className="font-body text-[11.5px] leading-[1.85] text-ink/80">
-                        {lang === 'en' ? (
-                          <>1. Open the bKash app<br />2. Tap the QR Scan button<br />3. Scan this QR code<br />4. Enter amount 200 BDT<br />5. Complete payment</>
-                        ) : (
-                          <>১. বিকাশ অ্যাপ খুলুন<br />২. QR স্ক্যান বাটনে ট্যাপ করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ২০০ টাকা দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
-                        )}
+                  <div className={`overflow-hidden transition-[max-height,opacity] duration-[400ms] ${qrOpen ? 'mt-2 max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="flex items-start gap-3.5 rounded-[14px] border border-white/80 bg-white/90 p-3.5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-payment-qr_zmr6dz.jpg" alt="bKash QR" className="h-[130px] w-[130px] shrink-0 rounded-xl border border-border-base object-cover shadow-xs" />
+                      <div className="pt-0.5">
+                        <div className="mb-1.5 font-body text-[12.5px] font-bold text-[#1F6B3A]">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
+                        <div className="font-body text-[11.5px] leading-[1.85] text-ink/80">
+                          {lang === 'en' ? (
+                            <>1. Open the bKash app<br />2. Tap the QR Scan button<br />3. Scan this QR code<br />4. Enter amount 200 BDT<br />5. Complete payment</>
+                          ) : (
+                            <>১. বিকাশ অ্যাপ খুলুন<br />২. QR স্ক্যান বাটনে ট্যাপ করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ২০০ টাকা দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                <div className="mt-3 flex items-start gap-2.5 rounded-r-xl border-l-[3px] border-brand-light bg-brand-bg/30 px-3.5 py-2.5 font-body text-xs leading-[1.6] text-ink">
+                  <span className="mt-0.5 text-brand-light"><IconInfo /></span>
+                  <span>{t('ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।')}</span>
+                </div>
               </div>
 
-              {/* ৩. ইন্টারেক্টিভ ট্যাব সুইচার */}
-              <div className="mb-2 text-center font-body text-[12px] font-bold text-ink">
-                {lang === 'en' ? 'Provide any one below (Mandatory)' : 'নিচের যেকোনো একটি তথ্য দিন (বাধ্যতামূলক)'}
+              <div className="mb-3 text-center font-body text-[12.5px] font-bold text-ink">
+                {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
               </div>
 
-              <div className="mb-3 flex rounded-full border border-border-base bg-surface-muted/80 p-1">
-                <button
-                  type="button"
-                  onClick={() => { setPaymentInputMode('txn'); setErrors((e) => ({ ...e, eL4: undefined })); }}
-                  className={`flex-1 rounded-full py-2 font-body text-[12px] font-bold transition-all ${
-                    paymentInputMode === 'txn'
-                      ? 'bg-brand-light text-white shadow-xs'
-                      : 'text-muted hover:text-ink'
-                  }`}
-                >
-                  {lang === 'en' ? 'bKash Transaction ID' : 'ট্রানজেকশন আইডি'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPaymentInputMode('last4'); setErrors((e) => ({ ...e, eTxn: undefined })); }}
-                  className={`flex-1 rounded-full py-2 font-body text-[12px] font-bold transition-all ${
-                    paymentInputMode === 'last4'
-                      ? 'bg-brand-light text-white shadow-xs'
-                      : 'text-muted hover:text-ink'
-                  }`}
-                >
-                  {lang === 'en' ? 'Last 4 Digits' : 'বিকাশের শেষ ৪ ডিজিট'}
-                </button>
+              {/* ট্রানজেকশন আইডি ইনপুট */}
+              <div className="mb-3.5">
+                <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>{t('(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)')}</span></label>
+                <div className="relative">
+                  <span className={fieldIconClass}><IconDoc /></span>
+                  <input
+                    className={fieldInputClass(!!errors.eTxn)}
+                    value={txn}
+                    maxLength={10}
+                    onChange={(e) => { setTxn(e.target.value.toUpperCase()); if (errors.eTxn) setErrors((err) => ({ ...err, eTxn: undefined })); }}
+                    placeholder="bKash Transaction ID"
+                  />
+                </div>
+                {errors.eTxn && <div className={fieldErrClass}><IconWarning />{errors.eTxn}</div>}
               </div>
 
-              {/* সিঙ্গল ডাইনামিক ইনপুট */}
+              <div className="my-3.5 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">{t('অথবা')}</div>
+
+              {/* শেষ ৪ ডিজিট ইনপুট */}
               <div className="mb-4">
-                {paymentInputMode === 'txn' ? (
-                  <div>
-                    <div className="relative">
-                      <span className={fieldIconClass}><IconDoc /></span>
-                      <input
-                        className={fieldInputClass(!!errors.eTxn)}
-                        value={txn}
-                        maxLength={10}
-                        onChange={(e) => { setTxn(e.target.value.toUpperCase()); if (errors.eTxn) setErrors((err) => ({ ...err, eTxn: undefined })); }}
-                        placeholder="10 সংখ্যার বিকাশ TrxID (যেমন: 8N5O2A3BDE)"
-                      />
-                    </div>
-                    {errors.eTxn && <div className={fieldErrClass}><IconWarning />{errors.eTxn}</div>}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="relative">
-                      <span className={fieldIconClass}><IconPhone /></span>
-                      <input
-                        className={fieldInputClass(!!errors.eL4)}
-                        value={last4}
-                        maxLength={4}
-                        onChange={(e) => { setLast4(e.target.value.replace(/\D/g, '')); if (errors.eL4) setErrors((err) => ({ ...err, eL4: undefined })); }}
-                        placeholder={lang === 'en' ? 'Last 4 digits of sender number (e.g. 5504)' : 'Send Money করা নম্বরের শেষ ৪ ডিজিট (যেমন: 5504)'}
-                      />
-                    </div>
-                    {errors.eL4 && <div className={fieldErrClass}><IconWarning />{errors.eL4}</div>}
-                  </div>
-                )}
+                <label className={fieldLabelClass}>{t('Send Money করা bKash নম্বরের শেষ ৪ ডিজিট')}</label>
+                <div className="relative">
+                  <span className={fieldIconClass}><IconPhone /></span>
+                  <input
+                    className={fieldInputClass(!!errors.eL4)}
+                    value={last4}
+                    maxLength={4}
+                    onChange={(e) => { setLast4(e.target.value.replace(/\D/g, '')); if (errors.eL4) setErrors((err) => ({ ...err, eL4: undefined })); }}
+                    placeholder={t('যেমন: 5504')}
+                  />
+                </div>
+                {errors.eL4 && <div className={fieldErrClass}><IconWarning />{errors.eL4}</div>}
               </div>
 
-              {/* অ্যাকশন বাটন */}
-              <div className="pt-1">
+              <div className="pt-2">
                 <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={goToStep3}>
                   <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
                   <IconArrowRight />
