@@ -1,8 +1,10 @@
+// [REPLACE] ফাইলের পাথ: lib/productData.ts
+
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
 import { useCartStore } from './store/cartStore';
-import { OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
+import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_ORDER_LIMIT_EVENT } from './uiEvents';
 
 interface MinimalRouter {
   push: (href: string) => void;
@@ -235,13 +237,51 @@ export const QUICK_CART_EVENT = 'vc:quickCart';
 export const QUICK_ORDER_MODAL_EVENT = 'vc:quickOrderModal';
 export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
 
+// ২৪ ঘণ্টায় এই ব্রাউজার থেকে ৩টি সফল অর্ডার হয়ে গেছে কি না যাচাই
+export function hasExceededLocalOrderLimit(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem('vc_order_timestamps');
+    if (!raw) return false;
+    const timestamps: number[] = JSON.parse(raw);
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const recent = timestamps.filter((ts) => ts > oneDayAgo);
+    return recent.length >= 3;
+  } catch {
+    return false;
+  }
+}
+
+// সফল অর্ডার হলে টাইমস্ট্যাম্প রেকর্ড করা
+export function recordLocalOrderTimestamp(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem('vc_order_timestamps');
+    const timestamps: number[] = raw ? JSON.parse(raw) : [];
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const recent = timestamps.filter((ts) => ts > oneDayAgo);
+    recent.push(Date.now());
+    localStorage.setItem('vc_order_timestamps', JSON.stringify(recent));
+  } catch {
+    // ignore
+  }
+}
+
 export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): void {
   if (!prod || prod.stock <= 0) return;
+
+  // আর্লি রেট লিমিট গার্ড — ৩টি অর্ডার পূর্ণ হলে চেকআউটে যাওয়ার আগেই প্রিমিয়াম পপআপ ট্রিগার হবে
+  if (hasExceededLocalOrderLimit()) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
+    }
+    return;
+  }
 
   const currentCart = useCartStore.getState().cart;
   const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
 
-  // কেস ১: কার্ট খালি থাকলে সরাসরি সিঙ্গেল প্রোডাক্ট চেকআউট
+  // কেস ১: কার্ট খালি থাকলে সরাসরি একক প্রোডাক্ট চেকআউট
   if (!currentCart || currentCart.length === 0) {
     const item: CartItem = {
       id: prod.id,
