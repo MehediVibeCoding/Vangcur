@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   productHref,
@@ -18,16 +18,16 @@ function WishImg({ emoji }: { emoji?: string }) {
   if (isUrl) {
     return (
       <img
-        src={optimizeCloudinaryUrl(emoji, 120)}
+        src={optimizeCloudinaryUrl(emoji, 140)}
         alt=""
-        className="h-12 w-12 shrink-0 rounded-xl border border-white/80 bg-white object-cover shadow-xs"
+        className="h-14 w-14 shrink-0 rounded-2xl border border-white/90 bg-white object-cover shadow-xs"
         loading="lazy"
         decoding="async"
       />
     );
   }
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-2xl shadow-xs">
+    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/90 bg-white/90 text-2xl shadow-xs">
       {emoji || '📦'}
     </span>
   );
@@ -47,6 +47,16 @@ function TrashIcon() {
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
       <line x1="10" y1="11" x2="10" y2="17" />
       <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  );
+}
+
+function CartPlusIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
     </svg>
   );
 }
@@ -114,131 +124,130 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
     showToast(t('Wishlist থেকে সরানো হয়েছে'));
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand ${
-          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-        }`}
+        className="fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
         onClick={onClose}
       />
 
-      {/* Wishlist Drawer: মোবাইলে সম্পূর্ণ ফুল-স্ক্রিন, ডেস্কে প্রিমিয়াম রাউন্ডেড মডাল */}
-      <div
-        className={`fixed inset-0 z-[965] flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-h-[88vh] sm:max-w-[440px] sm:rounded-[28px] ${
-          isOpen ? 'pointer-events-auto scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'
-        }`}
-      >
-        {/* Header */}
-        <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
-          <HeaderDecor />
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h3 className="font-body text-[17px] font-extrabold text-ink">
-                ❤️ {lang === 'en' ? 'My Wishlist' : 'আপনার Wishlist'}
-              </h3>
-              <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
-                {lang === 'en'
-                  ? `${items.length} favorite item(s)`
-                  : `${items.length}টি পছন্দের পণ্য`}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        {/* Content List */}
-        <div className="flex-1 overflow-y-auto px-6 py-3.5">
-          {items.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center py-10 text-center">
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
-                <HeartEmptySvgIcon className="h-8 w-8 text-brand-light" />
+      {/* Centered Aesthetic Window (No Fullscreen) */}
+      <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
+        <div className="relative flex max-h-[86vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
+          
+          {/* Header */}
+          <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
+            <HeaderDecor />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <h3 className="font-body text-[17px] font-extrabold text-ink">
+                  ❤️ {lang === 'en' ? 'My Wishlist' : 'আপনার Wishlist'}
+                </h3>
+                <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
+                  {lang === 'en'
+                    ? `${items.length} favorite item(s)`
+                    : `${items.length}টি পছন্দের পণ্য`}
+                </p>
               </div>
-              <p className="mb-1 font-body text-[15px] font-bold text-ink">
-                {t('আপনার Wishlist খালি')}
-              </p>
-              <p className="mb-5 max-w-xs font-body text-[12.5px] text-muted">
-                {t('পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন')}
-              </p>
               <button
-                onClick={goToProducts}
-                className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
+                aria-label="Close"
               >
-                {t('প্রোডাক্ট দেখুন')} →
+                ✕
               </button>
             </div>
-          ) : (
-            <div className="space-y-3.5">
-              {items.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className={`flex items-start gap-3.5 pb-3.5 ${
-                    idx !== items.length - 1 ? 'border-b border-ink/10' : ''
-                  }`}
+          </div>
+
+          {/* Product Items List */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {items.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center py-12 text-center">
+                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
+                  <HeartEmptySvgIcon className="h-8 w-8 text-brand-light" />
+                </div>
+                <p className="mb-1 font-body text-[15px] font-bold text-ink">
+                  {t('আপনার Wishlist খালি')}
+                </p>
+                <p className="mb-5 max-w-xs font-body text-[12.5px] text-muted">
+                  {t('পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন')}
+                </p>
+                <button
+                  onClick={goToProducts}
+                  className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
                 >
-                  {/* Thumbnail */}
+                  {t('প্রোডাক্ট দেখুন')} →
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {items.map((item, idx) => (
                   <div
-                    className="cursor-pointer"
-                    onClick={() => openProduct(item)}
-                    title={t('প্রোডাক্ট দেখুন')}
+                    key={item.id}
+                    className={`pb-4 ${
+                      idx !== items.length - 1 ? 'border-b border-ink/10' : ''
+                    }`}
                   >
-                    <WishImg emoji={item.emoji} />
-                  </div>
+                    {/* Top Row: Thumbnail + Multi-Line Title + Price + Delete Button */}
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="cursor-pointer shrink-0"
+                        onClick={() => openProduct(item)}
+                        title={t('প্রোডাক্ট দেখুন')}
+                      >
+                        <WishImg emoji={item.emoji} />
+                      </div>
 
-                  {/* Title, Price & Quick Action Pill Buttons */}
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className="cursor-pointer truncate font-body text-[13.5px] font-bold text-ink transition-colors hover:text-brand-light"
-                      onClick={() => openProduct(item)}
-                      title={t('প্রোডাক্ট দেখুন')}
-                    >
-                      {item.name}
-                    </div>
-                    <div className="mt-0.5 font-body text-[13px] font-extrabold text-brand-light">
-                      ৳{Number(item.price).toLocaleString('en-US')}
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className="line-clamp-2 cursor-pointer font-body text-[13.5px] font-bold leading-snug text-ink transition-colors hover:text-brand-light"
+                          onClick={() => openProduct(item)}
+                          title={t('প্রোডাক্ট দেখুন')}
+                        >
+                          {item.name}
+                        </div>
+                        <div className="mt-1 font-body text-[13px] font-extrabold text-brand-light">
+                          ৳{Number(item.price).toLocaleString('en-US')}
+                        </div>
+                      </div>
+
+                      {/* Subtle Glass Delete Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        title={t('Wishlist থেকে সরান')}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/70 text-muted/40 shadow-xs transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
+                      >
+                        <TrashIcon />
+                      </button>
                     </div>
 
-                    {/* Clean Action Buttons without Emoji */}
-                    <div className="mt-2 flex items-center gap-2">
+                    {/* Bottom Row: Spacious & Ergonomic Action Buttons */}
+                    <div className="mt-3 flex items-center gap-2.5">
                       <button
                         type="button"
                         onClick={() => addToCart(item.id)}
-                        className="rounded-full border border-brand-light bg-white/60 px-3 py-1 font-body text-[11px] font-bold text-brand-light transition-brand hover:bg-brand-light hover:text-white active:scale-95"
+                        className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-all hover:bg-brand-light hover:text-white hover:border-brand-light active:scale-95"
                       >
-                        + {lang === 'en' ? 'Cart' : 'কার্ট'}
+                        <CartPlusIcon />
+                        <span>{lang === 'en' ? 'Add to Cart' : 'কার্টে যোগ'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => orderNow(item.id)}
-                        className="rounded-full bg-gradient-to-r from-info to-brand-light px-3.5 py-1 font-body text-[11px] font-bold text-white shadow-xs transition-brand hover:brightness-[1.03] active:scale-95"
+                        className="flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03] active:scale-95"
                       >
-                        {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
+                        <span>{lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}</span>
                       </button>
                     </div>
                   </div>
-
-                  {/* Subtle Muted Trash Delete Button on Right */}
-                  <div className="flex shrink-0 items-center justify-center pl-1 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.id)}
-                      title={t('Wishlist থেকে সরান')}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
