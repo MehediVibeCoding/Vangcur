@@ -311,7 +311,6 @@ export default function CheckoutPage() {
     // ─────────────────────────────────────────────────────────────
     let draftLoaded = false;
     try {
-      // Priority 1: সদ্য টাইপ করা ড্রাফট (রিফ্রেশ দেওয়ার আগের তথ্য সবার আগে থাকবে)
       const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
       const persistentDraft = getDraft();
       const activeDraft = sessionDraft || persistentDraft;
@@ -331,7 +330,6 @@ export default function CheckoutPage() {
       draftLoaded = false;
     }
 
-    // Priority 2 & 3: যদি সদ্য কোনো ড্রাফট না থাকে, তখন লগইন ইউজার হিস্টোরি ও প্রোফাইল থেকে আনবে
     if (!draftLoaded) {
       const user = useAuthStore.getState().currentUser;
       if (user?.id) {
@@ -730,10 +728,10 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white py-2 sm:py-6">
+      <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white sm:py-6">
         <DesktopSideDecor />
         
-        {/* মেইন কন্টেইনার */}
+        {/* মেইন কন্টেইনার — উপরে কোনো আলগা লেআউট থাকবে না */}
         <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 sm:min-h-0 sm:rounded-[28px] sm:ring-1 sm:ring-white/80">
           
           {/* ========================================================================= */}
@@ -775,21 +773,16 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
+          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে — কোনো ১টি প্রোডাক্ট ব্যাজ ছাড়াই পুরো নাম */}
           {step === 1 && cartItems.length === 1 && (
             <div className="mx-6 mb-1 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
-                  <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
-                </div>
-                <span className="rounded-full bg-brand-bg/40 px-2 py-0.5 font-body text-[10.5px] font-bold text-brand-primary">
-                  1 {lang === 'en' ? 'Item' : 'টি প্রোডাক্ট'}
-                </span>
+              <div className="mb-2 flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
+                <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
               </div>
               <div className="flex flex-col gap-1 text-ink">
                 {cartItems.map((i) => (
                   <div key={i.id} className="flex items-center justify-between gap-3 font-body text-[13.5px] font-bold">
-                    <span className="truncate">{i.name} × {i.qty}</span>
+                    <span className="line-clamp-2 leading-snug">{i.name} × {i.qty}</span>
                     <span className="shrink-0 font-extrabold text-brand-light">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                   </div>
                 ))}
@@ -923,7 +916,7 @@ export default function CheckoutPage() {
                 {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
 
-              {/* শিপিং অপশন */}
+              {/* শিপিং অপশন — কাস্টম স্কাই-ব্লু রেডিও বাটন (কোনো কালো রিং নেই) */}
               {shipOptions.length > 0 && (
                 <div className="mb-4">
                   <label className={fieldLabelClass}>{t('শিপিং')}</label>
@@ -934,13 +927,10 @@ export default function CheckoutPage() {
                         className={`flex cursor-pointer items-center gap-3 rounded-[14px] border-[1.5px] px-3.5 py-3 transition-brand duration-brand ${selectedShip === opt.key ? 'border-brand-light bg-brand-bg/25 ring-1 ring-brand-light/30' : 'border-border-base bg-white/70 hover:bg-white'}`}
                         onClick={() => selectShip(opt.key)}
                       >
-                        <input
-                          type="radio"
-                          name="ship"
-                          checked={selectedShip === opt.key}
-                          onChange={() => selectShip(opt.key)}
-                          className="h-4 w-4 accent-brand-light cursor-pointer"
-                        />
+                        {/* কাস্টম রেডিও ইন্ডিকেটর */}
+                        <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-all ${selectedShip === opt.key ? 'border-brand-light bg-brand-light' : 'border-border-base bg-white'}`}>
+                          {selectedShip === opt.key && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                        </div>
                         <div>
                           <div className="font-body text-[13px] font-bold text-ink">{lang === 'en' ? opt.nameEn : opt.name}</div>
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
@@ -964,23 +954,19 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট — পরীক্ষিত ও ক্লিন ইউনিভার্সাল ডিজাইন */}
+          {/* স্টেপ ২: পেমেন্ট — ফ্রেশ স্কাই-ব্লু কালার ও স্পষ্ট ১-৫ ডিজিট সহ */}
           {/* ========================================================================= */}
           {step === 2 && (
             <div className="px-6 py-4">
               <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
-                <div className="mb-3 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
+                <div className="mb-2 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
                   <span className="text-brand-light"><IconCard /></span>
                   {t('এডভান্স পেমেন্ট')} <span className="font-body text-base font-extrabold text-brand-light">৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
                 
-                {/* ট্রাস্ট-বিল্ডিং ও স্পষ্ট নির্দেশিকা */}
-                <p className="mb-3.5 font-body text-[12.5px] leading-[1.65] text-ink/80">
-                  {lang === 'en' ? (
-                    <>To prevent fake bookings &amp; delivery risks, please <strong className="text-brand-primary">Send Money 200 Taka</strong> advance to our bKash number below. Pay the remaining balance upon delivery.</>
-                  ) : (
-                    <>ফেক বুকিং ও ডেলিভারি ঝুঁকি এড়াতে নিচের bKash নম্বরে <strong className="text-brand-primary">২০০ টাকা Send Money</strong> করুন। বাকি টাকা ডেলিভারির সময় পরিশোধ করবেন।</>
-                  )}
+                {/* সাধারণ ও ক্লিয়ার টেক্সট */}
+                <p className="mb-3.5 font-body text-[12.5px] leading-[1.65] text-muted">
+                  {t('অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।')}
                 </p>
 
                 {/* বিকাশ নম্বর বক্স */}
@@ -993,11 +979,11 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <div className="mb-0.5 font-body text-[10px] font-bold uppercase tracking-wide text-muted">bKash Send Money</div>
-                        <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-brand-primary">{bkashNum}</div>
+                        <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-brand-light">{bkashNum}</div>
                       </div>
                     </div>
                     <button
-                      className="flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-4 py-2 font-body text-xs font-bold text-brand-primary transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95"
+                      className="flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-4 py-2 font-body text-xs font-bold text-brand-light transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95"
                       onClick={copyBkash}
                       style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
                     >
@@ -1010,8 +996,8 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                   
-                  {/* কিউআর কোড অ্যাকর্ডিয়ন বাটন */}
-                  <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/40 bg-white/50 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-primary transition-colors duration-200 hover:bg-white active:scale-98" onClick={() => setQrOpen((v) => !v)}>
+                  {/* কিউআর কোড অ্যাকর্ডিয়ন বাটন — স্কাই-ব্লু কালার */}
+                  <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/50 bg-brand-bg/20 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:bg-brand-bg/35 active:scale-98" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
                     <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
                     <IconChevronDown open={qrOpen} />
@@ -1022,12 +1008,12 @@ export default function CheckoutPage() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-payment-qr_zmr6dz.jpg" alt="bKash QR" className="h-[130px] w-[130px] shrink-0 rounded-xl border border-border-base object-cover shadow-xs" />
                       <div className="pt-0.5">
-                        <div className="mb-1.5 font-body text-[12.5px] font-bold text-[#1F6B3A]">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
+                        <div className="mb-1.5 font-body text-[12.5px] font-bold text-brand-light">{t('বিকাশ অ্যাপ দিয়ে স্ক্যান করুন')}</div>
                         <div className="font-body text-[11.5px] leading-[1.85] text-ink/80">
                           {lang === 'en' ? (
                             <>1. Open the bKash app<br />2. Tap the QR Scan button<br />3. Scan this QR code<br />4. Enter amount 200 BDT<br />5. Complete payment</>
                           ) : (
-                            <>১. বিকাশ অ্যাপ খুলুন<br />২. QR স্ক্যান বাটনে ট্যাপ করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ২০০ টাকা দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
+                            <>1. বিকাশ অ্যাপ খুলুন<br />2. QR স্ক্যান বাটনে ট্যাপ করুন<br />3. এই QR টি স্ক্যান করুন<br />4. পরিমাণ ২০০ টাকা দিন<br />5. পেমেন্ট সম্পন্ন করুন</>
                           )}
                         </div>
                       </div>
@@ -1098,7 +1084,7 @@ export default function CheckoutPage() {
                 <div>
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/85">
-                      <span className="truncate">{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
+                      <span className="line-clamp-1 leading-snug">{i.name} × {i.qty}</span>
                       <span className="font-bold">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                     </div>
                   ))}
@@ -1107,11 +1093,18 @@ export default function CheckoutPage() {
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{t('ডেলিভারি চার্জ (Shipping)')}</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
                 <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>{t('সর্বমোট বিল (Total)')}</span><span>৳{total.toLocaleString('en-US')}</span></div>
+                
+                {/* পরিশোধিত রো — কোনো টিক চিহ্ন ছাড়া এবং সাইজ ও ডিজিট - ৳200 */}
                 <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-bold text-brand-light">
-                  <span className="flex items-center gap-1.5"><IconCheck /> {lang === 'en' ? 'Paid (bKash Advance)' : 'পরিশোধিত (বিকাশ অগ্রিম)'}</span>
-                  <span>- ৳{lang === 'en' ? '200' : '২০০'}</span>
+                  <span>{lang === 'en' ? 'Paid (bKash Advance)' : 'পরিশোধিত (বিকাশ অগ্রিম)'}</span>
+                  <span className="text-[13px] font-bold text-brand-light">- ৳200</span>
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[13.5px] font-extrabold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-brand-primary">৳{balance.toLocaleString('en-US')}</span></div>
+                
+                {/* বাকি বিল — স্কাই-ব্লু কালার */}
+                <div className="flex justify-between py-1.5 font-body text-[13.5px] font-extrabold text-ink">
+                  <span>{t('বাকি বিল (Cash on Delivery)')}</span>
+                  <span className="text-brand-light">৳{balance.toLocaleString('en-US')}</span>
+                </div>
 
                 <div className="my-3.5 h-px bg-border-base" />
 
@@ -1137,7 +1130,7 @@ export default function CheckoutPage() {
                       I have read and agree to Vangcur&apos;s{' '}
                       <span
                         onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
-                        className="cursor-pointer font-bold text-brand-primary underline"
+                        className="cursor-pointer font-bold text-brand-light underline hover:text-brand-light-hover"
                       >
                         Terms &amp; Conditions
                       </span>.
@@ -1147,7 +1140,7 @@ export default function CheckoutPage() {
                       আমি ভাঙচুরের সকল{' '}
                       <span
                         onClick={(e) => { e.stopPropagation(); setPolicyModalOpen(true); }}
-                        className="cursor-pointer font-bold text-brand-primary underline"
+                        className="cursor-pointer font-bold text-brand-light underline hover:text-brand-light-hover"
                       >
                         নীতিমালা ও শর্তাবলী
                       </span>{' '}
