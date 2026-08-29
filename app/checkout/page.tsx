@@ -766,6 +766,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
+          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
           {step === 1 && cartItems.length === 1 && (
             <div className="mx-6 mb-1 mt-4 rounded-[16px] border border-white/70 bg-gradient-to-br from-white/88 via-brand-bg/65 to-white/60 px-4 py-3.5 shadow-sh2 backdrop-blur-[8px]">
               <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wide text-brand-primary/70">
@@ -775,7 +776,7 @@ export default function CheckoutPage() {
                 {cartItems.map((i) => (
                   <div key={i.id} className="flex justify-between gap-3 font-body text-[13px] font-semibold">
                     <span>{i.name} × {i.qty}</span>
-                    <span className="flex-shrink-0 text-brand-primary">৳{(i.price * i.qty).toLocaleString()}</span>
+                    <span className="flex-shrink-0 text-brand-primary">৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                   </div>
                 ))}
               </div>
@@ -1018,19 +1019,19 @@ export default function CheckoutPage() {
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex items-center justify-between gap-1.5 py-1.5 font-body text-[12.5px] text-ink/80">
                       <span>{i.name.length > 28 ? `${i.name.slice(0, 28)}...` : i.name} × {i.qty}</span>
-                      <span>৳{(i.price * i.qty).toLocaleString()}</span>
+                      <span>৳{(i.price * i.qty).toLocaleString('en-US')}</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}</span><span>৳{sub.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}</span><span>৳{sub.toLocaleString('en-US')}</span></div>
                 <div className="flex justify-between py-1.5 font-body text-[12.5px] text-ink/80"><span>{t('ডেলিভারি চার্জ (Shipping)')}</span><span>৳{sc}</span></div>
                 <div className="my-3 h-px border-t-2 border-dashed border-border-base" />
-                <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>{t('সর্বমোট বিল (Total)')}</span><span>৳{total.toLocaleString()}</span></div>
+                <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink"><span>{t('সর্বমোট বিল (Total)')}</span><span>৳{total.toLocaleString('en-US')}</span></div>
                 <div className="flex items-center justify-between py-1.5 font-body text-[13px] font-semibold text-ink">
                   <span className="flex items-center gap-1.5 text-info"><IconCheck /> {lang === 'en' ? 'Paid (bKash Advance)' : 'পরিশোধিত (বিকাশ অগ্রিম)'}</span>
                   <span>- ৳{lang === 'en' ? '200' : '২০০'}</span>
                 </div>
-                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-info">৳{balance.toLocaleString()}</span></div>
+                <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-ink"><span>{t('বাকি বিল (Cash on Delivery)')}</span><span className="text-info">৳{balance.toLocaleString('en-US')}</span></div>
 
                 <div className="my-4 h-px bg-border-base" />
 
