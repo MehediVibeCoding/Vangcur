@@ -8,6 +8,8 @@ const MAX_QUESTION_LEN = 300;
 const MIN_ANSWER_LEN = 5;
 const MAX_ANSWER_LEN = 500;
 
+const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
+
 export async function checkIsUserAdmin(
   supabase: SupabaseClient,
   userId?: string | null,
@@ -16,32 +18,43 @@ export async function checkIsUserAdmin(
   let userEmail: string | null = null;
 
   try {
-    const { data } = await supabase.auth.getSession();
-    if (!targetId) targetId = data?.session?.user?.id || null;
-    userEmail = data?.session?.user?.email || null;
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!targetId) targetId = sessionData?.session?.user?.id || null;
+    userEmail = sessionData?.session?.user?.email || null;
   } catch {
     // fallback
   }
 
-  // মডারেটরের নির্দিষ্ট জিমেইল থাকলে সরাসরি এক্সেস দেওয়া
-  if (userEmail && userEmail.toLowerCase() === 'mehedivibecoding@gmail.com') {
+  if (!userEmail && typeof window !== 'undefined') {
+    try {
+      const localUser = JSON.parse(localStorage.getItem('vc_user') || '{}');
+      if (localUser?.email) userEmail = localUser.email;
+      if (!targetId && localUser?.id) targetId = localUser.id;
+    } catch {
+      // ignore
+    }
+  }
+
+  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই
+  if (userEmail && userEmail.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) {
     return true;
   }
 
   if (!targetId) return false;
 
   try {
+    // select('*') ব্যবহার করা হয়েছে যাতে কোনো কলামের নাম নিয়ে Postgres এরর না দেয়
     const { data, error } = await supabase
       .from('profiles')
-      .select('is_admin, role, email')
+      .select('*')
       .eq('id', targetId)
       .maybeSingle();
 
     if (error || !data) return false;
-    
-    if (data.email && data.email.toLowerCase() === 'mehedivibecoding@gmail.com') return true;
+
+    if (data.is_admin === true) return true;
     if (data.role && ['admin', 'super_admin', 'moderator'].includes(data.role)) return true;
-    return !!data.is_admin;
+    return false;
   } catch {
     return false;
   }
@@ -156,7 +169,6 @@ export async function submitProductAnswer(
     const { data: sessionData } = await supabase.auth.getSession();
     const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
 
-    // এডমিন বা মডারেটর যাচাই
     let userIsAdminOrMod = payload.isAdmin;
     if (liveUserId) {
       userIsAdminOrMod = await checkIsUserAdmin(supabase, liveUserId);
