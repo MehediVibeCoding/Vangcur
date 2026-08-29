@@ -34,10 +34,19 @@ function CartItemThumb({ emoji }: { emoji?: string }) {
 
 function TrashIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
       <line x1="10" y1="11" x2="10" y2="17" />
       <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  );
+}
+
+function CouponSvgIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary">
+      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+      <line x1="12" y1="9" x2="12" y2="15" strokeDasharray="2 2" />
     </svg>
   );
 }
@@ -130,7 +139,7 @@ export default function QuickOrderModal() {
 
   return (
     <>
-      {/* Backdrop with 3px Blur matching LoginModal */}
+      {/* Backdrop */}
       <div
         className="fixed inset-0 z-[975] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
         onClick={() => setOpen(false)}
@@ -138,8 +147,8 @@ export default function QuickOrderModal() {
 
       {/* Modal / Bottom Sheet with LoginModal's Authentic Unified Gradient */}
       <div className="fixed inset-x-0 bottom-0 z-[980] mx-auto flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
-        {/* Header */}
-        <div className="relative overflow-hidden px-6 pb-2 pt-5 text-left">
+        {/* Header with Full-Width Bottom Black Hairline Divider */}
+        <div className="relative overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
           <HeaderDecor />
           <div className="relative z-10 flex items-center justify-between">
             <div>
@@ -163,18 +172,18 @@ export default function QuickOrderModal() {
         </div>
 
         {/* Content List on Unified Background */}
-        <div className="flex-1 overflow-y-auto px-6 py-3 space-y-3.5">
+        <div className="flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
           {cart.map((item, idx) => (
             <div
               key={item.id}
               className={`flex items-start gap-3.5 pb-3.5 ${
-                idx !== cart.length - 1 ? 'border-b border-white/60' : ''
+                idx !== cart.length - 1 ? 'border-b border-ink/10' : ''
               }`}
             >
               {/* Thumbnail */}
               <CartItemThumb emoji={item.emoji} />
 
-              {/* Title, Price per Piece & Quantity Buttons */}
+              {/* Title, Price per Piece & Minimalist Transparent Quantity Buttons */}
               <div className="min-w-0 flex-1">
                 <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
                   {item.name}
@@ -183,12 +192,12 @@ export default function QuickOrderModal() {
                   ৳{item.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'}
                 </div>
 
-                {/* Minimalist Round Buttons */}
+                {/* No White Background: Pure Transparent Black Border Circles */}
                 <div className="mt-2.5 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => handleQty(item.id, -1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border-base bg-white font-body text-xs font-bold text-ink shadow-xs transition-brand hover:border-brand-light hover:text-brand-light active:scale-90"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
                     aria-label="Decrease"
                   >
                     −
@@ -199,7 +208,7 @@ export default function QuickOrderModal() {
                   <button
                     type="button"
                     onClick={() => handleQty(item.id, 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border-base bg-white font-body text-xs font-bold text-ink shadow-xs transition-brand hover:border-brand-light hover:text-brand-light active:scale-90"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
                     aria-label="Increase"
                   >
                     +
@@ -207,7 +216,7 @@ export default function QuickOrderModal() {
                 </div>
               </div>
 
-              {/* Total Item Price & Soft Red Trash Button (Reference 3) */}
+              {/* Total Item Price & Soft Red Trash Button */}
               <div className="flex flex-col items-end justify-between self-stretch pl-1">
                 <div className="font-body text-[14px] font-bold text-ink">
                   ৳{(item.price * item.qty).toLocaleString('en-US')}
@@ -224,31 +233,32 @@ export default function QuickOrderModal() {
             </div>
           ))}
 
-          {/* Embedded Coupon Bar matching Screenshot 3 */}
+          {/* Coupon Code Section matching Reference 2 */}
           <div className="pt-2">
             <div className="mb-1.5 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
-              <span>🎟️</span>
-              <span>{lang === 'en' ? 'Apply Coupon' : 'কুপন কোড'}</span>
+              <CouponSvgIcon />
+              <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
             </div>
+            {/* Transparent input with subtle border & embedded text action button (Reference 2) */}
             <form onSubmit={handleApplyCoupon} className="relative flex items-center">
               <input
                 type="text"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                placeholder={lang === 'en' ? 'Enter coupon...' : 'কুপন কোড লিখুন...'}
-                className="w-full rounded-full border border-border-base bg-white py-2.5 pl-4 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/70 focus:border-brand-light focus:shadow-[0_0_0_2px_rgba(0,88,199,.12)]"
+                placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-primary"
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-brand-light px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-brand hover:bg-brand-light-hover active:scale-95"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-primary transition-opacity hover:opacity-80 active:scale-95"
               >
-                {lang === 'en' ? 'Apply' : 'প্রয়োগ'}
+                {lang === 'en' ? 'Add' : 'প্রয়োগ'}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Footer seamlessly on the same gradient background (No white cut-off block) */}
+        {/* Footer seamlessly on the same gradient canvas */}
         <div className="px-6 pb-6 pt-3">
           <div className="mb-3.5 flex items-center justify-between">
             <span className="font-body text-[14px] font-bold text-muted">
