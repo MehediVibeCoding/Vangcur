@@ -1,51 +1,98 @@
+'use client';
+
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 
 export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
-  pending: 'bg-[#FEF3C7] text-[#92400E]',
-  confirmed: 'bg-[#D1FAE5] text-[#065F46]',
-  shipped: 'bg-[#D1FAE5] text-[#065F46]',
-  delivered: 'bg-[#DBEAFE] text-[#1E40AF]',
-  cancelled: 'bg-[#FEE2E2] text-[#991B1B]',
-  rejected: 'bg-[#FEE2E2] text-[#991B1B]',
+  pending: 'bg-amber-100 text-amber-900 border border-amber-200/80',
+  confirmed: 'bg-emerald-100 text-emerald-900 border border-emerald-200/80',
+  shipped: 'bg-sky-100 text-sky-900 border border-sky-200/80',
+  delivered: 'bg-blue-100 text-blue-900 border border-blue-200/80',
+  cancelled: 'bg-red-100 text-red-900 border border-red-200/80',
+  rejected: 'bg-red-100 text-red-900 border border-red-200/80',
 };
 
+// ১০০% ইমোজি-মুক্ত পরিষ্কার ইংরেজি ও বাংলা স্ট্যাটাস লেবেল
 export const ORDER_STATUS_LABEL_EN: Record<OrderStatus, string> = {
-  pending: '⏳ Pending',
-  confirmed: '✅ Confirmed',
-  shipped: '🚚 Shipped',
-  delivered: '📦 Delivered',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
   cancelled: 'Cancelled',
   rejected: 'Cancelled',
 };
 
 export const ORDER_STATUS_LABEL_BN: Record<OrderStatus, string> = {
-  pending: '⏳ পেন্ডিং',
-  confirmed: '✅ কনফার্মড',
-  shipped: '🚚 শিপড',
-  delivered: '📦 ডেলিভার্ড',
+  pending: 'পেন্ডিং',
+  confirmed: 'কনফার্মড',
+  shipped: 'শিপড',
+  delivered: 'ডেলিভার্ড',
   cancelled: 'বাতিল',
   rejected: 'বাতিল',
 };
 
 export const ORDER_STATUS_LABEL = ORDER_STATUS_LABEL_EN;
 
+function CalendarSvgIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
+function UserSvgIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function DocumentSvgIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-primary">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  );
+}
+
+function PackageFallbackIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
+      <path d="M16.5 9.4 7.55 4.24a1.8 1.8 0 0 0-1.8 0L2.5 6.1a1.8 1.8 0 0 0-.9 1.56v8.68a1.8 1.8 0 0 0 .9 1.56l3.25 1.86a1.8 1.8 0 0 0 1.8 0l8.95-5.16a1.8 1.8 0 0 0 .9-1.56V9.4z" />
+      <polyline points="3.29 7 12 12 20.71 7" />
+      <line x1="12" y1="22" x2="12" y2="12" />
+    </svg>
+  );
+}
+
 function ItemThumb({ imgVal }: { imgVal?: string }) {
   const isUrl = typeof imgVal === 'string' && imgVal.startsWith('http');
   if (isUrl) {
     return (
       <img
-        src={optimizeCloudinaryUrl(imgVal, 120)} alt="" className="h-9 w-9 shrink-0 rounded-[7px] border border-border-base object-cover"
-        loading="lazy" decoding="async"
+        src={optimizeCloudinaryUrl(imgVal, 120)}
+        alt=""
+        className="h-10 w-10 shrink-0 rounded-xl border border-border-base object-cover shadow-xs"
+        loading="lazy"
+        decoding="async"
         onError={(e) => { e.currentTarget.style.display = 'none'; }}
       />
     );
   }
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[7px] bg-surface-muted text-xl">
-      {imgVal || '📦'}
-    </span>
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-base bg-brand-bg/30 shadow-xs">
+      <PackageFallbackIcon />
+    </div>
   );
 }
 
@@ -56,33 +103,77 @@ interface OrderCardProps {
 
 export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
   const { t, lang } = useT();
-  const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+  const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+
   const statusLabel = lang === 'en'
     ? (ORDER_STATUS_LABEL_EN[o.status] || ORDER_STATUS_LABEL_EN.pending)
     : (ORDER_STATUS_LABEL_BN[o.status] || ORDER_STATUS_LABEL_BN.pending);
 
   return (
-    <div className="rounded-brand border border-border-base bg-white shadow-sh1">
-      <div className="flex items-center justify-between border-b border-border-base px-4 py-2.5">
-        <span className="font-body text-[13px] font-bold text-ink">{o.orderNum}</span>
-        <span className={`rounded-full px-2.5 py-1 font-body text-[11px] font-bold ${ORDER_STATUS_CLASS[o.status] || ORDER_STATUS_CLASS.pending}`}>
-          {statusLabel}
+    <div className="rounded-[20px] border border-border-base bg-white shadow-sm transition-brand hover:border-brand-light/40">
+      {/* Top Header: Order Number + Status Badge */}
+      <div className="flex items-center justify-between border-b border-border-base/70 px-4 py-3">
+        <span className="font-body text-[13.5px] font-extrabold text-ink">{o.orderNum}</span>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-body text-[11px] font-bold shadow-xs ${
+            ORDER_STATUS_CLASS[o.status] || ORDER_STATUS_CLASS.pending
+          }`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+          <span>{statusLabel}</span>
         </span>
       </div>
-      <div className="px-4 py-3">
-        <div className="mb-2.5 font-body text-[11.5px] text-muted">📅 {dateStr} &nbsp;|&nbsp; 👤 {o.customer?.name || '-'}</div>
-        <div className="flex flex-col gap-2">
+
+      {/* Card Content Body */}
+      <div className="p-4">
+        {/* Meta Info (SVG Icons) */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-body text-[11.5px] text-muted">
+          <div className="flex items-center gap-1.5">
+            <CalendarSvgIcon />
+            <span>{dateStr}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <UserSvgIcon />
+            <span>{o.customer?.name || '-'}</span>
+          </div>
+        </div>
+
+        {/* Ordered Items List */}
+        <div className="space-y-2.5">
           {(o.items || []).map((i, idx) => (
-            <div key={idx} className="flex items-center gap-2.5">
-              <ItemThumb imgVal={(i.imgs || ['📦'])[0]} />
-              <div className="min-w-0 flex-1 truncate font-body text-[12.5px] text-ink">{i.name}</div>
-              <div className="whitespace-nowrap font-body text-[12.5px] font-semibold text-ink">{i.qty} × ৳{i.price.toLocaleString('en-US')}</div>
+            <div key={idx} className="flex items-center gap-3">
+              <ItemThumb imgVal={(i.imgs || [''])[0]} />
+              <div className="min-w-0 flex-1 truncate font-body text-[13px] font-bold text-ink">
+                {i.name}
+              </div>
+              <div className="whitespace-nowrap font-body text-[12.5px] font-semibold text-muted">
+                {i.qty} × ৳{i.price.toLocaleString('en-US')}
+              </div>
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between border-t border-border-base pt-3">
-          <div className="font-body text-[13px] font-bold text-ink">{t('মোট:')} ৳{(o.total || 0).toLocaleString('en-US')} ({t('শিপিং সহ')})</div>
-          <button onClick={() => onInvoice(o.id)} className="rounded-full border border-border-base px-3 py-1.5 font-body text-[11px] font-bold text-ink hover:bg-surface-muted">📄 {t('ইনভয়েস')}</button>
+
+        {/* Card Footer: Total & Invoice Button */}
+        <div className="mt-4 flex items-center justify-between border-t border-border-base/70 pt-3">
+          <div className="font-body text-[13px] font-bold text-ink">
+            <span>{t('মোট:')} </span>
+            <span className="text-[14.5px] font-extrabold text-brand-light">
+              ৳{(o.total || 0).toLocaleString('en-US')}
+            </span>
+            <span className="ml-1 text-[11px] font-normal text-muted">({t('শিপিং সহ')})</span>
+          </div>
+
+          <button
+            onClick={() => onInvoice(o.id)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-brand-bg/30 px-3.5 py-1.5 font-body text-xs font-bold text-brand-primary transition-colors hover:bg-brand-bg/60 active:scale-95"
+          >
+            <DocumentSvgIcon />
+            <span>{lang === 'en' ? 'Invoice' : 'ইনভয়েস'}</span>
+          </button>
         </div>
       </div>
     </div>
