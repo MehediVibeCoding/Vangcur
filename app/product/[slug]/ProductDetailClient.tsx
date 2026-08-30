@@ -93,7 +93,7 @@ function CartIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
       <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
     </svg>
   );
 }
@@ -476,7 +476,15 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
 
   const addCartFromPP = () => {
     if (!prod || prod.stock <= 0) return;
-    window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
+    const res = useCartStore.getState().addToCart([prod], prod.id, qty);
+    if (res.ok) {
+      showToast(t('কার্টে যোগ হয়েছে'));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
+      }
+    } else if (res.reason === 'stock') {
+      showToast(t('স্টক শেষ!'));
+    }
     
     trackAddToCart(
       {
@@ -487,8 +495,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
       },
       qty,
     );
-
-    showToast(t('কার্টে যোগ হয়েছে'));
   };
 
   const orderNow = () => {
@@ -663,10 +669,23 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     return [];
   }, [prod?.faqs]);
 
-  const related = prods
-    .filter((p) => prodInCat(p, prod.cat) && p.id !== prod.id)
-    .sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0))
-    .slice(0, 4);
+  // 🌟 নিরাপদ স্ট্রিং টাইপ ও কেস-ইনসেনসিটিভ রিলেটেড প্রোডাক্ট ফিল্টার (iPhone 7 / iOS Safari ফিক্স)
+  const related = useMemo(() => {
+    const currentCat = String(prod.cat || '').trim().toLowerCase();
+    const currentIdStr = String(prod.id);
+    return prods
+      .filter((p) => {
+        if (String(p.id) === currentIdStr) return false;
+        if (currentCat === 'all') return true;
+        if (Array.isArray(p.cats) && p.cats.length) {
+          return p.cats.some((c) => String(c).trim().toLowerCase() === currentCat);
+        }
+        return String(p.cat || '').trim().toLowerCase() === currentCat;
+      })
+      .sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0))
+      .slice(0, 4);
+  }, [prods, prod.cat, prod.id]);
+
   const discountPct = prod.old && prod.old > prod.price ? Math.round((1 - prod.price / prod.old) * 100) : 0;
 
   return (
@@ -682,7 +701,6 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             onTouchEnd={handleGalleryTouchEnd}
           >
             {sold ? (
-              /* ১ম ছবির মতো নিখুঁত সফট স্লেট-অ্যাশ কালারের Sold Out ব্যাজ */
               <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-[#5A6578] px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs">
                 {lang === 'en' ? 'Sold Out' : 'স্টক শেষ'}
               </div>
@@ -860,11 +878,11 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <div className="flex flex-col gap-2.5">
             {sold ? (
               isStockNotified ? (
-                /* ✅ ইতিমধ্যে রিকোয়েস্ট জমা দেওয়া অবস্থা — কোনো টিকচিহ্ন ছাড়া পরিচ্ছন্ন টেক্সট */
+                /* 🌟 ইতিমধ্যে রিকোয়েস্ট জমা দেওয়া অবস্থা — সলিড স্কাই-ব্লু ও স্পষ্ট সাদা টেক্সট */
                 <button
                   type="button"
                   disabled
-                  className="flex w-full items-center justify-center rounded-[10px] border border-brand-light/35 bg-brand-bg/40 py-3.5 font-body text-sm font-bold text-brand-primary shadow-xs cursor-default select-none"
+                  className="flex w-full items-center justify-center rounded-[10px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 cursor-default select-none"
                 >
                   <span>{lang === 'en' ? 'You will be notified when back in stock' : 'স্টকে আসলে আপনাকে জানানো হবে'}</span>
                 </button>
@@ -911,8 +929,8 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* Main Content Sections */}
-      <div className="mx-auto max-w-[1100px] px-4 pb-8 md:px-8">
+      {/* 🌟 Main Content Sections — রিলেটেড প্রোডাক্ট না থাকলেও pb-36 নিশ্চিত করা হয়েছে */}
+      <div className={`mx-auto max-w-[1100px] px-4 md:px-8 ${related.length > 0 ? 'pb-8' : 'pb-36'}`}>
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
           <SectionHeading icon={<SolidDocIcon />}>
             {t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span>
@@ -943,27 +961,27 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           )}
         </div>
 
-        {/* স্পেসিফিকেশন টেবিল */}
+        {/* 🌟 মিনিমাল ও দৃষ্টিনন্দন স্পেসিফিকেশন টেবিল */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<SolidWrenchIcon />}>
             {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
           </SectionHeading>
-          <div className="w-full overflow-hidden rounded-brand border border-white/90 bg-gradient-to-br from-[#E0F2FE]/70 via-white/95 to-[#F0F9FF]/80 shadow-sh1 backdrop-blur-sm">
+          <div className="w-full overflow-hidden rounded-[18px] border border-border-base/80 bg-white shadow-xs">
             <table className="w-full border-collapse text-[14px]">
               <thead>
-                <tr className="bg-brand-bg/35">
-                  <th className="w-[38%] px-4 py-3 text-left font-bold text-ink">{t('বিবরণ')}</th>
-                  <th className="px-4 py-3 text-left font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
+                <tr className="border-b border-border-base/80 bg-surface-muted/60">
+                  <th className="w-[38%] px-4 py-3 text-left font-body text-[13px] font-bold text-ink">{t('বিবরণ')}</th>
+                  <th className="px-4 py-3 text-left font-body text-[13px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>
               </thead>
               <tbody>
                 {techRows.length === 0 ? (
-                  <tr><td colSpan={2} className="p-4 text-center text-muted">{t('স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।')}</td></tr>
+                  <tr><td colSpan={2} className="p-4 text-center text-muted font-body text-xs">{t('স্পেসিফিকেশন শীঘ্রই যোগ করা হবে।')}</td></tr>
                 ) : (
-                  techRows.map(([k, v], i) => (
-                    <tr key={k} className={`border-t border-sky-100/80 transition-brand duration-brand hover:bg-brand-bg/15 ${i % 2 === 1 ? 'bg-white/40' : ''}`}>
-                      <td className="px-4 py-3 font-semibold text-ink">{k}</td>
-                      <td className="px-4 py-3 text-ink/80">{v}</td>
+                  techRows.map(([k, v]) => (
+                    <tr key={k} className="border-b border-border-base/50 last:border-b-0 transition-colors hover:bg-brand-bg/10">
+                      <td className="px-4 py-3 font-body text-[13.5px] font-semibold text-ink/90">{k}</td>
+                      <td className="px-4 py-3 font-body text-[13.5px] font-medium text-ink/75">{v}</td>
                     </tr>
                   ))
                 )}
@@ -1062,9 +1080,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
         </div>
       </div>
 
-      {/* একই ক্যাটাগরির আরও পণ্য */}
+      {/* 🌟 একই ক্যাটাগরির আরও পণ্য — রিলেটেড প্রোডাক্ট থাকলে এর নিচে pb-36 থাকবে */}
       {related.length > 0 && (
-        <div className="mx-auto max-w-[1100px] px-4 pb-32 pt-2 md:px-8">
+        <div className="mx-auto max-w-[1100px] px-4 pb-36 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-base" />
             <div className="whitespace-nowrap font-body text-lg font-bold text-ink">
@@ -1101,16 +1119,16 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {sold ? (
               isStockNotified ? (
-                /* স্টিকি বারে সাবমিট হওয়া অবস্থা — টিকচিহ্ন মুক্ত পরিচ্ছন্ন টেক্সট */
+                /* স্টিকি বারে সাবমিট হওয়া অবস্থা */
                 <button
                   type="button"
                   disabled
-                  className="flex items-center justify-center rounded-[10px] border border-brand-light/35 bg-brand-bg/40 px-3.5 py-2.5 text-[12.5px] font-bold text-brand-primary shadow-xs cursor-default select-none"
+                  className="flex items-center justify-center rounded-[10px] bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 cursor-default select-none"
                 >
                   <span>{lang === 'en' ? 'Notified' : 'জানানো হবে'}</span>
                 </button>
               ) : (
-                /* স্টিকি বারে সলিড স্কাই-ব্লু বাটন */
+                /* স্টিকি বারে ফ্রেশ স্কাই-ব্লু বাটন */
                 <button
                   type="button"
                   className="flex items-center gap-1.5 rounded-[10px] bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
