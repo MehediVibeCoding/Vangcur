@@ -1,3 +1,5 @@
+// [REPLACE] ফাইলের পাথ: types/index.ts
+
 export interface ProductSpecs {
   [label: string]: string;
 }
@@ -109,6 +111,8 @@ export interface Order {
   payment?: OrderPayment;
   userId?: string;
   custEmail?: string;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
 export interface OrderStats {
@@ -230,6 +234,7 @@ export interface OrderPayload {
   paymentLast4: string;
   fingerprintId: string;
   lang?: 'bn' | 'en';
+  couponCode?: string;
 }
 
 export interface CreateOrderResult {
@@ -237,7 +242,7 @@ export interface CreateOrderResult {
   orderNum: string;
 }
 
-// 🆕 প্রশ্নোত্তর (Q&A) টাইপসমূহ
+// প্রশ্নোত্তর (Q&A) টাইপসমূহ
 export interface ProductQuestionAnswer {
   id: number | string;
   question_id: number | string;
@@ -258,7 +263,7 @@ export interface ProductQuestion {
   answer?: ProductQuestionAnswer | null;
 }
 
-// 🆕 কাস্টমার রিভিউ (Reviews) টাইপসমূহ (লাইক ও রিজেকশন সাপোর্ট সহ)
+// কাস্টমার রিভিউ (Reviews) টাইপসমূহ
 export interface ProductReview {
   id: number | string;
   product_id: number | string;
