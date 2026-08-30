@@ -145,6 +145,70 @@ export function shipPrice(shipKey: string, shipCfg: ShipConfig = DEFAULT_SHIP_CF
   return shipCfg.bd;
 }
 
+// =========================================================================
+// 🌟 ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট ও বাল্ক লিমিট কনফিগারেশন
+// =========================================================================
+export const HIGH_VALUE_THRESHOLD = 8000; // ৮,০০০ টাকা বা তার বেশি হলে ৫% অগ্রিম
+export const MAX_ONLINE_ORDER_TOTAL = 20000; // ২০,০০০ টাকার বেশি হলে WhatsApp বাল্ক অর্ডার
+
+export interface AdvancePaymentBreakdown {
+  tier: 1 | 2 | 3;
+  baseAdvance: number;       // ৫% মূল অগ্রিম বা ফিক্সড ২০০
+  bkashFee: number;          // ১.৫% বিকাশ ফি (টায়ার ২ এর জন্য)
+  totalAdvance: number;      // কাস্টমারকে মোট যত টাকা অগ্রিম সেন্ড মানি করতে হবে
+  isHighValue: boolean;      // ৮,০০০ - ২০,০০০ টাকার মধ্যে কি না
+  isBulkOrder: boolean;      // ২০,০০০ টাকার বেশি কি না
+  percentage: number;        // অগ্রিমের শতকরা হার (৫%)
+}
+
+/**
+ * কুপন ডিসকাউন্টের পর কার্যকরী সাবটোটালের ওপর ভিত্তি করে অগ্রিম ও বিকাশ ফি হিসাব
+ */
+export function calculateAdvancePayment(effectiveSubtotal: number): AdvancePaymentBreakdown {
+  const safeSubtotal = Math.max(0, Number(effectiveSubtotal) || 0);
+
+  // টায়ার ৩: ২০,০০০ টাকার বেশি (বাল্ক অর্ডার)
+  if (safeSubtotal > MAX_ONLINE_ORDER_TOTAL) {
+    const baseAdvance = Math.round(safeSubtotal * 0.05);
+    const bkashFee = Math.round(baseAdvance * 0.015);
+    return {
+      tier: 3,
+      baseAdvance,
+      bkashFee,
+      totalAdvance: baseAdvance + bkashFee,
+      isHighValue: true,
+      isBulkOrder: true,
+      percentage: 5,
+    };
+  }
+
+  // টায়ার ২: ৮,০০০ থেকে ২০,০০০ টাকা (হাই-ভ্যালু অর্ডার: ৫% অগ্রিম + ১.৫% বিকাশ ফি)
+  if (safeSubtotal >= HIGH_VALUE_THRESHOLD) {
+    const baseAdvance = Math.round(safeSubtotal * 0.05);
+    const bkashFee = Math.round(baseAdvance * 0.015);
+    return {
+      tier: 2,
+      baseAdvance,
+      bkashFee,
+      totalAdvance: baseAdvance + bkashFee,
+      isHighValue: true,
+      isBulkOrder: false,
+      percentage: 5,
+    };
+  }
+
+  // টায়ার ১: ৮,০০০ টাকার নিচে (স্বাভাবিক অর্ডার: ফিক্সড ২০০ টাকা)
+  return {
+    tier: 1,
+    baseAdvance: 200,
+    bkashFee: 0,
+    totalAdvance: 200,
+    isHighValue: false,
+    isBulkOrder: false,
+    percentage: 0,
+  };
+}
+
 export function validatePhone(ph: string): boolean {
   const phoneRegex = /^01[3-9]\d{8}$/;
   if (!phoneRegex.test(ph)) return false;
