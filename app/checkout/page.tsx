@@ -242,7 +242,6 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isSingleDirectOrder, setIsSingleDirectOrder] = useState(false);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -307,7 +306,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     let hasItems = false;
     let loadedItems: CartItem[] = [];
-    let isQuick = false;
 
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
@@ -315,20 +313,16 @@ export default function CheckoutPage() {
         setCartItems(quickOrder);
         loadedItems = quickOrder;
         hasItems = true;
-        isQuick = true;
       } else {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
         const validCart = Array.isArray(cart) ? cart : [];
         setCartItems(validCart);
         loadedItems = validCart;
         hasItems = validCart.length > 0;
-        isQuick = false;
       }
     } catch {
       hasItems = false;
     }
-
-    setIsSingleDirectOrder(isQuick && loadedItems.length === 1);
 
     if (!hasItems) {
       showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
@@ -575,7 +569,7 @@ export default function CheckoutPage() {
   const total = Math.max(0, sub - discountAmount + effectiveShippingCost);
   const balance = Math.max(0, total - 200);
 
-  // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার
+  // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার — স্টেট ও সাকসেস সরাসরি আপডেট
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponInput.trim().toUpperCase();
@@ -595,6 +589,7 @@ export default function CheckoutPage() {
     }
 
     saveAppliedCoupon(res.coupon);
+    setAppliedCoupon(res.coupon);
     setCouponInput('');
     setShowCouponInputBox(false);
     showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
@@ -602,6 +597,7 @@ export default function CheckoutPage() {
 
   const handleRemoveCoupon = () => {
     removeAppliedCoupon();
+    setAppliedCoupon(null);
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
@@ -867,7 +863,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
+          {/* একক প্রোডাক্ট অর্ডারের ক্ষেত্রে YOUR ORDER কার্ড */}
           {step === 1 && cartItems.length === 1 && (
             <div className="mx-6 mb-2 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="mb-2 flex items-center justify-between">
@@ -875,8 +871,8 @@ export default function CheckoutPage() {
                   <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
                 </div>
                 
-                {/* 🌟 সিঙ্গেল প্রোডাক্ট ডিরেক্ট চেকআউটে মার্জিত "কুপন কোড আছে?" ইন্টারঅ্যাকশন */}
-                {isSingleDirectOrder && !appliedCoupon && (
+                {/* 🌟 কুপন কোড ইনপুট টগল লিংক */}
+                {!appliedCoupon && (
                   <button
                     type="button"
                     onClick={() => setShowCouponInputBox((v) => !v)}
@@ -896,52 +892,56 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* সিঙ্গেল প্রোডাক্টের ক্ষেত্রে কুপন ইনপুট ড্রপডাউন ফর্ম */}
-              {isSingleDirectOrder && !appliedCoupon && showCouponInputBox && (
-                <form onSubmit={handleApplyCoupon} className="relative mt-3 pt-2.5 border-t border-border-base/70 flex items-center">
-                  <input
-                    type="text"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                    className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
-                  />
-                  <button
-                    type="submit"
-                    disabled={couponLoading || !couponInput.trim()}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
-                  >
-                    {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
-                  </button>
-                </form>
+              {/* কুপন ইনপুট ড্রপডাউন ফর্ম — নিখুঁত ভার্টিক্যাল সেন্টারিং ফিক্স */}
+              {!appliedCoupon && showCouponInputBox && (
+                <div className="mt-3 pt-2.5 border-t border-border-base/70">
+                  <form onSubmit={handleApplyCoupon} className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                      className="w-full rounded-[10px] border border-ink/20 bg-white py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
+                    />
+                    <button
+                      type="submit"
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
+                    >
+                      {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
+                    </button>
+                  </form>
+                </div>
               )}
 
-              {/* 🌟 ৪ নম্বর ছবির হুবহু: সিঙ্গেল প্রোডাক্টের কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */}
-              {isSingleDirectOrder && appliedCoupon && (
-                <div className="mt-3 pt-2.5 border-t border-border-base/70 flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
-                      ✓
-                    </span>
-                    <div>
-                      <div className="font-body text-[12.5px] font-bold text-emerald-800">
-                        {appliedCoupon.code}
-                      </div>
-                      <div className="font-body text-[11px] font-medium text-emerald-700">
-                        {appliedCoupon.freeShipping
-                          ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
-                          : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
+              {/* 🌟 কুপন অ্যাপ্লাইড সাকসেস ব্যাজ (৪ নম্বর ছবির হুবহু প্রিমিয়াম স্টাইল) */}
+              {appliedCoupon && (
+                <div className="mt-3 pt-2.5 border-t border-border-base/70">
+                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3.5 py-2 shadow-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white shadow-xs">
+                        ✓
+                      </span>
+                      <div>
+                        <div className="font-body text-[12px] font-extrabold uppercase text-emerald-800 leading-tight">
+                          {appliedCoupon.code}
+                        </div>
+                        <div className="font-body text-[10.5px] font-semibold text-emerald-700 leading-tight">
+                          {appliedCoupon.freeShipping
+                            ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
+                            : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
+                        </div>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
+                      title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveCoupon}
-                    className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
-                    title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
-                  >
-                    ✕
-                  </button>
                 </div>
               )}
             </div>
@@ -1092,7 +1092,7 @@ export default function CheckoutPage() {
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
                         </div>
                         
-                        {/* 🌟 ২ নম্বর ছবির হুবহু: ফ্রি শিপিং ব্যাজ (সবুজ গোল টিকচিহ্ন, উপরে কোড ও নিচে ফ্রি ডেলিভারি প্রযোজ্য) */}
+                        {/* ২ নম্বর ছবির হুবহু: ফ্রি শিপিং ব্যাজ */}
                         {appliedCoupon?.freeShipping ? (
                           <div className="ml-auto flex items-center gap-2 rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3 py-1.5 shadow-xs">
                             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white shadow-xs">
@@ -1283,7 +1283,7 @@ export default function CheckoutPage() {
                   <span>৳{sub.toLocaleString('en-US')}</span>
                 </div>
 
-                {/* 🌟 ৫ নম্বর ছবির হুবহু: ফ্রি শিপিং কুপন থাকলে মেমোতে সবুজ টিকচিহ্ন সহ কোড ও ফ্রি ডেলিভারি প্রযোজ্য */}
+                {/* ৫ নম্বর ছবির হুবহু: ফ্রি শিপিং কুপন থাকলে মেমোতে সবুজ টিকচিহ্ন সহ কোড ও ফ্রি ডেলিভারি প্রযোজ্য */}
                 <div className="flex justify-between items-center py-1.5 font-body text-[13px] text-ink/80">
                   {appliedCoupon?.freeShipping ? (
                     <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[12.5px]">
