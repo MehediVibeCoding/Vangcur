@@ -252,7 +252,7 @@ export default function CheckoutPage() {
   const [selectedShip, setSelectedShip] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
 
-  // কুপন স্টেট ও টগল
+  // কুপন স্টেট ও ড্রপডাউন টগল
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
@@ -575,7 +575,7 @@ export default function CheckoutPage() {
   const total = Math.max(0, sub - discountAmount + effectiveShippingCost);
   const balance = Math.max(0, total - 200);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার — কোনো ইমোজি ছাড়া এরর মেসেজ
+  // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponInput.trim().toUpperCase();
@@ -875,12 +875,12 @@ export default function CheckoutPage() {
                   <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
                 </div>
                 
-                {/* 🌟 সিঙ্গেল প্রোডাক্ট অর্ডারে মার্জিত "কুপন কোড আছে?" ইন্টারঅ্যাকশন */}
+                {/* 🌟 সিঙ্গেল প্রোডাক্ট ডিরেক্ট চেকআউটে মার্জিত "কুপন কোড আছে?" ইন্টারঅ্যাকশন */}
                 {isSingleDirectOrder && !appliedCoupon && (
                   <button
                     type="button"
                     onClick={() => setShowCouponInputBox((v) => !v)}
-                    className="font-body text-[11px] font-bold text-brand-light hover:underline transition-colors cursor-pointer"
+                    className="font-body text-[11.5px] font-bold text-brand-light hover:underline transition-colors cursor-pointer"
                   >
                     {showCouponInputBox ? (lang === 'en' ? 'Hide coupon' : 'লুকান') : (lang === 'en' ? 'Have a coupon code?' : 'কুপন কোড আছে?')}
                   </button>
@@ -904,40 +904,51 @@ export default function CheckoutPage() {
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                    className="w-full rounded-[10px] border border-ink/20 bg-white py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
+                    className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
                   />
                   <button
                     type="submit"
                     disabled={couponLoading || !couponInput.trim()}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 font-body text-[12px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
                   >
                     {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
                   </button>
                 </form>
               )}
 
-              {/* সিঙ্গেল প্রোডাক্টের ক্ষেত্রে যদি কুপন ইতিমধ্যে অ্যাপ্লাই থাকে তবে ব্যাজ */}
+              {/* 🌟 ৪ নম্বর ছবির হুবহু: সিঙ্গেল প্রোডাক্টের কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */}
               {isSingleDirectOrder && appliedCoupon && (
-                <div className="mt-3 pt-2 border-t border-border-base/70 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-body text-[11.5px] font-bold text-emerald-700">
-                    <span>✓</span>
-                    <span>{appliedCoupon.code}</span>
-                    <span>({appliedCoupon.freeShipping ? (lang === 'en' ? 'Free Delivery' : 'ফ্রি ডেলিভারি') : `-৳${discountAmount}`})</span>
+                <div className="mt-3 pt-2.5 border-t border-border-base/70 flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
+                      ✓
+                    </span>
+                    <div>
+                      <div className="font-body text-[12.5px] font-bold text-emerald-800">
+                        {appliedCoupon.code}
+                      </div>
+                      <div className="font-body text-[11px] font-medium text-emerald-700">
+                        {appliedCoupon.freeShipping
+                          ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
+                          : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
+                      </div>
+                    </div>
                   </div>
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    className="font-body text-[11px] font-bold text-emerald-700 hover:text-red-500 transition-colors"
+                    className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
+                    title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
                   >
-                    {lang === 'en' ? 'Remove' : 'মুছুন'}
+                    ✕
                   </button>
                 </div>
               )}
             </div>
           )}
 
-          {/* ৩-ধাপের স্টেপার */}
-          <div className="flex px-6 pb-2 pt-3">
+          {/* ৩-ধাপের স্টেপার — হেডার থেকে আরামদায়ক ব্রিদিং স্পেস (pt-5 sm:pt-6) */}
+          <div className="flex px-6 pb-2 pt-5 sm:pt-6">
             {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
               const isDone = step > s.n;
               const isActive = step === s.n;
@@ -1081,11 +1092,20 @@ export default function CheckoutPage() {
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
                         </div>
                         
-                        {/* 🌟 ফ্রি শিপিং থাকলে স্পষ্ট "✓ FREESHIP · ফ্রি ডেলিভারি প্রযোজ্য" ব্যাজ */}
+                        {/* 🌟 ২ নম্বর ছবির হুবহু: ফ্রি শিপিং ব্যাজ (সবুজ গোল টিকচিহ্ন, উপরে কোড ও নিচে ফ্রি ডেলিভারি প্রযোজ্য) */}
                         {appliedCoupon?.freeShipping ? (
-                          <div className="ml-auto font-body text-[11.5px] font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                            <span>✓</span>
-                            <span>{appliedCoupon.code} · {lang === 'en' ? 'Free Delivery' : 'ফ্রি ডেলিভারি প্রযোজ্য'}</span>
+                          <div className="ml-auto flex items-center gap-2 rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3 py-1.5 shadow-xs">
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white shadow-xs">
+                              ✓
+                            </span>
+                            <div className="text-left">
+                              <div className="font-body text-[12px] font-extrabold uppercase leading-tight text-emerald-800">
+                                {appliedCoupon.code}
+                              </div>
+                              <div className="font-body text-[10.5px] font-semibold leading-tight text-emerald-700">
+                                {lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য'}
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="ml-auto font-body text-sm font-extrabold text-brand-light">
@@ -1230,7 +1250,7 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ — ৩ নম্বর ছবির হুবহু ব্রেকডাউন */}
+          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ */}
           {/* ========================================================================= */}
           {step === 3 && (
             <div className="px-6 py-4">
@@ -1248,7 +1268,7 @@ export default function CheckoutPage() {
                     </div>
                   ))}
 
-                  {/* ৩ নম্বর ছবির হুবহু: প্রোডাক্টের ঠিক নিচেই কুপন ছাড়ের লাইন */}
+                  {/* প্রোডাক্টের নিচে কুপন ছাড়ের লাইন (টাকা বা শতকরা ছাড়ের ক্ষেত্রে) */}
                   {appliedCoupon && discountAmount > 0 && (
                     <div className="flex items-center justify-between gap-2 py-1.5 font-body text-[13px] font-bold text-emerald-600">
                       <span>{lang === 'en' ? `Coupon Discount (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}</span>
@@ -1263,11 +1283,21 @@ export default function CheckoutPage() {
                   <span>৳{sub.toLocaleString('en-US')}</span>
                 </div>
 
-                {/* ডেলিভারি চার্জ — ফ্রি শিপিং থাকলে "ফ্রি" দেখাবে */}
-                <div className="flex justify-between py-1.5 font-body text-[13px] text-ink/80">
-                  <span>{lang === 'en' ? 'Delivery Charge' : 'ডেলিভারি চার্জ'}</span>
+                {/* 🌟 ৫ নম্বর ছবির হুবহু: ফ্রি শিপিং কুপন থাকলে মেমোতে সবুজ টিকচিহ্ন সহ কোড ও ফ্রি ডেলিভারি প্রযোজ্য */}
+                <div className="flex justify-between items-center py-1.5 font-body text-[13px] text-ink/80">
                   {appliedCoupon?.freeShipping ? (
-                    <span className="font-bold text-emerald-600">{lang === 'en' ? 'FREE' : 'ফ্রি'}</span>
+                    <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[12.5px]">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow-xs">
+                        ✓
+                      </span>
+                      <span>{appliedCoupon.code} · {lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য'}</span>
+                    </div>
+                  ) : (
+                    <span>{lang === 'en' ? 'Delivery Charge' : 'ডেলিভারি চার্জ'}</span>
+                  )}
+
+                  {appliedCoupon?.freeShipping ? (
+                    <span className="font-extrabold text-emerald-600">{lang === 'en' ? 'FREE' : 'ফ্রি'}</span>
                   ) : (
                     <span>৳{effectiveShippingCost}</span>
                   )}
@@ -1276,7 +1306,7 @@ export default function CheckoutPage() {
                 {/* ড্যাশড ডিভাইডার */}
                 <div className="my-2.5 h-px border-t border-dashed border-border-base" />
 
-                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি — সমান স্পেসিং */}
+                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি — নিখুঁত সমান স্পেসিং */}
                 <div className="flex flex-col gap-2 pt-0.5 pb-1">
                   {/* সর্বমোট বিল */}
                   <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink">
