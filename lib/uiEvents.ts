@@ -25,3 +25,6 @@ export const OPEN_QUICK_CART_MODAL_EVENT = 'vc:openQuickCartModal';
 
 // দৈনিক ৩-অর্ডার লিমিট অতিক্রম করলে প্রিমিয়াম পপআপ ওপেন করার ইভেন্ট
 export const OPEN_ORDER_LIMIT_EVENT = 'vc:openOrderLimitModal';
+
+// ২০,০০০ টাকার বেশি অর্ডারের ক্ষেত্রে WhatsApp বাল্ক অর্ডার পপআপ ওপেন করার ইভেন্ট
+export const OPEN_BULK_ORDER_EVENT = 'vc:openBulkOrderModal';
