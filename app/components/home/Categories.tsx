@@ -25,7 +25,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
   const { lang } = useT();
   const [cats] = useState<Category[]>(initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES);
   const [catPage, setCatPage] = useState(0);
-  const [perPage, setPerPage] = useState(4); // মোবাইলে ডিফল্ট ৪টি আইটেম
+  const [perPage, setPerPage] = useState(4); // মোবাইলে ডিফল্ট ৪টি আইটেম (২x২ গ্রিড)
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const prevBtnRef = useRef<HTMLButtonElement>(null);
@@ -125,7 +125,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
           &#8249;
         </button>
 
-        {/* ক্যাটাগরি গ্রিড কনটেইনার — পিওর সিএসএস রেসপন্সিভ গ্রিড */}
+        {/* ক্যাটাগরি গ্রিড কনটেইনার — ২ লাইনে সম্পূর্ণ নাম প্রদর্শনের জন্য অপ্টিমাইজড */}
         <div className="touch-pan-y overflow-hidden py-1" ref={viewportRef}>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 md:gap-3">
             {cats.map((cat, i) => {
@@ -135,13 +135,14 @@ export default function Categories({ initialCategories }: CategoriesProps) {
               return (
                 <div
                   key={cat.id}
-                  className="flex cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs transition-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:gap-3 md:p-3 active:scale-98"
+                  className="flex min-h-[58px] cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs transition-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:min-h-[66px] md:gap-3 md:p-3 active:scale-98"
                   onClick={() => handleSelect(cat.id)}
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-base bg-brand-bg text-[20px] text-brand-light md:h-12 md:w-12 md:text-2xl">
                     <CatIcon icon={cat.icon} />
                   </div>
-                  <div className="line-clamp-1 font-body text-xs font-bold leading-tight text-ink md:text-[13px]">
+                  {/* 🌟 ২ লাইনে সুন্দরভাবে পুরো নাম রেন্ডারিং */}
+                  <div className="line-clamp-2 min-w-0 flex-1 font-body text-xs font-bold leading-[1.3] text-ink md:text-[13px]">
                     {cat.name}
                   </div>
                 </div>
