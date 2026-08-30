@@ -92,7 +92,8 @@ export interface ShipConfig {
   bd: number;
 }
 
-export const DEFAULT_SHIP_CFG: ShipConfig = { dhaka: 90, out: 130, bd: 130 };
+// 📦 আপডেট করা ডেলিভারি চার্জ রেট: ঢাকা ৭০ টাকা, ঢাকা বাইরে ১২০ টাকা, সারা বাংলাদেশ ১২০ টাকা
+export const DEFAULT_SHIP_CFG: ShipConfig = { dhaka: 70, out: 120, bd: 120 };
 
 export type ShipKey = 'dhaka' | 'outside' | 'bangladesh';
 
@@ -117,8 +118,8 @@ export function getShipOptions(dist: string): ShipOption[] {
       },
       {
         key: 'outside',
-        name: 'ঢাকা সিটি কর্পোরেশনের বাইরে / সাভার / গাজীপুর',
-        nameEn: 'Outside Dhaka City / Suburb',
+        name: 'ঢাকা সিটি কর্পোরেশনের বাইরে',
+        nameEn: 'Outside Dhaka City',
         sub: 'Pathao Courier · হোম ডেলিভারি ১-৩ দিন',
         subEn: 'Pathao Courier · Home Delivery 1-3 Days',
       },
