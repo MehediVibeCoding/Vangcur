@@ -264,7 +264,7 @@ function GalleryImg({ val, name, isThumb }: { val?: string; name: string; isThum
         src={optimizeCloudinaryUrl(val, isThumb ? 200 : 900)}
         alt={name || ''}
         loading="lazy"
-        className={isThumb ? 'h-full w-full rounded-lg object-cover' : 'block h-full w-full object-contain'}
+        className={isThumb ? 'h-full w-full rounded-[8px] object-cover' : 'block h-full w-full object-contain select-none'}
         onError={() => setBroken(true)}
       />
     );
@@ -711,9 +711,9 @@ export default function ProductDetailClient({
 
       <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-5 md:grid-cols-2 md:px-8 md:pb-10">
         <div>
-          {/* 🌟 এজ-টু-এজ প্রফেশনাল স্কয়ার ফটো ফ্রেম (কোনো বাড়তি ফাঁকা সাদা বর্ডার ছাড়া) */}
+          {/* 🌟 অরিজিনাল ক্লাসিক ব্র্যান্ড শেপের ফটো ফ্রেম (rounded-brand) */}
           <div
-            className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-[22px] border border-border-base bg-white shadow-sh1 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-brand border border-border-base bg-white shadow-sh1 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
             onClick={toggleZoom}
             onTouchStart={handleGalleryTouchStart}
             onTouchEnd={handleGalleryTouchEnd}
@@ -753,7 +753,7 @@ export default function ProductDetailClient({
                     type="button"
                     key={i}
                     aria-label={lang === 'en' ? `View image ${i + 1}` : `ছবি ${i + 1} দেখুন`}
-                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-light shadow-[0_0_0_3px_rgba(0,88,199,.12)]' : 'border-border-base hover:border-brand-light/40'}`}
+                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-light shadow-[0_0_0_3px_rgba(0,88,199,.12)]' : 'border-border-base hover:border-brand-light/40'}`}
                     onClick={() => goImg(i)}
                   >
                     <GalleryImg val={im} name={prod.name} isThumb />
