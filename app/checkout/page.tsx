@@ -19,7 +19,9 @@ import { recordLocalOrderTimestamp } from '@/lib/productData';
 import { OPEN_ORDER_LIMIT_EVENT } from '@/lib/uiEvents';
 import {
   getAppliedCoupon,
+  saveAppliedCoupon,
   removeAppliedCoupon,
+  validateCoupon,
   recalculateDiscount,
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
