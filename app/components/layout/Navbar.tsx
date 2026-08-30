@@ -1,3 +1,4 @@
+// [REPLACE] ফাইলের পাথ: app/components/layout/Navbar.tsx
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, type RefObject } from 'react';
@@ -34,6 +35,15 @@ function SearchIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
       <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+    </svg>
+  );
+}
+
+function HomeSvgIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   );
 }
@@ -577,17 +587,20 @@ export default function Navbar({
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
             {showHomeButton ? (
+              /* 🌟 দৃষ্টিনন্দন ফ্রস্টেড গ্লাস রাউন্ডেড হোম পিল বাটন */
               <Link
                 href="/"
                 prefetch={true}
-                aria-label={t('হোম পেইজে যান')}
-                className="group flex shrink-0 items-center gap-1.5 no-underline"
+                aria-label={t('হোম')}
+                title={t('হোম')}
+                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border-base/80 bg-white/75 py-1 pl-1.5 pr-3 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2.5"
               >
-                <svg className="text-brand-light transition-brand duration-brand group-hover:text-brand-light-hover" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 11.5 12 4l8 7.5" />
-                  <path d="M6.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h2.5a1 1 0 0 0 1-1v-9" />
-                </svg>
-                <span className="font-body text-[15px] font-bold text-ink">{t('হোম')}</span>
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
+                  <HomeSvgIcon />
+                </div>
+                <span className="font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
+                  {t('হোম')}
+                </span>
               </Link>
             ) : (
               <Link className="flex shrink-0 items-center no-underline" href="/" prefetch={true}>
@@ -677,7 +690,7 @@ export default function Navbar({
                 >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-                    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
                   <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
                 </button>
@@ -723,7 +736,7 @@ export default function Navbar({
         </div>
       </nav>
 
-      {/* ১ নম্বর ছবির অরিজিনাল rounded-b-[22px] এবং ফ্রস্টেড গ্লাস লুক */}
+      {/* মোবাইল সার্চ এরিয়া */}
       <div className="relative md:hidden" ref={mobileSearchAreaRef}>
         <div
           className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-200 ease-out ${mobileSearchOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}
