@@ -1,4 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/checkout/page.tsx
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -55,6 +54,8 @@ import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
 import { useT } from '@/lib/i18n/useT';
 import type { CartItem } from '@/types';
+
+const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 interface CheckoutErrors {
   eN?: string;
@@ -348,9 +349,7 @@ export default function CheckoutPage() {
       );
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 🌟 স্মার্ট ৩-ধাপের অটোফিল লজিক (Autofill Hierarchy Priority)
-    // ─────────────────────────────────────────────────────────────
+    // স্মার্ট ৩-ধাপের অটোফিল লজিক
     let draftLoaded = false;
     try {
       const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
@@ -404,9 +403,7 @@ export default function CheckoutPage() {
       }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 🛡️ রিফ্রেশে সুরক্ষিত স্টেপ ২/৩ রিস্টোরেশন
-    // ─────────────────────────────────────────────────────────────
+    // রিফ্রেশে সুরক্ষিত স্টেপ ২/৩ রিস্টোরেশন
     try {
       const savedStep = parseInt(sessionStorage.getItem('vc_checkout_step') || '1', 10);
       if (savedStep === 2 || savedStep === 3) {
@@ -572,7 +569,7 @@ export default function CheckoutPage() {
   const effectiveProductSubtotal = Math.max(0, sub - discountAmount);
   const total = Math.max(0, effectiveProductSubtotal + effectiveShippingCost);
 
-  // 🌟 ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট ব্রেকডাউন হিসাব (ডেলিভারি চার্জ সহ টোটাল বিলের ওপর ৫% + ১.৫%)
+  // ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট ব্রেকডাউন হিসাব
   const advanceInfo = useMemo(() => {
     return calculateAdvancePayment(total);
   }, [total]);
@@ -618,12 +615,15 @@ export default function CheckoutPage() {
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
-  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ পরবর্তী ধাপে যাওয়ার হ্যান্ডলার
+  // ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ পরবর্তী ধাপে যাওয়ার হ্যান্ডলার
   const goToStep2 = async () => {
     if (cartItems.length === 0 || step1BtnStatus !== 'idle') {
       if (!cartItems.length) showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       return;
     }
+
+    const user = useAuthStore.getState().currentUser;
+    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase() || email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
 
     // ১. কুইক অর্ডারে যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক করা না হয়ে থাকে
     if (isDirectQuickOrder && couponInput.trim() && !appliedCoupon) {
@@ -631,18 +631,17 @@ export default function CheckoutPage() {
       const success = await handleApplyCoupon(undefined, couponInput);
       if (!success) {
         setStep1BtnStatus('idle');
-        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
+        return;
       }
 
-      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ সাকসেস ব্যাজ দেখার জন্য ঠিক ৯০০ms অপেক্ষা
       await new Promise((r) => setTimeout(r, 900));
       setStep1BtnStatus('success');
       await new Promise((r) => setTimeout(r, 300));
       setStep1BtnStatus('idle');
     }
 
-    // ২. ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড
-    if (total > MAX_ONLINE_ORDER_TOTAL) {
+    // ২. ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড (মডারেটর ছাড়া সাধারণ কাস্টমারদের জন্য)
+    if (!isMod && total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
       }
@@ -731,8 +730,11 @@ export default function CheckoutPage() {
   const submitOrderNow = useCallback(async () => {
     if (confirmLockRef.current) return;
 
-    // 🛡️ ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড
-    if (total > MAX_ONLINE_ORDER_TOTAL) {
+    const user = useAuthStore.getState().currentUser;
+    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase() || email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+
+    // ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড (মডারেটর ছাড়া সবার জন্য)
+    if (!isMod && total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
       }
@@ -762,11 +764,12 @@ export default function CheckoutPage() {
         setSubmitting(false);
         confirmLockRef.current = false;
         
-        if (result.error?.includes('অপেক্ষা') || result.error?.includes('wait') || result.error?.includes('সীমা') || result.error?.includes('limit')) {
+        // মডারেটর না হলে তখন রেট লিমিট পপআপ দেখাবে
+        if (!isMod && (result.error?.includes('অপেক্ষা') || result.error?.includes('wait') || result.error?.includes('সীমা') || result.error?.includes('limit'))) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
           }
-        } else if (result.error?.includes('২০,০০০') || result.error?.includes('20,000') || result.error?.includes('WhatsApp')) {
+        } else if (!isMod && (result.error?.includes('২০,০০০') || result.error?.includes('20,000') || result.error?.includes('WhatsApp'))) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
           }
@@ -879,9 +882,7 @@ export default function CheckoutPage() {
         {/* মেইন কন্টেইনার */}
         <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 sm:min-h-0 sm:rounded-[28px] sm:ring-1 sm:ring-white/80">
           
-          {/* ========================================================================= */}
-          {/* টপ হেডার বার: উপরে ফ্ল্যাট ও নিচে rounded-b-[22px] প্রিমিয়াম কার্ভ */}
-          {/* ========================================================================= */}
+          {/* টপ হেডার বার */}
           <div className="rounded-b-[22px] rounded-t-none bg-gradient-to-br from-[#85C2FA] to-brand-light px-5 pb-3.5 pt-3.5 shadow-xs">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
@@ -918,7 +919,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* 🌟 শুধুমাত্র সরাসরি কুইক অর্ডার (Source A) এর ক্ষেত্রে YOUR ORDER ও কুপন কার্ড */}
+          {/* কুইক অর্ডারে YOUR ORDER ও কুপন কার্ড */}
           {step === 1 && isDirectQuickOrder && cartItems.length === 1 && (
             <div className="mx-6 mb-2 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="mb-2 flex items-center justify-between">
@@ -926,7 +927,6 @@ export default function CheckoutPage() {
                   <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
                 </div>
                 
-                {/* কুপন কোড ইনপুট টগল লিংক */}
                 {!appliedCoupon && (
                   <button
                     type="button"
@@ -947,7 +947,6 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* কুপন ইনপুট ড্রপডাউন ফর্ম */}
               {!appliedCoupon && showCouponInputBox && (
                 <div className="mt-3 pt-2.5 border-t border-border-base/70">
                   <form onSubmit={handleApplyCoupon} className="relative flex flex-col gap-1">
@@ -979,7 +978,6 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* 🌟 কুপন অ্যাপ্লাইড সাকসেস ব্যাজ (সবসময় দৃশ্যমান) */}
               {appliedCoupon && (
                 <div className="mt-3 pt-2.5 border-t border-border-base/70">
                   <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3.5 py-2 shadow-xs animate-section-reveal">
@@ -1121,7 +1119,7 @@ export default function CheckoutPage() {
                 {errors.eA && <div className={`${fieldErrClass} -mt-1`}><IconWarning />{errors.eA}</div>}
               </div>
 
-              {/* সলিড ভরাট ইমেইল আইকন */}
+              {/* ইমেইল */}
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('ইমেইল')} <span className={optionalTagClass}>{t('(ঐচ্ছিক — ইনভয়েস পাঠানো হবে)')}</span></label>
                 <div className="relative">
@@ -1157,7 +1155,6 @@ export default function CheckoutPage() {
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
                         </div>
                         
-                        {/* ফ্রি শিপিং ব্যাজ */}
                         {appliedCoupon?.freeShipping ? (
                           <div className="ml-auto flex items-center gap-2 rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3 py-1.5 shadow-xs">
                             <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white shadow-xs">
@@ -1184,7 +1181,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* অ্যাকশন বাটন — অ্যানিমেশন সিকোয়েন্স সহ */}
+              {/* অ্যাকশন বাটন */}
               <div className="pt-2">
                 <button
                   className={`${btnNextClass} flex items-center justify-center gap-2`}
@@ -1213,12 +1210,11 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট (মিনিমাল এক-লাইন হেডার ও বিস্তারিত হিসাব ড্রপডাউন) */}
+          {/* স্টেপ ২: পেমেন্ট */}
           {/* ========================================================================= */}
           {step === 2 && (
             <div className="px-6 py-4">
               <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
-                {/* 🌟 মিনিমাল এক-লাইন হেডার (কোনো ব্যাজ ছাড়া, এক লাইনে) */}
                 <div className="mb-2 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
                   <span className="text-brand-light"><IconCard /></span>
                   <span>{t('এডভান্স পেমেন্ট')}</span>
@@ -1227,7 +1223,6 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 
-                {/* 🌟 মূল নির্দেশনা বাক্য + ব্র্যাকেট ও আন্ডারলাইন ছাড়া স্কাই-ব্লু বিস্তারিত লিংক + টাকা পুনরাবৃত্তি ফিক্স */}
                 <p className="mb-3.5 font-body text-[12.5px] leading-[1.7] text-muted">
                   {advanceInfo.isHighValue ? (
                     lang === 'en' ? (
@@ -1264,7 +1259,6 @@ export default function CheckoutPage() {
                   )}
                 </p>
 
-                {/* 🌟 মিনিমাল ও মার্জিত ড্রপডাউন ব্রেকডাউন বক্স — গাঢ় মোট বিল ও পাতলা ফি টেক্সট */}
                 {advanceInfo.isHighValue && showBreakdown && (
                   <div className="mb-3.5 rounded-[14px] border border-brand-light/35 bg-[#F8FAFC] p-3.5 font-body text-xs shadow-xs transition-all duration-300 animate-section-reveal">
                     <div className="mb-2 font-bold text-ink flex items-center justify-between border-b border-border-base/70 pb-1.5">
@@ -1293,7 +1287,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* বিকাশ নম্বর বক্স — ছোট স্ক্রিনে রেসপন্সিভ কপি বাটন সহ */}
+                {/* বিকাশ নম্বর বক্স */}
                 <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border border-brand-light/30 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD]/80 p-3.5 min-[400px]:p-4">
                   <div className="flex items-center justify-between gap-2 min-[400px]:gap-3">
                     <div className="flex items-center gap-2.5 min-[400px]:gap-3 min-w-0">
@@ -1321,7 +1315,6 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                   
-                  {/* কিউআর কোড অ্যাকর্ডিয়ন বাটন */}
                   <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/50 bg-brand-bg/20 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:bg-brand-bg/35 active:scale-98" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
                     <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
@@ -1356,7 +1349,6 @@ export default function CheckoutPage() {
                 {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
               </div>
 
-              {/* ট্রানজেকশন আইডি ইনপুট */}
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>(10 ক্যারেক্টার, যেমন: 8N5O2A3BDE)</span></label>
                 <div className="relative">
@@ -1374,7 +1366,6 @@ export default function CheckoutPage() {
 
               <div className="my-3.5 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">{t('অথবা')}</div>
 
-              {/* শেষ ৪ ডিজিট ইনপুট */}
               <div className="mb-4">
                 <label className={fieldLabelClass}>{t('Send Money করা bKash নম্বরের শেষ ৪ ডিজিট')}</label>
                 <div className="relative">
@@ -1412,7 +1403,6 @@ export default function CheckoutPage() {
                   {lang === 'en' ? 'Order Invoice' : 'অর্ডার মেমো'}
                 </span>
                 
-                {/* প্রোডাক্ট তালিকা */}
                 <div className="border-b border-border-base/70 pb-2 mb-2">
                   {cartItems.map((i) => (
                     <div key={i.id} className="flex items-center justify-between gap-2 py-1.5 font-body text-[13px] text-ink/85">
@@ -1421,7 +1411,6 @@ export default function CheckoutPage() {
                     </div>
                   ))}
 
-                  {/* প্রোডাক্টের নিচে কুপন ছাড়ের লাইন */}
                   {appliedCoupon && discountAmount > 0 && (
                     <div className="flex items-center justify-between gap-2 py-1.5 font-body text-[13px] font-bold text-emerald-600">
                       <span>{lang === 'en' ? `Coupon Discount (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}</span>
@@ -1430,13 +1419,11 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* সাবটোটাল */}
                 <div className="flex justify-between py-1.5 font-body text-[13px] text-ink/80">
                   <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}</span>
                   <span>৳{sub.toLocaleString('en-US')}</span>
                 </div>
 
-                {/* ডেলিভারি চার্জ / ফ্রি ডেলিভারি লাইন */}
                 <div className="flex justify-between items-center py-1.5 font-body text-[13px] text-ink/80">
                   {appliedCoupon?.freeShipping ? (
                     <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[12.5px]">
@@ -1456,18 +1443,14 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* ড্যাশড ডিভাইডার */}
                 <div className="my-2.5 h-px border-t border-dashed border-border-base" />
 
-                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি */}
                 <div className="flex flex-col gap-2 pt-0.5 pb-1">
-                  {/* সর্বমোট বিল */}
                   <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink">
                     <span>{lang === 'en' ? 'Total Bill' : 'সর্বমোট বিল'}</span>
                     <span>৳{total.toLocaleString('en-US')}</span>
                   </div>
 
-                  {/* এডভান্স পেমেন্ট (ডায়নামিক) */}
                   <div className="flex items-center justify-between font-body text-[13px] font-medium text-ink/75">
                     <span>
                       {advanceInfo.isHighValue
@@ -1477,17 +1460,14 @@ export default function CheckoutPage() {
                     <span className="font-semibold text-brand-light">- ৳{advanceInfo.totalAdvance.toLocaleString('en-US')}</span>
                   </div>
 
-                  {/* ক্যাশ অন ডেলিভারি */}
                   <div className="flex items-center justify-between font-body text-[14.5px] font-bold text-ink">
                     <span>{lang === 'en' ? 'Cash on Delivery' : 'ক্যাশ অন ডেলিভারি'}</span>
                     <span className="font-extrabold text-ink">৳{balance.toLocaleString('en-US')}</span>
                   </div>
                 </div>
 
-                {/* ডিভাইডার */}
                 <div className="my-3.5 h-px bg-border-base" />
 
-                {/* ডেলিভারি লেবেল */}
                 <span className="mb-2 block font-body text-[11px] font-bold uppercase tracking-wide text-brand-light">
                   {lang === 'en' ? 'Delivery Label' : 'ডেলিভারি লেবেল'}
                 </span>
