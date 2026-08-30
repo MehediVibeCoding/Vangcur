@@ -82,6 +82,23 @@ function LockSecurityIcon() {
   );
 }
 
+function IconSpinner() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.75" opacity="0.22" />
+      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12.5 9.5 17.5 19.5 6" />
+    </svg>
+  );
+}
+
 function HeaderDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
@@ -119,6 +136,9 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const [couponLoading, setCouponLoading] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [couponError, setCouponError] = useState('');
+
+  // চেকআউট বাটন লোডিং ও সাকসেস ট্রানজিশন স্টেট
+  const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
   useEffect(() => {
     router.prefetch('/checkout');
@@ -160,7 +180,10 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   useEffect(() => {
     if (isOpen) lockBody();
-    else unlockBody();
+    else {
+      unlockBody();
+      setCheckoutStatus('idle');
+    }
   }, [isOpen]);
 
   const handleQty = (id: number | string, delta: number) => {
@@ -195,10 +218,10 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
   // কুপন অ্যাপ্লাই হ্যান্ডলার
-  const handleApplyCoupon = async (e?: React.FormEvent) => {
+  const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
-    const clean = couponCode.trim().toUpperCase();
+    const clean = (customCode !== undefined ? customCode : couponCode).trim().toUpperCase();
     if (!clean) {
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
@@ -222,6 +245,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     }
 
     saveAppliedCoupon(res.coupon);
+    setAppliedCoupon(res.coupon);
     setCouponCode('');
     setCouponError('');
     showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
@@ -230,33 +254,47 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   const handleRemoveCoupon = () => {
     removeAppliedCoupon();
+    setAppliedCoupon(null);
     setCouponError('');
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
+  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ চেকআউট ট্রানজিশন হ্যান্ডলার
   const handleCheckout = async () => {
-    if (!cart.length) {
-      showToast(t('কার্ট খালি!'));
+    if (!cart.length || checkoutStatus !== 'idle') {
+      if (!cart.length) showToast(t('কার্ট খালি!'));
       return;
     }
 
-    // 🌟 যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করে থাকে, তবে আগে স্বয়ংক্রিয়ভাবে ভ্যালিডেট হবে
     let currentDiscount = discountAmount;
+
+    // ১. যদি কুপন কোড বক্সে লেখা থাকে কিন্তু প্রয়োগে ক্লিক করা না হয়ে থাকে
     if (couponCode.trim() && !appliedCoupon) {
-      const success = await handleApplyCoupon();
-      if (!success) return; // ভুল কুপন হলে চেকআউট আটকাবে
+      setCheckoutStatus('verifying');
+      const success = await handleApplyCoupon(undefined, couponCode);
+      if (!success) {
+        setCheckoutStatus('idle');
+        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
+      }
+
+      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ ব্যাজ ও ডিসকাউন্ট দেখার জন্য ঠিক ৯০০ms অপেক্ষা
+      await new Promise((r) => setTimeout(r, 900));
+
       const freshlyApplied = getAppliedCoupon();
       if (freshlyApplied) {
         currentDiscount = freshlyApplied.discountAmount || 0;
       }
+      setCheckoutStatus('success');
+      await new Promise((r) => setTimeout(r, 300));
     }
 
     const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
 
-    // 🛡️ ২০,০০০ টাকার বেশি বিল হলে সরাসরি বাল্ক অর্ডার মডাল ওপেন
+    // ২. ২০,০০০ টাকার বেশি বিল হলে বাল্ক অর্ডার মডাল ওপেন
     if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
+      setCheckoutStatus('idle');
       onClose();
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
@@ -404,7 +442,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 )}
 
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
+                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs animate-section-reveal">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
                         ✓
@@ -489,9 +527,22 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
             <button
               onClick={handleCheckout}
-              className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95"
+              disabled={checkoutStatus !== 'idle'}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-90"
             >
-              {lang === 'en' ? 'Checkout' : 'চেকআউট করুন'}
+              {checkoutStatus === 'verifying' ? (
+                <>
+                  <IconSpinner />
+                  <span>{lang === 'en' ? 'Verifying Coupon...' : 'কুপন যাচাই হচ্ছে...'}</span>
+                </>
+              ) : checkoutStatus === 'success' ? (
+                <>
+                  <IconCheck />
+                  <span>{lang === 'en' ? 'Success!' : 'সফল!'}</span>
+                </>
+              ) : (
+                <span>{lang === 'en' ? 'Checkout' : 'চেকআউট করুন'}</span>
+              )}
             </button>
 
             <div className="mt-2.5 flex items-center justify-center gap-1.5 font-body text-[11px] font-medium text-muted">
