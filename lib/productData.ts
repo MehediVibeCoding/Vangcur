@@ -11,10 +11,26 @@ interface MinimalRouter {
   push: (href: string) => void;
 }
 
+// 🌟 পুরানো iOS Safari / iPhone 7 (iOS 15) সামঞ্জস্যপূর্ণ সেফ টাইমআউট সিগন্যাল
+function getTimeoutSignal(ms: number): AbortSignal | undefined {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms);
+  }
+  if (typeof AbortController !== 'undefined') {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), ms);
+    return controller.signal;
+  }
+  return undefined;
+}
+
 export function prodInCat(p: Product, catId: string): boolean {
-  if (catId === 'all') return true;
-  if (Array.isArray(p.cats) && p.cats.length) return p.cats.includes(catId);
-  return p.cat === catId;
+  const targetCat = String(catId || '').trim().toLowerCase();
+  if (!targetCat || targetCat === 'all') return true;
+  if (Array.isArray(p.cats) && p.cats.length) {
+    return p.cats.some((c) => String(c || '').trim().toLowerCase() === targetCat);
+  }
+  return String(p.cat || '').trim().toLowerCase() === targetCat;
 }
 
 export function applyProdOrder(prods: Product[], orderArr: unknown): Product[] {
@@ -116,16 +132,17 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
 const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
 const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,power_info,info_boxes,seo_h1,meta_title,meta_description,og_description,quick_specs_text,packaging_content`;
 
-const QUERY_TIMEOUT_MS = 3500;
+const QUERY_TIMEOUT_MS = 4000;
 const RETRY_DELAY_MS = 400;
 
 async function fetchProdOrder(supabase: SupabaseClient): Promise<unknown> {
   try {
+    const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
     const { data } = await supabase
       .from('store_settings')
       .select('setting_value')
       .eq('setting_key', 'vc_prod_order')
-      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
+      .abortSignal(signal as any)
       .maybeSingle();
     return data?.setting_value ?? null;
   } catch {
@@ -140,11 +157,12 @@ export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Pro
   while (attempt < MAX_ATTEMPTS) {
     attempt++;
     try {
+      const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
       const { data: sbProds, error } = await supabase
         .from('custom_products')
         .select(GRID_COLS)
         .order('id', { ascending: true })
-        .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS));
+        .abortSignal(signal as any);
 
       if (error) {
         logWarn('[Vangcur] custom_products fetch error (attempt ' + attempt + '):', error.message, '| code:', error.code);
@@ -271,7 +289,7 @@ export function recordLocalOrderTimestamp(): void {
 export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): void {
   if (!prod || prod.stock <= 0) return;
 
-  // ১. আর্লি রেট লিমিট গার্ড — ৩টি অর্ডার পূর্ণ হলে চেকআউটে যাওয়ার আগেই প্রিমিয়াম পপআপ ট্রিগার হবে
+  // ১. আর্লি রেট লিমিট গার্ড
   if (hasExceededLocalOrderLimit()) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
