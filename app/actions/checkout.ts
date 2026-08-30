@@ -82,10 +82,16 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('সার্ভার কনফিগারেশন সমস্যা, একটু পরে চেষ্টা করুন'));
   }
 
-  // 🛡️ জিরো-ট্রাস্ট অথেন্টিকেশন ও মডারেটর সেশন ডিটেকশন
+  // 🛡️ মাল্টি-লেয়ার মডারেটর ও অ্যাডমিন ডিটেকশন (সেশন কুকি + ফর্ম ইমেইল)
   let currentUserId: string | null = null;
   let isPrivilegedUser = false;
 
+  // লেভেল ১: ফর্মের ইমেইল বক্স চেক
+  if (email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
+    isPrivilegedUser = true;
+  }
+
+  // লেভেল ২: লগইন সেশন কুকি চেক
   try {
     const cookieClient = await createClient();
     const { data: userData } = await cookieClient.auth.getUser();
@@ -108,11 +114,10 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       }
     }
   } catch {
-    currentUserId = null;
-    isPrivilegedUser = false;
+    // ignore
   }
 
-  // ২. রেট লিমিট যাচাই (মডারেটর ছাড়া সাধারণ কাস্টমারদের জন্য)
+  // ২. রেট লিমিট যাচাই (মডারেটর/অ্যাডমিন হলে রেট লিমিট ১০০% বাইপাস)
   if (!isPrivilegedUser) {
     try {
       const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
@@ -187,7 +192,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
   const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
-  // ২০k লিমিট গার্ড
+  // ২০k লিমিট গার্ড (মডারেটরের জন্য বাইপাস)
   if (vTotal > MAX_ONLINE_ORDER_TOTAL && !isPrivilegedUser) {
     return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
   }
@@ -196,7 +201,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const advanceBreakdown = calculateAdvancePayment(vTotal);
   const advancePaidAmount = advanceBreakdown.totalAdvance;
 
-  // ৫. স্টক কমানোর চেষ্টা (ফেইল করলেও অর্ডার আটকাবে না)
+  // ৫. স্টক হ্রাস
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
   try {
     const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
@@ -294,7 +299,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // ৭. কুপন ব্যবহার কাউন্ট বৃদ্ধি (টাইপ-সেফ .then() হ্যান্ডলার)
+  // ৭. কুপন ব্যবহার কাউন্ট বৃদ্ধি (টাইপ-সেফ হ্যান্ডলার)
   if (appliedCouponCode) {
     service
       .rpc('increment_coupon_usage', { p_code: appliedCouponCode })
