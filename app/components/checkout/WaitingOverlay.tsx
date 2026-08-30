@@ -40,17 +40,6 @@ function HeaderDecor() {
   );
 }
 
-function IconHourglass() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 animate-pulse">
-      <path d="M5 22h14" />
-      <path d="M5 2h14" />
-      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
-      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
-    </svg>
-  );
-}
-
 function IconCheck() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
@@ -61,18 +50,18 @@ function IconCheck() {
 
 function IconSearch() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   );
 }
 
-function IconCircleDot() {
+function IconCircleTarget() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="3" fill="currentColor" />
+      <circle cx="12" cy="12" r="4" />
     </svg>
   );
 }
@@ -92,16 +81,6 @@ function IconWarningShield() {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  );
-}
-
-function IconBulb() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
-      <path d="M9 18h6" />
-      <path d="M10 22h4" />
-      <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
     </svg>
   );
 }
@@ -131,8 +110,6 @@ function IconWhatsApp() {
     </svg>
   );
 }
-
-const socialIconClass = 'flex h-[36px] w-[36px] items-center justify-center rounded-full border border-white/80 bg-white/70 text-ink shadow-xs transition-all duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-current';
 
 export default function WaitingOverlay() {
   const { t, lang } = useT();
@@ -282,77 +259,67 @@ export default function WaitingOverlay() {
         onClick={() => (isPending ? setMinimized(true) : dismiss())}
       />
 
-      {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
-      <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4 overflow-y-auto">
-        <div className="relative w-full max-w-[440px] max-h-[92vh] overflow-y-auto rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal">
+      {/* মোবাইলে ১০০% ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মডাল — সম্পূর্ণ ইনভিজিবল স্লিক স্ক্রলবার সহ */}
+      <div className="fixed inset-0 z-[1205] flex items-center justify-center sm:p-4">
+        <div className="relative w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <HeaderDecor />
-
-          {/* টপ ক্লোজ / মিনিমাইজ বাটন */}
-          <div className="relative z-10 -mt-2 mb-2 flex justify-end">
-            <button
-              onClick={() => (isPending ? setMinimized(true) : dismiss())}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-              title={isPending ? t('মিনিমাইজ করুন') : t('বন্ধ করুন')}
-              aria-label={isPending ? t('মিনিমাইজ করুন') : t('বন্ধ করুন')}
-            >
-              {isPending ? '—' : '✕'}
-            </button>
-          </div>
 
           {/* ========================================================================= */}
           {/* ১. পেন্ডিং ও ভেরিফিকেশন স্টেট */}
           {/* ========================================================================= */}
           {isPending && (
             <>
-              {/* লোডার আইকন ব্যাজ */}
-              <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-amber-200/80 bg-amber-50 text-amber-600 shadow-xs">
-                <IconHourglass />
+              {/* ক্লাসিক ওয়ার্ম স্যান্ড-গ্লাস আইকন ব্যাজ */}
+              <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#FEF3C7] text-[34px] shadow-[0_4px_16px_rgba(245,158,11,0.22)] animate-pulse">
+                ⏳
               </div>
 
-              {/* টাইটেল ও সাবটাইটেল */}
+              {/* টাইটেল */}
               <h2 className="relative z-10 mb-1.5 font-body text-xl font-extrabold text-ink">
                 {t('ধন্যবাদ!')}
               </h2>
+
+              {/* ক্লাসিক প্রমিত মূল বাক্য (সঠিক ও নির্ভুল বানান সহ) */}
               <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
                 {lang === 'en' ? (
-                  <>Your order is pending. We are verifying your ৳{advanceAmount.toLocaleString('en-US')} advance payment. You will usually get confirmation <strong className="text-ink font-bold">within 5–10 minutes</strong> (maximum 30 minutes).</>
+                  <>Your order is pending. We are verifying your ৳{advanceAmount.toLocaleString('en-US')} payment. You will usually get confirmation <strong className="text-ink font-bold">within 5–10 minutes</strong> (maximum 30 minutes).</>
                 ) : (
-                  <>আপনার অর্ডারটি পেন্ডিং অবস্থায় আছে। আপনার ৳{advanceAmount.toLocaleString('en-US')} এডভান্স পেমেন্ট যাচাই করা হচ্ছে। সাধারণত <strong className="text-ink font-bold">৫–১০ মিনিটের মধ্যে</strong> কনফার্মেশন পাবেন (সর্বোচ্চ ৩০ মিনিট)।</>
+                  <>আপনার অর্ডারটি পেন্ডিং অবস্থায় আছে। আপনার ৳{advanceAmount.toLocaleString('en-US')} টাকার পেমেন্ট আমরা যাচাই করছি। সাধারণত <strong className="text-ink font-bold">৫–১০ মিনিটের মধ্যে</strong> কনফার্মেশন পাবেন (সর্বোচ্চ ৩০ মিনিট)।</>
                 )}
               </p>
 
-              {/* অর্ডার নম্বর ও কপি বাটন */}
-              <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
-                <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
-                <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
+              {/* অর্ডার নম্বর বক্স — সফট গ্রিন টিন্ট ব্যাকগ্রাউন্ড সহ */}
+              <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-emerald-300/80 bg-emerald-50/90 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+                <span className="font-body text-xs font-bold text-emerald-800">{t('অর্ডার নম্বর:')}</span>
+                <span className="font-body text-sm font-extrabold text-emerald-950">{order.orderNum}</span>
                 <button
                   onClick={copyOrderNum}
-                  className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
+                  className="ml-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/60 bg-white/90 px-2.5 py-1 font-body text-[11px] font-bold text-emerald-800 shadow-xs transition-colors hover:bg-emerald-600 hover:text-white active:scale-95"
                 >
                   {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
                   <span>{copyLabel}</span>
                 </button>
               </div>
 
-              {/* আন-লগইন গেস্ট ওয়ার্নিং কার্ড */}
+              {/* আন-লগইন গেস্ট কার্ড */}
               {isGuest && (
                 <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[16px] border border-amber-200/80 bg-amber-50/90 p-3 text-left shadow-xs">
                   <IconWarningShield />
                   <div className="font-body text-[11.5px] leading-[1.65] text-amber-900">
                     {lang === 'en' ? (
-                      <>You are currently <strong>not logged in</strong>. To track and manage your order in the future from any device, click the website&apos;s <strong>Login button</strong>.</>
+                      <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
                     ) : (
-                      <>আপনি এই মুহূর্তে <strong>আন-লগইন</strong> অবস্থায় আছেন। ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে অ্যাকাউন্টে প্রবেশ করুন।</>
+                      <>⚠️ আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন */}
+              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন (হলুদ আলো বিচ্ছুরণ ইফেক্ট সহ) */}
               <div className="relative z-10 mb-4 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
-                {/* ধাপ ১: রিসিভড */}
+                {/* ধাপ ১: রিসিভড (গ্রিন) */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-xs">
                     <IconCheck />
                   </span>
                   <div>
@@ -361,64 +328,100 @@ export default function WaitingOverlay() {
                   </div>
                 </div>
 
-                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন */}
+                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন (উজ্জ্বল হলুদ আলো বিচ্ছুরণ — Radiant Amber Glow) */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white shadow-xs animate-pulse">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-100 text-amber-700 shadow-[0_0_18px_rgba(245,158,11,0.55)] animate-pulse">
                     <IconSearch />
                   </span>
                   <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-ink">{t('পেমেন্ট ভেরিফিকেশন')}</strong>
-                    <span className="font-body text-[11px] text-muted">{t('বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে')}</span>
+                    <strong className="block font-body text-[12.5px] font-bold text-amber-900">{t('পেমেন্ট ভেরিফিকেশন')}</strong>
+                    <span className="font-body text-[11px] font-medium text-amber-700">{t('বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে')}</span>
                   </div>
                 </div>
 
-                {/* ধাপ ৩: কনফার্মেশন */}
+                {/* ধাপ ৩: কনফার্মেশন (ক্লিয়ার ও কালারফুল) */}
                 <div className="flex items-center gap-3 pt-0.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border-base text-muted shadow-xs">
-                    <IconCircleDot />
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-light/40 bg-brand-bg/50 text-brand-light shadow-xs">
+                    <IconCircleTarget />
                   </span>
                   <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-muted">{t('অর্ডার কনফার্ম')}</strong>
+                    <strong className="block font-body text-[12.5px] font-bold text-ink/85">{t('অর্ডার কনফার্ম')}</strong>
                     <span className="font-body text-[11px] text-muted">{t('পেমেন্ট সঠিক হলে কনফার্ম হবে')}</span>
                   </div>
                 </div>
               </div>
 
-              {/* টিপ কলআউট বক্স */}
-              <div className="relative z-10 mb-4 flex items-start gap-2 rounded-[14px] border border-brand-light/30 bg-brand-bg/30 p-3 text-left font-body text-[11.5px] leading-[1.65] text-ink/85">
-                <IconBulb />
-                <span>
-                  {lang === 'en' ? (
-                    <>You can browse the website freely now. An automatic notification popup will appear once your order is confirmed.</>
-                  ) : (
-                    <>আপনি নিশ্চিন্তে এখন ওয়েবসাইট ব্রাউজ করতে পারেন। অর্ডার কনফার্ম হওয়ামাত্র স্বয়ংক্রিয় নোটিফিকেশন পপআপ দেখতে পাবেন।</>
-                  )}
-                </span>
+              {/* ক্লাসিক টিপ বক্স */}
+              <div className="relative z-10 mb-4 rounded-xl bg-surface-muted p-3 text-center font-body text-xs leading-[1.7] text-muted">
+                {lang === 'en' ? (
+                  <>💡 You can browse the website now if you&apos;d like.<br />An automatic notification will show once your order is confirmed.</>
+                ) : (
+                  <>💡 আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।<br />অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।</>
+                )}
               </div>
 
-              {/* সোশ্যাল ফলো বাটনসমূহ */}
+              {/* সোশ্যাল মিডিয়া আইকনসমূহ — ১০০% অফিসিয়াল ব্র্যান্ড কালার */}
               <div className="relative z-10 mb-5">
-                <div className="mb-2 font-body text-[10.5px] font-bold uppercase tracking-wider text-muted">{t('আমাদের ফলো করুন')}</div>
-                <div className="flex justify-center gap-2">
-                  <a className={socialIconClass} href={DEFAULT_FOOTER.social.fb} target="_blank" rel="noopener noreferrer" title="Facebook">
+                <div className="mb-2.5 font-body text-[10.5px] font-bold uppercase tracking-wider text-muted">{t('আমাদের ফলো করুন')}</div>
+                <div className="flex justify-center gap-2.5">
+                  {/* Facebook (#1877F2) */}
+                  <a
+                    className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#1877F2] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
+                    href={DEFAULT_FOOTER.social.fb}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Facebook"
+                  >
                     <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
                   </a>
-                  <a className={socialIconClass} href={DEFAULT_FOOTER.social.ig} target="_blank" rel="noopener noreferrer" title="Instagram">
+
+                  {/* Instagram (Official Gradient) */}
+                  <a
+                    className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-gradient-to-tr from-[#FFDC80] via-[#FD1D1D] to-[#833AB4] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
+                    href={DEFAULT_FOOTER.social.ig}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Instagram"
+                  >
                     <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
                   </a>
-                  <a className={socialIconClass} href={DEFAULT_FOOTER.social.tk} target="_blank" rel="noopener noreferrer" title="TikTok">
+
+                  {/* TikTok (#010101) */}
+                  <a
+                    className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#010101] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
+                    href={DEFAULT_FOOTER.social.tk}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="TikTok"
+                  >
                     <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" /></svg>
                   </a>
-                  <a className={socialIconClass} href={DEFAULT_FOOTER.social.wa} target="_blank" rel="noopener noreferrer" title="WhatsApp">
+
+                  {/* WhatsApp (#25D366) */}
+                  <a
+                    className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
+                    href={DEFAULT_FOOTER.social.wa}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="WhatsApp"
+                  >
                     <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
                   </a>
-                  <a className={socialIconClass} href={DEFAULT_FOOTER.social.yt} target="_blank" rel="noopener noreferrer" title="YouTube">
+
+                  {/* YouTube (#FF0000) */}
+                  <a
+                    className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FF0000] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
+                    href={DEFAULT_FOOTER.social.yt}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="YouTube"
+                  >
                     <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
                   </a>
                 </div>
               </div>
 
-              {/* সাইট ব্রাউজ করার প্রাইমারি বাটন */}
+              {/* ওয়েবসাইটে ফিরে যাওয়ার প্রাইমারি বাটন */}
               <button
                 onClick={() => setMinimized(true)}
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
