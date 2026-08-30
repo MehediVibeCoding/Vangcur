@@ -1,3 +1,4 @@
+// [REPLACE] ফাইলের পাথ: app/components/modals/InvoiceModal.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -209,6 +210,8 @@ export default function InvoiceModal() {
     : '';
   const advancePaid = order.advancePaid || 200;
   const balanceDue = Math.max(0, (order.total || 0) - advancePaid);
+  const isFreeShipping = Number(order.shippingCost) === 0;
+
   const dueMsg = balanceDue > 0
     ? `Hey! Please hand ৳${balanceDue.toLocaleString()} to the delivery man when you receive your package — that's your remaining balance (COD). Once you've got it home, make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`
     : `Great news — you've already paid in full! Once you receive your package, make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`;
@@ -236,7 +239,7 @@ export default function InvoiceModal() {
           onClick={downloadPNG}
           disabled={downloading}
           style={{
-            display: 'flex', alignItems: 'center', gap: 7, background: '#E63946', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: downloading ? 'default' : 'pointer', opacity: downloading ? 0.6 : 1, fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
+            display: 'flex', alignItems: 'center', gap: 7, background: '#0058C7', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, cursor: downloading ? 'default' : 'pointer', opacity: downloading ? 0.6 : 1, fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
           }}
         >
           {downloading ? t('⏳ তৈরি হচ্ছে...') : t('🖼️ ছবি ডাউনলোড')}
@@ -275,16 +278,46 @@ export default function InvoiceModal() {
                   </tr>
                 ))}
                 <tr>
-                  <td colSpan={2} style={{ color: '#888' }}>Shipping ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})</td>
-                  <td style={{ textAlign: 'right' }}>৳{order.shippingCost}</td>
+                  <td colSpan={2} style={{ color: isFreeShipping ? '#065F46' : '#888', fontWeight: isFreeShipping ? 600 : 400 }}>
+                    Shipping ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
+                    {isFreeShipping && ' — FREE (Coupon)'}
+                  </td>
+                  <td style={{ textAlign: 'right', color: isFreeShipping ? '#10B981' : '#1a1a1a', fontWeight: isFreeShipping ? 700 : 400 }}>
+                    {isFreeShipping ? 'FREE' : `৳${order.shippingCost}`}
+                  </td>
                 </tr>
               </tbody>
             </table>
 
+            {/* টোটাল ও ডিসকাউন্ট বক্স */}
             <div className="totals-box">
-              <div className="total-row grand"><span>Total</span><span>৳{(order.total || 0).toLocaleString()}</span></div>
-              <div className="total-row paid"><span>✅ Paid (bKash Advance)</span><span>৳{advancePaid.toLocaleString()}</span></div>
-              <div className="total-row balance"><span>Balance Due (COD)</span><span>৳{balanceDue.toLocaleString()}</span></div>
+              {order.subtotal ? (
+                <div className="total-row">
+                  <span>Subtotal</span>
+                  <span>৳{order.subtotal.toLocaleString()}</span>
+                </div>
+              ) : null}
+
+              {/* কুপন ছাড় রো */}
+              {order.discountAmount && order.discountAmount > 0 ? (
+                <div className="total-row" style={{ color: '#065F46', fontWeight: 600 }}>
+                  <span>🏷️ Coupon Discount ({order.couponCode || 'PROMO'})</span>
+                  <span style={{ color: '#10B981', fontWeight: 700 }}>- ৳{order.discountAmount.toLocaleString()}</span>
+                </div>
+              ) : null}
+
+              <div className="total-row grand">
+                <span>Grand Total</span>
+                <span>৳{(order.total || 0).toLocaleString()}</span>
+              </div>
+              <div className="total-row paid">
+                <span>✅ Paid (bKash Advance)</span>
+                <span>৳{advancePaid.toLocaleString()}</span>
+              </div>
+              <div className="total-row balance">
+                <span>Balance Due (COD)</span>
+                <span>৳{balanceDue.toLocaleString()}</span>
+              </div>
             </div>
 
             <div className="payment-badge">💳 Payment: bKash &nbsp;|&nbsp; 🚚 Courier: Pathao</div>
