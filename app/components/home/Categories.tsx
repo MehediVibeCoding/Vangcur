@@ -1,6 +1,7 @@
+// [REPLACE] ফাইলের পাথ: app/components/home/Categories.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   DEFAULT_CATEGORIES, makeCatSlug, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
@@ -24,11 +25,9 @@ export default function Categories({ initialCategories }: CategoriesProps) {
   const { lang } = useT();
   const [cats] = useState<Category[]>(initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES);
   const [catPage, setCatPage] = useState(0);
-  const [gridCols, setGridCols] = useState(4);
-  const [perPage, setPerPage] = useState(8);
+  const [perPage, setPerPage] = useState(4); // মোবাইলে ডিফল্ট ৪টি আইটেম
 
   const viewportRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
   const prevBtnRef = useRef<HTMLButtonElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
   const btnResetTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -36,27 +35,22 @@ export default function Categories({ initialCategories }: CategoriesProps) {
 
   const maxPage = Math.max(0, Math.ceil(cats.length / perPage) - 1);
 
-  useEffect(() => {
-    const applyResponsive = () => {
-      if (typeof window === 'undefined') return;
-      if (window.visualViewport && window.visualViewport.scale !== 1) return;
-      
-      const width = window.innerWidth;
-      const cols = width <= 768 ? 2 : width <= 1024 ? 3 : 4;
-      const pp = width <= 768 ? 4 : 8;
-      
-      setGridCols(cols);
-      setPerPage(pp);
-      setCatPage((p) => {
-        const nextMax = Math.max(0, Math.ceil(cats.length / pp) - 1);
-        return Math.max(0, Math.min(p, nextMax));
-      });
-    };
+  const applyResponsive = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const width = window.innerWidth;
+    const pp = width <= 768 ? 4 : 8; // মোবাইলে ৪টি (২x২ গ্রিড), ডেস্কে ৮টি
+    setPerPage(pp);
+    setCatPage((p) => {
+      const nextMax = Math.max(0, Math.ceil(cats.length / pp) - 1);
+      return Math.max(0, Math.min(p, nextMax));
+    });
+  }, [cats.length]);
 
+  useEffect(() => {
     applyResponsive();
     window.addEventListener('resize', applyResponsive);
     return () => window.removeEventListener('resize', applyResponsive);
-  }, [cats.length]);
+  }, [applyResponsive]);
 
   const slide = (dir: number, btnKey: 'prev' | 'next') => {
     setCatPage((p) => {
@@ -70,8 +64,8 @@ export default function Categories({ initialCategories }: CategoriesProps) {
       btn.classList.add('scale-95', 'bg-brand-light', 'text-white', 'border-brand-light');
       clearTimeout(btnResetTimerRef.current[btnKey]);
       btnResetTimerRef.current[btnKey] = setTimeout(() => {
-        btn.classList.remove('scale-95', 'bg-brand-light', 'text-white', 'border-brand-light');
-      }, 500);
+        btn?.classList.remove('scale-95', 'bg-brand-light', 'text-white', 'border-brand-light');
+      }, 400);
     }
   };
 
@@ -85,7 +79,9 @@ export default function Categories({ initialCategories }: CategoriesProps) {
     const onTouchEnd = (e: TouchEvent) => {
       const dx = e.changedTouches[0].clientX - touchRef.current.x;
       const dy = e.changedTouches[0].clientY - touchRef.current.y;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) slide(dx < 0 ? 1 : -1, dx < 0 ? 'next' : 'prev');
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 36) {
+        slide(dx < 0 ? 1 : -1, dx < 0 ? 'next' : 'prev');
+      }
     };
     vp.addEventListener('touchstart', onTouchStart, { passive: true });
     vp.addEventListener('touchend', onTouchEnd, { passive: true });
@@ -109,53 +105,55 @@ export default function Categories({ initialCategories }: CategoriesProps) {
   const pageCount = maxPage + 1;
 
   return (
-    <div className="mx-auto mb-11 min-h-[140px] max-w-[1300px] px-5">
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
+    <div className="mx-auto mb-11 min-h-[140px] max-w-[1300px] overflow-hidden px-3.5 sm:px-5">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="border-l-[3px] border-brand-light pl-3 text-lg font-bold sm:text-xl text-ink">
           {lang === 'en'
             ? <>All <span className="text-brand-light">Categories</span></>
             : <>ক্যাটাগরি <span className="text-brand-light">সমূহ</span></>}
         </h2>
       </div>
 
-      <div className="relative overflow-visible px-[38px] md:px-[44px]">
+      <div className="relative px-8 sm:px-[38px] md:px-[44px]">
+        {/* আগের বাটন */}
         <button
           ref={prevBtnRef}
-          className="absolute left-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute left-0 top-1/2 z-[5] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-base font-bold leading-none text-ink shadow-sh1 transition-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
           aria-label="Previous Category"
         >
           &#8249;
         </button>
 
-        <div className="touch-pan-y overflow-hidden pt-1.5" ref={viewportRef}>
-          <div
-            ref={gridRef}
-            className="grid gap-[7px] md:gap-3"
-            style={{ gridTemplateColumns: `repeat(${gridCols},1fr)` }}
-          >
+        {/* ক্যাটাগরি গ্রিড কনটেইনার — পিওর সিএসএস রেসপন্সিভ গ্রিড */}
+        <div className="touch-pan-y overflow-hidden py-1" ref={viewportRef}>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 md:gap-3">
             {cats.map((cat, i) => {
               const start = catPage * perPage;
               const visible = i >= start && i < start + perPage;
+              if (!visible) return null;
               return (
                 <div
                   key={cat.id}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-[0_2px_6px_rgba(0,0,0,.04)] transition-brand duration-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:gap-3 md:p-[13px] ${visible ? '' : 'hidden'}`}
+                  className="flex cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs transition-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:gap-3 md:p-3 active:scale-98"
                   onClick={() => handleSelect(cat.id)}
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[1.5px] border-border-base bg-brand-bg text-[22px] text-brand-light md:h-[52px] md:w-[52px] md:text-2xl">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-base bg-brand-bg text-[20px] text-brand-light md:h-12 md:w-12 md:text-2xl">
                     <CatIcon icon={cat.icon} />
                   </div>
-                  <div className="text-xs font-bold leading-tight text-ink md:text-[13px]">{cat.name}</div>
+                  <div className="line-clamp-1 font-body text-xs font-bold leading-tight text-ink md:text-[13px]">
+                    {cat.name}
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
 
+        {/* পরের বাটন */}
         <button
           ref={nextBtnRef}
-          className="absolute right-0 top-1/2 z-[5] flex h-[30px] w-[30px] -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-lg font-bold leading-none text-ink shadow-sh2 transition-brand duration-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute right-0 top-1/2 z-[5] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-base font-bold leading-none text-ink shadow-sh1 transition-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
           aria-label="Next Category"
         >
@@ -163,11 +161,14 @@ export default function Categories({ initialCategories }: CategoriesProps) {
         </button>
       </div>
 
+      {/* পেজিনেশন ডটস */}
       <div className="mt-3.5 flex justify-center gap-1.5">
         {Array.from({ length: pageCount }).map((_, p) => (
-          <div
+          <button
+            type="button"
             key={p}
-            className={`h-2 cursor-pointer rounded-full transition-brand duration-brand ${p === catPage ? 'w-[22px] rounded bg-brand-light' : 'w-2 bg-[#D1D5DB]'}`}
+            aria-label={`Go to category page ${p + 1}`}
+            className={`h-1.5 cursor-pointer rounded-full transition-brand ${p === catPage ? 'w-5 bg-brand-light' : 'w-1.5 bg-border-base'}`}
             onClick={() => setCatPage(p)}
           />
         ))}
