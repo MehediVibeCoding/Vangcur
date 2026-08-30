@@ -100,7 +100,7 @@ function CartIcon({ className = '' }: { className?: string }) {
 
 function BellIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -368,7 +368,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
 
-  // স্টক নোটিফিকেশন সাবস্ক্রিপশন স্টেট (ইউজার রিকোয়েস্ট জমা দিয়েছে কি না)
+  // স্টক নোটিফিকেশন সাবস্ক্রিপশন স্টেট
   const [isStockNotified, setIsStockNotified] = useState(false);
 
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
@@ -389,7 +389,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
   }, []);
 
-  // চেক করা যে এই প্রোডাক্টে ইউজার ইতিমধ্যে নোটিফিকেশন চেয়ে রেখেছে কি না
+  // চেক করা যে এই প্রোডাক্টে ইউজার ইতিমধ্যে নোটিফিকেশন সাবমিট করেছে কি না
   useEffect(() => {
     if (!prod?.id) return;
     try {
@@ -501,7 +501,7 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
     if (!prod) return;
     
     if (isStockNotified) {
-      showToast(lang === 'en' ? '✅ You have already requested notification for this product.' : '✅ আপনি ইতিমধ্যে এই প্রোডাক্টের নোটিফিকেশন রিকোয়েস্ট জমা দিয়েছেন।');
+      showToast(lang === 'en' ? 'You have already requested notification for this product.' : 'আপনি ইতিমধ্যে এই প্রোডাক্টের নোটিফিকেশন রিকোয়েস্ট জমা দিয়েছেন।');
       return;
     }
 
@@ -682,8 +682,9 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
             onTouchEnd={handleGalleryTouchEnd}
           >
             {sold ? (
-              <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-ink/85 px-3 py-1 text-[11px] font-bold text-white backdrop-blur">
-                {t('স্টক আউট')}
+              /* ১ম ছবির মতো নিখুঁত সফট স্লেট-অ্যাশ কালারের Sold Out ব্যাজ */
+              <div className="absolute left-3.5 top-3.5 z-10 rounded-full bg-[#5A6578] px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs">
+                {lang === 'en' ? 'Sold Out' : 'স্টক শেষ'}
               </div>
             ) : prod.badge && (
               <div className="absolute left-3.5 top-3.5 z-10 animate-badge-hot-glow rounded-full bg-brand-light px-3 py-1 text-[11px] font-bold text-white">
@@ -859,23 +860,22 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <div className="flex flex-col gap-2.5">
             {sold ? (
               isStockNotified ? (
-                /* ✅ ইতিমধ্যে রিকোয়েস্ট জমা দেওয়া অবস্থা */
+                /* ✅ ইতিমধ্যে রিকোয়েস্ট জমা দেওয়া অবস্থা — কোনো টিকচিহ্ন ছাড়া পরিচ্ছন্ন টেক্সট */
                 <button
                   type="button"
                   disabled
-                  className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-emerald-300 bg-emerald-50 py-3.5 font-body text-sm font-bold text-emerald-700 shadow-xs cursor-default select-none"
+                  className="flex w-full items-center justify-center rounded-[10px] border border-brand-light/35 bg-brand-bg/40 py-3.5 font-body text-sm font-bold text-brand-primary shadow-xs cursor-default select-none"
                 >
-                  <CheckBadgeIcon className="h-4 w-4 bg-transparent text-emerald-600" />
                   <span>{lang === 'en' ? 'You will be notified when back in stock' : 'স্টকে আসলে আপনাকে জানানো হবে'}</span>
                 </button>
               ) : (
-                /* 🔔 ফ্রেশ স্কাই-ব্লু স্টক নোটিফিকেশন বাটন */
+                /* 🔔 ফ্রেশ সলিড স্কাই-ব্লু স্টক নোটিফিকেশন অ্যাকশন বাটন */
                 <button
                   type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-light/60 bg-gradient-to-r from-brand-bg/50 via-white to-brand-bg/40 py-3.5 font-body text-sm font-bold text-brand-primary shadow-xs transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg/70 active:scale-98"
+                  className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-98"
                   onClick={notifyStock}
                 >
-                  <BellIcon className="text-brand-light" />
+                  <BellIcon className="text-white" />
                   <span>{lang === 'en' ? 'Notify Me When in Stock' : 'স্টকে আসলে আমাকে জানান'}</span>
                 </button>
               )
@@ -1101,21 +1101,22 @@ export default function ProductDetailClient({ slug, initialId, initialProduct }:
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {sold ? (
               isStockNotified ? (
+                /* স্টিকি বারে সাবমিট হওয়া অবস্থা — টিকচিহ্ন মুক্ত পরিচ্ছন্ন টেক্সট */
                 <button
                   type="button"
                   disabled
-                  className="flex items-center gap-1.5 rounded-[10px] border border-emerald-300 bg-emerald-50 px-3.5 py-2.5 text-[12.5px] font-bold text-emerald-700 shadow-xs cursor-default select-none"
+                  className="flex items-center justify-center rounded-[10px] border border-brand-light/35 bg-brand-bg/40 px-3.5 py-2.5 text-[12.5px] font-bold text-brand-primary shadow-xs cursor-default select-none"
                 >
-                  <CheckBadgeIcon className="h-3.5 w-3.5 bg-transparent text-emerald-600" />
                   <span>{lang === 'en' ? 'Notified' : 'জানানো হবে'}</span>
                 </button>
               ) : (
+                /* স্টিকি বারে সলিড স্কাই-ব্লু বাটন */
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 rounded-[10px] border border-brand-light/60 bg-brand-bg/40 px-4 py-2.5 text-[13px] font-bold text-brand-primary shadow-xs transition-brand duration-brand hover:bg-brand-bg active:scale-95"
+                  className="flex items-center gap-1.5 rounded-[10px] bg-brand-light px-4 py-2.5 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
                   onClick={notifyStock}
                 >
-                  <BellIcon className="text-brand-light" />
+                  <BellIcon className="text-white" />
                   <span>{lang === 'en' ? 'Notify' : 'জানান'}</span>
                 </button>
               )
