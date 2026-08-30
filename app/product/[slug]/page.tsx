@@ -1,7 +1,8 @@
+// [REPLACE] ফাইলের পাথ: app/product/[slug]/page.tsx
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { idFromSlug, makeSlug, fetchProductById } from '@/lib/productData';
+import { idFromSlug, makeSlug, fetchProductById, fetchCustomProducts } from '@/lib/productData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 import ProductDetailClient from './ProductDetailClient';
 
@@ -16,6 +17,15 @@ const getProduct = cache(async (id: string) => {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
   return fetchProductById(supabase, id);
+});
+
+// 🌟 সার্ভার থেকেই সম্পূর্ণ প্রোডাক্ট তালিকা ক্যাশড ফেচ করা (রিলেটেড প্রোডাক্টের জন্য)
+const getAllProducts = cache(async () => {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  return fetchCustomProducts(supabase);
 });
 
 // গুগল স্কিমার জন্য অনুমোদিত আসল রিভিউয়ের লাইভ গড় ও সংখ্যা ফেচ করা
@@ -96,9 +106,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const id = idFromSlug(slug);
 
-  const [initialProduct, liveReviewsSummary] = id
-    ? await Promise.all([getProduct(id), getProductReviewsSummary(id)])
-    : [null, null];
+  const [initialProduct, liveReviewsSummary, initialProducts] = id
+    ? await Promise.all([getProduct(id), getProductReviewsSummary(id), getAllProducts()])
+    : [null, null, []];
 
   let jsonLd = null;
   if (initialProduct) {
@@ -145,7 +155,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProductDetailClient slug={slug} initialId={id} initialProduct={initialProduct} />
+      <ProductDetailClient
+        slug={slug}
+        initialId={id}
+        initialProduct={initialProduct}
+        initialProducts={initialProducts || []}
+      />
     </>
   );
 }
