@@ -9,6 +9,8 @@ import {
   startQuickOrder, QUICK_CART_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useCartStore } from '@/lib/store/cartStore';
+import { showToast } from '@/lib/toast';
 import { WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
@@ -86,7 +88,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
-  const { lang } = useT();
+  const { t, lang } = useT();
   const router = useRouter();
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
@@ -119,20 +121,28 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
     }
   };
 
-  const handleCtaClick = (e: React.MouseEvent<HTMLButtonElement>, action: () => void) => {
+  // 🌟 ডিরেক্ট স্টোর মেথড সহ ১০০% ইনস্ট্যান্ট কার্ট হ্যান্ডলার (iPhone 7 / iOS 15 ফিক্স)
+  const handleAddToCartDirect = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!prefersReducedMotion()) {
-      const btn = e.currentTarget;
-      const r = document.createElement('span');
-      r.className = 'pointer-events-none absolute -ml-2.5 -mt-2.5 h-5 w-5 rounded-full bg-white/45 animate-ripple';
-      const rect = btn.getBoundingClientRect();
-      r.style.left = (e.clientX - rect.left) + 'px';
-      r.style.top = (e.clientY - rect.top) + 'px';
-      btn.appendChild(r);
-      setTimeout(() => r.remove(), 600);
+    if (sold) return;
+
+    const res = useCartStore.getState().addToCart([p], p.id, 1);
+    if (res.ok) {
+      showToast(t('কার্টে যোগ হয়েছে'));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }));
+      }
+    } else if (res.reason === 'stock') {
+      showToast(t('স্টক শেষ!'));
     }
-    action();
+  };
+
+  const handleOrderNowDirect = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (sold) return;
+    startQuickOrder(router, p, 1);
   };
 
   return (
@@ -148,7 +158,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
         />
 
         {sold ? (
-          /* ১ম ছবির মতো নিখুঁত সফট স্লেট-অ্যাশ কালারের Sold Out ব্যাজ */
           <div className="absolute left-[4.5%] top-[4.5%] z-[2] rounded-full bg-[#5A6578] px-2.5 py-1 text-[10.5px] font-bold text-white shadow-xs">
             {lang === 'en' ? 'Sold Out' : 'স্টক শেষ'}
           </div>
@@ -196,7 +205,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
 
           <div className="mt-1 flex w-full items-center gap-1 sm:mt-1.5 sm:gap-1.5">
             {sold ? (
-              /* গ্রিড কার্ডে পরিষ্কার সফট স্লেট-অ্যাশ ডিসেবলড বাটন */
               <button
                 type="button"
                 disabled
@@ -207,19 +215,21 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             ) : (
               <>
                 <button
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10"
-                  title="Add to Cart"
-                  aria-label="Add to Cart"
-                  onClick={(e) => handleCtaClick(e, () => window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } })))}
+                  type="button"
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10 active:scale-90"
+                  title={t('কার্টে যোগ করুন')}
+                  aria-label={t('কার্টে যোগ করুন')}
+                  onClick={handleAddToCartDirect}
                 >
                   <CartIcon />
                 </button>
                 <button
+                  type="button"
                   className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 active:scale-95 sm:h-9 sm:text-[13px] lg:h-10"
                   style={{
                     background: 'linear-gradient(115deg, rgba(255,255,255,.94) 0%, rgba(195,222,252,.9) 38%, rgba(255,255,255,.92) 64%, rgba(68,167,252,.35) 100%)',
                   }}
-                  onClick={(e) => handleCtaClick(e, () => startQuickOrder(router, p, 1))}
+                  onClick={handleOrderNowDirect}
                 >
                   {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
                 </button>
