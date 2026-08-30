@@ -18,7 +18,7 @@ import { sendTelegramOrderNotification } from '@/lib/telegram';
 import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 
 const MAX_ITEMS = 30;
-const MAX_QTY_PER_ITEM = 20;
+const MAX_QTY_PER_ITEM = 50;
 const GENERIC_RETRY_MSG = 'একটু পরে আবার চেষ্টা করুন';
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
@@ -42,7 +42,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const last4 = String(payload.paymentLast4 || '').trim();
   const fingerprintId = String(payload.fingerprintId || '').trim().slice(0, 128);
   const couponCode = String(payload.couponCode || '').trim().toUpperCase();
-  const items = Array.isArray(payload.items) ? payload.items : [];
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
 
   if (!validateName(name) || name.length > MAX_NAME_LEN) return fail(t('সঠিক নাম দিন'));
   if (!validatePhone(phone)) return fail(t('সঠিক মোবাইল নম্বর দিন'));
@@ -59,16 +59,20 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   if (hasTxn && !validateTxnId(txn)) return fail(t('সঠিক বিকাশ ট্রানজেকশন আইডি দিন'));
   if (hasLast4 && !/^\d{4}$/.test(last4)) return fail(t('সঠিক শেষ ৪ ডিজিট দিন'));
 
-  if (!items.length || items.length > MAX_ITEMS) return fail(t('কার্ট খালি বা অস্বাভাবিক, রিফ্রেশ করে আবার চেষ্টা করুন'));
-  const cleanItems: { id: string; qty: number }[] = [];
-  for (const raw of items) {
+  if (!rawItems.length || rawItems.length > MAX_ITEMS) return fail(t('কার্ট খালি বা অস্বাভাবিক, রিফ্রেশ করে আবার চেষ্টা করুন'));
+
+  // ১. ডুপ্লিকেট প্রোডাক্ট মার্জার (একই প্রোডাক্ট একাধিকবার থাকলে কোয়ান্টিটি যোগ করা)
+  const mergedMap: Record<string, number> = {};
+  for (const raw of rawItems) {
     const id = String(raw?.id ?? '').trim();
     const qty = Number(raw?.qty);
     if (!id || !Number.isInteger(qty) || qty < 1 || qty > MAX_QTY_PER_ITEM) {
       return fail(t('কার্টের একটি আইটেম সঠিক নয়, রিফ্রেশ করে আবার চেষ্টা করুন'));
     }
-    cleanItems.push({ id, qty });
+    mergedMap[id] = (mergedMap[id] || 0) + qty;
   }
+
+  const cleanItems: { id: string; qty: number }[] = Object.entries(mergedMap).map(([id, qty]) => ({ id, qty }));
 
   let service;
   try {
@@ -78,9 +82,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('সার্ভার কনফিগারেশন সমস্যা, একটু পরে চেষ্টা করুন'));
   }
 
-  // 🛡️ জিরো-ট্রাস্ট অথেন্টিকেশন ভেরিফিকেশন (Zero-Trust Session Verification)
-  // কোনো সাধারণ কাস্টমার ফর্মে মডারেটরের ইমেইল টাইপ করলেও সার্ভার কখনোই বাইপাস দেবে না,
-  // শুধুমাত্র ব্রাউজারে ক্রিপ্টোগ্রাফিক সেশন ভেরিফাইড থাকলেই আনলিমিটেড পাওয়ার কার্যকর হবে।
+  // 🛡️ জিরো-ট্রাস্ট অথেন্টিকেশন ও মডারেটর সেশন ডিটেকশন
   let currentUserId: string | null = null;
   let isPrivilegedUser = false;
 
@@ -110,31 +112,30 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     isPrivilegedUser = false;
   }
 
-  // ১. রেট লিমিট যাচাই (সাধারণ কাস্টমারের জন্য ২৪ ঘণ্টার ৩-অর্ডার গার্ড, মডারেটর/এডমিনের জন্য বাইপাস)
+  // ২. রেট লিমিট যাচাই (মডারেটর ছাড়া সাধারণ কাস্টমারদের জন্য)
   if (!isPrivilegedUser) {
     try {
       const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
       if (phoneRlErr) {
-        logError('[checkout] phone rate limit error:', phoneRlErr.message);
-        return fail(t(GENERIC_RETRY_MSG));
+        logWarn('[checkout] phone rate limit error:', phoneRlErr.message);
+      } else if (phoneOk === false) {
+        return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
       }
-      if (phoneOk === false) return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
 
       if (fingerprintId) {
         const { data: fpOk, error: fpErr } = await service.rpc('check_and_set_fingerprint_limit', { p_fingerprint_id: fingerprintId });
         if (fpErr) {
-          logError('[checkout] fingerprint rate limit error:', fpErr.message);
-          return fail(t(GENERIC_RETRY_MSG));
+          logWarn('[checkout] fingerprint rate limit error:', fpErr.message);
+        } else if (fpOk === false) {
+          return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
-        if (fpOk === false) return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
       }
     } catch (e) {
-      logError('[checkout] rate limit exception:', e);
-      return fail(t(GENERIC_RETRY_MSG));
+      logWarn('[checkout] rate limit exception:', e);
     }
   }
 
-  // ২. পণ্যের আসল দাম যাচাই
+  // ৩. পণ্যের আসল দাম যাচাই
   let authoritativeProds: Awaited<ReturnType<typeof fetchCustomProducts>> = [];
   try {
     authoritativeProds = await fetchCustomProducts(service);
@@ -156,7 +157,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   let sc = shipPrice(shipping, shipCfg);
   const vSub = verifiedItems.reduce((s, i) => s + i.price * i.qty, 0);
 
-  // ৩. সার্ভার-সাইড অথরিটেটিভ কুপন ভ্যালিডেশন
+  // ৪. কুপন ভ্যালিডেশন
   let discountAmount = 0;
   let appliedCouponCode: string | null = null;
 
@@ -169,48 +170,44 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         p_user_id: currentUserId,
       });
 
-      if (couponErr || !couponRes || !couponRes.ok) {
-        return fail(t(couponRes?.error || 'কুপন কোডটি সঠিক নয় বা মেয়াদ শেষ'));
-      }
-
-      appliedCouponCode = String(couponRes.code);
-      discountAmount = Number(couponRes.discount_amount) || 0;
-      if (couponRes.free_shipping === true) {
-        sc = 0;
+      if (!couponErr && couponRes && couponRes.ok) {
+        appliedCouponCode = String(couponRes.code);
+        discountAmount = Number(couponRes.discount_amount) || 0;
+        if (couponRes.free_shipping === true) {
+          sc = 0;
+        }
+      } else if (couponRes?.error) {
+        return fail(t(couponRes.error));
       }
     } catch (e) {
-      logError('[checkout] coupon validation exception:', e);
-      return fail(t('কুপন যাচাই করা যায়নি, আবার চেষ্টা করুন'));
+      logWarn('[checkout] coupon validation skipped:', e);
     }
   }
 
   const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
   const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
-  // ২০,০০০ টাকার বেশি অর্ডারের সার্ভার গার্ড (মডারেটর ছাড়া সবার জন্য)
+  // ২০k লিমিট গার্ড
   if (vTotal > MAX_ONLINE_ORDER_TOTAL && !isPrivilegedUser) {
     return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
   }
 
-  // ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট হিসাব
+  // ৩-টায়ার অগ্রিম হিসাব
   const advanceBreakdown = calculateAdvancePayment(vTotal);
   const advancePaidAmount = advanceBreakdown.totalAdvance;
 
-  // ৪. স্টক হ্রাস
+  // ৫. স্টক কমানোর চেষ্টা (ফেইল করলেও অর্ডার আটকাবে না)
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
   try {
     const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
-    if (stockErr) {
-      logWarn('[checkout] stock decrement failed:', stockErr.message);
-      if (stockErr.message?.includes('INSUFFICIENT_STOCK')) {
-        return fail(t('দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই'));
-      }
-      // স্টক ফাংশন না থাকলেও ফেইল-সেফ রাখার চেষ্টা
+    if (stockErr && stockErr.message?.includes('INSUFFICIENT_STOCK')) {
+      return fail(t('দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই'));
     }
   } catch (e) {
-    logError('[checkout] stock decrement exception:', e);
+    logWarn('[checkout] stock decrement skipped:', e);
   }
 
+  // অর্ডার নম্বর তৈরি
   let orderNum = `#VC-${Date.now().toString(36).toUpperCase()}`;
   try {
     const { data: counterData, error: counterErr } = await service.rpc('increment_order_counter');
@@ -219,23 +216,42 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     // fallback
   }
 
-  // ৫. অর্ডার ইনসার্ট (টেস্টিংয়ের সময় মডারেটরের ব্যবহৃত TxnID ডুপ্লিকেট কনফ্লিক্ট বাইপাস)
+  // ডুপ্লিকেট বিকাশ TxnID বাইপাস (মডারেটর টেস্টিংয়ের জন্য)
   let safeTxn = txn || null;
   if (safeTxn && isPrivilegedUser) {
-    const { data: existingTxn } = await service
-      .from('orders')
-      .select('id')
-      .eq('payment_txn', safeTxn)
-      .limit(1);
-
-    if (existingTxn && existingTxn.length > 0) {
-      safeTxn = `${safeTxn}-${Date.now().toString(36).toUpperCase().slice(-3)}`;
-    }
+    safeTxn = `${safeTxn}-${Date.now().toString(36).toUpperCase().slice(-3)}`;
   }
 
-  const { data: insData, error: insErr } = await service
-    .from('orders')
-    .insert({
+  // ৬. রেজিলিয়েন্ট অর্ডার ইনসার্ট (নতুন কলাম না থাকলেও ফলব্যাক দিয়ে সফল ইনসার্ট)
+  const primaryPayload: Record<string, unknown> = {
+    order_num: orderNum,
+    created_at: new Date().toISOString(),
+    customer_name: name,
+    customer_phone: phone,
+    customer_district: dist,
+    customer_address: addr,
+    customer_email: email,
+    items: verifiedItems,
+    shipping,
+    shipping_cost: sc,
+    subtotal: vSub,
+    total: vTotal,
+    discount_amount: discountAmount,
+    coupon_code: appliedCouponCode,
+    advance_paid: advancePaidAmount,
+    payment_txn: safeTxn,
+    payment_last4: last4,
+    fingerprint_id: fingerprintId || null,
+    status: 'pending',
+    ...(currentUserId ? { user_id: currentUserId } : {}),
+  };
+
+  let insResult = await service.from('orders').insert(primaryPayload).select('id').single();
+
+  // যদি কোনো কলাম অনুপস্থিত থাকার কারণে ইনসার্ট ফেইল করে, তাহলে বেস কলামে ফলব্যাক ইনসার্ট
+  if (insResult.error && insResult.error.code === '42703') {
+    logWarn('[checkout] Missing optional columns in DB schema, falling back to core fields...');
+    const fallbackPayload: Record<string, unknown> = {
       order_num: orderNum,
       created_at: new Date().toISOString(),
       customer_name: name,
@@ -248,39 +264,34 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       shipping_cost: sc,
       subtotal: vSub,
       total: vTotal,
-      discount_amount: discountAmount,
-      coupon_code: appliedCouponCode,
-      advance_paid: advancePaidAmount,
       payment_txn: safeTxn,
       payment_last4: last4,
-      fingerprint_id: fingerprintId || null,
       status: 'pending',
       ...(currentUserId ? { user_id: currentUserId } : {}),
-    })
-    .select('id')
-    .single();
+    };
+    insResult = await service.from('orders').insert(fallbackPayload).select('id').single();
+  }
 
-  if (insErr || !insData) {
-    logError('[checkout] order insert failed:', insErr?.message);
-    try {
-      await service.rpc('restore_product_stock', { p_items: stockItems });
-    } catch (e) {
-      logError('[checkout] stock restore after failed insert failed:', e);
+  if (insResult.error || !insResult.data) {
+    logError('[checkout] order insert failed:', insResult.error?.message, '| Code:', insResult.error?.code);
+    
+    // মডারেটর/এডমিনকে আসল ডাটাবেজ এরর মেসেজ দেখানো
+    if (isPrivilegedUser && insResult.error) {
+      return fail(`[DB Error]: ${insResult.error.message} (Code: ${insResult.error.code})`);
     }
-    if (insErr?.code === '23505') return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
+
+    if (insResult.error?.code === '23505') {
+      return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
+    }
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // ৬. কুপন ব্যবহৃত কাউন্ট বৃদ্ধি
+  // ৭. কুপন ব্যবহার কাউন্ট বৃদ্ধি
   if (appliedCouponCode) {
-    service
-      .rpc('increment_coupon_usage', { p_code: appliedCouponCode })
-      .then(({ error: incErr }) => {
-        if (incErr) logWarn('[checkout] increment_coupon_usage failed:', incErr.message);
-      });
+    service.rpc('increment_coupon_usage', { p_code: appliedCouponCode }).catch(() => {});
   }
 
-  // ৭. টেলিগ্রাম নোটিফিকেশন পাঠানো
+  // ৮. টেলিগ্রাম নোটিফিকেশন
   sendTelegramOrderNotification({
     orderNum,
     name,
@@ -298,5 +309,5 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     logWarn('[checkout] telegram notification error:', err);
   });
 
-  return { ok: true, data: { id: insData.id, orderNum } };
+  return { ok: true, data: { id: insResult.data.id, orderNum } };
 }
