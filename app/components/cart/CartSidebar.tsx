@@ -174,12 +174,11 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const subtotal = cartTotal(cart);
   const totalCount = cartCount(cart);
 
-  // কুপন ডিসকাউন্ট পুনঃহিসাব
+  // কুপন ডিসকাউন্ট রিক্যালকুলেশন
   const { discountAmount, isValid: isCouponStillValid, reason: couponInvalidReason } = useMemo(() => {
     return recalculateDiscount(appliedCoupon, subtotal);
   }, [appliedCoupon, subtotal]);
 
-  // যদি কার্ট খালি হয়ে যায় বা কুপনের শর্ত ভঙ্গ হয় তবে স্বয়ংক্রিয় রিমুভ
   useEffect(() => {
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
       removeAppliedCoupon();
@@ -189,7 +188,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     }
   }, [cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন কোড সাবমিট / অ্যাপ্লাই
+  // কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponCode.trim().toUpperCase();
@@ -253,7 +252,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         onClick={onClose}
       />
 
-      {/* Main Cart Drawer */}
+      {/* Main Cart Drawer — ২ নম্বর ছবির হুবহু ক্লাসিক ক্যানভাস */}
       <div
         className={`fixed inset-0 z-[965] flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:inset-y-0 sm:left-auto sm:right-0 sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:max-w-[440px] sm:rounded-[28px] ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -360,10 +359,18 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               ))}
 
               {/* কুপন সেকশন */}
-              <div className="pt-1">
+              <div className="pt-0.5">
+                {/* 🌟 সাবটোটাল শুধুমাত্র তখনই আসবে যখন কুপন অ্যাপ্লাই করা থাকবে — ডিভাইডারের নিচে ও কুপন ব্যাজের উপরে */}
+                {appliedCoupon && (
+                  <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
+                    <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
+                    <span>৳{subtotal.toLocaleString('en-US')}</span>
+                  </div>
+                )}
+
                 {appliedCoupon ? (
-                  /* ✅ কুপন অ্যাপ্লাইড সবুজ সাকসেস ব্যাজ */
-                  <div className="flex items-center justify-between rounded-[14px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
+                  /* ✅ কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */
+                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
                         ✓
@@ -389,7 +396,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </button>
                   </div>
                 ) : (
-                  /* কুপন ইনপুট ফর্ম */
+                  /* ২ নম্বর ছবির হুবহু ক্লাসিক কুপন ইনপুট ফর্ম */
                   <div>
                     <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                       <CouponSvgIcon />
@@ -401,8 +408,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         type="text"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder={lang === 'en' ? 'Enter coupon (e.g. SAVE100)' : 'কুপন কোড লিখুন (যেমন: SAVE100)'}
-                        className="w-full rounded-[12px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:bg-white focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
+                        placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                        className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
                       />
                       <button
                         type="submit"
@@ -421,42 +428,21 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — ২ নম্বর ছবির হুবহু ক্লাসিক ডিজাইন (কোনো বাড়তি সাদা বক্স বা অতিরিক্ত লেখা ছাড়া) */}
         {cart.length > 0 && (
-          <div className="shrink-0 px-6 pb-6 pt-3 border-t border-ink/10 bg-white/60 backdrop-blur-xs">
-            <div className="space-y-1.5 mb-3 px-1">
-              <div className="flex items-center justify-between text-[13px] font-semibold text-muted">
-                <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
-                <span>৳{subtotal.toLocaleString('en-US')}</span>
-              </div>
-
-              {appliedCoupon && discountAmount > 0 && (
-                <div className="flex items-center justify-between text-[13px] font-bold text-emerald-600">
-                  <span>{lang === 'en' ? `Coupon (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}:</span>
-                  <span>- ৳{discountAmount.toLocaleString('en-US')}</span>
-                </div>
-              )}
-
-              {appliedCoupon && appliedCoupon.freeShipping && (
-                <div className="flex items-center justify-between text-[13px] font-bold text-emerald-600">
-                  <span>{lang === 'en' ? 'Shipping' : 'ডেলিভারি চার্জ'}:</span>
-                  <span>{lang === 'en' ? 'FREE (Coupon)' : 'ফ্রি (কুপন)'}</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between pt-1 border-t border-dashed border-border-base">
-                <span className="font-body text-[14px] font-bold text-ink">
-                  {t('মোট')}:
-                </span>
-                <span className="font-body text-[19px] font-extrabold text-brand-light">
-                  ৳{finalTotal.toLocaleString('en-US')}
-                </span>
-              </div>
+          <div className="shrink-0 px-6 pb-6 pt-3">
+            <div className="mb-4 flex items-center justify-between px-2">
+              <span className="font-body text-[13.5px] font-bold text-muted">
+                {t('মোট')}:
+              </span>
+              <span className="font-body text-[18px] font-extrabold text-brand-light">
+                ৳{finalTotal.toLocaleString('en-US')}
+              </span>
             </div>
 
             <button
               onClick={handleCheckout}
-              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95"
+              className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95"
             >
               {lang === 'en' ? 'Checkout' : 'চেকআউট করুন'}
             </button>
