@@ -40,6 +40,20 @@ function HeaderDecor() {
   );
 }
 
+function PremiumHourglassIcon() {
+  return (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 22h14" />
+      <path d="M5 2h14" />
+      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" fill="#FEF3C7" />
+      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" fill="#FEF3C7" />
+      <circle cx="12" cy="12" r="1" fill="#D97706" />
+      <path d="M10 18h4" stroke="#D97706" strokeWidth="2" />
+      <path d="M11 16h2" stroke="#D97706" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 function IconCheck() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
@@ -81,6 +95,16 @@ function IconWarningShield() {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+function IconBulb() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
     </svg>
   );
 }
@@ -175,7 +199,6 @@ export default function WaitingOverlay() {
     if (orderId) return;
     const pending = readPendingOrder();
     if (pending) {
-      // যদি এই অর্ডারটি ইতিমধ্যে ইউজার দেখে থাকেন, পেন্ডিং স্ট্যাটাস স্বয়ংক্রিয় ক্লিয়ার
       if (typeof window !== 'undefined' && (localStorage.getItem(`vc_confirm_seen_${pending.id}`) || sessionStorage.getItem(`vc_confirm_dismissed_${pending.id}`))) {
         clearPendingOrder();
         return;
@@ -204,7 +227,6 @@ export default function WaitingOverlay() {
         setVisible(false);
         setMinimized(false);
 
-        // 🛡️ গার্ড: ইতিমধ্যে দেখা হয়ে থাকলে দ্বিতীয়বার ইভেন্ট ফায়ার হবে না
         if (orderId && typeof window !== 'undefined') {
           const seenKey = `vc_confirm_seen_${orderId}`;
           const dismissedKey = `vc_confirm_dismissed_${orderId}`;
@@ -273,7 +295,7 @@ export default function WaitingOverlay() {
         onClick={() => setMinimized(false)}
         className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 font-body text-[12.5px] font-bold text-white shadow-sh3 transition-brand duration-brand hover:bg-brand-primary active:scale-95"
       >
-        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+        <span className="inline-block h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
         <span>{lang === 'en' ? `${order.orderNum} processing...` : `${order.orderNum} প্রসেস হচ্ছে...`}</span>
       </button>
     );
@@ -297,9 +319,9 @@ export default function WaitingOverlay() {
           {/* ========================================================================= */}
           {isPending && (
             <>
-              {/* ক্লাসিক ওয়ার্ম স্যান্ড-গ্লাস আইকন ব্যাজ */}
-              <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#FEF3C7] text-[34px] shadow-[0_4px_16px_rgba(245,158,11,0.22)] animate-pulse">
-                ⏳
+              {/* প্রিমিয়াম স্যান্ড-গ্লাস আইকন ব্যাজ */}
+              <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_4px_16px_rgba(245,158,11,0.20)]">
+                <PremiumHourglassIcon />
               </div>
 
               {/* টাইটেল */}
@@ -307,7 +329,7 @@ export default function WaitingOverlay() {
                 {t('ধন্যবাদ!')}
               </h2>
 
-              {/* ক্লাসিক প্রমিত মূল বাক্য (সঠিক ও নির্ভুল বানান সহ) */}
+              {/* ক্লাসিক মূল বাক্য */}
               <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
                 {lang === 'en' ? (
                   <>Your order is pending. We are verifying your ৳{advanceAmount.toLocaleString('en-US')} payment. You will usually get confirmation <strong className="text-ink font-bold">within 5–10 minutes</strong> (maximum 30 minutes).</>
@@ -316,13 +338,13 @@ export default function WaitingOverlay() {
                 )}
               </p>
 
-              {/* অর্ডার নম্বর বক্স — সফট গ্রিন টিন্ট ব্যাকগ্রাউন্ড সহ */}
-              <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-emerald-300/80 bg-emerald-50/90 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
-                <span className="font-body text-xs font-bold text-emerald-800">{t('অর্ডার নম্বর:')}</span>
-                <span className="font-body text-sm font-extrabold text-emerald-950">{order.orderNum}</span>
+              {/* অর্ডার নম্বর বক্স — ফ্রস্টেড গ্লাস ও স্কাই-ব্লু টিন্ট ব্যাকগ্রাউন্ড */}
+              <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+                <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
+                <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
                 <button
                   onClick={copyOrderNum}
-                  className="ml-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/60 bg-white/90 px-2.5 py-1 font-body text-[11px] font-bold text-emerald-800 shadow-xs transition-colors hover:bg-emerald-600 hover:text-white active:scale-95"
+                  className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
                 >
                   {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
                   <span>{copyLabel}</span>
@@ -343,7 +365,7 @@ export default function WaitingOverlay() {
                 </div>
               )}
 
-              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন (হলুদ আলো বিচ্ছুরণ ইফেক্ট সহ) */}
+              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন (স্বাভাবিক ডার্ক টেক্সট ও রেডিয়েন্ট গোল্ডেন গ্লো) */}
               <div className="relative z-10 mb-4 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
                 {/* ধাপ ১: রিসিভড (গ্রিন) */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
@@ -356,14 +378,14 @@ export default function WaitingOverlay() {
                   </div>
                 </div>
 
-                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন (উজ্জ্বল হলুদ আলো বিচ্ছুরণ — Radiant Amber Glow) */}
+                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন (স্বাভাবিক ডার্ক টেক্সট + সোনালী আলো বিচ্ছুরণ হ্যালো ইফেক্ট) */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-100 text-amber-700 shadow-[0_0_18px_rgba(245,158,11,0.55)] animate-pulse">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-100 text-amber-700 shadow-[0_0_16px_rgba(245,158,11,0.55)]">
                     <IconSearch />
                   </span>
                   <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-amber-900">{t('পেমেন্ট ভেরিফিকেশন')}</strong>
-                    <span className="font-body text-[11px] font-medium text-amber-700">{t('বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে')}</span>
+                    <strong className="block font-body text-[12.5px] font-bold text-ink">{t('পেমেন্ট ভেরিফিকেশন')}</strong>
+                    <span className="font-body text-[11px] text-muted">{t('বিকাশ ট্রানজেকশন যাচাই করা হচ্ছে')}</span>
                   </div>
                 </div>
 
@@ -373,19 +395,22 @@ export default function WaitingOverlay() {
                     <IconCircleTarget />
                   </span>
                   <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-ink/85">{t('অর্ডার কনফার্ম')}</strong>
+                    <strong className="block font-body text-[12.5px] font-bold text-ink">{t('অর্ডার কনফার্ম')}</strong>
                     <span className="font-body text-[11px] text-muted">{t('পেমেন্ট সঠিক হলে কনফার্ম হবে')}</span>
                   </div>
                 </div>
               </div>
 
-              {/* ক্লাসিক টিপ বক্স */}
-              <div className="relative z-10 mb-4 rounded-xl bg-surface-muted p-3 text-center font-body text-xs leading-[1.7] text-muted">
-                {lang === 'en' ? (
-                  <>💡 You can browse the website now if you&apos;d like.<br />An automatic notification will show once your order is confirmed.</>
-                ) : (
-                  <>💡 আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।<br />অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।</>
-                )}
+              {/* ফ্রেশ স্কাই-ব্লু টিপ বক্স */}
+              <div className="relative z-10 mb-4 flex items-start gap-2 rounded-[14px] border border-brand-light/30 bg-brand-bg/30 p-3 text-left font-body text-[11.5px] leading-[1.65] text-ink/85">
+                <IconBulb />
+                <span>
+                  {lang === 'en' ? (
+                    <>You can browse the website freely now. An automatic notification popup will appear once your order is confirmed.</>
+                  ) : (
+                    <>আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন। অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।</>
+                  )}
+                </span>
               </div>
 
               {/* সোশ্যাল মিডিয়া আইকনসমূহ — ১০০% অফিসিয়াল ব্র্যান্ড কালার */}
