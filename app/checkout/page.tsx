@@ -19,9 +19,7 @@ import { recordLocalOrderTimestamp } from '@/lib/productData';
 import { OPEN_ORDER_LIMIT_EVENT } from '@/lib/uiEvents';
 import {
   getAppliedCoupon,
-  saveAppliedCoupon,
   removeAppliedCoupon,
-  validateCoupon,
   recalculateDiscount,
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
@@ -152,6 +150,15 @@ function IconHome() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2.7 2.35 10.55a1 1 0 0 0 .63 1.78h1.27v8.17a1 1 0 0 0 1 1H9.5a.5.5 0 0 0 .5-.5V15h4v6a.5.5 0 0 0 .5.5h4.25a1 1 0 0 0 1-1v-8.17h1.27a1 1 0 0 0 .63-1.78L12 2.7Z" />
+    </svg>
+  );
+}
+function IconInfo() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" className="shrink-0">
+      <circle cx="12" cy="12" r="12" fill="currentColor" />
+      <rect x="10.85" y="10.3" width="2.3" height="7.3" rx="1.15" fill="white" />
+      <circle cx="12" cy="6.9" r="1.4" fill="white" />
     </svg>
   );
 }
@@ -1218,7 +1225,7 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ — ৩ নম্বর ছবির হুবহু মেমো ব্রেকডাউন */}
+          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ */}
           {/* ========================================================================= */}
           {step === 3 && (
             <div className="px-6 py-4">
@@ -1236,7 +1243,7 @@ export default function CheckoutPage() {
                     </div>
                   ))}
 
-                  {/* 🌟 ৩ নম্বর ছবির হুবহু: প্রোডাক্টের নিচে কুপন ছাড়ের লাইন (যদি কুপন থাকে) */}
+                  {/* প্রোডাক্টের নিচে কুপন ছাড়ের লাইন */}
                   {appliedCoupon && discountAmount > 0 && (
                     <div className="flex items-center justify-between gap-2 py-1.5 font-body text-[13px] font-bold text-emerald-600">
                       <span>{lang === 'en' ? `Coupon Discount (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}</span>
