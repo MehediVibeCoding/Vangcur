@@ -223,11 +223,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // ৬. কুপন ব্যবহৃত কাউন্ট বৃদ্ধি (ব্যাকগ্রাউন্ড)
+  // ৬. কুপন ব্যবহৃত কাউন্ট বৃদ্ধি (টাইপ-সেফ হ্যান্ডলার)
   if (appliedCouponCode) {
-    service.rpc('increment_coupon_usage', { p_code: appliedCouponCode }).catch((err) => {
-      logWarn('[checkout] increment_coupon_usage failed:', err);
-    });
+    service
+      .rpc('increment_coupon_usage', { p_code: appliedCouponCode })
+      .then(({ error: incErr }) => {
+        if (incErr) logWarn('[checkout] increment_coupon_usage failed:', incErr.message);
+      });
   }
 
   // ৭. টেলিগ্রাম নোটিফিকেশন পাঠানো
