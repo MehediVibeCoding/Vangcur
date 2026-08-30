@@ -63,6 +63,23 @@ function CouponSvgIcon() {
   );
 }
 
+function IconSpinner() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.75" opacity="0.22" />
+      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 12.5 9.5 17.5 19.5 6" />
+    </svg>
+  );
+}
+
 function HeaderDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
@@ -97,6 +114,9 @@ export default function QuickOrderModal() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [couponError, setCouponError] = useState('');
 
+  // বাটন লোডিং ও সাকসেস স্টেট
+  const [orderStatus, setOrderStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
+
   useEffect(() => {
     fetchCustomProducts(supabase).then((prods) => {
       if (prods.length) prodsRef.current = prods;
@@ -121,8 +141,10 @@ export default function QuickOrderModal() {
 
   useEffect(() => {
     if (open) lockBody();
-    else unlockBody();
-    return () => unlockBody();
+    else {
+      unlockBody();
+      setOrderStatus('idle');
+    }
   }, [open]);
 
   useEffect(() => {
@@ -163,10 +185,10 @@ export default function QuickOrderModal() {
   }, [open, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
   // কুপন অ্যাপ্লাই হ্যান্ডলার
-  const handleApplyCoupon = async (e?: React.FormEvent) => {
+  const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
-    const clean = couponCode.trim().toUpperCase();
+    const clean = (customCode !== undefined ? customCode : couponCode).trim().toUpperCase();
     if (!clean) {
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
@@ -190,6 +212,7 @@ export default function QuickOrderModal() {
     }
 
     saveAppliedCoupon(res.coupon);
+    setAppliedCoupon(res.coupon);
     setCouponCode('');
     setCouponError('');
     showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
@@ -204,22 +227,37 @@ export default function QuickOrderModal() {
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
+  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ অর্ডার কনফার্ম হ্যান্ডলার
   const handleConfirmOrder = async () => {
-    // 🌟 যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করে থাকে, তবে আগে স্বয়ংক্রিয়ভাবে ভ্যালিডেট হবে
+    if (!cart.length || orderStatus !== 'idle') return;
+
     let currentDiscount = discountAmount;
+
+    // ১. যদি কুপন কোড বক্সে লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করা হয়ে থাকে
     if (couponCode.trim() && !appliedCoupon) {
-      const success = await handleApplyCoupon();
-      if (!success) return; // ভুল কুপন হলে চেকআউট আটকাবে
+      setOrderStatus('verifying');
+      const success = await handleApplyCoupon(undefined, couponCode);
+      if (!success) {
+        setOrderStatus('idle');
+        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
+      }
+
+      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ ব্যাজ ও ডিসকাউন্ট দেখার জন্য ঠিক ৯০০ms অপেক্ষা
+      await new Promise((r) => setTimeout(r, 900));
+
       const freshlyApplied = getAppliedCoupon();
       if (freshlyApplied) {
         currentDiscount = freshlyApplied.discountAmount || 0;
       }
+      setOrderStatus('success');
+      await new Promise((r) => setTimeout(r, 300));
     }
 
     const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
 
-    // 🛡️ ২০,০০০ টাকার বেশি বিল হলে সরাসরি বাল্ক অর্ডার মডাল ওপেন
+    // ২. ২০,০০০ টাকার বেশি বিল হলে বাল্ক অর্ডার মডাল ওপেন
     if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
+      setOrderStatus('idle');
       setOpen(false);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
@@ -338,7 +376,7 @@ export default function QuickOrderModal() {
             )}
 
             {appliedCoupon ? (
-              <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
+              <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs animate-section-reveal">
                 <div className="flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
                     ✓
@@ -351,7 +389,7 @@ export default function QuickOrderModal() {
                       {appliedCoupon.freeShipping
                         ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
                         : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
-                    </div>
+                        </div>
                   </div>
                 </div>
                 <button
@@ -420,9 +458,22 @@ export default function QuickOrderModal() {
 
           <button
             onClick={handleConfirmOrder}
-            className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95"
+            disabled={orderStatus !== 'idle'}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-90"
           >
-            {lang === 'en' ? 'Confirm Order' : 'অর্ডার নিশ্চিত করুন'}
+            {orderStatus === 'verifying' ? (
+              <>
+                <IconSpinner />
+                <span>{lang === 'en' ? 'Verifying Coupon...' : 'কুপন যাচাই হচ্ছে...'}</span>
+              </>
+            ) : orderStatus === 'success' ? (
+              <>
+                <IconCheck />
+                <span>{lang === 'en' ? 'Success!' : 'সফল!'}</span>
+              </>
+            ) : (
+              <span>{lang === 'en' ? 'Confirm Order' : 'অর্ডার নিশ্চিত করুন'}</span>
+            )}
           </button>
         </div>
       </div>
