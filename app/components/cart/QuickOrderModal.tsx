@@ -7,7 +7,8 @@ import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { OPEN_QUICK_CART_MODAL_EVENT } from '@/lib/uiEvents';
+import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_BULK_ORDER_EVENT } from '@/lib/uiEvents';
+import { MAX_ONLINE_ORDER_TOTAL } from '@/lib/checkoutData';
 import { fetchCustomProducts } from '@/lib/productData';
 import { createClient } from '@/lib/supabase/client';
 import { showToast } from '@/lib/toast';
@@ -56,7 +57,7 @@ function TrashIcon() {
 function CouponSvgIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
-      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2 2z" />
       <line x1="12" y1="9" x2="12" y2="15" strokeDasharray="2 2" />
     </svg>
   );
@@ -158,7 +159,7 @@ export default function QuickOrderModal() {
     }
   }, [cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার — নো-ইমোজি এরর মেসেজ
+  // কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponCode.trim().toUpperCase();
@@ -194,6 +195,15 @@ export default function QuickOrderModal() {
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
   const handleConfirmOrder = () => {
+    // 🛡️ ২০,০০০ টাকার বেশি বিল হলে সরাসরি বাল্ক অর্ডার মডাল ওপেন
+    if (finalTotal > MAX_ONLINE_ORDER_TOTAL) {
+      setOpen(false);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: finalTotal } }));
+      }
+      return;
+    }
+
     try {
       sessionStorage.removeItem('vc_quick_order_items');
     } catch {
@@ -297,7 +307,6 @@ export default function QuickOrderModal() {
 
           {/* কুপন সেকশন */}
           <div className="pt-0.5">
-            {/* সাবটোটাল — শুধুমাত্র কুপন অ্যাপ্লাইড অবস্থায় দৃশ্যমান */}
             {appliedCoupon && (
               <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
                 <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
@@ -306,7 +315,6 @@ export default function QuickOrderModal() {
             )}
 
             {appliedCoupon ? (
-              /* ✅ কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */
               <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
                 <div className="flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
@@ -333,7 +341,6 @@ export default function QuickOrderModal() {
                 </button>
               </div>
             ) : (
-              /* ২ নম্বর ছবির হুবহু ক্লাসিক কুপন ইনপুট ফর্ম */
               <div>
                 <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                   <CouponSvgIcon />
