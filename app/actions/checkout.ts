@@ -160,17 +160,16 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   }
 
   const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
+  const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
-  // 🛡️ ২০,০০০ টাকার বেশি অর্ডারের সার্ভার-সাইড ফেইল-ক্লোজড গার্ড
-  if (effectiveProductSubtotal > MAX_ONLINE_ORDER_TOTAL) {
+  // 🛡️ ২০,০০০ টাকার বেশি সর্বমোট অর্ডারের সার্ভার-সাইড ফেইল-ক্লোজড গার্ড
+  if (vTotal > MAX_ONLINE_ORDER_TOTAL) {
     return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
   }
 
-  // 🌟 ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট হিসাব (৳২০০ বনাম ৫% + ১.৫% বিকাশ ফি)
-  const advanceBreakdown = calculateAdvancePayment(effectiveProductSubtotal);
+  // 🌟 ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট হিসাব (ডেলিভারি চার্জ সহ সর্বমোট বিলের ওপর ৫% + ১.৫% বিকাশ ট্রানজেকশন ফি)
+  const advanceBreakdown = calculateAdvancePayment(vTotal);
   const advancePaidAmount = advanceBreakdown.totalAdvance;
-
-  const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
   // ৪. স্টক হ্রাস
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
