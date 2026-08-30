@@ -129,6 +129,16 @@ export default function WaitingOverlay() {
   useEffect(() => { orderRef.current = order; }, [order]);
 
   const openForPending = useCallback(async (id: string, orderNum: string, phone: string, opts?: { startMinimized?: boolean }) => {
+    // 🛡️ পার্মানেন্ট লুপ ব্লকার গার্ড
+    if (typeof window !== 'undefined') {
+      const alreadySeen = localStorage.getItem(`vc_confirm_seen_${id}`);
+      const alreadyDismissed = sessionStorage.getItem(`vc_confirm_dismissed_${id}`);
+      if (alreadySeen || alreadyDismissed) {
+        clearPendingOrder();
+        return;
+      }
+    }
+
     phoneRef.current = phone;
     setOrderId(id);
     setStatus('pending');
@@ -138,10 +148,12 @@ export default function WaitingOverlay() {
       : {
         id, orderNum, date: new Date().toISOString(), status: 'pending', total: 0, items: [], customer: {},
       };
+
     if (['confirmed', 'shipped', 'delivered'].includes(mapped.status)) {
       clearPendingOrder();
+      const seenKey = `vc_confirm_seen_${mapped.id}`;
       const dismissedKey = `vc_confirm_dismissed_${mapped.id}`;
-      if (typeof window !== 'undefined' && sessionStorage.getItem(dismissedKey)) {
+      if (typeof window !== 'undefined' && (localStorage.getItem(seenKey) || sessionStorage.getItem(dismissedKey))) {
         return;
       }
       window.dispatchEvent(new CustomEvent(SHOW_BG_CONFIRM_EVENT, {
@@ -149,6 +161,7 @@ export default function WaitingOverlay() {
       }));
       return;
     }
+
     setOrder(mapped);
     setStatus(mapped.status);
     setVisible(true);
@@ -162,6 +175,11 @@ export default function WaitingOverlay() {
     if (orderId) return;
     const pending = readPendingOrder();
     if (pending) {
+      // যদি এই অর্ডারটি ইতিমধ্যে ইউজার দেখে থাকেন, পেন্ডিং স্ট্যাটাস স্বয়ংক্রিয় ক্লিয়ার
+      if (typeof window !== 'undefined' && (localStorage.getItem(`vc_confirm_seen_${pending.id}`) || sessionStorage.getItem(`vc_confirm_dismissed_${pending.id}`))) {
+        clearPendingOrder();
+        return;
+      }
       openForPending(pending.id, pending.orderNum, pending.phone, { startMinimized: true });
     }
   }, [pathname, orderId, openForPending]);
@@ -185,6 +203,16 @@ export default function WaitingOverlay() {
         const updatedOrder = orderRef.current ? { ...orderRef.current, status: newStatus } : orderRef.current;
         setVisible(false);
         setMinimized(false);
+
+        // 🛡️ গার্ড: ইতিমধ্যে দেখা হয়ে থাকলে দ্বিতীয়বার ইভেন্ট ফায়ার হবে না
+        if (orderId && typeof window !== 'undefined') {
+          const seenKey = `vc_confirm_seen_${orderId}`;
+          const dismissedKey = `vc_confirm_dismissed_${orderId}`;
+          if (localStorage.getItem(seenKey) || sessionStorage.getItem(dismissedKey)) {
+            return;
+          }
+        }
+
         const confirmPhone = phoneRef.current 
           || updatedOrder?.customer?.phone 
           || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
