@@ -157,7 +157,7 @@ export default function QuickOrderModal() {
     }
   }, [cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন অ্যাপ্লাই
+  // কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponCode.trim().toUpperCase();
@@ -295,10 +295,18 @@ export default function QuickOrderModal() {
           ))}
 
           {/* কুপন সেকশন */}
-          <div className="pt-1">
+          <div className="pt-0.5">
+            {/* 🌟 সাবটোটাল শুধুমাত্র তখনই আসবে যখন কুপন অ্যাপ্লাই করা থাকবে — ডিভাইডারের নিচে ও কুপন ব্যাজের উপরে */}
+            {appliedCoupon && (
+              <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
+                <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
+                <span>৳{subtotal.toLocaleString('en-US')}</span>
+              </div>
+            )}
+
             {appliedCoupon ? (
               /* ✅ কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */
-              <div className="flex items-center justify-between rounded-[14px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
+              <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
                 <div className="flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
                     ✓
@@ -324,7 +332,7 @@ export default function QuickOrderModal() {
                 </button>
               </div>
             ) : (
-              /* কুপন ইনপুট ফর্ম */
+              /* ২ নম্বর ছবির হুবহু ক্লাসিক কুপন ইনপুট ফর্ম */
               <div>
                 <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                   <CouponSvgIcon />
@@ -336,8 +344,8 @@ export default function QuickOrderModal() {
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder={lang === 'en' ? 'Enter coupon (e.g. SAVE100)' : 'কুপন কোড লিখুন (যেমন: SAVE100)'}
-                    className="w-full rounded-[12px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:bg-white focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
+                    placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                    className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
                   />
                   <button
                     type="submit"
@@ -354,36 +362,15 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="shrink-0 px-6 pb-6 pt-3 border-t border-ink/10 bg-white/60 backdrop-blur-xs">
-          <div className="space-y-1.5 mb-3 px-1">
-            <div className="flex items-center justify-between text-[13px] font-semibold text-muted">
-              <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
-              <span>৳{subtotal.toLocaleString('en-US')}</span>
-            </div>
-
-            {appliedCoupon && discountAmount > 0 && (
-              <div className="flex items-center justify-between text-[13px] font-bold text-emerald-600">
-                <span>{lang === 'en' ? `Coupon (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}:</span>
-                <span>- ৳{discountAmount.toLocaleString('en-US')}</span>
-              </div>
-            )}
-
-            {appliedCoupon && appliedCoupon.freeShipping && (
-              <div className="flex items-center justify-between text-[13px] font-bold text-emerald-600">
-                <span>{lang === 'en' ? 'Shipping' : 'ডেলিভারি চার্জ'}:</span>
-                <span>{lang === 'en' ? 'FREE (Coupon)' : 'ফ্রি (কুপন)'}</span>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-1 border-t border-dashed border-border-base">
-              <span className="font-body text-[14px] font-bold text-ink">
-                {t('মোট')}:
-              </span>
-              <span className="font-body text-[19px] font-extrabold text-brand-light">
-                ৳{finalTotal.toLocaleString('en-US')}
-              </span>
-            </div>
+        {/* Footer — ২ নম্বর ছবির হুবহু ক্লাসিক ডিজাইন */}
+        <div className="shrink-0 px-6 pb-6 pt-3">
+          <div className="mb-4 flex items-center justify-between px-2">
+            <span className="font-body text-[13.5px] font-bold text-muted">
+              {t('মোট')}:
+            </span>
+            <span className="font-body text-[18px] font-extrabold text-brand-light">
+              ৳{finalTotal.toLocaleString('en-US')}
+            </span>
           </div>
 
           <button
