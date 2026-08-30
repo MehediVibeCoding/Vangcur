@@ -1293,30 +1293,31 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* বিকাশ নম্বর বক্স */}
-                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border border-brand-light/30 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD]/80 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/80 p-1.5 shadow-xs">
+                {/* বিকাশ নম্বর বক্স — ছোট স্ক্রিনে রেসপন্সিভ কপি বাটন সহ */}
+                <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border border-brand-light/30 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD]/80 p-3.5 min-[400px]:p-4">
+                  <div className="flex items-center justify-between gap-2 min-[400px]:gap-3">
+                    <div className="flex items-center gap-2.5 min-[400px]:gap-3 min-w-0">
+                      <div className="flex h-11 w-11 min-[400px]:h-[52px] min-[400px]:w-[52px] shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/80 p-1 shadow-xs">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-logo-icon_beuxfl.png" alt="bKash" className="h-9 w-9 shrink-0 object-contain" />
+                        <img src="https://res.cloudinary.com/dkjzleczw/image/upload/v1785388318/bkash-logo-icon_beuxfl.png" alt="bKash" className="h-7 w-7 min-[400px]:h-9 min-[400px]:w-9 shrink-0 object-contain" />
                       </div>
-                      <div>
-                        <div className="mb-0.5 font-body text-[10px] font-bold uppercase tracking-wide text-muted">bKash Send Money</div>
-                        <div className="font-body text-[19px] font-extrabold leading-none tracking-wide text-brand-light">{bkashNum}</div>
+                      <div className="min-w-0">
+                        <div className="mb-0.5 font-body text-[9.5px] min-[400px]:text-[10px] font-bold uppercase tracking-wide text-muted truncate">bKash Send Money</div>
+                        <div className="font-body text-[17px] min-[400px]:text-[19px] font-extrabold leading-none tracking-tight min-[400px]:tracking-wide text-brand-light">{bkashNum}</div>
                       </div>
                     </div>
                     <button
-                      className="flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-4 py-2 font-body text-xs font-bold text-brand-light transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95"
+                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-2.5 py-2 min-[400px]:px-4 min-[400px]:py-2 font-body text-xs font-bold text-brand-light transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95 shadow-xs"
                       onClick={copyBkash}
                       style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
+                      title={copyLabel === 'Copy' ? t('কপি করুন') : t('কপি হয়েছে!')}
                     >
                       {copyLabel === 'Copy' ? (
-                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
                       ) : (
                         <IconCheck />
                       )}
-                      {copyLabel}
+                      <span className="hidden min-[400px]:inline">{copyLabel}</span>
                     </button>
                   </div>
                   
@@ -1390,7 +1391,10 @@ export default function CheckoutPage() {
               </div>
 
               <div className="pt-2">
-                <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={goToStep3}>
+                <button
+                  className={`${btnNextClass} flex items-center justify-center gap-2`}
+                  onClick={goToStep3}
+                >
                   <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
                   <IconArrowRight />
                 </button>
@@ -1541,7 +1545,11 @@ export default function CheckoutPage() {
               )}
 
               <div className="pt-3">
-                <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={handleConfirmClick} disabled={submitting}>
+                <button
+                  className={`${btnNextClass} flex items-center justify-center gap-2`}
+                  onClick={handleConfirmClick}
+                  disabled={submitting}
+                >
                   {submitting ? (<><IconSpinner /> {t('প্রক্রিয়া হচ্ছে...')}</>) : t('অর্ডার কনফার্ম করুন')}
                 </button>
               </div>
