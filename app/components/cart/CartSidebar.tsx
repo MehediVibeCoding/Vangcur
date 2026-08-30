@@ -118,6 +118,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   useEffect(() => {
     router.prefetch('/checkout');
@@ -182,27 +183,31 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     return recalculateDiscount(appliedCoupon, subtotal);
   }, [appliedCoupon, subtotal]);
 
+  // 🛡️ শুধুমাত্র ড্রয়ার ওপেন থাকলেই কুপন রিমুভ চেক চলবে (ব্যাকগ্রাউন্ড ডিলিট ফিক্স)
   useEffect(() => {
+    if (!isOpen) return;
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
       removeAppliedCoupon();
       if (cart.length && couponInvalidReason) {
         showToast(couponInvalidReason);
       }
     }
-  }, [cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
+  }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
   // কুপন অ্যাপ্লাই হ্যান্ডলার
-  const handleApplyCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApplyCoupon = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setCouponError('');
     const clean = couponCode.trim().toUpperCase();
     if (!clean) {
+      setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
-      return;
+      return false;
     }
 
     if (subtotal <= 0) {
       showToast(lang === 'en' ? 'Add products to cart first' : 'প্রথমে কার্টে পণ্য যোগ করুন');
-      return;
+      return false;
     }
 
     setCouponLoading(true);
@@ -210,33 +215,51 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     setCouponLoading(false);
 
     if (!res.ok || !res.coupon) {
-      showToast(res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়'));
-      return;
+      const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
+      setCouponError(errMsg);
+      showToast(errMsg);
+      return false;
     }
 
     saveAppliedCoupon(res.coupon);
     setCouponCode('');
+    setCouponError('');
     showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
+    return true;
   };
 
   const handleRemoveCoupon = () => {
     removeAppliedCoupon();
+    setCouponError('');
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!cart.length) {
       showToast(t('কার্ট খালি!'));
       return;
     }
 
+    // 🌟 যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করে থাকে, তবে আগে স্বয়ংক্রিয়ভাবে ভ্যালিডেট হবে
+    let currentDiscount = discountAmount;
+    if (couponCode.trim() && !appliedCoupon) {
+      const success = await handleApplyCoupon();
+      if (!success) return; // ভুল কুপন হলে চেকআউট আটকাবে
+      const freshlyApplied = getAppliedCoupon();
+      if (freshlyApplied) {
+        currentDiscount = freshlyApplied.discountAmount || 0;
+      }
+    }
+
+    const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
+
     // 🛡️ ২০,০০০ টাকার বেশি বিল হলে সরাসরি বাল্ক অর্ডার মডাল ওপেন
-    if (finalTotal > MAX_ONLINE_ORDER_TOTAL) {
+    if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
       onClose();
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: finalTotal } }));
+        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
       }
       return;
     }
@@ -413,27 +436,37 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                       <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
                     </div>
 
-                    <form onSubmit={handleApplyCoupon} className="relative flex items-center">
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onFocus={() => setIsInputFocused(true)}
-                        onBlur={() => setIsInputFocused(false)}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                        className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
-                      />
-                      <button
-                        type="submit"
-                        disabled={couponLoading}
-                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-opacity active:scale-95 ${
-                          isInputFocused && !couponCode.trim() ? 'opacity-40' : 'opacity-100'
-                        }`}
-                      >
-                        {couponLoading
-                          ? (lang === 'en' ? 'Applying...' : 'যাচাই...')
-                          : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
-                      </button>
+                    <form onSubmit={handleApplyCoupon} className="relative flex flex-col gap-1">
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onFocus={() => setIsInputFocused(true)}
+                          onBlur={() => setIsInputFocused(false)}
+                          onChange={(e) => {
+                            setCouponCode(e.target.value.toUpperCase());
+                            if (couponError) setCouponError('');
+                          }}
+                          placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                          className={`w-full rounded-[10px] border bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 ${
+                            couponError ? 'border-red-400 bg-red-50/40 focus:border-red-500' : 'border-ink/20 focus:border-brand-light'
+                          }`}
+                        />
+                        <button
+                          type="submit"
+                          disabled={couponLoading}
+                          className={`absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-opacity active:scale-95 ${
+                            isInputFocused && !couponCode.trim() ? 'opacity-40' : 'opacity-100'
+                          }`}
+                        >
+                          {couponLoading
+                            ? (lang === 'en' ? 'Applying...' : 'যাচাই...')
+                            : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
+                        </button>
+                      </div>
+                      {couponError && (
+                        <p className="pl-1 font-body text-[11px] font-semibold text-red-500">{couponError}</p>
+                      )}
                     </form>
                   </div>
                 )}
