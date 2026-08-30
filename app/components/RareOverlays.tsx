@@ -11,6 +11,7 @@ import OfferPopup from './modals/OfferPopup';
 import RecoveryToast from './modals/RecoveryToast';
 import QuickOrderModal from './cart/QuickOrderModal';
 import OrderRateLimitModal from './modals/OrderRateLimitModal';
+import BulkOrderModal from './modals/BulkOrderModal';
 
 export default function RareOverlays() {
   return (
@@ -26,6 +27,7 @@ export default function RareOverlays() {
       <RecoveryToast />
       <QuickOrderModal />
       <OrderRateLimitModal />
+      <BulkOrderModal />
     </>
   );
 }
