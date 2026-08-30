@@ -7,6 +7,7 @@ import { fetchCustomProducts } from '@/lib/productData';
 import {
   DISTRICTS, getShipOptions, shipPrice, fetchShipConfig,
   validatePhone, validateAddress, validateEmail, validateTxnId,
+  calculateAdvancePayment, MAX_ONLINE_ORDER_TOTAL,
 } from '@/lib/checkoutData';
 import {
   sanitizePlainName, validateName, MAX_NAME_LEN,
@@ -158,7 +159,18 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   }
 
-  const vTotal = Math.max(0, vSub - discountAmount + sc);
+  const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
+
+  // 🛡️ ২০,০০০ টাকার বেশি অর্ডারের সার্ভার-সাইড ফেইল-ক্লোজড গার্ড
+  if (effectiveProductSubtotal > MAX_ONLINE_ORDER_TOTAL) {
+    return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
+  }
+
+  // 🌟 ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট হিসাব (৳২০০ বনাম ৫% + ১.৫% বিকাশ ফি)
+  const advanceBreakdown = calculateAdvancePayment(effectiveProductSubtotal);
+  const advancePaidAmount = advanceBreakdown.totalAdvance;
+
+  const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
   // ৪. স্টক হ্রাস
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
@@ -202,7 +214,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       total: vTotal,
       discount_amount: discountAmount,
       coupon_code: appliedCouponCode,
-      advance_paid: 200,
+      advance_paid: advancePaidAmount,
       payment_txn: txn || null,
       payment_last4: last4,
       fingerprint_id: fingerprintId || null,
@@ -242,6 +254,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     email,
     items: verifiedItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
     total: vTotal,
+    advancePaid: advancePaidAmount,
     shippingCost: sc,
     paymentTxn: txn || undefined,
     paymentLast4: last4 || undefined,
