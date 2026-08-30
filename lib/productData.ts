@@ -1,17 +1,18 @@
-// [REPLACE] ফাইলের পাথ: lib/productData.ts
-
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
 import { useCartStore, cartTotal } from './store/cartStore';
+import { useAuthStore } from './store/authStore';
 import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
+
+const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 interface MinimalRouter {
   push: (href: string) => void;
 }
 
-// 🌟 পুরানো iOS Safari / iPhone 7 (iOS 15) সামঞ্জস্যপূর্ণ সেফ টাইমআউট সিগন্যাল
+// পুরানো iOS Safari / iPhone 7 (iOS 15) সামঞ্জস্যপূর্ণ সেফ টাইমআউট সিগন্যাল
 function getTimeoutSignal(ms: number): AbortSignal | undefined {
   if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
     return AbortSignal.timeout(ms);
@@ -256,10 +257,14 @@ export const QUICK_CART_EVENT = 'vc:quickCart';
 export const QUICK_ORDER_MODAL_EVENT = 'vc:quickOrderModal';
 export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
 
-// ২৪ ঘণ্টায় এই ব্রাউজার থেকে ৩টি সফল অর্ডার হয়ে গেছে কি না যাচাই
+// ২৪ ঘণ্টায় এই ব্রাউজার থেকে ৩টি সফল অর্ডার হয়ে গেছে কি না যাচাই (মডারেটরের জন্য বাইপাস)
 export function hasExceededLocalOrderLimit(): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    const user = useAuthStore.getState().currentUser;
+    if (user?.email && user.email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
+      return false;
+    }
     const raw = localStorage.getItem('vc_order_timestamps');
     if (!raw) return false;
     const timestamps: number[] = JSON.parse(raw);
@@ -300,10 +305,12 @@ export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): 
   const currentCart = useCartStore.getState().cart;
   const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
 
-  // ২. আর্লি ২০,০০০ টাকার বাল্ক গার্ড
+  // ২. আর্লি ২০,০০০ টাকার বাল্ক গার্ড (মডারেটর ছাড়া সাধারণ কাস্টমারদের জন্য)
+  const isMod = useAuthStore.getState().currentUser?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+
   if (!currentCart || currentCart.length === 0) {
     const singleProductTotal = prod.price * safeQty;
-    if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL) {
+    if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: singleProductTotal } }));
       }
@@ -340,7 +347,7 @@ export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): 
   const newCartTotal = cartTotal(updatedCart);
 
   // কার্টের মোট বিল ২০k ছাড়িয়ে গেলে বাল্ক পপআপ
-  if (newCartTotal > MAX_ONLINE_ORDER_TOTAL) {
+  if (newCartTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: newCartTotal } }));
     }
