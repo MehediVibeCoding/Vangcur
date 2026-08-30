@@ -461,25 +461,32 @@ export default function ProductDetailClient({
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
+  // 🌟 মসৃণ ও ১০০% নির্ভরযোগ্য স্টিকি বটম বার ট্রিগার (যেকোনো ডিভাইস ও স্কেলিংয়ে কার্যকরী)
   useEffect(() => {
     let raf = 0;
-    const handler = () => {
+    const checkSticky = () => {
       raf = 0;
-      const el = tabsWrapRef.current;
-      if (!el) return;
-      setStickyShown(el.getBoundingClientRect().top <= 70);
-    };
-    const scheduleHandler = () => {
-      if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
-        return;
+      const scrollY = window.scrollY;
+      const tabsEl = tabsWrapRef.current;
+      if (tabsEl) {
+        const tabsTop = tabsEl.getBoundingClientRect().top;
+        setStickyShown(scrollY > 300 || tabsTop <= 80);
+      } else {
+        setStickyShown(scrollY > 300);
       }
-      if (raf) return;
-      raf = requestAnimationFrame(handler);
     };
-    window.addEventListener('scroll', scheduleHandler, { passive: true });
-    handler();
+
+    const onScrollHandler = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(checkSticky);
+    };
+
+    checkSticky();
+    window.addEventListener('scroll', onScrollHandler, { passive: true });
+    window.addEventListener('resize', onScrollHandler, { passive: true });
     return () => {
-      window.removeEventListener('scroll', scheduleHandler);
+      window.removeEventListener('scroll', onScrollHandler);
+      window.removeEventListener('resize', onScrollHandler);
       if (raf) cancelAnimationFrame(raf);
     };
   }, [prod?.id]);
@@ -1125,9 +1132,9 @@ export default function ProductDetailClient({
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
       <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
 
-      {/* 🌟 স্টিকি বটম বার — বাটন দুটির উচ্চতা (h-[42px]) ১০০% পিক্সেল-পারফেক্ট সমান করা হয়েছে */}
-      <div className={`fixed inset-x-0 bottom-0 z-30 border-t border-border-base bg-white/95 shadow-sh3 backdrop-blur transition-transform duration-brand ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 py-2.5 md:px-8">
+      {/* 🌟 স্টিকি বটম বার — z-[45] ও স্মুথ স্ক্রল অ্যানিমেশন সহ */}
+      <div className={`fixed inset-x-0 bottom-0 z-[45] border-t border-border-base bg-white/95 pb-[max(10px,env(safe-area-inset-bottom))] shadow-sh3 backdrop-blur transition-transform duration-300 ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
+        <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 pt-2.5 md:px-8">
           <div className="min-w-0 flex flex-1 flex-col justify-center pr-2">
             <div className="line-clamp-2 font-body text-[12px] font-semibold leading-tight text-ink">
               {prod.name}
