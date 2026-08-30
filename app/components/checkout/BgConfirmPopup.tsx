@@ -15,6 +15,66 @@ const RESTORE_SHOW_DELAY_MS = 1200;
 let lastPlayedOrderId: string | number | null = null;
 let lastPlayedTime = 0;
 
+const lineIcon = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+};
+
+function HeaderDecor() {
+  const deco = { ...lineIcon, strokeWidth: 1.4 };
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
+      <svg {...deco} width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+      <svg {...deco} width="26" height="26" className="absolute right-14 top-3 rotate-6" viewBox="0 0 24 24">
+        <rect x="7" y="2.5" width="10" height="15" rx="3" />
+        <path d="M10 5.5h4" />
+        <circle cx="12" cy="20" r="1.6" />
+      </svg>
+    </div>
+  );
+}
+
+function IconCheckBadge() {
+  return (
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function IconCopy() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function IconDownload() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
 const successSound = () => {
   try {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -61,7 +121,7 @@ export default function BgConfirmPopup() {
   const [open, setOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [phone, setPhone] = useState<string | undefined>(undefined);
-  const [copyLabel, setCopyLabel] = useState(() => t('📋'));
+  const [copyLabel, setCopyLabel] = useState<string>(() => (lang === 'en' ? 'Copy' : 'কপি'));
   const orderRef = useRef<Order | null>(null);
   const phoneRef = useRef<string | undefined>(undefined);
 
@@ -69,17 +129,18 @@ export default function BgConfirmPopup() {
   useEffect(() => { phoneRef.current = phone; }, [phone]);
 
   const showPopup = useCallback((o: Order, p?: string, playAudio = true) => {
+    // 🛡️ পার্মানেন্ট লুপ গার্ড: এই নির্দিষ্ট অর্ডার কনফার্মেশন ইতিমধ্যে দেখা হয়ে থাকলে দ্বিতীয়বার পপআপ খুলবে না
+    if (typeof window !== 'undefined') {
+      const alreadySeen = localStorage.getItem(`vc_confirm_seen_${o.id}`);
+      if (alreadySeen) return;
+    }
+
     const finalPhone = p || o.customer?.phone || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || undefined : undefined);
     setOrder(o);
     setPhone(finalPhone);
     setOpen(true);
     if (playAudio) {
       playSoundOnce(o.id);
-    }
-    try {
-      localStorage.setItem(PENDING_CONFIRM_KEY, JSON.stringify({ order: o, phone: finalPhone }));
-    } catch {
-      // ignore
     }
   }, []);
 
@@ -111,6 +172,13 @@ export default function BgConfirmPopup() {
       try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
       return undefined;
     }
+
+    // যদি ইতিমধ্যে দেখা হয়ে গিয়ে থাকে, সাথে সাথে ক্যাশড কী মুছে ফেলবে
+    if (typeof window !== 'undefined' && localStorage.getItem(`vc_confirm_seen_${saved.order.id}`)) {
+      try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
+      return undefined;
+    }
+
     const timer = setTimeout(async () => {
       if (cancelled) return;
       const lookupPhone = saved!.phone || saved!.order?.customer?.phone || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone : undefined);
@@ -141,8 +209,8 @@ export default function BgConfirmPopup() {
     } catch {
       // ignore
     }
-    setCopyLabel(t('✅'));
-    setTimeout(() => setCopyLabel(t('📋')), 2000);
+    setCopyLabel(t('কপি হয়েছে!'));
+    setTimeout(() => setCopyLabel(lang === 'en' ? 'Copy' : 'কপি'), 2000);
   };
 
   const downloadInvoice = () => {
@@ -152,8 +220,16 @@ export default function BgConfirmPopup() {
       || o.customer?.phone 
       || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
 
+    // 🔒 স্থায়ীভাবে রেকর্ড করা যে এই অর্ডারের কনফার্মেশন কাস্টমার দেখে নিয়েছেন এবং ইনভয়েস জেনারেট করেছেন
+    try {
+      localStorage.setItem(`vc_confirm_seen_${o.id}`, '1');
+      localStorage.removeItem(PENDING_CONFIRM_KEY);
+      sessionStorage.setItem(`vc_confirm_dismissed_${o.id}`, '1');
+    } catch {
+      // ignore
+    }
+
     clearPendingOrder();
-    try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
     
     window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
       detail: { orderId: o.id, phone: finalInvoicePhone },
@@ -166,43 +242,66 @@ export default function BgConfirmPopup() {
   if (!open || !order) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/55 p-4">
-      <div className="w-full max-w-[420px] rounded-[22px] bg-white px-7 py-[34px] text-center shadow-sh3">
-        <div className="mx-auto mb-[18px] flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[#D1FAE5] text-[34px] shadow-[0_6px_20px_rgba(16,185,129,0.2)]">
-          🎉
-        </div>
-        <h2 className="mb-2 font-body text-xl font-bold text-success">{t('অর্ডার কনফার্ম হয়েছে!')}</h2>
-        <p className="mb-1.5 font-body text-[13px] leading-[1.7] text-muted">
-          {lang === 'en' ? (
-            <>Your payment has been verified and the order has been successfully confirmed.</>
-          ) : (
-            <>আপনার পেমেন্ট যাচাই হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।</>
-          )}
-        </p>
-        <div className="mb-2 flex items-center justify-center gap-2 font-body text-[13.5px] font-bold text-ink">
-          {t('অর্ডার নম্বর:')} <span className="text-success">{order.orderNum}</span>
+    <>
+      {/* ব্যাকড্রপ ব্লার */}
+      <div className="fixed inset-0 z-[1000] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand" />
+
+      {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
+      <div className="fixed inset-0 z-[1005] flex items-center justify-center p-4">
+        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal">
+          <HeaderDecor />
+
+          {/* সাকসেস ব্যাজ আইকন */}
+          <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.22)]">
+            <IconCheckBadge />
+          </div>
+
+          {/* টাইটেল */}
+          <h2 className="relative z-10 mb-1.5 font-body text-xl font-extrabold text-ink">
+            {t('অর্ডার কনফার্ম হয়েছে!')}
+          </h2>
+
+          {/* সাবটাইটেল */}
+          <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
+            {lang === 'en' ? (
+              <>Your payment has been successfully verified and your order is confirmed.</>
+            ) : (
+              <>আপনার পেমেন্ট সফলভাবে যাচাই হয়েছে এবং অর্ডারটি কনফার্ম করা হয়েছে।</>
+            )}
+          </p>
+
+          {/* অর্ডার নম্বর বক্স — সফট গ্রিন টিন্ট ব্যাকগ্রাউন্ড */}
+          <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-emerald-300/80 bg-emerald-50/90 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+            <span className="font-body text-xs font-bold text-emerald-800">{t('অর্ডার নম্বর:')}</span>
+            <span className="font-body text-sm font-extrabold text-emerald-950">{order.orderNum}</span>
+            <button
+              onClick={copyOrderNum}
+              className="ml-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/60 bg-white/90 px-2.5 py-1 font-body text-[11px] font-bold text-emerald-800 shadow-xs transition-colors hover:bg-emerald-600 hover:text-white active:scale-95"
+            >
+              {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
+              <span>{copyLabel}</span>
+            </button>
+          </div>
+
+          {/* ট্র্যাক অর্ডার টিপ */}
+          <p className="relative z-10 mb-5 font-body text-[11.5px] text-muted">
+            {lang === 'en' ? (
+              <>🔍 You can track the delivery progress anytime via the &quot;Track Order&quot; menu.</>
+            ) : (
+              <>🔍 যেকোনো সময় ডেলিভারি অগ্রগতি দেখতে &quot;অর্ডার ট্র্যাক&quot; মেনু ব্যবহার করুন।</>
+            )}
+          </p>
+
+          {/* ইনভয়েস ডাউনলোড সিগনেচার বাটন */}
           <button
-            onClick={copyOrderNum}
-            title={lang === 'en' ? 'Copy' : 'কপি করুন'}
-            className="inline-flex items-center gap-1 rounded-lg border-[1.5px] border-border-base px-2.5 py-1 font-body text-xs font-semibold text-ink transition-brand duration-brand hover:bg-surface-muted"
+            onClick={downloadInvoice}
+            className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
           >
-            {copyLabel}
+            <IconDownload />
+            <span>{t('ইনভয়েস ডাউনলোড করুন')}</span>
           </button>
         </div>
-        <p className="mb-[18px] font-body text-xs text-muted">
-          {lang === 'en' ? (
-            <>🔍 To track your order, use the website&apos;s &quot;Track Order&quot; option.</>
-          ) : (
-            <>🔍 অর্ডার ট্র্যাক করতে ওয়েবসাইটের &quot;অর্ডার ট্র্যাক&quot; অপশন ব্যবহার করুন।</>
-          )}
-        </p>
-        <button
-          onClick={downloadInvoice}
-          className="block w-full rounded-xl bg-ink px-4 py-3 font-body text-[14px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
-        >
-          {t('⬇️ ইনভয়েস ডাউনলোড করুন (বাধ্যতামূলক)')}
-        </button>
       </div>
-    </div>
+    </>
   );
 }
