@@ -250,6 +250,7 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCouponInputBox, setShowCouponInputBox] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   // বিস্তারিত হিসাব অ্যাকর্ডিয়ন টগল
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -576,12 +577,14 @@ export default function CheckoutPage() {
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
   // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার
-  const handleApplyCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApplyCoupon = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setCouponError('');
     const clean = couponInput.trim().toUpperCase();
     if (!clean) {
+      setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
-      return;
+      return false;
     }
 
     setCouponLoading(true);
@@ -590,28 +593,39 @@ export default function CheckoutPage() {
     setCouponLoading(false);
 
     if (!res.ok || !res.coupon) {
-      showToast(res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়'));
-      return;
+      const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
+      setCouponError(errMsg);
+      showToast(errMsg);
+      return false;
     }
 
     saveAppliedCoupon(res.coupon);
     setAppliedCoupon(res.coupon);
     setCouponInput('');
+    setCouponError('');
     setShowCouponInputBox(false);
     showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
+    return true;
   };
 
   const handleRemoveCoupon = () => {
     removeAppliedCoupon();
     setAppliedCoupon(null);
+    setCouponError('');
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
-  const goToStep2 = () => {
+  const goToStep2 = async () => {
     if (cartItems.length === 0) {
       showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       router.replace('/');
       return;
+    }
+
+    // 🌟 কুইক অর্ডারে যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করে থাকে, তবে আগে স্বয়ংক্রিয়ভাবে যাচাই হবে
+    if (isDirectQuickOrder && couponInput.trim() && !appliedCoupon) {
+      const success = await handleApplyCoupon();
+      if (!success) return; // ভুল কুপন হলে পরবর্তী ধাপে যাওয়া আটকাবে
     }
 
     // 🛡️ ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড
@@ -923,26 +937,36 @@ export default function CheckoutPage() {
               {/* কুপন ইনপুট ড্রপডাউন ফর্ম */}
               {!appliedCoupon && showCouponInputBox && (
                 <div className="mt-3 pt-2.5 border-t border-border-base/70">
-                  <form onSubmit={handleApplyCoupon} className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                      className="w-full rounded-[10px] border border-ink/20 bg-white py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
-                    />
-                    <button
-                      type="submit"
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
-                    >
-                      {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
-                    </button>
+                  <form onSubmit={handleApplyCoupon} className="relative flex flex-col gap-1">
+                    <div className="relative flex items-center">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase());
+                          if (couponError) setCouponError('');
+                        }}
+                        placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                        className={`w-full rounded-[10px] border bg-white py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 ${
+                          couponError ? 'border-red-400 bg-red-50/40 focus:border-red-500' : 'border-ink/20 focus:border-brand-light'
+                        }`}
+                      />
+                      <button
+                        type="submit"
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
+                      >
+                        {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="pl-1 font-body text-[11px] font-semibold text-red-500">{couponError}</p>
+                    )}
                   </form>
                 </div>
               )}
 
-              {/* 🌟 কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */}
+              {/* 🌟 কুপন অ্যাপ্লাইড সাকসেস ব্যাজ (সবসময় দৃশ্যমান) */}
               {appliedCoupon && (
                 <div className="mt-3 pt-2.5 border-t border-border-base/70">
                   <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3.5 py-2 shadow-xs">
@@ -1158,12 +1182,12 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট (মিনিমাল এক-লাইন হেডার ও বিস্তারিত হিসাব অ্যাকর্ডিয়ন) */}
+          {/* স্টেপ ২: পেমেন্ট (মিনিমাল এক-লাইন হেডার ও বিস্তারিত হিসাব ড্রপডাউন) */}
           {/* ========================================================================= */}
           {step === 2 && (
             <div className="px-6 py-4">
               <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
-                {/* 🌟 মিনিমাল এক-লাইন হেডার (কোনো ব্যাজ ছাড়া) */}
+                {/* 🌟 মিনিমাল এক-লাইন হেডার (কোনো ব্যাজ ছাড়া, এক লাইনে) */}
                 <div className="mb-2 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
                   <span className="text-brand-light"><IconCard /></span>
                   <span>{t('এডভান্স পেমেন্ট')}</span>
@@ -1172,7 +1196,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 
-                {/* 🌟 মূল নির্দেশনা বাক্য + ক্লিকেবল নীল বিস্তারিত লিংক */}
+                {/* 🌟 মূল নির্দেশনা বাক্য + ব্র্যাকেট ও আন্ডারলাইন ছাড়া স্কাই-ব্লু বিস্তারিত লিংক */}
                 <p className="mb-3.5 font-body text-[12.5px] leading-[1.7] text-muted">
                   {advanceInfo.isHighValue ? (
                     lang === 'en' ? (
@@ -1182,9 +1206,9 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setShowBreakdown((v) => !v)}
-                          className="inline font-bold text-brand-light underline transition-colors hover:text-brand-light-hover"
+                          className="inline font-bold text-brand-light transition-colors hover:text-brand-light-hover ml-1"
                         >
-                          [View Breakdown {showBreakdown ? '↑' : '↓'}]
+                          View Breakdown {showBreakdown ? '↑' : '↓'}
                         </button>
                       </>
                     ) : (
@@ -1194,9 +1218,9 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setShowBreakdown((v) => !v)}
-                          className="inline font-bold text-brand-light underline transition-colors hover:text-brand-light-hover"
+                          className="inline font-bold text-brand-light transition-colors hover:text-brand-light-hover ml-1"
                         >
-                          [বিস্তারিত হিসাব {showBreakdown ? '↑' : '↓'}]
+                          বিস্তারিত হিসাব {showBreakdown ? '↑' : '↓'}
                         </button>
                       </>
                     )
@@ -1209,7 +1233,7 @@ export default function CheckoutPage() {
                   )}
                 </p>
 
-                {/* 🌟 মিনিমাল ও মার্জিত ড্রপডাউন ব্রেকডাউন বক্স (ক্লিন ডিজাইন) */}
+                {/* 🌟 মিনিমাল ও মার্জিত ড্রপডাউন ব্রেকডাউন বক্স */}
                 {advanceInfo.isHighValue && showBreakdown && (
                   <div className="mb-3.5 rounded-[14px] border border-brand-light/35 bg-[#F8FAFC] p-3.5 font-body text-xs shadow-xs transition-all duration-300 animate-section-reveal">
                     <div className="mb-2 font-bold text-ink flex items-center justify-between border-b border-border-base/70 pb-1.5">
@@ -1228,7 +1252,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="my-1.5 h-px border-t border-dashed border-border-base" />
                     <div className="flex justify-between py-0.5 text-brand-light font-bold">
-                      <span>{lang === 'en' ? 'Total Advance to Pay:' : 'বিকাশে প্রদেয় মোট অগ্রিম:'}</span>
+                      <span>{lang === 'en' ? 'Total Advance Payment:' : 'টোটাল এডভান্স পেমেন্ট:'}</span>
                       <span className="font-extrabold text-[13px]">৳{advanceInfo.totalAdvance.toLocaleString('en-US')}</span>
                     </div>
                     <div className="flex justify-between py-0.5 text-ink font-bold">
@@ -1282,7 +1306,7 @@ export default function CheckoutPage() {
                           {lang === 'en' ? (
                             <>1. Open the bKash app<br />2. Tap the QR Scan button<br />3. Scan this QR code<br />4. Enter amount ৳{advanceInfo.totalAdvance.toLocaleString('en-US')}<br />5. Complete payment</>
                           ) : (
-                            <>1. বিকাশ অ্যাপ খুলুন<br />2. QR স্ক্যান বাটনে ট্যাপ করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ৳{advanceInfo.totalAdvance.toLocaleString('en-US')} দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
+                            <>১. বিকাশ অ্যাপ খুলুন<br />২. QR স্ক্যান বাটনে ট্যাপ করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ৳{advanceInfo.totalAdvance.toLocaleString('en-US')} দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
                           )}
                         </div>
                       </div>
@@ -1302,7 +1326,7 @@ export default function CheckoutPage() {
 
               {/* ট্রানজেকশন আইডি ইনপুট */}
               <div className="mb-3.5">
-                <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>{t('(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)')}</span></label>
+                <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>(10 ক্যারেক্টার, যেমন: 8N5O2A3BDE)</span></label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconDoc /></span>
                   <input
