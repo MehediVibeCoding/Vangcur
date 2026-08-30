@@ -1,7 +1,7 @@
 // [REPLACE] ফাইলের পাথ: app/checkout/page.tsx
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -17,6 +17,13 @@ import { showToast } from '@/lib/toast';
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics';
 import { recordLocalOrderTimestamp } from '@/lib/productData';
 import { OPEN_ORDER_LIMIT_EVENT } from '@/lib/uiEvents';
+import {
+  getAppliedCoupon,
+  removeAppliedCoupon,
+  recalculateDiscount,
+  COUPON_CHANGE_EVENT,
+  type AppliedCoupon,
+} from '@/lib/couponData';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const PreConfirmLoginModal = dynamic(() => import('@/app/components/checkout/PreConfirmLoginModal'));
@@ -146,15 +153,6 @@ function IconHome() {
     </svg>
   );
 }
-function IconInfo() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" className="shrink-0">
-      <circle cx="12" cy="12" r="12" fill="currentColor" />
-      <rect x="10.85" y="10.3" width="2.3" height="7.3" rx="1.15" fill="white" />
-      <circle cx="12" cy="6.9" r="1.4" fill="white" />
-    </svg>
-  );
-}
 function IconMail() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -233,6 +231,9 @@ export default function CheckoutPage() {
   const [selectedShip, setSelectedShip] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
 
+  // কুপন স্টেট
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
   const [txn, setTxn] = useState('');
   const [last4, setLast4] = useState('');
   const [qrOpen, setQrOpen] = useState(false);
@@ -258,6 +259,17 @@ export default function CheckoutPage() {
   useEffect(() => {
     router.prefetch('/');
   }, [router]);
+
+  // কুপন স্টেট লোড ও সিঙ্ক
+  useEffect(() => {
+    setAppliedCoupon(getAppliedCoupon());
+    const onCouponChange = (e: Event) => {
+      const c = (e as CustomEvent<{ coupon: AppliedCoupon | null }>).detail?.coupon;
+      setAppliedCoupon(c || null);
+    };
+    window.addEventListener(COUPON_CHANGE_EVENT, onCouponChange);
+    return () => window.removeEventListener(COUPON_CHANGE_EVENT, onCouponChange);
+  }, []);
 
   const updateStep = (n: number) => {
     setStep(n);
@@ -591,9 +603,16 @@ export default function CheckoutPage() {
     setTimeout(() => setCopyLabel('Copy'), 2000);
   };
 
-  const sc = shipPrice(selectedShip, shipCfg);
+  const rawSc = shipPrice(selectedShip, shipCfg);
   const sub = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const total = sub + sc;
+
+  // কুপন ডিসকাউন্ট ও ফ্রি শিপিং হিসাব
+  const { discountAmount } = useMemo(() => {
+    return recalculateDiscount(appliedCoupon, sub);
+  }, [appliedCoupon, sub]);
+
+  const effectiveShippingCost = appliedCoupon?.freeShipping ? 0 : rawSc;
+  const total = Math.max(0, sub - discountAmount + effectiveShippingCost);
   const balance = Math.max(0, total - 200);
 
   const handleConfirmClick = () => {
@@ -627,6 +646,7 @@ export default function CheckoutPage() {
         paymentTxn: txn.trim(),
         paymentLast4: last4.trim(),
         fingerprintId: fingerprintIdRef.current,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         lang,
       });
 
@@ -634,7 +654,6 @@ export default function CheckoutPage() {
         setSubmitting(false);
         confirmLockRef.current = false;
         
-        // যদি ২৪ ঘণ্টায় ৩-অর্ডার সীমা পার হয়ে থাকে, তবে সরাসরি ইউনিভার্সাল লিমিট মডাল ওপেন হবে
         if (result.error?.includes('অপেক্ষা') || result.error?.includes('wait') || result.error?.includes('সীমা') || result.error?.includes('limit')) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
@@ -649,13 +668,14 @@ export default function CheckoutPage() {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData?.user?.id || null;
 
-      // ব্রাউজার লোকাল অর্ডারের টাইমস্ট্যাম্প সংরক্ষণ (আর্লি গার্ডের জন্য)
+      // টাইমস্ট্যাম্প রেকর্ড ও কুপন ক্লিয়ার
       recordLocalOrderTimestamp();
+      removeAppliedCoupon();
 
       trackPurchase(
         num,
         total,
-        sc,
+        effectiveShippingCost,
         cartItems.map((i) => ({
           item_id: i.id,
           item_name: i.name,
@@ -698,7 +718,7 @@ export default function CheckoutPage() {
       confirmLockRef.current = false;
       showToast(t('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।'));
     }
-  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4, lang, router, supabase, t, total, sc]);
+  }, [phone, cartItems, name, dist, addr, email, selectedShip, txn, last4, appliedCoupon, lang, router, supabase, t, total, effectiveShippingCost]);
 
   useEffect(() => { submitOrderNowRef.current = submitOrderNow; }, [submitOrderNow]);
 
@@ -786,7 +806,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে — পুরো নাম সহ */}
+          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
           {step === 1 && cartItems.length === 1 && (
             <div className="mx-6 mb-1 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="mb-2 flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
@@ -929,7 +949,7 @@ export default function CheckoutPage() {
                 {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
 
-              {/* শিপিং অপশন — কাস্টম স্কাই-ব্লু রেডিও বাটন */}
+              {/* শিপিং অপশন — ফ্রি শিপিং থাকলে সরাসরি "ফ্রি" দেখাবে */}
               {shipOptions.length > 0 && (
                 <div className="mb-4">
                   <label className={fieldLabelClass}>{t('শিপিং')}</label>
@@ -947,7 +967,17 @@ export default function CheckoutPage() {
                           <div className="font-body text-[13px] font-bold text-ink">{lang === 'en' ? opt.nameEn : opt.name}</div>
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
                         </div>
-                        <div className="ml-auto font-body text-sm font-extrabold text-brand-light">৳{shipPrice(opt.key, shipCfg)}</div>
+                        
+                        {/* ফ্রি শিপিং কুপন থাকলে "ফ্রি" / "FREE" দেখাবে */}
+                        {appliedCoupon?.freeShipping ? (
+                          <div className="ml-auto font-body text-sm font-extrabold text-emerald-600">
+                            {lang === 'en' ? 'FREE' : 'ফ্রি'}
+                          </div>
+                        ) : (
+                          <div className="ml-auto font-body text-sm font-extrabold text-brand-light">
+                            ৳{shipPrice(opt.key, shipCfg)}
+                          </div>
+                        )}
                       </label>
                     ))}
                   </div>
@@ -955,6 +985,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* অ্যাকশন বাটন */}
               <div className="pt-2">
                 <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={goToStep2}>
                   <span>{t('পরবর্তী ধাপ: পেমেন্ট')}</span>
@@ -965,7 +996,7 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট — ফ্রেশ স্কাই-ব্লু কালার ও স্পষ্ট ১-৫ ডিজিট সহ */}
+          {/* স্টেপ ২: পেমেন্ট */}
           {/* ========================================================================= */}
           {step === 2 && (
             <div className="px-6 py-4">
@@ -1023,7 +1054,7 @@ export default function CheckoutPage() {
                           {lang === 'en' ? (
                             <>1. Open the bKash app<br />2. Tap the QR Scan button<br />3. Scan this QR code<br />4. Enter amount 200 BDT<br />5. Complete payment</>
                           ) : (
-                            <>1. বিকাশ অ্যাপ খুলুন<br />2. QR স্ক্যান বাটনে ট্যাপ করুন<br />3. এই QR টি স্ক্যান করুন<br />4. পরিমাণ ২০০ টাকা দিন<br />5. পেমেন্ট সম্পন্ন করুন</>
+                            <>1. বিকাশ অ্যাপ খুলুন<br />2. QR স্ক্যান বাটনে ট্যাপ করুন<br />৩. এই QR টি স্ক্যান করুন<br />৪. পরিমাণ ২০০ টাকা দিন<br />৫. পেমেন্ট সম্পন্ন করুন</>
                           )}
                         </div>
                       </div>
@@ -1085,7 +1116,7 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ — সম্পূর্ণ আপনার নির্দেশনানুযায়ী রিডিজাইন */}
+          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ — কুপন ছাড় ও ফ্রি শিপিং ব্রেকডাউন সহ */}
           {/* ========================================================================= */}
           {step === 3 && (
             <div className="px-6 py-4">
@@ -1104,20 +1135,34 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* সাবটোটাল ও ডেলিভারি চার্জ */}
+                {/* সাবটোটাল */}
                 <div className="flex justify-between py-1.5 font-body text-[13px] text-ink/80">
                   <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}</span>
                   <span>৳{sub.toLocaleString('en-US')}</span>
                 </div>
+
+                {/* কুপন ডিসকাউন্ট রো (যদি কুপন থাকে) */}
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="flex justify-between py-1.5 font-body text-[13px] font-bold text-emerald-600">
+                    <span>{lang === 'en' ? `Coupon (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}</span>
+                    <span>- ৳{discountAmount.toLocaleString('en-US')}</span>
+                  </div>
+                )}
+
+                {/* ডেলিভারি চার্জ — ফ্রি শিপিং কুপন থাকলে "ফ্রি" দেখাবে */}
                 <div className="flex justify-between py-1.5 font-body text-[13px] text-ink/80">
                   <span>{lang === 'en' ? 'Delivery Charge' : 'ডেলিভারি চার্জ'}</span>
-                  <span>৳{sc}</span>
+                  {appliedCoupon?.freeShipping ? (
+                    <span className="font-bold text-emerald-600">{lang === 'en' ? 'FREE' : 'ফ্রি'}</span>
+                  ) : (
+                    <span>৳{effectiveShippingCost}</span>
+                  )}
                 </div>
 
                 {/* ড্যাশড ডিভাইডার */}
                 <div className="my-2.5 h-px border-t border-dashed border-border-base" />
 
-                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি — একদম সমান নিখুঁত স্পেসিং */}
+                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি — সমান স্পেসিং */}
                 <div className="flex flex-col gap-2 pt-0.5 pb-1">
                   {/* সর্বমোট বিল */}
                   <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink">
@@ -1125,13 +1170,13 @@ export default function CheckoutPage() {
                     <span>৳{total.toLocaleString('en-US')}</span>
                   </div>
 
-                  {/* এডভান্স পেমেন্ট — সাবটোটালের মতো হালকা কালার ও চিকন ফন্ট */}
+                  {/* এডভান্স পেমেন্ট */}
                   <div className="flex items-center justify-between font-body text-[13px] font-medium text-ink/75">
                     <span>{lang === 'en' ? 'Advance Payment' : 'এডভান্স পেমেন্ট'}</span>
                     <span>- ৳200</span>
                   </div>
 
-                  {/* ক্যাশ অন ডেলিভারি — সলিড কালো কালারের মূল অ্যামাউন্ট */}
+                  {/* ক্যাশ অন ডেলিভারি */}
                   <div className="flex items-center justify-between font-body text-[14.5px] font-bold text-ink">
                     <span>{lang === 'en' ? 'Cash on Delivery' : 'ক্যাশ অন ডেলিভারি'}</span>
                     <span className="font-extrabold text-ink">৳{balance.toLocaleString('en-US')}</span>
