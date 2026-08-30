@@ -3,8 +3,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
-import { useCartStore } from './store/cartStore';
-import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_ORDER_LIMIT_EVENT } from './uiEvents';
+import { useCartStore, cartTotal } from './store/cartStore';
+import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT } from './uiEvents';
+import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
 
 interface MinimalRouter {
   push: (href: string) => void;
@@ -270,7 +271,7 @@ export function recordLocalOrderTimestamp(): void {
 export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): void {
   if (!prod || prod.stock <= 0) return;
 
-  // আর্লি রেট লিমিট গার্ড — ৩টি অর্ডার পূর্ণ হলে চেকআউটে যাওয়ার আগেই প্রিমিয়াম পপআপ ট্রিগার হবে
+  // ১. আর্লি রেট লিমিট গার্ড — ৩টি অর্ডার পূর্ণ হলে চেকআউটে যাওয়ার আগেই প্রিমিয়াম পপআপ ট্রিগার হবে
   if (hasExceededLocalOrderLimit()) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
@@ -281,8 +282,17 @@ export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): 
   const currentCart = useCartStore.getState().cart;
   const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
 
-  // কেস ১: কার্ট খালি থাকলে সরাসরি একক প্রোডাক্ট চেকআউট
+  // ২. আর্লি ২০,০০০ টাকার বাল্ক গার্ড
   if (!currentCart || currentCart.length === 0) {
+    const singleProductTotal = prod.price * safeQty;
+    if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: singleProductTotal } }));
+      }
+      return;
+    }
+
+    // কেস ১: কার্ট খালি এবং ২০k-এর নিচে থাকলে সরাসরি একক প্রোডাক্ট চেকআউট
     const item: CartItem = {
       id: prod.id,
       name: prod.name,
@@ -300,7 +310,7 @@ export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): 
     return;
   }
 
-  // কেস ২: কার্টে ইতিমধ্যে পণ্য থাকলে এটিকে কার্টে যুক্ত করে ফ্লোটিং শপিং কার্ট মডাল ওপেন করা
+  // কেস ২: কার্টে ইতিমধ্যে পণ্য থাকলে নতুনটি কার্টে যোগ করা
   useCartStore.getState().addToCart([prod], prod.id, safeQty);
   try {
     sessionStorage.removeItem('vc_quick_order_items');
@@ -308,6 +318,18 @@ export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): 
     // ignore
   }
 
+  const updatedCart = useCartStore.getState().cart;
+  const newCartTotal = cartTotal(updatedCart);
+
+  // কার্টের মোট বিল ২০k ছাড়িয়ে গেলে বাল্ক পপআপ
+  if (newCartTotal > MAX_ONLINE_ORDER_TOTAL) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: newCartTotal } }));
+    }
+    return;
+  }
+
+  // অন্যথায় ফ্লোটিং শপিং কার্ট মডাল ওপেন
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(OPEN_QUICK_CART_MODAL_EVENT));
   }
