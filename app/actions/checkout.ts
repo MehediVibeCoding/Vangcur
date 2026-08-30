@@ -219,7 +219,15 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   // ডুপ্লিকেট বিকাশ TxnID বাইপাস (মডারেটর টেস্টিংয়ের জন্য)
   let safeTxn = txn || null;
   if (safeTxn && isPrivilegedUser) {
-    safeTxn = `${safeTxn}-${Date.now().toString(36).toUpperCase().slice(-3)}`;
+    const { data: existingTxn } = await service
+      .from('orders')
+      .select('id')
+      .eq('payment_txn', safeTxn)
+      .limit(1);
+
+    if (existingTxn && existingTxn.length > 0) {
+      safeTxn = `${safeTxn}-${Date.now().toString(36).toUpperCase().slice(-3)}`;
+    }
   }
 
   // ৬. রেজিলিয়েন্ট অর্ডার ইনসার্ট (নতুন কলাম না থাকলেও ফলব্যাক দিয়ে সফল ইনসার্ট)
@@ -286,9 +294,16 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // ৭. কুপন ব্যবহার কাউন্ট বৃদ্ধি
+  // ৭. কুপন ব্যবহার কাউন্ট বৃদ্ধি (টাইপ-সেফ .then() হ্যান্ডলার)
   if (appliedCouponCode) {
-    service.rpc('increment_coupon_usage', { p_code: appliedCouponCode }).catch(() => {});
+    service
+      .rpc('increment_coupon_usage', { p_code: appliedCouponCode })
+      .then(
+        ({ error: incErr }) => {
+          if (incErr) logWarn('[checkout] increment_coupon_usage failed:', incErr.message);
+        },
+        () => {}
+      );
   }
 
   // ৮. টেলিগ্রাম নোটিফিকেশন
