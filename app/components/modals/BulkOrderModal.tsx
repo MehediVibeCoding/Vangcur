@@ -1,10 +1,10 @@
-// [NEW FILE] ফাইলের পাথ: app/components/modals/BulkOrderModal.tsx
+// [REPLACE] ফাইলের পাথ: app/components/modals/BulkOrderModal.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { OPEN_BULK_ORDER_EVENT } from '@/lib/uiEvents';
+import { OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from '@/lib/uiEvents';
 import { useCartStore, cartTotal } from '@/lib/store/cartStore';
 import {
   DEFAULT_WA_LINK,
@@ -114,6 +114,13 @@ export default function BulkOrderModal() {
     setCustomTotal(null);
   };
 
+  const handleModifyCart = () => {
+    close();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(OPEN_QUICK_CART_MODAL_EVENT));
+    }
+  };
+
   const handleWhatsAppOrder = () => {
     close();
 
@@ -193,9 +200,9 @@ export default function BulkOrderModal() {
               <span>{lang === 'en' ? 'Order via WhatsApp' : 'WhatsApp-এ অর্ডার কনফার্ম করুন'}</span>
             </button>
 
-            {/* কার্টে ফিরে যান বাটন */}
+            {/* কার্ট পরিবর্তন করুন বাটন — ক্লিক করলেই কুইক শপিং কার্ট ড্রয়ার ওপেন হবে */}
             <button
-              onClick={close}
+              onClick={handleModifyCart}
               className="w-full rounded-full border border-border-base bg-white/80 py-[11.5px] font-body text-[13.5px] font-bold text-ink transition-all duration-brand hover:bg-white active:scale-95"
             >
               {lang === 'en' ? 'Modify Cart' : 'কার্ট পরিবর্তন করুন'}
