@@ -73,7 +73,7 @@ const fieldInputClass = (hasError?: boolean) =>
   `w-full rounded-[14px] border-[1.5px] bg-white pl-10 pr-3.5 py-2.5 font-body text-base text-ink transition-brand duration-brand outline-none ${
     hasError
       ? 'border-red-400 bg-red-50/50 focus:border-red-500'
-      : 'border-border-base focus:border-brand-light focus:bg-white focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)]'
+      : 'border-border-base focus:border-brand-light focus:bg-white'
   }`;
 const fieldIconClass = 'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light';
 const fieldErrClass = 'mt-1.5 flex items-center gap-1 font-body text-[11.5px] font-semibold text-red-600';
@@ -209,7 +209,7 @@ function IconArrowLeft() {
 
 function CouponSvgIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
       <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
       <line x1="12" y1="9" x2="12" y2="15" strokeDasharray="2 2" />
     </svg>
@@ -242,6 +242,7 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isSingleDirectOrder, setIsSingleDirectOrder] = useState(false);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -251,10 +252,11 @@ export default function CheckoutPage() {
   const [selectedShip, setSelectedShip] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
 
-  // কুপন স্টেট
+  // কুপন স্টেট ও টগল
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [showCouponInputBox, setShowCouponInputBox] = useState(false);
 
   const [txn, setTxn] = useState('');
   const [last4, setLast4] = useState('');
@@ -305,22 +307,29 @@ export default function CheckoutPage() {
   useEffect(() => {
     let hasItems = false;
     let loadedItems: CartItem[] = [];
+    let isQuick = false;
+
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
         setCartItems(quickOrder);
         loadedItems = quickOrder;
         hasItems = true;
+        isQuick = true;
       } else {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
         const validCart = Array.isArray(cart) ? cart : [];
         setCartItems(validCart);
         loadedItems = validCart;
         hasItems = validCart.length > 0;
+        isQuick = false;
       }
     } catch {
       hasItems = false;
     }
+
+    setIsSingleDirectOrder(isQuick && loadedItems.length === 1);
+
     if (!hasItems) {
       showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       router.replace('/');
@@ -566,7 +575,7 @@ export default function CheckoutPage() {
   const total = Math.max(0, sub - discountAmount + effectiveShippingCost);
   const balance = Math.max(0, total - 200);
 
-  // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার
+  // কুপন অ্যাপ্লাই হ্যান্ডলার — কোনো ইমোজি ছাড়া এরর মেসেজ
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponInput.trim().toUpperCase();
@@ -581,13 +590,14 @@ export default function CheckoutPage() {
     setCouponLoading(false);
 
     if (!res.ok || !res.coupon) {
-      showToast(`❌ ${res.error || (lang === 'en' ? 'Invalid coupon code' : 'অবৈধ কুপন কোড')}`);
+      showToast(res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়'));
       return;
     }
 
     saveAppliedCoupon(res.coupon);
     setCouponInput('');
-    showToast(lang === 'en' ? `🎉 Coupon "${res.coupon.code}" applied successfully!` : `🎉 কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
+    setShowCouponInputBox(false);
+    showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
   };
 
   const handleRemoveCoupon = () => {
@@ -857,12 +867,26 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে — পুরো নাম সহ */}
+          {/* শুধু একক প্রোডাক্ট অর্ডারের ক্ষেত্রে স্টেপ ১-এ YOUR ORDER কার্ডটি দেখা যাবে */}
           {step === 1 && cartItems.length === 1 && (
             <div className="mx-6 mb-2 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
-              <div className="mb-2 flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
-                <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
+                  <IconBag /> {lang === 'en' ? 'YOUR ORDER' : 'আপনার অর্ডার'}
+                </div>
+                
+                {/* 🌟 সিঙ্গেল প্রোডাক্ট অর্ডারে মার্জিত "কুপন কোড আছে?" ইন্টারঅ্যাকশন */}
+                {isSingleDirectOrder && !appliedCoupon && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCouponInputBox((v) => !v)}
+                    className="font-body text-[11px] font-bold text-brand-light hover:underline transition-colors cursor-pointer"
+                  >
+                    {showCouponInputBox ? (lang === 'en' ? 'Hide coupon' : 'লুকান') : (lang === 'en' ? 'Have a coupon code?' : 'কুপন কোড আছে?')}
+                  </button>
+                )}
               </div>
+
               <div className="flex flex-col gap-1 text-ink">
                 {cartItems.map((i) => (
                   <div key={i.id} className="flex items-center justify-between gap-3 font-body text-[13.5px] font-bold">
@@ -871,64 +895,42 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* 🌟 সিঙ্গেল প্রোডাক্ট ডিরেক্ট চেকআউটে কুপন সেকশন (স্টেপ ১) */}
-          {step === 1 && (
-            <div className="mx-6 mb-1">
-              {appliedCoupon ? (
-                /* ✅ কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */
-                <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
-                      ✓
-                    </span>
-                    <div>
-                      <div className="font-body text-[12.5px] font-bold text-emerald-800">
-                        {appliedCoupon.code}
-                      </div>
-                      <div className="font-body text-[11px] font-medium text-emerald-700">
-                        {appliedCoupon.freeShipping
-                          ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
-                          : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
-                      </div>
-                    </div>
+              {/* সিঙ্গেল প্রোডাক্টের ক্ষেত্রে কুপন ইনপুট ড্রপডাউন ফর্ম */}
+              {isSingleDirectOrder && !appliedCoupon && showCouponInputBox && (
+                <form onSubmit={handleApplyCoupon} className="relative mt-3 pt-2.5 border-t border-border-base/70 flex items-center">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
+                    className="w-full rounded-[10px] border border-ink/20 bg-white py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
+                  />
+                  <button
+                    type="submit"
+                    disabled={couponLoading || !couponInput.trim()}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 font-body text-[12px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
+                  >
+                    {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
+                  </button>
+                </form>
+              )}
+
+              {/* সিঙ্গেল প্রোডাক্টের ক্ষেত্রে যদি কুপন ইতিমধ্যে অ্যাপ্লাই থাকে তবে ব্যাজ */}
+              {isSingleDirectOrder && appliedCoupon && (
+                <div className="mt-3 pt-2 border-t border-border-base/70 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-body text-[11.5px] font-bold text-emerald-700">
+                    <span>✓</span>
+                    <span>{appliedCoupon.code}</span>
+                    <span>({appliedCoupon.freeShipping ? (lang === 'en' ? 'Free Delivery' : 'ফ্রি ডেলিভারি') : `-৳${discountAmount}`})</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
-                    title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
+                    className="font-body text-[11px] font-bold text-emerald-700 hover:text-red-500 transition-colors"
                   >
-                    ✕
+                    {lang === 'en' ? 'Remove' : 'মুছুন'}
                   </button>
-                </div>
-              ) : (
-                /* ক্লাসিক কুপন ইনপুট বক্স */
-                <div>
-                  <div className="mb-1.5 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
-                    <CouponSvgIcon />
-                    <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
-                  </div>
-                  <form onSubmit={handleApplyCoupon} className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                      className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:bg-white focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
-                    />
-                    <button
-                      type="submit"
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
-                    >
-                      {couponLoading
-                        ? (lang === 'en' ? 'Applying...' : 'যাচাই...')
-                        : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
-                    </button>
-                  </form>
                 </div>
               )}
             </div>
@@ -1060,7 +1062,7 @@ export default function CheckoutPage() {
                 {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
 
-              {/* শিপিং অপশন — ফ্রি শিপিং থাকলে সরাসরি "ফ্রি" দেখাবে */}
+              {/* শিপিং অপশন */}
               {shipOptions.length > 0 && (
                 <div className="mb-4">
                   <label className={fieldLabelClass}>{t('শিপিং')}</label>
@@ -1079,10 +1081,11 @@ export default function CheckoutPage() {
                           <div className="font-body text-[11px] text-muted">{lang === 'en' ? opt.subEn : opt.sub}</div>
                         </div>
                         
-                        {/* ফ্রি শিপিং কুপন থাকলে "ফ্রি" / "FREE" দেখাবে */}
+                        {/* 🌟 ফ্রি শিপিং থাকলে স্পষ্ট "✓ FREESHIP · ফ্রি ডেলিভারি প্রযোজ্য" ব্যাজ */}
                         {appliedCoupon?.freeShipping ? (
-                          <div className="ml-auto font-body text-sm font-extrabold text-emerald-600">
-                            {lang === 'en' ? 'FREE' : 'ফ্রি'}
+                          <div className="ml-auto font-body text-[11.5px] font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            <span>✓</span>
+                            <span>{appliedCoupon.code} · {lang === 'en' ? 'Free Delivery' : 'ফ্রি ডেলিভারি প্রযোজ্য'}</span>
                           </div>
                         ) : (
                           <div className="ml-auto font-body text-sm font-extrabold text-brand-light">
@@ -1227,7 +1230,7 @@ export default function CheckoutPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ */}
+          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ — ৩ নম্বর ছবির হুবহু ব্রেকডাউন */}
           {/* ========================================================================= */}
           {step === 3 && (
             <div className="px-6 py-4">
@@ -1245,7 +1248,7 @@ export default function CheckoutPage() {
                     </div>
                   ))}
 
-                  {/* প্রোডাক্টের নিচে কুপন ছাড়ের লাইন */}
+                  {/* ৩ নম্বর ছবির হুবহু: প্রোডাক্টের ঠিক নিচেই কুপন ছাড়ের লাইন */}
                   {appliedCoupon && discountAmount > 0 && (
                     <div className="flex items-center justify-between gap-2 py-1.5 font-body text-[13px] font-bold text-emerald-600">
                       <span>{lang === 'en' ? `Coupon Discount (${appliedCoupon.code})` : `কুপন ছাড় (${appliedCoupon.code})`}</span>
@@ -1273,7 +1276,7 @@ export default function CheckoutPage() {
                 {/* ড্যাশড ডিভাইডার */}
                 <div className="my-2.5 h-px border-t border-dashed border-border-base" />
 
-                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি — নিখুঁত সমান স্পেসিং */}
+                {/* সর্বমোট বিল, এডভান্স এবং ক্যাশ অন ডেলিভারি — সমান স্পেসিং */}
                 <div className="flex flex-col gap-2 pt-0.5 pb-1">
                   {/* সর্বমোট বিল */}
                   <div className="flex justify-between font-body text-[14.5px] font-extrabold text-ink">
