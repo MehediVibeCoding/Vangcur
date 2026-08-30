@@ -115,6 +115,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     router.prefetch('/checkout');
@@ -183,12 +184,12 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
       removeAppliedCoupon();
       if (cart.length && couponInvalidReason) {
-        showToast(`⚠️ ${couponInvalidReason}`);
+        showToast(couponInvalidReason);
       }
     }
   }, [cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার
+  // কুপন অ্যাপ্লাই হ্যান্ডলার — নো-ইমোজি এরর মেসেজ
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponCode.trim().toUpperCase();
@@ -207,13 +208,13 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     setCouponLoading(false);
 
     if (!res.ok || !res.coupon) {
-      showToast(`❌ ${res.error || (lang === 'en' ? 'Invalid coupon code' : 'অবৈধ কুপন কোড')}`);
+      showToast(res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়'));
       return;
     }
 
     saveAppliedCoupon(res.coupon);
     setCouponCode('');
-    showToast(lang === 'en' ? `🎉 Coupon "${res.coupon.code}" applied successfully!` : `🎉 কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
+    showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
   };
 
   const handleRemoveCoupon = () => {
@@ -252,7 +253,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         onClick={onClose}
       />
 
-      {/* Main Cart Drawer — ২ নম্বর ছবির হুবহু ক্লাসিক ক্যানভাস */}
+      {/* Main Cart Drawer */}
       <div
         className={`fixed inset-0 z-[965] flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:inset-y-0 sm:left-auto sm:right-0 sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:max-w-[440px] sm:rounded-[28px] ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -360,7 +361,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
               {/* কুপন সেকশন */}
               <div className="pt-0.5">
-                {/* 🌟 সাবটোটাল শুধুমাত্র তখনই আসবে যখন কুপন অ্যাপ্লাই করা থাকবে — ডিভাইডারের নিচে ও কুপন ব্যাজের উপরে */}
+                {/* সাবটোটাল — শুধুমাত্র তখনই দৃশ্যমান যখন কুপন অ্যাপ্লাই করা থাকবে */}
                 {appliedCoupon && (
                   <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
                     <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
@@ -396,7 +397,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </button>
                   </div>
                 ) : (
-                  /* ২ নম্বর ছবির হুবহু ক্লাসিক কুপন ইনপুট ফর্ম */
+                  /* ক্লাসিক কুপন ইনপুট ফর্ম — নো গ্লো শ্যাডো, শার্প স্কাই-ব্লু বর্ডার */
                   <div>
                     <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                       <CouponSvgIcon />
@@ -407,14 +408,18 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                       <input
                         type="text"
                         value={couponCode}
+                        onFocus={() => setIsInputFocused(true)}
+                        onBlur={() => setIsInputFocused(false)}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                        className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light focus:shadow-[0_0_0_2px_rgba(68,167,252,.18)]"
+                        className="w-full rounded-[10px] border border-ink/20 bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 focus:border-brand-light"
                       />
                       <button
                         type="submit"
-                        disabled={couponLoading || !couponCode.trim()}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
+                        disabled={couponLoading}
+                        className={`absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-opacity active:scale-95 ${
+                          isInputFocused && !couponCode.trim() ? 'opacity-40' : 'opacity-100'
+                        }`}
                       >
                         {couponLoading
                           ? (lang === 'en' ? 'Applying...' : 'যাচাই...')
@@ -428,7 +433,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           )}
         </div>
 
-        {/* Footer — ২ নম্বর ছবির হুবহু ক্লাসিক ডিজাইন (কোনো বাড়তি সাদা বক্স বা অতিরিক্ত লেখা ছাড়া) */}
+        {/* Footer — কোনো বাড়তি সাদা ব্যাকগ্রাউন্ড বক্স ছাড়া ২ নম্বর ছবির হুবহু ক্লাসিক লুক */}
         {cart.length > 0 && (
           <div className="shrink-0 px-6 pb-6 pt-3">
             <div className="mb-4 flex items-center justify-between px-2">
