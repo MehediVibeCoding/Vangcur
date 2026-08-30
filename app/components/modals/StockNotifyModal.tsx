@@ -154,7 +154,7 @@ export default function StockNotifyModal() {
         }),
       }).catch(() => {});
 
-      // ৩. প্রোডাক্ট পেজকে জানানো যাতে সাথে সাথে বাটনটি "✅ স্টকে আসলে আপনাকে জানানো হবে" তে আপডেট হয়
+      // ৩. প্রোডাক্ট পেজকে জানানো যাতে সাথে সাথে বাটনটি "স্টকে আসলে আপনাকে জানানো হবে" তে আপডেট হয়
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('vc:stockSubscribed', {
@@ -201,26 +201,21 @@ export default function StockNotifyModal() {
             <BellIcon />
           </div>
 
-          {/* টাইটেল ও সাবটাইটেল */}
+          {/* টাইটেল — "স্টক নোটিফিকেশন" */}
           <h3 className="relative z-10 text-center font-body text-[17px] font-extrabold text-ink">
-            {lang === 'en' ? 'Notify When in Stock' : 'স্টকে আসলে জানাবো'}
+            {lang === 'en' ? 'Stock Notification' : 'স্টক নোটিফিকেশন'}
           </h3>
           
-          <p className="relative z-10 mt-1 text-center font-body text-[12.5px] leading-relaxed text-muted">
+          {/* ৪ নম্বর ছবির মতো ডিরেক্ট ব্যাকগ্রাউন্ড টেক্সট (কোনো বাড়তি সাদা কার্ড ছাড়াই) */}
+          <p className="relative z-10 my-3 text-center font-body text-[13px] leading-relaxed text-ink/85">
+            <strong className="font-bold text-ink">{detail.name}</strong>{' '}
             {lang === 'en'
-              ? 'We will notify you directly via phone once this product is available.'
-              : 'প্রোডাক্টটি স্টকে আসলে আমরা আপনাকে সরাসরি জানাবো।'}
+              ? 'will be notified to you directly once back in stock. You can find this list on your account page under "Stock Notifications".'
+              : 'স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে "স্টক নোটিফিকেশন"-এ পাবেন।'}
           </p>
 
-          {/* প্রোডাক্টের নাম হাইলাইট কার্ড */}
-          <div className="relative z-10 my-3 rounded-[16px] border border-brand-light/30 bg-white/80 p-3 text-center shadow-xs backdrop-blur-md">
-            <p className="line-clamp-2 font-body text-[13.5px] font-bold leading-snug text-brand-primary">
-              {detail.name}
-            </p>
-          </div>
-
           {/* ফর্ম ইনপুটসমূহ */}
-          <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3">
+          <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3 pt-1">
             {/* আপনার নাম ইনপুট */}
             <div>
               <label className="mb-1 block font-body text-[12px] font-bold text-ink">
@@ -282,7 +277,7 @@ export default function StockNotifyModal() {
               >
                 {submitting
                   ? (lang === 'en' ? 'Submitting...' : 'জমা হচ্ছে...')
-                  : (lang === 'en' ? 'Submit Request' : 'জমা দিন')}
+                  : (lang === 'en' ? 'Submit' : 'জমা দিন')}
               </button>
             </div>
           </form>
