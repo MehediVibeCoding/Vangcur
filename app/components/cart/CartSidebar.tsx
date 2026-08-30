@@ -11,6 +11,8 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
+import { OPEN_BULK_ORDER_EVENT } from '@/lib/uiEvents';
+import { MAX_ONLINE_ORDER_TOTAL } from '@/lib/checkoutData';
 import {
   getAppliedCoupon,
   saveAppliedCoupon,
@@ -189,7 +191,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     }
   }, [cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার — নো-ইমোজি এরর মেসেজ
+  // কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = couponCode.trim().toUpperCase();
@@ -229,6 +231,16 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       showToast(t('কার্ট খালি!'));
       return;
     }
+
+    // 🛡️ ২০,০০০ টাকার বেশি বিল হলে সরাসরি বাল্ক অর্ডার মডাল ওপেন
+    if (finalTotal > MAX_ONLINE_ORDER_TOTAL) {
+      onClose();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: finalTotal } }));
+      }
+      return;
+    }
+
     try {
       sessionStorage.removeItem('vc_quick_order_items');
     } catch {
@@ -361,7 +373,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
               {/* কুপন সেকশন */}
               <div className="pt-0.5">
-                {/* সাবটোটাল — শুধুমাত্র তখনই দৃশ্যমান যখন কুপন অ্যাপ্লাই করা থাকবে */}
                 {appliedCoupon && (
                   <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
                     <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
@@ -370,7 +381,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 )}
 
                 {appliedCoupon ? (
-                  /* ✅ কুপন অ্যাপ্লাইড সাকসেস ব্যাজ */
                   <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
@@ -397,7 +407,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </button>
                   </div>
                 ) : (
-                  /* ক্লাসিক কুপন ইনপুট ফর্ম — নো গ্লো শ্যাডো, শার্প স্কাই-ব্লু বর্ডার */
                   <div>
                     <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                       <CouponSvgIcon />
@@ -433,7 +442,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           )}
         </div>
 
-        {/* Footer — কোনো বাড়তি সাদা ব্যাকগ্রাউন্ড বক্স ছাড়া ২ নম্বর ছবির হুবহু ক্লাসিক লুক */}
+        {/* Footer */}
         {cart.length > 0 && (
           <div className="shrink-0 px-6 pb-6 pt-3">
             <div className="mb-4 flex items-center justify-between px-2">
