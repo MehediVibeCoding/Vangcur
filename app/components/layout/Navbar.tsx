@@ -39,11 +39,11 @@ function SearchIcon({ className = '' }: { className?: string }) {
   );
 }
 
-function HomeSvgIcon() {
+// 🌟 ১০০% সলিড ভরাট সাদা হোম আইকন (Solid Filled White Home Icon)
+function HomeSolidSvgIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+      <path d="M12 2.7 2.35 10.55a1 1 0 0 0 .63 1.78h1.27v8.17a1 1 0 0 0 1 1H9.5a.5.5 0 0 0 .5-.5V15h4v6a.5.5 0 0 0 .5.5h4.25a1 1 0 0 0 1-1v-8.17h1.27a1 1 0 0 0 .63-1.78L12 2.7Z" />
     </svg>
   );
 }
@@ -242,7 +242,7 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`search-dropdown-reveal search-dropdown-glass ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh3 backdrop-blur-[8px]`}
+      className={`search-dropdown-reveal search-dropdown-glass ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh1 backdrop-blur-[8px]`}
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
@@ -581,22 +581,23 @@ export default function Navbar({
           onClick={() => setShowDropdown(false)}
         />
       )}
+      {/* 🌟 লিন, সিমলেস ও হালকা শ্যাডো (shadow-sh1 + border-white/70) */}
       <nav
-        className={`navbar-glass relative z-[900] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
+        className={`navbar-glass relative z-[900] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
             {showHomeButton ? (
-              /* 🌟 দৃষ্টিনন্দন ফ্রস্টেড গ্লাস রাউন্ডেড হোম পিল বাটন */
+              /* 🌟 সলিড ভরাট সাদা হোম আইকন সহ আধুনিক রাউন্ডেড হোম পিল বাটন */
               <Link
                 href="/"
                 prefetch={true}
                 aria-label={t('হোম')}
                 title={t('হোম')}
-                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border-base/80 bg-white/75 py-1 pl-1.5 pr-3 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2.5"
+                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border-base/70 bg-white/80 py-1 pl-1.5 pr-3 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2.5"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
-                  <HomeSvgIcon />
+                  <HomeSolidSvgIcon />
                 </div>
                 <span className="font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
                   {t('হোম')}
