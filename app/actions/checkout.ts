@@ -1,3 +1,4 @@
+// [REPLACE] ফাইলের পাথ: app/actions/checkout.ts
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
@@ -39,6 +40,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const txn = String(payload.paymentTxn || '').trim().toUpperCase();
   const last4 = String(payload.paymentLast4 || '').trim();
   const fingerprintId = String(payload.fingerprintId || '').trim().slice(0, 128);
+  const couponCode = String(payload.couponCode || '').trim().toUpperCase();
   const items = Array.isArray(payload.items) ? payload.items : [];
 
   if (!validateName(name) || name.length > MAX_NAME_LEN) return fail(t('সঠিক নাম দিন'));
@@ -75,6 +77,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('সার্ভার কনফিগারেশন সমস্যা, একটু পরে চেষ্টা করুন'));
   }
 
+  // ১. রেট লিমিট যাচাই (True 24-Hour Sliding Window)
   try {
     const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
     if (phoneRlErr) {
@@ -96,6 +99,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t(GENERIC_RETRY_MSG));
   }
 
+  // ২. পণ্যের আসল দাম যাচাই
   let authoritativeProds: Awaited<ReturnType<typeof fetchCustomProducts>> = [];
   try {
     authoritativeProds = await fetchCustomProducts(service);
@@ -114,10 +118,49 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   }
 
   const shipCfg = await fetchShipConfig(service);
-  const sc = shipPrice(shipping, shipCfg);
+  let sc = shipPrice(shipping, shipCfg);
   const vSub = verifiedItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const vTotal = vSub + sc;
 
+  let currentUserId: string | null = null;
+  try {
+    const cookieClient = await createClient();
+    const { data: userData } = await cookieClient.auth.getUser();
+    currentUserId = userData?.user?.id || null;
+  } catch {
+    currentUserId = null;
+  }
+
+  // ৩. সার্ভার-সাইড অথরিটেটিভ কুপন ভ্যালিডেশন
+  let discountAmount = 0;
+  let appliedCouponCode: string | null = null;
+
+  if (couponCode) {
+    try {
+      const { data: couponRes, error: couponErr } = await service.rpc('validate_and_apply_coupon', {
+        p_code: couponCode,
+        p_subtotal: vSub,
+        p_phone: phone,
+        p_user_id: currentUserId,
+      });
+
+      if (couponErr || !couponRes || !couponRes.ok) {
+        return fail(t(couponRes?.error || 'কুপন কোডটি সঠিক নয় বা মেয়াদ শেষ'));
+      }
+
+      appliedCouponCode = String(couponRes.code);
+      discountAmount = Number(couponRes.discount_amount) || 0;
+      if (couponRes.free_shipping === true) {
+        sc = 0;
+      }
+    } catch (e) {
+      logError('[checkout] coupon validation exception:', e);
+      return fail(t('কুপন যাচাই করা যায়নি, আবার চেষ্টা করুন'));
+    }
+  }
+
+  const vTotal = Math.max(0, vSub - discountAmount + sc);
+
+  // ৪. স্টক হ্রাস
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
   try {
     const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
@@ -138,18 +181,10 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     const { data: counterData, error: counterErr } = await service.rpc('increment_order_counter');
     if (!counterErr && counterData) orderNum = `#VC-${counterData}`;
   } catch {
-    // fallback value already set above
+    // fallback
   }
 
-  let currentUserId: string | null = null;
-  try {
-    const cookieClient = await createClient();
-    const { data: userData } = await cookieClient.auth.getUser();
-    currentUserId = userData?.user?.id || null;
-  } catch {
-    currentUserId = null;
-  }
-
+  // ৫. অর্ডার ইনসার্ট
   const { data: insData, error: insErr } = await service
     .from('orders')
     .insert({
@@ -165,6 +200,9 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       shipping_cost: sc,
       subtotal: vSub,
       total: vTotal,
+      discount_amount: discountAmount,
+      coupon_code: appliedCouponCode,
+      advance_paid: 200,
       payment_txn: txn || null,
       payment_last4: last4,
       fingerprint_id: fingerprintId || null,
@@ -185,7 +223,14 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // এডমিনের টেলিগ্রাম বোটে ব্যাকগ্রাউন্ডে ইনস্ট্যান্ট নোটিফিকেশন পাঠানো (নন-ব্লকিং)
+  // ৬. কুপন ব্যবহৃত কাউন্ট বৃদ্ধি (ব্যাকগ্রাউন্ড)
+  if (appliedCouponCode) {
+    service.rpc('increment_coupon_usage', { p_code: appliedCouponCode }).catch((err) => {
+      logWarn('[checkout] increment_coupon_usage failed:', err);
+    });
+  }
+
+  // ৭. টেলিগ্রাম নোটিফিকেশন পাঠানো
   sendTelegramOrderNotification({
     orderNum,
     name,
