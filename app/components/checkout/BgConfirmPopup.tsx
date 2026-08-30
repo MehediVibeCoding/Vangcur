@@ -65,12 +65,10 @@ function IconCopy() {
   );
 }
 
-function IconDownload() {
+function SolidDownloadIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+      <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm9 4v-2c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h16c.55 0 1-.45 1-1z" />
     </svg>
   );
 }
@@ -264,41 +262,41 @@ export default function BgConfirmPopup() {
           {/* সাবটাইটেল */}
           <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
             {lang === 'en' ? (
-              <>Your payment has been successfully verified and your order is confirmed.</>
+              <>Your payment has been verified and the order has been successfully confirmed.</>
             ) : (
-              <>আপনার পেমেন্ট সফলভাবে যাচাই হয়েছে এবং অর্ডারটি কনফার্ম করা হয়েছে।</>
+              <>আপনার পেমেন্ট যাচাই হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।</>
             )}
           </p>
 
-          {/* অর্ডার নম্বর বক্স — সফট গ্রিন টিন্ট ব্যাকগ্রাউন্ড */}
-          <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-emerald-300/80 bg-emerald-50/90 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
-            <span className="font-body text-xs font-bold text-emerald-800">{t('অর্ডার নম্বর:')}</span>
-            <span className="font-body text-sm font-extrabold text-emerald-950">{order.orderNum}</span>
+          {/* অর্ডার নম্বর বক্স — ফ্রস্টেড গ্লাস ও স্কাই-ব্লু টিন্ট ব্যাকগ্রাউন্ড */}
+          <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+            <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
+            <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
             <button
               onClick={copyOrderNum}
-              className="ml-1 inline-flex items-center gap-1 rounded-full border border-emerald-400/60 bg-white/90 px-2.5 py-1 font-body text-[11px] font-bold text-emerald-800 shadow-xs transition-colors hover:bg-emerald-600 hover:text-white active:scale-95"
+              className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
             >
               {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
               <span>{copyLabel}</span>
             </button>
           </div>
 
-          {/* ট্র্যাক অর্ডার টিপ */}
-          <p className="relative z-10 mb-5 font-body text-[11.5px] text-muted">
+          {/* মাঝ বরাবর সেন্টারে থাকা ট্র্যাক অর্ডার তথ্য */}
+          <p className="relative z-10 mb-5 text-center font-body text-[11.5px] text-muted">
             {lang === 'en' ? (
-              <>🔍 You can track the delivery progress anytime via the &quot;Track Order&quot; menu.</>
+              <>To track your order, use the website&apos;s &quot;Track Order&quot; option.</>
             ) : (
-              <>🔍 যেকোনো সময় ডেলিভারি অগ্রগতি দেখতে &quot;অর্ডার ট্র্যাক&quot; মেনু ব্যবহার করুন।</>
+              <>অর্ডার ট্র্যাক করতে ওয়েবসাইটের &quot;অর্ডার ট্র্যাক&quot; অপশন ব্যবহার করুন।</>
             )}
           </p>
 
-          {/* ইনভয়েস ডাউনলোড সিগনেচার বাটন */}
+          {/* ইনভয়েস ডাউনলোড সিগনেচার বাটন — লেখার শেষে সলিড ফিল করা প্রিমিয়াম ডাউনলোড আইকন */}
           <button
             onClick={downloadInvoice}
             className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
           >
-            <IconDownload />
             <span>{t('ইনভয়েস ডাউনলোড করুন')}</span>
+            <SolidDownloadIcon />
           </button>
         </div>
       </div>
