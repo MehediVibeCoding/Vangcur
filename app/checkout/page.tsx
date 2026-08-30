@@ -105,7 +105,7 @@ function IconWarning() {
 }
 function IconCheck() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4.5 12.5 9.5 17.5 19.5 6" />
     </svg>
   );
@@ -251,6 +251,9 @@ export default function CheckoutPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCouponInputBox, setShowCouponInputBox] = useState(false);
   const [couponError, setCouponError] = useState('');
+
+  // স্টেপ ১ বাটন লোডিং ও ট্রানজিশন স্টেট
+  const [step1BtnStatus, setStep1BtnStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
   // বিস্তারিত হিসাব অ্যাকর্ডিয়ন টগল
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -577,10 +580,10 @@ export default function CheckoutPage() {
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
   // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার
-  const handleApplyCoupon = async (e?: React.FormEvent) => {
+  const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
-    const clean = couponInput.trim().toUpperCase();
+    const clean = (customCode !== undefined ? customCode : couponInput).trim().toUpperCase();
     if (!clean) {
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
@@ -615,20 +618,30 @@ export default function CheckoutPage() {
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
+  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ পরবর্তী ধাপে যাওয়ার হ্যান্ডলার
   const goToStep2 = async () => {
-    if (cartItems.length === 0) {
-      showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
-      router.replace('/');
+    if (cartItems.length === 0 || step1BtnStatus !== 'idle') {
+      if (!cartItems.length) showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       return;
     }
 
-    // 🌟 কুইক অর্ডারে যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করে থাকে, তবে আগে স্বয়ংক্রিয়ভাবে যাচাই হবে
+    // ১. কুইক অর্ডারে যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক করা না হয়ে থাকে
     if (isDirectQuickOrder && couponInput.trim() && !appliedCoupon) {
-      const success = await handleApplyCoupon();
-      if (!success) return; // ভুল কুপন হলে পরবর্তী ধাপে যাওয়া আটকাবে
+      setStep1BtnStatus('verifying');
+      const success = await handleApplyCoupon(undefined, couponInput);
+      if (!success) {
+        setStep1BtnStatus('idle');
+        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
+      }
+
+      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ সাকসেস ব্যাজ দেখার জন্য ঠিক ৯০০ms অপেক্ষা
+      await new Promise((r) => setTimeout(r, 900));
+      setStep1BtnStatus('success');
+      await new Promise((r) => setTimeout(r, 300));
+      setStep1BtnStatus('idle');
     }
 
-    // 🛡️ ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড
+    // ২. ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড
     if (total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
@@ -969,7 +982,7 @@ export default function CheckoutPage() {
               {/* 🌟 কুপন অ্যাপ্লাইড সাকসেস ব্যাজ (সবসময় দৃশ্যমান) */}
               {appliedCoupon && (
                 <div className="mt-3 pt-2.5 border-t border-border-base/70">
-                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3.5 py-2 shadow-xs">
+                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3.5 py-2 shadow-xs animate-section-reveal">
                     <div className="flex items-center gap-2">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white shadow-xs">
                         ✓
@@ -1171,11 +1184,29 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* অ্যাকশন বাটন */}
+              {/* অ্যাকশন বাটন — অ্যানিমেশন সিকোয়েন্স সহ */}
               <div className="pt-2">
-                <button className={`${btnNextClass} flex items-center justify-center gap-2`} onClick={goToStep2}>
-                  <span>{t('পরবর্তী ধাপ: পেমেন্ট')}</span>
-                  <IconArrowRight />
+                <button
+                  className={`${btnNextClass} flex items-center justify-center gap-2`}
+                  onClick={goToStep2}
+                  disabled={step1BtnStatus !== 'idle'}
+                >
+                  {step1BtnStatus === 'verifying' ? (
+                    <>
+                      <IconSpinner />
+                      <span>{lang === 'en' ? 'Verifying Coupon...' : 'কুপন যাচাই হচ্ছে...'}</span>
+                    </>
+                  ) : step1BtnStatus === 'success' ? (
+                    <>
+                      <IconCheck />
+                      <span>{lang === 'en' ? 'Success!' : 'সফল!'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t('পরবর্তী ধাপ: পেমেন্ট')}</span>
+                      <IconArrowRight />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -1196,7 +1227,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 
-                {/* 🌟 মূল নির্দেশনা বাক্য + ব্র্যাকেট ও আন্ডারলাইন ছাড়া স্কাই-ব্লু বিস্তারিত লিংক */}
+                {/* 🌟 মূল নির্দেশনা বাক্য + ব্র্যাকেট ও আন্ডারলাইন ছাড়া স্কাই-ব্লু বিস্তারিত লিংক + টাকা পুনরাবৃত্তি ফিক্স */}
                 <p className="mb-3.5 font-body text-[12.5px] leading-[1.7] text-muted">
                   {advanceInfo.isHighValue ? (
                     lang === 'en' ? (
@@ -1213,8 +1244,8 @@ export default function CheckoutPage() {
                       </>
                     ) : (
                       <>
-                        আপনার অর্ডারটি নিশ্চিত করতে সর্বমোট বিলের ৫% অগ্রিম ও ১.৫% বিকাশ ট্রানজেকশন ফি সহ মোট{' '}
-                        <strong className="text-ink">৳{advanceInfo.totalAdvance.toLocaleString('en-US')} টাকা</strong> নিচের bKash নম্বরে Send Money করুন।{' '}
+                        আপনার অর্ডারটি নিশ্চিত করতে সর্বমোট বিলের ৫% অগ্রিম ও 1.5% বিকাশ ট্রানজেকশন ফি সহ মোট{' '}
+                        <strong className="text-ink">{advanceInfo.totalAdvance.toLocaleString('en-US')} টাকা</strong> নিচের bKash নম্বরে Send Money করুন।{' '}
                         <button
                           type="button"
                           onClick={() => setShowBreakdown((v) => !v)}
@@ -1233,22 +1264,22 @@ export default function CheckoutPage() {
                   )}
                 </p>
 
-                {/* 🌟 মিনিমাল ও মার্জিত ড্রপডাউন ব্রেকডাউন বক্স */}
+                {/* 🌟 মিনিমাল ও মার্জিত ড্রপডাউন ব্রেকডাউন বক্স — গাঢ় মোট বিল ও পাতলা ফি টেক্সট */}
                 {advanceInfo.isHighValue && showBreakdown && (
                   <div className="mb-3.5 rounded-[14px] border border-brand-light/35 bg-[#F8FAFC] p-3.5 font-body text-xs shadow-xs transition-all duration-300 animate-section-reveal">
                     <div className="mb-2 font-bold text-ink flex items-center justify-between border-b border-border-base/70 pb-1.5">
-                      <span>{lang === 'en' ? 'Advance Fee Breakdown' : 'অগ্রিম ফি হিসাব'}</span>
-                      <span className="text-[11px] text-muted font-normal">
+                      <span className="font-bold text-ink">{lang === 'en' ? 'Advance Fee Breakdown' : 'অগ্রিম ফি হিসাব'}</span>
+                      <span className="text-[11.5px] text-ink font-bold">
                         {lang === 'en' ? 'Total Bill:' : 'ডেলিভারি সহ মোট বিল:'} ৳{total.toLocaleString('en-US')}
                       </span>
                     </div>
-                    <div className="flex justify-between py-0.5 text-muted">
+                    <div className="flex justify-between py-0.5 text-muted font-normal">
                       <span>{lang === 'en' ? '• 5% Base Advance:' : '• ৫% মূল অগ্রিম:'}</span>
-                      <span className="font-semibold text-ink">৳{advanceInfo.baseAdvance.toLocaleString('en-US')}</span>
+                      <span className="text-muted font-normal">৳{advanceInfo.baseAdvance.toLocaleString('en-US')}</span>
                     </div>
-                    <div className="flex justify-between py-0.5 text-muted">
-                      <span>{lang === 'en' ? '• 1.5% bKash Transaction Fee:' : '• ১.৫% বিকাশ ট্রানজেকশন ফি:'}</span>
-                      <span className="font-semibold text-ink">৳{advanceInfo.bkashFee.toLocaleString('en-US')}</span>
+                    <div className="flex justify-between py-0.5 text-muted font-normal">
+                      <span>{lang === 'en' ? '• 1.5% bKash Transaction Fee:' : '• 1.5% বিকাশ ট্রানজেকশন ফি:'}</span>
+                      <span className="text-muted font-normal">৳{advanceInfo.bkashFee.toLocaleString('en-US')}</span>
                     </div>
                     <div className="my-1.5 h-px border-t border-dashed border-border-base" />
                     <div className="flex justify-between py-0.5 text-brand-light font-bold">
