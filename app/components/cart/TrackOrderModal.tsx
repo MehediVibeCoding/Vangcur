@@ -7,7 +7,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { fetchFullOrder, readPendingOrder, readLatestGuestOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
-import { GENERATE_INVOICE_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import OrderCard from '@/app/components/orders/OrderCard';
 import type { Order } from '@/types';
@@ -78,7 +78,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   useEffect(() => {
     if (!isOpen) return;
 
-    // দৃশ্যপট ৩ ও ৪: লগইন থাকলে সরাসরি একাউন্ট অর্ডার পেজে পাঠানো
     if (currentUser) {
       onClose();
       router.push('/account/orders');
@@ -89,7 +88,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setNotFound(false);
     setOrders([]);
 
-    // দৃশ্যপট ১ ও ২: আন-লগইন কাস্টমারের লোকাল সবকটি অর্ডার ফেচ করা
     const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
       try {
         const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
@@ -130,9 +128,8 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   }, [isOpen, currentUser, router, supabase, onClose]);
 
   const openInvoice = (orderId: string | number) => {
-    window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
-      detail: { orderId, ctx: 'guest-track' },
-    }));
+    onClose();
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
   };
 
   const handleOpenLogin = () => {
@@ -218,7 +215,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                   ))}
                 </div>
 
-                {/* হাই-কনভার্শন সাইকোলজিক্যাল ভ্যালু লগইন কার্ড (সফট ফ্রস্টেড গ্লাস) */}
+                {/* হাই-কনভার্শন সাইকোলজিক্যাল ভ্যালু লগইন কার্ড */}
                 <div className="rounded-[22px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
                   <div className="flex items-start gap-3">
                     <SparklesCrownSvgIcon />
