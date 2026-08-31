@@ -5,12 +5,35 @@ import { createClient } from '@/lib/supabase/client';
 import { parseSupabaseVal } from '@/lib/categoryData';
 import { useT } from '@/lib/i18n/useT';
 
-const DEFAULT_ABOUT = 'Vangcur (ভাঙচুর) — গ্যাজেট ও লাইফস্টাইল অ্যাক্সেসরিজের এক বিশ্বস্ত নাম। বাংলাদেশের প্রতিটি কোণে আমরা পৌঁছে দিচ্ছি সেরা মানের পণ্য, সাশ্রয়ী মূল্যে। আমাদের লক্ষ্য: শুধু পণ্য নয়, একটি নিরাপদ ও আনন্দময় শপিং অভিজ্ঞতা।';
+function HeaderDecor() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.12]" aria-hidden="true">
+      <svg width="40" height="40" className="absolute -left-2 top-2 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 13a8 8 0 0 1 16 0" />
+        <rect x="3" y="13" width="4" height="6" rx="1.5" />
+        <rect x="17" y="13" width="4" height="6" rx="1.5" />
+      </svg>
+      <svg width="32" height="32" className="absolute right-4 top-4 rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="7" y="2.5" width="10" height="15" rx="3" />
+        <path d="M10 5.5h4" />
+        <circle cx="12" cy="20" r="1.6" />
+      </svg>
+    </div>
+  );
+}
+
+function SparklesIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
+    </svg>
+  );
+}
 
 export default function About() {
   const { t, lang } = useT();
   const supabase = useRef(createClient()).current;
-  const [desc, setDesc] = useState(DEFAULT_ABOUT);
+  const [customDesc, setCustomDesc] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,22 +47,15 @@ export default function About() {
           .maybeSingle();
         if (!cancelled && !error && data && data.setting_value) {
           const parsed = parseSupabaseVal<unknown>(data.setting_value);
-          if (typeof parsed === 'string' && parsed.trim()) setDesc(parsed);
+          if (typeof parsed === 'string' && parsed.trim() && !parsed.includes('গ্যাজেট ও লাইফস্টাইল অ্যাক্সেসরিজের এক বিশ্বস্ত নাম')) {
+            setCustomDesc(parsed);
+          }
         }
       } catch {
-        // fallback stays as DEFAULT_ABOUT
+        // fallback to rich default
       }
     })();
 
-    // ⚠️ ফিক্সড চ্যানেল নাম বাগ — subscribeCategories() (lib/categoryData.ts)
-    // আর subscribeContactSettings() (lib/floatButtonsData.ts)-এ ঠিক এই একই
-    // ক্লাসের বাগ আগে পাওয়া গিয়েছিল: ফিক্সড (হার্ডকোডেড) চ্যানেল নামে দ্বিতীয়
-    // কোনো .subscribe() কল একই টপিকে এসে পড়লে Supabase Realtime
-    // "cannot add postgres_changes callbacks ... after subscribe()" থ্রো করে,
-    // যা পুরো render/boundary ক্র্যাশ করিয়ে দেয় (ব্রাউজার কনসোলে React error
-    // #419 আর নেটওয়ার্ক ট্যাবে সেই রিয়েলটাইম রিকোয়েস্টের জন্য
-    // ERR_HTTP2_SERVER_REFUSED_STREAM হিসেবে দেখা যায়)। এখানেও ঠিক সেই একই
-    // প্যাটার্নে র‍্যান্ডম সাফিক্স দিয়ে ইউনিক নাম ব্যবহার করা হলো।
     const uniqueName = `about-desc-watch-${Math.random().toString(36).slice(2, 9)}`;
     const channel = supabase
       .channel(uniqueName)
@@ -50,7 +66,9 @@ export default function About() {
           const row = payload.new as { setting_value?: unknown } | null;
           if (!row) return;
           const parsed = parseSupabaseVal<unknown>(row.setting_value);
-          if (typeof parsed === 'string' && parsed.trim()) setDesc(parsed);
+          if (typeof parsed === 'string' && parsed.trim()) {
+            setCustomDesc(parsed);
+          }
         },
       )
       .subscribe();
@@ -62,17 +80,56 @@ export default function About() {
   }, [supabase]);
 
   return (
-    <section className="m-0 px-5 pb-11 pt-[52px]" style={{ background: 'linear-gradient(135deg,#1A1A1A 0%,#0f1a2e 60%,#1A1A1A 100%)' }}>
-      <div className="mx-auto max-w-[760px] text-center">
-        <div className="mb-3.5 inline-block rounded-full border border-brand-light/30 bg-brand-light/[.15] px-3.5 py-1 text-[11px] font-bold uppercase tracking-[1.2px] text-brand-light-hover">
-          {t('আমাদের সম্পর্কে')}
+    <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5">
+      {/* অ্যাপল-স্টাইল ফ্রস্টেড স্কাই-ব্লু ক্যানভাস */}
+      <div className="relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-b from-brand-bg/35 via-[#EFF6FE]/65 to-white/95 p-7 sm:p-10 shadow-sh2 backdrop-blur-md">
+        
+        {/* লাইন-আর্ট ওয়াটারমার্ক */}
+        <HeaderDecor />
+
+        <div className="relative z-10 mx-auto max-w-[860px] text-center">
+          
+          {/* অফিসিয়াল ট্যাগলাইন ব্যাজ */}
+          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/35 bg-white/85 px-4 py-1.5 font-body text-[11px] sm:text-[12px] font-bold uppercase tracking-[1.5px] text-brand-light shadow-xs backdrop-blur-md">
+            <SparklesIcon />
+            <span>Vangcur — Your First Choice For Gadgets</span>
+          </div>
+
+          {/* মূল শিরোনাম */}
+          <h2 className="mb-5 font-body text-2xl font-extrabold text-ink sm:text-[30px] leading-snug">
+            {lang === 'en' ? (
+              <>Vangcur — <span className="text-brand-light">Your Trusted Tech & Lifestyle Store</span></>
+            ) : (
+              <>Vangcur (ভাঙচুর) — <span className="text-brand-light">আপনার বিশ্বস্ত গ্যাজেট ও লাইফস্টাইল শপ</span></>
+            )}
+          </h2>
+
+          {/* কাস্টম ডেসক্রিপশন বা বিস্তারিত প্রফেশনাল টেক্সট */}
+          {customDesc ? (
+            <p className="font-body text-[14px] sm:text-[15px] leading-[1.9] text-ink/85 whitespace-pre-line">
+              {t(customDesc)}
+            </p>
+          ) : (
+            <div className="space-y-4 font-body text-[14px] sm:text-[15px] leading-[1.9] text-ink/80 text-justify sm:text-center">
+              <p>
+                {lang === 'en' ? (
+                  <>Vangcur is one of Bangladesh&apos;s leading innovative gadget and lifestyle e-commerce brands. Catering to modern lifestyle tech and everyday creative needs, we bring you the finest collection of trending RGB &amp; neon lights, ambient crystal lamps, premium TWS earbuds, smartwatches, portable cooling fans, and unique utility gadgets.</>
+                ) : (
+                  <>Vangcur (ভাঙচুর) বাংলাদেশের অন্যতম উদ্ভাবনী ও আধুনিক গ্যাজেট এবং লাইফস্টাইল ই-কমার্স ব্র্যান্ড। আমরা নতুন প্রজন্মের রুচি ও দৈনন্দিন প্রযুক্তিগত চাহিদাকে প্রাধান্য দিয়ে সেরা মানের ট্রেন্ডি RGB ও নিয়ন লাইট, ডেকোরেটিভ ক্রিস্টাল ল্যাম্প, প্রিমিয়াম TWS ইয়ারবাডস, স্মার্ট ওয়াচ, রিচার্জেবল ফ্যান এবং ইউনিক লাইফস্টাইল ইলেকট্রনিক্স গ্যাজেট সরবরাহ করে থাকি।</>
+                )}
+              </p>
+
+              <p>
+                {lang === 'en' ? (
+                  <>Every product undergoes strict quality inspections to ensure uncompromised quality before reaching your doorstep. Partnered with top logistics providers, we offer fast and reliable home delivery across all 64 districts of Bangladesh, backed by genuine replacement warranties and dedicated customer support to ensure a secure, transparent, and seamless shopping experience.</>
+                ) : (
+                  <>আমাদের প্রতিটি পণ্য নিজস্ব কোয়ালিটি চেকের মাধ্যমে শতভাগ গুণগত মান নিশ্চিত করে গ্রাহকের কাছে পৌঁছানো হয়। দেশের স্বনামধন্য কুরিয়ার পার্টনারের মাধ্যমে ঢাকা সিটি সহ সমগ্র বাংলাদেশের ৬৪টি জেলাতেই রয়েছে আমাদের দ্রুত হোম ডেলিভারি সুবিধা। প্রতিটি অর্ডারে জেনুইন রিপ্লেসমেন্ট ওয়ারেন্টি এবং সার্বক্ষণিক কাস্টমার সাপোর্ট প্রদান করে একটি নিরাপদ, স্বচ্ছ ও প্রিমিয়াম কেনাকাটার অভিজ্ঞতা দেওয়াই আমাদের মূল অঙ্গীকার।</>
+                )}
+              </p>
+            </div>
+          )}
+
         </div>
-        <h2 className="mb-4 font-display text-2xl leading-tight text-white md:text-[30px]">
-          {lang === 'en' ? 'Vangcur' : <>Vangcur — <span className="text-gold">ভাঙচুর</span></>}
-        </h2>
-        <p className="mx-auto max-w-[640px] font-body text-[13.5px] leading-[1.9] text-white/70 md:text-[14.5px]">
-          {t(desc)}
-        </p>
       </div>
     </section>
   );
