@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Navbar from '@/app/components/layout/Navbar';
@@ -9,16 +9,13 @@ import Footer from '@/app/components/layout/Footer';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import { makeCatSlug } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 
-// লগইন মোডাল আর অ্যাকাউন্ট পেজ — ClientHome.tsx/ProductDetailClient.tsx-এর
-// একই প্যাটার্নে dynamic import দিয়ে আলাদা চাংকে রাখা হলো।
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
-const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
 function CatIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
@@ -39,30 +36,12 @@ interface CategoryClientProps {
   siblingCategories: Category[];
 }
 
-// আগে /category/<slug>-এ পুরো হোমপেজ (Hero/TrustStrip/Categories carousel/
-// FAQ/About/Gallery) reuse করার কথা ভাবা হয়েছিল — কিন্তু প্রতিটা ক্যাটাগরি
-// পেজে একই মার্কেটিং সেকশনগুলো বার বার দেখানো একদিকে পেজ ভারী করে, অন্যদিকে
-// SEO-র জন্যও আদর্শ না (প্রতিটা ক্যাটাগরি পেজের মূল কনটেন্ট — প্রোডাক্ট
-// লিস্ট — নিচের দিকে চলে যায়, বেশিরভাগ HTML হোমপেজের সাথে ডুপ্লিকেট হয়ে
-// থাকে)। তাই এখানে একটা লিন, ক্যাটাগরি-নির্দিষ্ট শেল বানানো হলো — Navbar +
-// breadcrumb/ক্যাটাগরি হেডার + অন্যান্য ক্যাটাগরিতে যাওয়ার কুইক-লিংক
-// (internal linking-এর জন্যও ভালো) + ফিল্টার করা প্রোডাক্ট গ্রিড + Footer।
 export default function CategoryClient({ initialProducts, category, siblingCategories }: CategoryClientProps) {
   const { t } = useT();
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-
-  useEffect(() => {
-    const onOpenAccount = () => {
-      if (!useAuthStore.getState().currentUser) setLoginOpen(true);
-      else setAccountOpen(true);
-    };
-    window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-    return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-  }, []);
 
   const others = siblingCategories.filter((c) => c.id !== 'all' && c.id !== category.id);
 
@@ -78,7 +57,6 @@ export default function CategoryClient({ initialProducts, category, siblingCateg
         onWishClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
         onTrackClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
         onLoginClick={() => setLoginOpen(true)}
-        onAccountClick={() => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT))}
       />
 
       <div className="mx-auto max-w-[1300px] px-5 pt-6">
@@ -115,11 +93,6 @@ export default function CategoryClient({ initialProducts, category, siblingCateg
       <Footer />
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      <AccountPage
-        isOpen={accountOpen}
-        onClose={() => setAccountOpen(false)}
-        currentUser={currentUser}
-      />
     </>
   );
 }
