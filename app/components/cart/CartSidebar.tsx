@@ -71,26 +71,64 @@ export default function CartSidebar({
   const router = useRouter();
   const { lang } = useLanguageStore();
 
-  // Safely support both props from GlobalOverlays and Zustand store
+  // Safely support both props from GlobalOverlays and Zustand CartState
   const cartStore = useCartStore();
-  const items = cartStore.items || cartStore.cart || [];
-  
-  const isStoreOpen = Boolean(cartStore.isCartOpen ?? cartStore.isOpen);
+  const rawCart = (cartStore as unknown as Record<string, unknown>);
+  const items = Array.isArray(rawCart.cart)
+    ? (rawCart.cart as Array<{
+        id: string;
+        name: string;
+        nameBn?: string;
+        price: number;
+        originalPrice?: number;
+        image?: string;
+        quantity: number;
+        selectedColor?: string;
+        selectedSize?: string;
+        slug?: string;
+      }>)
+    : Array.isArray(rawCart.items)
+    ? (rawCart.items as Array<{
+        id: string;
+        name: string;
+        nameBn?: string;
+        price: number;
+        originalPrice?: number;
+        image?: string;
+        quantity: number;
+        selectedColor?: string;
+        selectedSize?: string;
+        slug?: string;
+      }>)
+    : [];
+
+  const isStoreOpen = Boolean(rawCart.isCartOpen ?? rawCart.isOpen);
   const isOpen = propIsOpen !== undefined ? propIsOpen : isStoreOpen;
 
   const closeCart = () => {
     if (propOnClose) {
       propOnClose();
     }
-    if (typeof cartStore.closeCart === "function") {
-      cartStore.closeCart();
-    } else if (typeof cartStore.setIsCartOpen === "function") {
-      cartStore.setIsCartOpen(false);
+    if (typeof rawCart.closeCart === "function") {
+      (rawCart.closeCart as () => void)();
+    } else if (typeof rawCart.setIsCartOpen === "function") {
+      (rawCart.setIsCartOpen as (val: boolean) => void)(false);
     }
   };
 
-  const updateQuantity = cartStore.updateQuantity;
-  const removeItem = cartStore.removeItem || cartStore.removeFromCart;
+  const handleUpdateQuantity = (id: string, qty: number) => {
+    if (typeof rawCart.updateQuantity === "function") {
+      (rawCart.updateQuantity as (itemId: string, q: number) => void)(id, qty);
+    }
+  };
+
+  const handleRemoveItem = (id: string) => {
+    if (typeof rawCart.removeFromCart === "function") {
+      (rawCart.removeFromCart as (itemId: string) => void)(id);
+    } else if (typeof rawCart.removeItem === "function") {
+      (rawCart.removeItem as (itemId: string) => void)(id);
+    }
+  };
 
   // Native Self-contained Body Scroll Lock
   useEffect(() => {
@@ -297,10 +335,10 @@ export default function CartSidebar({
                       <div className="flex items-center rounded-lg bg-brand-bg/80 border border-ink/10 p-0.5">
                         <button
                           onClick={() => {
-                            if (itemQty > 1 && updateQuantity) {
-                              updateQuantity(item.id, itemQty - 1);
-                            } else if (removeItem) {
-                              removeItem(item.id);
+                            if (itemQty > 1) {
+                              handleUpdateQuantity(item.id, itemQty - 1);
+                            } else {
+                              handleRemoveItem(item.id);
                             }
                           }}
                           className="w-6 h-6 rounded-md bg-white text-ink/70 flex items-center justify-center hover:text-ink active:scale-90 transition-all font-bold text-[13px] shadow-xs"
@@ -313,9 +351,7 @@ export default function CartSidebar({
                         </span>
                         <button
                           onClick={() => {
-                            if (updateQuantity) {
-                              updateQuantity(item.id, itemQty + 1);
-                            }
+                            handleUpdateQuantity(item.id, itemQty + 1);
                           }}
                           className="w-6 h-6 rounded-md bg-white text-ink/70 flex items-center justify-center hover:text-ink active:scale-90 transition-all font-bold text-[13px] shadow-xs"
                           aria-label="Increase quantity"
@@ -329,9 +365,7 @@ export default function CartSidebar({
                   {/* Remove Button */}
                   <button
                     onClick={() => {
-                      if (removeItem) {
-                        removeItem(item.id);
-                      }
+                      handleRemoveItem(item.id);
                     }}
                     className="text-ink/40 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all active:scale-90 flex-shrink-0"
                     aria-label="Remove item"
