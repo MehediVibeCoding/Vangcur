@@ -9,7 +9,7 @@ import { showToast } from '@/lib/toast';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { sanitizePlainName, validateName, MAX_NAME_LEN } from '@/lib/security';
 import { checkNameChangeLimit } from '@/lib/rateLimit';
-import { productHref } from '@/lib/productData';
+import { productHref, QUICK_CART_EVENT } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -18,7 +18,7 @@ import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
-  OPEN_MEMBERSHIP_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, QUICK_CART_EVENT,
+  OPEN_MEMBERSHIP_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
@@ -630,9 +630,8 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ২. ৩-কার্ডের নতুন রিডিজাইন (সেন্টার অ্যালাইন্ড অর্ডার্স + ডার্ক মোড UI প্লেসহোল্ডার + মেম্বারশিপ) */}
+                {/* ২. ৩-কার্ডের নতুন রিডিজাইন */}
                 <div className="grid grid-cols-3 gap-2.5">
-                  {/* মোট অর্ডার */}
                   <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
                     <div className="font-body text-base font-extrabold text-ink leading-tight">
                       {stats.total}{lang === 'en' ? '' : 'টি'}
@@ -640,7 +639,6 @@ export default function AccountClient() {
                     <div className="mt-1 font-body text-[11px] font-bold text-muted">{t('মোট অর্ডার')}</div>
                   </div>
 
-                  {/* ডার্ক / লাইট মোড UI প্লেসহোল্ডার */}
                   <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
                     <div className="flex items-center gap-1 text-brand-light">
                       <IconSun />
@@ -652,7 +650,6 @@ export default function AccountClient() {
                     </div>
                   </div>
 
-                  {/* মেম্বারশিপ টায়ার কার্ড */}
                   <div
                     onClick={openMembership}
                     className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/80 bg-white/85 py-3 px-2 text-center shadow-xs backdrop-blur-md transition-all hover:border-brand-light/40 active:scale-95"
@@ -693,7 +690,7 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (Incomplete Orders) */}
+                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড */}
                 {drafts.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
@@ -753,7 +750,7 @@ export default function AccountClient() {
                   </div>
                 )}
 
-                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট (ইন্টেলিজেন্ট লাইভ কালার সুইচিং) */}
+                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট */}
                 {stockNotifs.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
