@@ -14,7 +14,7 @@ function ChevronIcon({ className = '' }: { className?: string }) {
   );
 }
 
-function QuestionHelpIcon() {
+function SupportHelpIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
@@ -51,23 +51,25 @@ export default function FAQ() {
 
   return (
     <div className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5" id="faqSec">
-      {/* হেডার ব্লক */}
+      {/* পরিচ্ছন্ন ও মার্জিত হেডার ব্লক */}
       <div className="mb-8 text-center">
         <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-3.5 py-1 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light shadow-xs backdrop-blur-md">
-          <QuestionHelpIcon />
-          <span>{lang === 'en' ? 'Help & FAQ' : 'সাধারণ জিজ্ঞাসা'}</span>
+          <SupportHelpIcon />
+          <span>{lang === 'en' ? 'Help & Support' : 'কাস্টমার সাপোর্ট'}</span>
         </div>
         
         <h2 className="font-body text-2xl font-extrabold text-ink sm:text-[28px]">
           {lang === 'en' ? (
             <>Frequently Asked <span className="text-brand-light">Questions</span></>
           ) : (
-            <>যা জানতে <span className="text-brand-light">চান</span></>
+            <>সাধারণ জিজ্ঞাসা ও <span className="text-brand-light">উত্তর</span></>
           )}
         </h2>
         
         <p className="mt-1.5 font-body text-[13px] text-muted sm:text-[14px]">
-          {t('Vangcur থেকে কেনাকাটা সম্পর্কে সকল প্রশ্নের উত্তর')}
+          {lang === 'en'
+            ? 'Everything you need to know about shopping, delivery & warranty'
+            : 'কেনাকাটা, ডেলিভারি ও ওয়ারেন্টি সম্পর্কিত আপনার সকল প্রশ্নের উত্তর'}
         </p>
       </div>
 
