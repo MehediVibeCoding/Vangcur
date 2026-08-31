@@ -8,9 +8,6 @@ import {
   DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
 } from '@/lib/footerData';
 import {
-  DEFAULT_CATEGORIES, fetchCategories, makeCatSlug,
-} from '@/lib/categoryData';
-import {
   OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
 } from '@/lib/uiEvents';
 import { sanitizeHref } from '@/lib/security';
@@ -148,7 +145,7 @@ function UsersGroupIcon() {
   );
 }
 
-const colLinkClass暗 = 'block bg-transparent border-0 p-0 text-left font-body text-[13.5px] font-medium text-slate-700 no-underline transition-colors hover:text-brand-light cursor-pointer leading-snug';
+const colLinkClass = 'block bg-transparent border-0 p-0 text-left font-body text-[13.5px] font-medium text-slate-700 no-underline transition-colors hover:text-brand-light cursor-pointer leading-snug';
 
 export default function Footer() {
   const { t, lang } = useT();
@@ -161,12 +158,12 @@ export default function Footer() {
     let cancelled = false;
 
     (async () => {
-      const settings受 = await fetchFooterSettings(supabase);
+      const settings = await fetchFooterSettings(supabase);
       if (cancelled) return;
 
-      if (settings受.vc_logo) setLogo(computeLogo(settings受.vc_logo));
-      if (settings受.vc_contact) setContact(computeContact(settings受.vc_contact));
-      if (settings受.vc_footer) setExtras(computeFooterExtras(settings受.vc_footer));
+      if (settings.vc_logo) setLogo(computeLogo(settings.vc_logo));
+      if (settings.vc_contact) setContact(computeContact(settings.vc_contact));
+      if (settings.vc_footer) setExtras(computeFooterExtras(settings.vc_footer));
     })();
 
     const channel = subscribeFooterSettings(supabase, (key, val) => {
@@ -178,7 +175,7 @@ export default function Footer() {
   }, [supabase]);
 
   const openAccount = () => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
-  const openTrackOrder述 = () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
+  const openTrackOrder = () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
   const openOfferPage = () => window.dispatchEvent(new CustomEvent(OPEN_OFFER_PAGE_EVENT));
   const openInfo = (type: string) => window.dispatchEvent(new CustomEvent(OPEN_INFO_EVENT, { detail: { type } }));
 
@@ -189,115 +186,46 @@ export default function Footer() {
   const fbGroupLink = 'https://facebook.com/groups/vangcurgadgets';
 
   return (
-    <footer className="relative mt-14 overflow-hidden">
+    <footer className="relative mt-12 overflow-hidden">
       
-      {/* ─────────────────────────────────────────────────────────────
-          ১. বর্ধিত সিনেমাটিক আকাশ ও লাইভ অ্যানিমেশন লেয়ার (Extended Sky Stage)
-          ───────────────────────────────────────────────────────────── */}
-      <div className="relative w-full bg-gradient-to-b from-[#C3DEFC]/35 via-[#D6EAFF] to-[#D3E7FC] pt-12 sm:pt-16 md:pt-20 select-none overflow-hidden">
-        
-        {/* আকাশের ভাসমান চলমান মেঘমালা (Drifting Cloud Layers) */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div
-            className="absolute top-6 left-[-100px] h-9 w-28 rounded-full bg-white/70 blur-[1px]"
-            style={{ animation: 'cloudDrift 28s linear infinite' }}
+      {/* ছবির উপরে পিওর কোডেড ভেক্টর ওয়েভ লেয়ার (Organic Top Wave) */}
+      <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+        <svg
+          viewBox="0 0 1440 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-8 sm:h-11 md:h-14"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+            fillOpacity="0.4"
           />
-          <div
-            className="absolute top-14 left-[-120px] h-12 w-40 rounded-full bg-white/60 blur-[2px]"
-            style={{ animation: 'cloudDrift 38s linear infinite -14s' }}
+          <path
+            d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
           />
-          <div
-            className="absolute top-4 left-[-90px] h-7 w-24 rounded-full bg-white/50 blur-[1px]"
-            style={{ animation: 'cloudDrift 22s linear infinite -7s' }}
-          />
-        </div>
-
-        {/* ইলাস্ট্রেশন কন্টেইনার ও রিয়েলটাইম ইন্টারেক্টিভ এলিমেন্ট স্টেজ */}
-        <div className="relative mx-auto aspect-[1536/606] w-full max-w-[1700px]">
-          
-          {/* মূল হাই-রেজুলেশন ক্যারেক্টার ও ঘাসের ছবি */}
-          <Image
-            src="/footer-illustration.webp"
-            alt="Vangcur Gadgets Lifestyle"
-            fill
-            sizes="100vw"
-            className="object-cover object-bottom"
-            priority={false}
-          />
-
-          {/* 🌟 অ্যানিমেশন লেয়ার ১: আকাশে ভাসমান উড়ন্ত ড্রোন (Hovering Drone) */}
-          <div
-            className="pointer-events-none absolute z-10"
-            style={{
-              left: '46.8%',
-              top: '19.5%',
-              animation: 'droneHover 3.2s ease-in-out infinite',
-            }}
-          >
-            {/* ড্রোনের হালকা এলইডি গ্লো লাইট */}
-            <span
-              className="absolute -top-1 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-sky-400/40 blur-[3px]"
-              style={{ animation: 'pulse 1.8s ease-in-out infinite' }}
-            />
-          </div>
-
-          {/* 🌟 অ্যানিমেশন লেয়ার ২: গান শোনা পান্ডার মিউজিক্যাল নোটস (Floating Music Notes) */}
-          <div
-            className="pointer-events-none absolute z-10 font-body text-xs font-bold text-sky-800"
-            style={{ left: '26.8%', top: '48%' }}
-          >
-            <span
-              className="absolute inline-block text-[14px]"
-              style={{ animation: 'musicFloat1 2.8s ease-in-out infinite' }}
-            >
-              ♫
-            </span>
-            <span
-              className="absolute inline-block text-[12px]"
-              style={{ animation: 'musicFloat2 3.4s ease-in-out infinite 1.1s' }}
-            >
-              ♪
-            </span>
-            <span
-              className="absolute inline-block text-[13px]"
-              style={{ animation: 'musicFloat1 3s ease-in-out infinite 1.9s' }}
-            >
-              ♬
-            </span>
-          </div>
-
-          {/* 🌟 অ্যানিমেশন লেয়ার ৩: ক্রিস্টাল ল্যাম্পের গোল্ডেন অরা গ্লো (Ambient Crystal Pulse) */}
-          <div
-            className="pointer-events-none absolute z-10"
-            style={{ left: '74.6%', bottom: '13%' }}
-          >
-            <div
-              className="h-10 w-10 sm:h-14 sm:w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-amber-300/60 to-yellow-400/30 blur-[6px]"
-              style={{ animation: 'crystalPulse 2.6s ease-in-out infinite' }}
-            />
-          </div>
-
-          {/* 🌟 অ্যানিমেশন লেয়ার ৪: ডানের ছেলের ক্যামেরা ফ্ল্যাশ স্পার্কল (Camera Lens Flare) */}
-          <div
-            className="pointer-events-none absolute z-10"
-            style={{ left: '79.8%', bottom: '27.5%' }}
-          >
-            <div
-              className="h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white blur-[2px]"
-              style={{ animation: 'cameraShutterFlash 4.8s ease-in-out infinite' }}
-            />
-          </div>
-
-        </div>
+        </svg>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          ২. ফুটার কন্টেন্ট — ৪-কলাম বিশিষ্ট ব্যালান্সড লেআউট (#D3E7FC)
-          ───────────────────────────────────────────────────────────── */}
-      <div className="bg-[#D3E7FC] px-5 pb-8 pt-6 md:px-10 lg:px-16">
+      {/* ইলাস্ট্রেশন — পান্ডা ও বাচ্চাদের গ্যাজেট লাইফস্টাইল ছবি */}
+      <div className="relative aspect-[1536/606] w-full select-none pointer-events-none bg-[#D3E7FC]">
+        <Image
+          src="/footer-illustration.webp"
+          alt="Vangcur Gadgets Lifestyle"
+          fill
+          sizes="100vw"
+          className="object-cover object-bottom"
+          priority={false}
+        />
+      </div>
+
+      {/* ফুটার কনটেন্ট — Nexiron স্টাইলে ৪-কলাম গ্রিড (#D3E7FC) */}
+      <div className="bg-[#D3E7FC] px-5 pb-8 pt-8 md:px-10 lg:px-16">
         <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
           
-          {/* কলাম ১ (বামে): ইমেজ লোগো, সাধারণ ট্যাগলাইন ও সেন্টার-অ্যালাইন সোশ্যাল আইকন */}
+          {/* কলাম ১ (বামে): আসল ইমেজ লোগো, সাধারণ ট্যাগলাইন ও সেন্টার-অ্যালাইন সোশ্যাল আইকন */}
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
             <Link href="/" className="mb-2 inline-block">
               <Image
@@ -310,12 +238,12 @@ export default function Footer() {
               />
             </Link>
 
-            {/* সাধারণ মার্জিত ট্যাগলাইন (কোনো ব্যাজ ছাড়া) */}
+            {/* কোনো ব্যাজ ছাড়া সাধারণ মার্জিত ট্যাগলাইন */}
             <p className="font-body text-[12px] font-bold uppercase tracking-[1.5px] text-brand-light mb-4">
               Your First Choice For Gadgets
             </p>
 
-            {/* ব্র্যান্ড কালার অনুযায়ী সোশ্যাল মিডিয়া আইকনসমূহ */}
+            {/* ব্র্যান্ডের কালার অনুযায়ী সোশ্যাল মিডিয়া বাটনসমূহ */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
               <a
                 href={extras.social.fb}
@@ -375,12 +303,12 @@ export default function Footer() {
               {lang === 'en' ? 'Customer Care' : 'গ্রাহক সেবা'}
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
-              <li><button className={colLinkClass暗} onClick={scrollToFaq}>FAQ</button></li>
-              <li><button className={colLinkClass暗} onClick={() => openInfo('shipping')}>Shipping Info</button></li>
-              <li><Link href="/terms" className={colLinkClass暗}>{lang === 'en' ? 'Warranty Info' : 'ওয়ারেন্টি তথ্য'}</Link></li>
-              <li><Link href="/refund-policy" className={colLinkClass暗}>{lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}</Link></li>
-              <li><Link href="/privacy-policy" className={colLinkClass暗}>{lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}</Link></li>
-              <li><Link href="/terms" className={colLinkClass暗}>{lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}</Link></li>
+              <li><button className={colLinkClass} onClick={scrollToFaq}>FAQ</button></li>
+              <li><button className={colLinkClass} onClick={() => openInfo('shipping')}>Shipping Info</button></li>
+              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Warranty Info' : 'ওয়ারেন্টি তথ্য'}</Link></li>
+              <li><Link href="/refund-policy" className={colLinkClass}>{lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}</Link></li>
+              <li><Link href="/privacy-policy" className={colLinkClass}>{lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}</Link></li>
+              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}</Link></li>
             </ul>
           </div>
 
@@ -390,13 +318,13 @@ export default function Footer() {
               {t('কুইক লিঙ্কস')}
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
-              <li><button className={colLinkClass暗} onClick={scrollTop}>{t('হোম')}</button></li>
-              <li><button className={colLinkClass暗} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button></li>
-              <li><button className={colLinkClass暗} onClick={openAccount}>{t('মাই প্রোফাইল')}</button></li>
-              <li><button className={colLinkClass暗} onClick={openTrackOrder述}>{t('ট্র্যাক অর্ডার')}</button></li>
+              <li><button className={colLinkClass} onClick={scrollTop}>{t('হোম')}</button></li>
+              <li><button className={colLinkClass} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button></li>
+              <li><button className={colLinkClass} onClick={openAccount}>{t('মাই প্রোফাইল')}</button></li>
+              <li><button className={colLinkClass} onClick={openTrackOrder}>{t('ট্র্যাক অর্ডার')}</button></li>
               <li>
                 <button
-                  className={`${colLinkClass暗} font-bold text-amber-700 hover:text-amber-800`}
+                  className={`${colLinkClass} font-bold text-amber-700 hover:text-amber-800`}
                   onClick={openOfferPage}
                 >
                   {t('📢 চলতি অফারসমূহ')}
@@ -459,74 +387,6 @@ export default function Footer() {
           {t(extras.copy)}
         </div>
       </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          ৩. লেয়ার্ড অ্যানিমেশন স্টাইল রুলস (Pure GPU Keyframes)
-          ───────────────────────────────────────────────────────────── */}
-      <style jsx global>{`
-        @keyframes droneHover {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-9px) rotate(2deg);
-          }
-        }
-
-        @keyframes musicFloat1 {
-          0% {
-            transform: translate(0, 0) scale(0.6);
-            opacity: 0;
-          }
-          25% {
-            opacity: 0.85;
-          }
-          100% {
-            transform: translate(-14px, -34px) scale(1.1);
-            opacity: 0;
-          }
-        }
-
-        @keyframes musicFloat2 {
-          0% {
-            transform: translate(0, 0) scale(0.6);
-            opacity: 0;
-          }
-          25% {
-            opacity: 0.85;
-          }
-          100% {
-            transform: translate(10px, -38px) scale(1.2);
-            opacity: 0;
-          }
-        }
-
-        @keyframes crystalPulse {
-          0%, 100% {
-            transform: scale(0.85);
-            opacity: 0.35;
-          }
-          50% {
-            transform: scale(1.25);
-            opacity: 0.85;
-          }
-        }
-
-        @keyframes cameraShutterFlash {
-          0%, 88%, 94%, 100% {
-            opacity: 0;
-            transform: scale(0.3);
-          }
-          90% {
-            opacity: 0.95;
-            transform: scale(1.4);
-          }
-          92% {
-            opacity: 0.2;
-            transform: scale(1.1);
-          }
-        }
-      `}</style>
     </footer>
   );
 }
