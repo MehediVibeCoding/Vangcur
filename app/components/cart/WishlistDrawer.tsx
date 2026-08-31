@@ -6,8 +6,12 @@ import Link from "next/link";
 import { useWishlistStore } from "@/lib/store/wishlistStore";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useLanguageStore } from "@/lib/store/languageStore";
-import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
 import { showToast } from "@/lib/toast";
+
+export interface WishlistDrawerProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
 // Header Watermark Gadget Line-Art (14% Opacity)
 const HeaderDecor: React.FC = () => (
@@ -61,15 +65,22 @@ const HeaderDecor: React.FC = () => (
   </svg>
 );
 
-export default function WishlistDrawer() {
+export default function WishlistDrawer({
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+}: WishlistDrawerProps) {
   const { lang } = useLanguageStore();
   const wishlistStore = useWishlistStore();
   const cartStore = useCartStore();
 
   const items = wishlistStore.items || wishlistStore.wishlist || [];
-  const isOpen = Boolean(wishlistStore.isWishlistOpen ?? wishlistStore.isOpen);
+  const isStoreOpen = Boolean(wishlistStore.isWishlistOpen ?? wishlistStore.isOpen);
+  const isOpen = propIsOpen !== undefined ? propIsOpen : isStoreOpen;
 
   const closeWishlist = () => {
+    if (propOnClose) {
+      propOnClose();
+    }
     if (typeof wishlistStore.closeWishlist === "function") {
       wishlistStore.closeWishlist();
     } else if (typeof wishlistStore.setIsWishlistOpen === "function") {
@@ -80,16 +91,15 @@ export default function WishlistDrawer() {
   const removeItem = wishlistStore.removeItem || wishlistStore.removeFromWishlist;
   const clearWishlist = wishlistStore.clearWishlist;
 
-  // Lock body scroll when open
+  // Native Self-contained Body Scroll Lock
   useEffect(() => {
     if (isOpen) {
-      lockBodyScroll();
-    } else {
-      unlockBodyScroll();
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     }
-    return () => {
-      unlockBodyScroll();
-    };
   }, [isOpen]);
 
   // Handle ESC key press
