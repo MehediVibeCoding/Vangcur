@@ -7,9 +7,9 @@ import HeroSlider from './components/home/HeroSlider';
 import TrustStrip from './components/home/TrustStrip';
 import Categories from './components/home/Categories';
 import ProductGrid from './components/home/ProductGrid';
+import CustomerGallery from './components/home/CustomerGallery';
 import FAQ from './components/home/FAQ';
 import About from './components/home/About';
-import CustomerGallery from './components/home/CustomerGallery';
 import Footer from './components/layout/Footer';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
@@ -45,13 +45,6 @@ export default function ClientHome({ initialProducts, initialCategories, initial
   }, []);
 
   useEffect(() => {
-    // চেকআউট পেজ এখন আর quick-order sessionStorage key সাথে সাথে ডিলিট
-    // করে না (cart-empty বাগ ফিক্স, app/checkout/page.tsx দ্রষ্টব্য) — সেটা
-    // ক্লিয়ার হয় শুধু অর্ডার সফল হলে বা × দিয়ে ক্যানসেল করলে। কিন্তু ইউজার
-    // ব্রাউজার Back বাটন দিয়ে চেকআউট ছেড়ে হোমে ফিরলে ওই ক্লিয়ার-আপ চলে না,
-    // তাই হোমপেজে ফেরাকেই "quick order attempt পরিত্যক্ত" ধরে এখানে
-    // defensively পুরনো key মুছে ফেলা হচ্ছে, যাতে পরে normal cart দিয়ে
-    // checkout করলে সেটা এই পুরনো single-item quick order দিয়ে hijack না হয়।
     try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
   }, []);
 
@@ -71,9 +64,9 @@ export default function ClientHome({ initialProducts, initialCategories, initial
       <TrustStrip />
       <Categories initialCategories={initialCategories} />
       <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
+      <CustomerGallery />
       <FAQ />
       <About />
-      <CustomerGallery />
       <Footer />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
       <AccountPage
