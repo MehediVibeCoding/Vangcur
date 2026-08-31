@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/app/components/layout/Navbar';
@@ -11,7 +12,7 @@ import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import {
-  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT, GENERATE_INVOICE_EVENT,
+  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT,
 } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
@@ -21,6 +22,7 @@ const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
 export default function AccountOrdersClient() {
   const { t } = useT();
+  const router = useRouter();
   const supabase = useRef(createClient()).current;
 
   const cartQty = useCartStore((s) => cartCount(s.cart));
@@ -53,16 +55,15 @@ export default function AccountOrdersClient() {
 
   const stats = useMemo(() => orderStats(orders), [orders]);
 
-  // শুধু order number দিয়ে সার্চ — client-side filter, নতুন কোনো query না;
-  // orders আগে থেকেই RLS দিয়ে শুধু নিজের rows-এ scoped, তাই phone-verify
-  // করার কোনো দরকার নেই এখানে। phone দিয়ে সার্চ করার অপশন ইচ্ছাকৃতভাবে নেই।
   const filteredOrders = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return orders;
     return orders.filter((o) => String(o.orderNum).toLowerCase().includes(q));
   }, [orders, query]);
 
-  const openInvoice = (orderId: string | number) => window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, { detail: { orderId, ctx: 'acc-orders' } }));
+  const openInvoice = (orderId: string | number) => {
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
+  };
 
   return (
     <>
