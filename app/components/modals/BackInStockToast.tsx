@@ -1,9 +1,10 @@
-// [REPLACE] ফাইলের পাথ: app/components/modals/BackInStockToast.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getStockNotifications, removeStockNotification } from '@/lib/accountData';
+import { getDraft } from '@/lib/draftRecovery';
 import { useCartStore } from '@/lib/store/cartStore';
 import { OPEN_CART_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -14,6 +15,12 @@ import type { Product } from '@/types';
 interface InStockItem extends Product {
   key: string;
 }
+
+const HOMEPAGE_INITIAL_DELAY_MS = 5000; // ড্রাফট না থাকলে হোমপেজে আসার ঠিক ৫ সেকেন্ড পর আসবে
+const DISMISS_GAP_DELAY_MS = 10000; // ড্রাফট টোস্ট কেটে দেওয়ার বরাবর ঠিক ১০ সেকেন্ড পর আসবে
+const RECOVERY_DISMISS_KEY = 'vc_recovery_dismissed';
+const RECOVERY_DISMISS_TIME_KEY = 'vc_toast_dismiss_time';
+const MAX_DRAFT_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
 function HeaderDecor() {
   return (
@@ -66,81 +73,137 @@ function CartPlusIcon() {
   );
 }
 
+function hasActiveRecoveryDraft(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (sessionStorage.getItem(RECOVERY_DISMISS_KEY) === '1') return false;
+    const d = getDraft();
+    return !!(d && d.items && d.items.length > 0 && Date.now() - d.createdAt < MAX_DRAFT_AGE_MS);
+  } catch {
+    return false;
+  }
+}
+
 export default function BackInStockToast() {
   const { t, lang } = useT();
-  const checkedRef = useRef(false);
+  const pathname = usePathname();
   const [inStockItems, setInStockItems] = useState<InStockItem[]>([]);
 
   useEffect(() => {
-    if (checkedRef.current) return;
-    checkedRef.current = true;
+    // 🛡️ শুধুমাত্র হোমপেজে (pathname === '/') আসবে
+    if (pathname !== '/') {
+      setInStockItems([]);
+      return;
+    }
 
-    const notifs = getStockNotifications();
-    if (notifs.length === 0) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
 
-    const targetIds = notifs.map((n) => n.prodId).filter(Boolean);
-    if (targetIds.length === 0) return;
+    const scheduleStockToast = (delayMs: number) => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(async () => {
+        if (cancelled) return;
+        const notifs = getStockNotifications();
+        if (notifs.length === 0) return;
 
-    (async () => {
-      const supabase = createClient();
-      try {
-        const { data, error } = await supabase
-          .from('custom_products')
-          .select('id, name, price, old, stock, imgs, cat')
-          .in('id', targetIds);
+        const targetIds = notifs.map((n) => n.prodId).filter(Boolean);
+        if (targetIds.length === 0) return;
 
-        if (error || !data || data.length === 0) return;
+        const supabase = createClient();
+        try {
+          const { data, error } = await supabase
+            .from('custom_products')
+            .select('id, name, price, old, stock, imgs, cat')
+            .in('id', targetIds);
 
-        const available: InStockItem[] = [];
-        notifs.forEach((n) => {
-          const prod = data.find((p) => String(p.id) === String(n.prodId));
-          if (prod && Number(prod.stock) > 0) {
-            let imgsArr: string[] = [];
-            if (typeof prod.imgs === 'string') {
-              try { imgsArr = JSON.parse(prod.imgs); } catch { imgsArr = [prod.imgs]; }
-            } else if (Array.isArray(prod.imgs)) {
-              imgsArr = prod.imgs;
+          if (error || !data || data.length === 0 || cancelled) return;
+
+          const available: InStockItem[] = [];
+          notifs.forEach((n) => {
+            const prod = data.find((p) => String(p.id) === String(n.prodId));
+            if (prod && Number(prod.stock) > 0) {
+              let imgsArr: string[] = [];
+              if (typeof prod.imgs === 'string') {
+                try { imgsArr = JSON.parse(prod.imgs); } catch { imgsArr = [prod.imgs]; }
+              } else if (Array.isArray(prod.imgs)) {
+                imgsArr = prod.imgs;
+              }
+
+              available.push({
+                id: prod.id,
+                name: prod.name,
+                price: Number(prod.price) || 0,
+                old: Number(prod.old) || Number(prod.price) || 0,
+                stock: Number(prod.stock) || 0,
+                imgs: imgsArr.length ? imgsArr : ['📦'],
+                cat: prod.cat || 'general',
+                cats: [prod.cat || 'general'],
+                specs: {},
+                warranty: '৭ দিন',
+                badge: '',
+                rating: 5,
+                discountColor: '',
+                desc: '',
+                _detailLoaded: false,
+                key: n.key,
+              });
             }
+          });
 
-            available.push({
-              id: prod.id,
-              name: prod.name,
-              price: Number(prod.price) || 0,
-              old: Number(prod.old) || Number(prod.price) || 0,
-              stock: Number(prod.stock) || 0,
-              imgs: imgsArr.length ? imgsArr : ['📦'],
-              cat: prod.cat || 'general',
-              cats: [prod.cat || 'general'],
-              specs: {},
-              warranty: '৭ দিন',
-              badge: '',
-              rating: 5,
-              discountColor: '',
-              desc: '',
-              _detailLoaded: false,
-              key: n.key,
-            });
+          if (available.length > 0 && !cancelled) {
+            setInStockItems(available);
           }
-        });
+        } catch {
+          // ignore
+        }
+      }, delayMs);
+    };
 
-        if (available.length > 0) {
-          setInStockItems(available);
+    // 🌟 স্মার্ট টাইমিং কোঅর্ডিনেশন (৫ সেকেন্ড ও ১০ সেকেন্ডের গ্যাপ লজিক)
+    if (hasActiveRecoveryDraft()) {
+      // যদি রিকভারি ড্রাফট টোস্ট সক্রিয় থাকে, এটি কেটে দেওয়ার ১০ সেকেন্ড পর আসবে
+      const onRecoveryDismissed = (e: Event) => {
+        const d = (e as CustomEvent<{ type?: string }>).detail;
+        if (d?.type === 'recovery') {
+          scheduleStockToast(DISMISS_GAP_DELAY_MS);
+        }
+      };
+      window.addEventListener('vc:toastDismissed', onRecoveryDismissed);
+      return () => {
+        cancelled = true;
+        if (timer) clearTimeout(timer);
+        window.removeEventListener('vc:toastDismissed', onRecoveryDismissed);
+      };
+    } else {
+      // কোনো ড্রাফট না থাকলে বা ড্রাফট আগেই কেটে দেওয়া থাকলে
+      let calculatedDelay = HOMEPAGE_INITIAL_DELAY_MS;
+      try {
+        const dismissTime = Number(sessionStorage.getItem(RECOVERY_DISMISS_TIME_KEY)) || 0;
+        if (dismissTime > 0) {
+          const timeSinceDismiss = Date.now() - dismissTime;
+          if (timeSinceDismiss < DISMISS_GAP_DELAY_MS) {
+            calculatedDelay = DISMISS_GAP_DELAY_MS - timeSinceDismiss;
+          }
         }
       } catch {
-        // network exception
+        // ignore
       }
-    })();
-  }, []);
+      scheduleStockToast(calculatedDelay);
+    }
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [pathname]);
 
   if (inStockItems.length === 0) return null;
 
-  // নোটিফিকেশন পুরোপুরি কেটে দেওয়া (লোকাল স্টোরেজ থেকে চিরতরে ডিলিট)
   const handleDismissAll = () => {
     inStockItems.forEach((item) => removeStockNotification(item.key));
     setInStockItems([]);
   };
 
-  // একক প্রোডাক্ট কার্টে যোগ ও কার্ট ওপেন করা
   const handleAddSingleToCart = (item: InStockItem) => {
     useCartStore.getState().addToCart([item], item.id, 1);
     removeStockNotification(item.key);
@@ -154,7 +217,6 @@ export default function BackInStockToast() {
     setInStockItems(remaining);
   };
 
-  // মাল্টিপল প্রোডাক্টের ক্ষেত্রে সবগুলো একসাথে কার্টে যোগ ও কার্ট ড্রয়ার ওপেন করা
   const handleAddAllToCart = () => {
     inStockItems.forEach((item) => {
       useCartStore.getState().addToCart([item], item.id, 1);
@@ -176,10 +238,8 @@ export default function BackInStockToast() {
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[390px] animate-section-reveal">
       <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-md">
         
-        {/* লাইন-আর্ট ওয়াটারমার্ক */}
         <HeaderDecor />
 
-        {/* ফ্রস্টেড সার্কুলার ক্লোজ বাটন */}
         <button
           onClick={handleDismissAll}
           className="absolute right-3.5 top-3.5 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
@@ -189,7 +249,6 @@ export default function BackInStockToast() {
           ✕
         </button>
 
-        {/* হেডার শিরোনাম ও সাবটাইটেল */}
         <div className="relative z-10 pr-6">
           <h3 className="font-body text-[15px] font-extrabold text-ink leading-tight">
             {isMultiple
@@ -203,9 +262,6 @@ export default function BackInStockToast() {
           </p>
         </div>
 
-        {/* ========================================================================= */}
-        {/* ১. সিঙ্গেল প্রোডাক্ট মোড                                                   */}
-        {/* ========================================================================= */}
         {!isMultiple && (
           <>
             <div className="relative z-10 my-3 rounded-[16px] border border-white/90 bg-white/80 p-2.5 shadow-xs backdrop-blur-md">
@@ -246,9 +302,6 @@ export default function BackInStockToast() {
           </>
         )}
 
-        {/* ========================================================================= */}
-        {/* ২. মাল্টিপল প্রোডাক্ট মোড (ক্লিন ও কম্প্যাক্ট লিস্ট)                         */}
-        {/* ========================================================================= */}
         {isMultiple && (
           <>
             <div className="sleek-scrollbar relative z-10 my-3 max-h-[190px] overflow-y-auto space-y-2 pr-0.5">
