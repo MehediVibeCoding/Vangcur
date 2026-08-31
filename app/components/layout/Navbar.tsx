@@ -1,4 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/components/layout/Navbar.tsx
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, type RefObject } from 'react';
@@ -39,7 +38,6 @@ function SearchIcon({ className = '' }: { className?: string }) {
   );
 }
 
-// 🌟 ১০০% সলিড ভরাট সাদা হোম আইকন (Solid Filled White Home Icon)
 function HomeSolidSvgIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
@@ -113,12 +111,12 @@ function highlightMatch(text: string, q: string) {
   const truncBefore = before.length > 20 ? '...' + before.slice(-20) : before;
   const truncAfter = after.length > 25 ? after.slice(0, 25) + '...' : after;
   return (
-    <>{truncBefore}<span className="bg-brand-light-hover/20 text-brand-light">{match}</span>{truncAfter}</>
+    <>{truncBefore}<span className="bg-brand-light-hover/20 text-brand-light font-bold">{match}</span>{truncAfter}</>
   );
 }
 
 const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:outline-none';
-const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,88,199,.12)] focus:outline-none';
+const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)] focus:outline-none';
 
 const DEFAULT_POPULAR_SEARCHES = [
   'Neon Light', 'Smart Watch', 'Power Bank', 'TWS Earbuds', 'Headphone', 'Humidifier',
@@ -329,6 +327,8 @@ export default function Navbar({
 }: NavbarProps) {
   const { t } = useT();
   const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
+
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -338,6 +338,7 @@ export default function Navbar({
   const [desktopSearchHovered, setDesktopSearchHovered] = useState(false);
   const [desktopSearchFocused, setDesktopSearchFocused] = useState(false);
   const [desktopSearchGeo, setDesktopSearchGeo] = useState<{ left: number; width: number } | null>(null);
+
   const desktopNavRowRef = useRef<HTMLDivElement>(null);
   const desktopSearchWrapRef = useRef<HTMLDivElement>(null);
   const desktopSearchBoxRef = useRef<HTMLDivElement>(null);
@@ -349,7 +350,7 @@ export default function Navbar({
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const prodsRef = useRef<Product[]>([]);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
-  const router = useRouter();
+
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused || showDropdown;
   const isDefaultView = showDropdown && !searchQuery.trim();
@@ -554,6 +555,14 @@ export default function Navbar({
     setRecentSearches([]);
   };
 
+  const handleAccountClick = () => {
+    if (onAccountClick) {
+      onAccountClick();
+    } else {
+      router.push('/account');
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -581,14 +590,13 @@ export default function Navbar({
           onClick={() => setShowDropdown(false)}
         />
       )}
-      {/* 🌟 লিন, সিমলেস ও হালকা শ্যাডো (shadow-sh1 + border-white/70) */}
+
       <nav
         className={`navbar-glass relative z-[900] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
             {showHomeButton ? (
-              /* 🌟 সলিড ভরাট সাদা হোম আইকন সহ আধুনিক রাউন্ডেড হোম পিল বাটন */
               <Link
                 href="/"
                 prefetch={true}
@@ -697,7 +705,10 @@ export default function Navbar({
                 </button>
 
                 {currentUser ? (
-                  <button className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5" onClick={onAccountClick}>
+                  <button
+                    className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5"
+                    onClick={handleAccountClick}
+                  >
                     <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-white shadow-sh1">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
