@@ -246,17 +246,14 @@ export default function CheckoutPage() {
   const [selectedShip, setSelectedShip] = useState('');
   const [errors, setErrors] = useState<CheckoutErrors>({});
 
-  // কুপন স্টেট ও ড্রপডাউন টগল
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponInput, setCouponInput] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCouponInputBox, setShowCouponInputBox] = useState(false);
   const [couponError, setCouponError] = useState('');
 
-  // স্টেপ ১ বাটন লোডিং ও ট্রানজিশন স্টেট
   const [step1BtnStatus, setStep1BtnStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
-  // বিস্তারিত হিসাব অ্যাকর্ডিয়ন টগল
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const [txn, setTxn] = useState('');
@@ -285,7 +282,6 @@ export default function CheckoutPage() {
     router.prefetch('/');
   }, [router]);
 
-  // কুপন স্টেট লোড ও সিঙ্ক
   useEffect(() => {
     setAppliedCoupon(getAppliedCoupon());
     const onCouponChange = (e: Event) => {
@@ -309,6 +305,7 @@ export default function CheckoutPage() {
     let hasItems = false;
     let loadedItems: CartItem[] = [];
 
+    // ১. কুইক অর্ডার আইটেম চেক
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
@@ -316,16 +313,46 @@ export default function CheckoutPage() {
         loadedItems = quickOrder;
         hasItems = true;
         setIsDirectQuickOrder(true);
-      } else {
-        const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
-        const validCart = Array.isArray(cart) ? cart : [];
-        setCartItems(validCart);
-        loadedItems = validCart;
-        hasItems = validCart.length > 0;
-        setIsDirectQuickOrder(false);
       }
     } catch {
-      hasItems = false;
+      // ignore
+    }
+
+    // ২. মেইন শপিং কার্ট চেক
+    if (!hasItems) {
+      try {
+        const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
+        const validCart = Array.isArray(cart) ? cart : [];
+        if (validCart.length > 0) {
+          setCartItems(validCart);
+          loadedItems = validCart;
+          hasItems = true;
+          setIsDirectQuickOrder(false);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // ৩. 🛡️ স্মার্ট রেজিলিয়েন্ট ড্রাফট রিকভারি (যদি কার্ট খালি থাকে কিন্তু ড্রাফট থাকে)
+    if (!hasItems) {
+      try {
+        const draft = getDraft();
+        if (draft && Array.isArray(draft.items) && draft.items.length > 0) {
+          setCartItems(draft.items);
+          loadedItems = draft.items;
+          hasItems = true;
+          setIsDirectQuickOrder(draft.items.length === 1);
+          if (draft.name) setName((prev) => prev || draft.name);
+          if (draft.phone) setPhone((prev) => prev || draft.phone);
+          if (draft.dist) setDist((prev) => prev || draft.dist);
+          if (draft.addr) setAddr((prev) => prev || draft.addr);
+          if (draft.email) setEmail((prev) => prev || draft.email);
+          if (draft.ship) setSelectedShip((prev) => prev || draft.ship);
+        }
+      } catch {
+        // ignore
+      }
     }
 
     if (!hasItems) {
@@ -349,7 +376,6 @@ export default function CheckoutPage() {
       );
     }
 
-    // স্মার্ট ৩-ধাপের অটোফিল লজিক
     let draftLoaded = false;
     try {
       const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
@@ -403,7 +429,6 @@ export default function CheckoutPage() {
       }
     }
 
-    // রিফ্রেশে সুরক্ষিত স্টেপ ২/৩ রিস্টোরেশন
     try {
       const savedStep = parseInt(sessionStorage.getItem('vc_checkout_step') || '1', 10);
       if (savedStep === 2 || savedStep === 3) {
@@ -560,7 +585,6 @@ export default function CheckoutPage() {
   const rawSc = shipPrice(selectedShip, shipCfg);
   const sub = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
 
-  // কুপন ডিসকাউন্ট ও ফ্রি শিপিং হিসাব
   const { discountAmount } = useMemo(() => {
     return recalculateDiscount(appliedCoupon, sub);
   }, [appliedCoupon, sub]);
@@ -569,14 +593,12 @@ export default function CheckoutPage() {
   const effectiveProductSubtotal = Math.max(0, sub - discountAmount);
   const total = Math.max(0, effectiveProductSubtotal + effectiveShippingCost);
 
-  // ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট ব্রেকডাউন হিসাব
   const advanceInfo = useMemo(() => {
     return calculateAdvancePayment(total);
   }, [total]);
 
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
-  // চেকআউট পেজে সরাসরি কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
@@ -615,7 +637,6 @@ export default function CheckoutPage() {
     showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
   };
 
-  // ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ পরবর্তী ধাপে যাওয়ার হ্যান্ডলার
   const goToStep2 = async () => {
     if (cartItems.length === 0 || step1BtnStatus !== 'idle') {
       if (!cartItems.length) showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
@@ -625,7 +646,6 @@ export default function CheckoutPage() {
     const user = useAuthStore.getState().currentUser;
     const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase() || email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
 
-    // ১. কুইক অর্ডারে যদি কুপন বক্সে কোড লেখা থাকে কিন্তু প্রয়োগে ক্লিক করা না হয়ে থাকে
     if (isDirectQuickOrder && couponInput.trim() && !appliedCoupon) {
       setStep1BtnStatus('verifying');
       const success = await handleApplyCoupon(undefined, couponInput);
@@ -640,7 +660,6 @@ export default function CheckoutPage() {
       setStep1BtnStatus('idle');
     }
 
-    // ২. ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড (মডারেটর ছাড়া সাধারণ কাস্টমারদের জন্য)
     if (!isMod && total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
@@ -733,7 +752,6 @@ export default function CheckoutPage() {
     const user = useAuthStore.getState().currentUser;
     const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase() || email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
 
-    // ২০,০০০ টাকার বেশি অর্ডারের বাল্ক গার্ড (মডারেটর ছাড়া সবার জন্য)
     if (!isMod && total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
@@ -764,7 +782,6 @@ export default function CheckoutPage() {
         setSubmitting(false);
         confirmLockRef.current = false;
         
-        // মডারেটর না হলে তখন রেট লিমিট পপআপ দেখাবে
         if (!isMod && (result.error?.includes('অপেক্ষা') || result.error?.includes('wait') || result.error?.includes('সীমা') || result.error?.includes('limit'))) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
@@ -783,7 +800,6 @@ export default function CheckoutPage() {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData?.user?.id || null;
 
-      // টাইমস্ট্যাম্প রেকর্ড ও কুপন ক্লিয়ার
       recordLocalOrderTimestamp();
       removeAppliedCoupon();
 
@@ -879,10 +895,8 @@ export default function CheckoutPage() {
       <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white sm:py-6">
         <DesktopSideDecor />
         
-        {/* মেইন কন্টেইনার */}
         <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 sm:min-h-0 sm:rounded-[28px] sm:ring-1 sm:ring-white/80">
           
-          {/* টপ হেডার বার */}
           <div className="rounded-b-[22px] rounded-t-none bg-gradient-to-br from-[#85C2FA] to-brand-light px-5 pb-3.5 pt-3.5 shadow-xs">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
@@ -919,7 +933,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* কুইক অর্ডারে YOUR ORDER ও কুপন কার্ড */}
           {step === 1 && isDirectQuickOrder && cartItems.length === 1 && (
             <div className="mx-6 mb-2 mt-3 rounded-[18px] border border-brand-light/35 bg-white/90 p-4 shadow-xs backdrop-blur-md">
               <div className="mb-2 flex items-center justify-between">
@@ -1010,7 +1023,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ৩-ধাপের স্টেপার */}
           <div className="flex px-6 pb-2 pt-5 sm:pt-6">
             {[{ n: 1, label: t('তথ্য') }, { n: 2, label: t('পেমেন্ট') }, { n: 3, label: t('নিশ্চিত') }].map((s) => {
               const isDone = step > s.n;
@@ -1031,7 +1043,6 @@ export default function CheckoutPage() {
             })}
           </div>
 
-          {/* প্রোগ্রেস বার */}
           <div className="px-6 pb-1 pt-1">
             <div className="mb-1 h-1.5 overflow-hidden rounded-full bg-brand-light/15">
               <div
@@ -1044,9 +1055,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* স্টেপ ১: গ্রাহকের তথ্য */}
-          {/* ========================================================================= */}
           {step === 1 && (
             <div className="px-6 py-4">
               <div className="mb-3.5">
@@ -1079,7 +1087,6 @@ export default function CheckoutPage() {
                 {errors.eP && <div className={fieldErrClass}><IconWarning />{errors.eP}</div>}
               </div>
 
-              {/* জেলা ড্রপডাউন */}
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('জেলা')}</label>
                 <div className="relative">
@@ -1119,7 +1126,6 @@ export default function CheckoutPage() {
                 {errors.eA && <div className={`${fieldErrClass} -mt-1`}><IconWarning />{errors.eA}</div>}
               </div>
 
-              {/* ইমেইল */}
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('ইমেইল')} <span className={optionalTagClass}>{t('(ঐচ্ছিক — ইনভয়েস পাঠানো হবে)')}</span></label>
                 <div className="relative">
@@ -1136,7 +1142,6 @@ export default function CheckoutPage() {
                 {errors.eEmail && <div className={fieldErrClass}><IconWarning />{errors.eEmail}</div>}
               </div>
 
-              {/* শিপিং অপশন */}
               {shipOptions.length > 0 && (
                 <div className="mb-4">
                   <label className={fieldLabelClass}>{t('শিপিং')}</label>
@@ -1181,7 +1186,6 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {/* অ্যাকশন বাটন */}
               <div className="pt-2">
                 <button
                   className={`${btnNextClass} flex items-center justify-center gap-2`}
@@ -1209,9 +1213,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* স্টেপ ২: পেমেন্ট */}
-          {/* ========================================================================= */}
           {step === 2 && (
             <div className="px-6 py-4">
               <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
@@ -1287,7 +1288,6 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {/* বিকাশ নম্বর বক্স */}
                 <div className="mb-2.5 flex flex-col gap-3 rounded-[16px] border border-brand-light/30 bg-gradient-to-br from-[#EFF6FF] to-[#DCEBFD]/80 p-3.5 min-[400px]:p-4">
                   <div className="flex items-center justify-between gap-2 min-[400px]:gap-3">
                     <div className="flex items-center gap-2.5 min-[400px]:gap-3 min-w-0">
@@ -1393,9 +1393,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ========================================================================= */}
-          {/* স্টেপ ৩: নিশ্চিতকরণ ও ইনভয়েস প্রিভিউ */}
-          {/* ========================================================================= */}
           {step === 3 && (
             <div className="px-6 py-4">
               <div className="relative mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
@@ -1485,7 +1482,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* নীতিমালা চেকবক্স */}
               <div
                 className={`flex cursor-pointer items-start gap-2.5 rounded-[14px] border bg-surface-muted/70 px-3.5 py-3 transition-brand duration-brand ${shake ? 'animate-[shake_.4s]' : ''} ${termsError ? 'border-red-500 bg-red-50/50' : 'border-border-base hover:bg-surface-muted'}`}
                 onClick={toggleTerms}
