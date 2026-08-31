@@ -1,4 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/components/modals/RecoveryToast.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -95,7 +94,31 @@ export default function RecoveryToast() {
   };
 
   const resume = () => {
-    dismiss();
+    if (!draft || !draft.items || draft.items.length === 0) return;
+    try {
+      // ১. ফেলে রাখা ট্রলি বা প্রোডাক্টের তালিকা হস্তান্তর করা
+      sessionStorage.setItem('vc_quick_order_items', JSON.stringify(draft.items));
+
+      // ২. কাস্টমারের পূর্বে লেখা নাম, মোবাইল নম্বর, জেলা ও ঠিকানা রিস্টোর করা
+      sessionStorage.setItem('vc_form_draft', JSON.stringify({
+        name: draft.name || '',
+        phone: draft.phone || '',
+        dist: draft.dist || '',
+        addr: draft.addr || '',
+        email: draft.email || '',
+      }));
+
+      // ৩. শিপিং অপশন রিস্টোর করা
+      if (draft.ship) {
+        sessionStorage.setItem('vc_ship', draft.ship);
+      }
+
+      sessionStorage.setItem(DISMISS_KEY, '1');
+    } catch {
+      // ignore
+    }
+
+    setDraft(null);
     router.push('/checkout?resume=1');
   };
 
@@ -155,7 +178,7 @@ export default function RecoveryToast() {
           </div>
         </div>
 
-        {/* প্রোগ্রেস / আর্জেন্ট ব্যাজ */}
+        {/* প্রোগ্রেস ব্যাজ */}
         <div className="relative z-10 mb-3.5 flex items-center gap-2 rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3 py-1.5 shadow-xs">
           <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-body text-[11.5px] font-bold text-emerald-800">
