@@ -46,8 +46,8 @@ export function PolicyContact() {
         {t('এই নীতিমালা সম্পর্কে কোনো প্রশ্ন বা অভিযোগ থাকলে আমাদের সাথে যোগাযোগ করুন —')}
       </p>
       <ul className={policyUlClass}>
-        <li className={policyLiClass}>{t('📞 ফোন / WhatsApp:')} <a href="tel:01816365504" className="font-semibold text-brand-light hover:underline">01816-365504</a></li>
-        <li className={policyLiClass}>{t('✉️ ইমেইল:')} <a href="mailto:vangcurbd@gmail.com" className="font-semibold text-brand-light hover:underline">vangcurbd@gmail.com</a></li>
+        <li className={policyLiClass}>{t('📞 ফোন / WhatsApp:')} <a href="tel:01897804055" className="font-semibold text-brand-light hover:underline">01897-804055</a></li>
+        <li className={policyLiClass}>{t('✉️ ইমেইল:')} <a href="mailto:vangcurgadgets@gmail.com" className="font-semibold text-brand-light hover:underline">vangcurgadgets@gmail.com</a></li>
         <li className={policyLiClass}>{t('📍 ঠিকানা: Dhaka, Bangladesh')}</li>
       </ul>
     </PolicySection>

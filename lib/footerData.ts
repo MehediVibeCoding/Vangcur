@@ -8,18 +8,18 @@ export const DEFAULT_FOOTER = {
   desc: 'Vangcur - ভাঙচুর বাংলাদেশের একটি আধুনিক Gadget & Accessories ভিত্তিক E-commerce Brand। Official ও Unofficial সব ধরনের গ্যাজেট পাবেন Warranty Support সহ। সারা বাংলাদেশে Fast Home Delivery।',
   copy: '© 2026 Vangcur - ভাঙচুর. All rights reserved.',
   social: {
-    fb: 'https://facebook.com/vangcurbdofficial',
-    ig: 'https://instagram.com/vangcur_official',
+    fb: 'https://facebook.com/vangcurgadgets',
+    ig: 'https://instagram.com/vangcurgadgets',
     tk: 'https://tiktok.com/@vangcur.com',
     wa: 'https://wa.me/8801897804055',
-    yt: 'https://youtube.com/@vangcur',
+    yt: 'https://youtube.com/@vangcurgadgets',
   },
   contact: {
     phoneLabel: '01897-804055',
     phoneHref: 'tel:01897804055',
     waHref: 'https://wa.me/8801897804055',
-    email: 'vangcurbd@gmail.com',
-    fb: 'https://facebook.com/vangcurbdofficial',
+    email: 'vangcurgadgets@gmail.com',
+    fb: 'https://facebook.com/vangcurgadgets',
     addr: 'Dhaka, Bangladesh',
   },
 };

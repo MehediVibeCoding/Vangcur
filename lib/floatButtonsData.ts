@@ -6,8 +6,8 @@ export interface ContactSettings {
   messenger?: string;
 }
 
-export const DEFAULT_WA_LINK = 'https://wa.me/8801816365504';
-export const DEFAULT_MSG_LINK = 'https://m.me/vangcurbdofficial';
+export const DEFAULT_WA_LINK = 'https://wa.me/8801897804055';
+export const DEFAULT_MSG_LINK = 'https://m.me/vangcurgadgets';
 
 export function computeWaLink(contact: ContactSettings | null): string {
   if (contact && contact.wa) {

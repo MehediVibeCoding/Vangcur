@@ -57,7 +57,7 @@ const TRUST_ITEMS: TrustItem[] = [
   },
   {
     label: 'সাপোর্ট',
-    sub: 'WhatsApp: 01816-365504',
+    sub: 'WhatsApp: 01897-804055',
     tint: 'text-gold bg-gold/10',
     icon: (
       <svg {...iconProps}>
