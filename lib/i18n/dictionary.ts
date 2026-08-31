@@ -6,6 +6,7 @@ export function translate(text: string, lang: DictLanguage): string {
 }
 
 export const staticDictionary: Record<string, string> = {
+  // Navigation & General
   'কুইক লিঙ্কস': 'Quick Links',
   'মাই প্রোফাইল': 'My Profile',
   'ট্র্যাক অর্ডার': 'Track Order',
@@ -15,8 +16,6 @@ export const staticDictionary: Record<string, string> = {
   'ভাষা': 'Language',
   'বাংলা': 'Bangla',
   'ওয়েবসাইটের ভাষা পরিবর্তন করুন': 'Change the website language',
-
-  // Navbar
   'সাম্প্রতিক অনুসন্ধান': 'Recent Searches',
   'সব মুছুন': 'Clear All',
   'মুছুন': 'Clear',
@@ -33,7 +32,7 @@ export const staticDictionary: Record<string, string> = {
   'লগইন করুন': 'Login',
   'অর্ডার ট্র্যাক করুন': 'Track Order',
 
-  // LoginModal
+  // Authentication & Account
   'Google দিয়ে লগইন সফল হয়েছে': 'Signed in with Google successfully',
   'সঠিক ইমেইল ঠিকানা দিন': 'Enter a valid email address',
   'আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।': 'You have reached the daily limit of 3 password resets. Please try again tomorrow.',
@@ -80,8 +79,15 @@ export const staticDictionary: Record<string, string> = {
   'লগইনে ফিরে যান': 'Back to Login',
   'রিসেট লিংক পাঠান': 'Send Reset Link',
   'মনে পড়েছে?': 'Remembered it?',
+  'নাম পরিবর্তন হয়েছে': 'Name updated successfully',
+  'প্রোফাইল নাম সফলভাবে আপডেট হয়েছে': 'Profile name updated successfully',
+  'লগআউট হয়েছে': 'Logged out successfully',
+  'সফলভাবে লগআউট সম্পন্ন হয়েছে': 'Logged out successfully',
+  'পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন': 'Password changed! Please log in with your new password',
+  'পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে': 'Password changed successfully',
+  'উভয় পাসওয়ার্ড একই হতে হবে': 'Both passwords must match',
 
-  // Checkout page
+  // Checkout & Ordering
   'আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।': 'Your cart is empty. Please add a product to the cart first.',
   'লগইন সফল — অর্ডার সম্পন্ন হচ্ছে...': 'Login successful — placing your order...',
   'নাম কমপক্ষে ৩ অক্ষরের হতে হবে': 'Name must be at least 3 characters',
@@ -95,6 +101,7 @@ export const staticDictionary: Record<string, string> = {
   'Transaction ID অথবা শেষ ৪ ডিজিট দিন': 'Enter the Transaction ID or the last 4 digits',
   'দয়া করে সঠিক ১০ সংখ্যার বিকাশ ট্রানজেকশন আইডি দিন': 'Please enter a valid 10-character bKash Transaction ID',
   'কপি হয়েছে!': 'Copied!',
+  'নম্বরটি সফলভাবে কপি হয়েছে': 'Number copied successfully',
   'দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।': 'Sorry, the order could not be saved. Please try again.',
   'নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।': 'A network problem occurred. Please try again.',
   'নিরাপদ চেকআউট': 'Secure Checkout',
@@ -116,15 +123,12 @@ export const staticDictionary: Record<string, string> = {
   '(ঐচ্ছিক — ইনভয়েস পাঠানো হবে)': '(optional — invoice will be sent)',
   'পরবর্তী ধাপ: পেমেন্ট': 'Next Step: Payment',
   'এডভান্স পেমেন্ট': 'Advance Payment',
-  'অর্ডার নিশ্চিত করতে নিচের bKash নম্বরে ২০০ টাকা Send Money করুন।': 'To confirm your order, Send Money 200 Taka to the bKash number below.',
   'QR কোড বন্ধ করুন': 'Close QR Code',
   'QR কোড দিয়ে পেমেন্ট করুন': 'Pay with QR Code',
   'বিকাশ অ্যাপ দিয়ে স্ক্যান করুন': 'Scan with the bKash app',
-  'Personal নম্বরে Send Money করুন (Payment নয়)': 'Send Money to the Personal number (not Payment)',
   'ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।': 'Incorrect information will prevent payment verification and the order will be cancelled.',
   'নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক': 'Providing any one of the below is mandatory',
   'ট্রানজেকশন আইডি': 'Transaction ID',
-  '(১০ ক্যারেক্টার, যেমন: 8N5O2A3BDE)': '(10 characters, e.g. 8N5O2A3BDE)',
   'Send Money করা bKash নম্বরের শেষ ৪ ডিজিট': 'Last 4 digits of the bKash number you sent money from',
   'যেমন: 5504': 'e.g. 5504',
   'পরবর্তী ধাপ: নিশ্চিত করুন': 'Next Step: Confirm',
@@ -137,7 +141,7 @@ export const staticDictionary: Record<string, string> = {
   'প্রক্রিয়া হচ্ছে...': 'Processing...',
   'অর্ডার কনফার্ম করুন': 'Confirm Order',
 
-  // ProductGrid / ProductCard
+  // Product Grid, Detail & Stock
   'সকল': 'All',
   'প্রোডাক্ট': 'Products',
   'এই ক্যাটাগরিতে এখন কোনো পণ্য নেই': 'There are no products in this category right now',
@@ -149,15 +153,6 @@ export const staticDictionary: Record<string, string> = {
   'স্টকে আসলে জানান': 'Notify When in Stock',
   'কার্টে যোগ করুন': 'Add to Cart',
   'অর্ডার করুন': 'Order Now',
-
-  // SearchClient / SrpClient
-  'পুনরায় সার্চ করুন...': 'Search again...',
-  'কিছু লিখে সার্চ করুন': 'Type something to search',
-  'অন্য কোনো নাম দিয়ে উপরের সার্চ বক্সে খুঁজে দেখুন, অথবা নিচের বাটনে ক্লিক করে ওয়েবসাইটের হোম পেইজে ফিরে যান।': 'Try searching with a different name in the box above, or click the button below to go back to the homepage.',
-  'ওয়েবসাইটের হোম পেইজে ফিরে যান': "Back to the website's homepage",
-  'আর কোনো প্রোডাক্ট নেই': 'No more products',
-
-  // ProductDetailClient
   'কার্টে যোগ হয়েছে': 'Added to cart',
   'এই প্রোডাক্টটি খুঁজে পাওয়া যায়নি': 'This product could not be found',
   'হোমে ফিরে যান': 'Back to Home',
@@ -172,7 +167,6 @@ export const staticDictionary: Record<string, string> = {
   'WhatsApp এ অর্ডার করুন': 'Order via WhatsApp',
   'স্টকে আসলে আমাকে জানান': 'Notify Me When in Stock',
   'এখনই অর্ডার করুন': 'Order Now',
-  'Messenger এ অর্ডার করুন': 'Order via Messenger',
   'প্রোডাক্টের': 'Product',
   'বিস্তারিত বিবরণ': 'Detailed Description',
   'এই প্রোডাক্টের বিস্তারিত বিবরণ শীঘ্রই যোগ করা হবে।': 'A detailed description for this product will be added soon.',
@@ -186,13 +180,47 @@ export const staticDictionary: Record<string, string> = {
   'কমন': 'Common',
   'প্রশ্নোত্তর': 'Questions & Answers',
   'প্রশ্নোত্তর (FAQ)': 'FAQ',
-  'কোনো FAQ নেই।': 'No FAQ available.',
   'একই ক্যাটাগরির': 'More Products from the',
   'আরও পণ্য': 'Same Category',
   'জানান': 'Notify',
   'পিছ': 'Pcs',
+  'স্টক শেষ!': 'Out of Stock!',
+  'দুঃখিত, পণ্যটির স্টক শেষ হয়ে গেছে': 'Sorry, this product is out of stock',
+  'সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে ({count}টি)': 'Reached maximum stock limit ({count})',
+  'তথ্য জমা দেওয়া সম্ভব হয়নি, আবার চেষ্টা করুন': 'Could not submit information, please try again',
+  'একটি সমস্যা হয়েছে, আবার চেষ্টা করুন': 'Something went wrong, please try again',
+  'আপনি ইতিমধ্যে স্টক অ্যালার্ট চালু করেছেন': 'You have already enabled stock alert for this product',
+  'আপনি ইতিমধ্যে এই প্রোডাক্টের নোটিফিকেশন রিকোয়েস্ট জমা দিয়েছেন।': 'You have already requested notification for this product.',
 
-  // Q&A Translations
+  // Cart & Wishlist Actions
+  'কার্ট খালি!': 'Cart is empty!',
+  'আপনার কার্টে কোনো পণ্য নেই': 'Your cart is empty',
+  'আপনার কার্ট খালি': 'Your cart is empty',
+  'আপনার কার্ট': 'Your Cart',
+  'টি পণ্য': 'items',
+  'পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন': 'Add your favorite products to start shopping',
+  'প্রোডাক্ট দেখুন': 'View Products',
+  'সরান': 'Remove',
+  'পণ্যটি কার্ট থেকে সরানো হয়েছে': 'Product removed from cart',
+  'কার্ট থেকে সরানো হয়েছে': 'Removed from cart',
+  'সর্বমোট': 'Grand Total',
+  'চেকআউট করুন': 'Checkout',
+  'আমার Wishlist': 'My Wishlist',
+  'টি পছন্দের পণ্য': 'favorite items',
+  'আপনার Wishlist খালি': 'Your Wishlist is empty',
+  'পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন': 'Tap the heart icon to save your favorite products',
+  'Wishlist থেকে সরান': 'Remove from Wishlist',
+  'পণ্যটি পছন্দের তালিকা থেকে সরানো হয়েছে': 'Product removed from wishlist',
+  'পণ্যটি পছন্দের তালিকায় যোগ হয়েছে': 'Product added to wishlist',
+  'কার্টে যোগ': 'Add to Cart',
+  'কুপন কোডটি বাতিল করা হয়েছে': 'Coupon code has been removed',
+  'কুপন সরানো হয়েছে': 'Coupon removed',
+
+  // Network Alerts
+  'ইন্টারনেট সংযোগ বিচ্ছিন্ন হয়েছে': 'Internet connection disconnected',
+  'ইন্টারনেট সংযোগ পুনরায় চালু হয়েছে': 'Internet connection restored',
+
+  // Reviews & Q&A
   'কাস্টমার প্রশ্নোত্তর (Q&A)': 'Customer Q&A',
   'প্রশ্ন করুন': 'Ask Question',
   'প্রশ্নোত্তর লোড হচ্ছে...': 'Loading Q&A...',
@@ -214,10 +242,6 @@ export const staticDictionary: Record<string, string> = {
   'প্রকাশ হচ্ছে...': 'Publishing...',
   'প্রকাশ করুন': 'Publish',
   'নতুন প্রশ্ন করুন': 'Ask a New Question',
-  '✅ আপনার প্রশ্নটি সফলভাবে জমা হয়েছে!': '✅ Your question has been submitted successfully!',
-  '✅ উত্তর সফলভাবে প্রকাশিত হয়েছে!': '✅ Answer published successfully!',
-
-  // Customer Reviews Translations
   'কাস্টমার': 'Customer',
   'রিভিউ ও রেটিং': 'Reviews & Ratings',
   'আপনার রিভিউ যুক্ত করুন': 'Add Your Review',
@@ -233,39 +257,16 @@ export const staticDictionary: Record<string, string> = {
   'প্রসেসিং ও আপলোড হচ্ছে...': 'Processing & uploading...',
   'রিভিউ সাবমিট করুন': 'Submit Review',
   'রিভিউ সীমা অতিক্রম করেছে': 'Review Limit Exceeded',
-  'আপনি ইতিমধ্যে আজকের জন্য সর্বোচ্চ ২টি আন-অর্ডারড প্রোডাক্টে রিভিউ দিয়েছেন এবং আপনি এই প্রোডাক্টটি আমাদের থেকে অর্ডারও করেননি। প্রতারণা ও ফেক রিভিউ রোধে এই মুহূর্তে নতুন রিভিউ দেওয়া সম্ভব নয়।': 'You have already submitted the maximum of 2 reviews for unpurchased products today. To prevent fake reviews, new reviews are not allowed at this moment.',
   'ঠিক আছে': 'Got It',
   'রিভিউ দেওয়ার জন্য অনুগ্রহ করে আগে লগইন করুন': 'Please log in first to write a review',
+  'রিভিউ দিতে অনুগ্রহ করে অ্যাকাউন্টে লগইন করুন': 'Please log in to your account to write a review',
   'আপনি ইতিমধ্যে এই প্রোডাক্টটিতে একটি রিভিউ দিয়েছেন': 'You have already submitted a review for this product',
-  '🎉 আপনার রিভিউটি জমা হয়েছে! অনুমোদনের পর লাইভ হবে।': '🎉 Your review has been submitted! It will be live after approval.',
   'শুধুমাত্র JPG, PNG বা WEBP ছবি গ্রহণযোগ্য': 'Only JPG, PNG or WEBP images are accepted',
   'আপনার রিভিউটি গ্রহণ করা সম্ভব হয়নি': 'Your review could not be accepted',
-  'দুঃখিত, আপনার সাবমিট করা রিভিউটি আমাদের রিভিউ নীতিমালা ও গাইডলাইনের সাথে সামঞ্জস্যপূর্ণ না হওয়ায় অ্যাডমিন কর্তৃক প্রত্যাখ্যাত হয়েছে।': 'Sorry, your submitted review was declined by the admin as it did not comply with our review guidelines.',
   'কারণ': 'Reason',
   'নতুন করে রিভিউ দিন': 'Submit a New Review',
 
-  // CartSidebar / WishlistDrawer
-  'স্টক শেষ!': 'Out of Stock!',
-  'সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে ({count}টি)': 'Reached maximum stock limit ({count})',
-  'কার্ট খালি!': 'Cart is empty!',
-  'আপনার কার্ট': 'Your Cart',
-  'টি পণ্য': 'items',
-  'আপনার কার্ট খালি': 'Your cart is empty',
-  'পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন': 'Add your favorite products to start shopping',
-  'প্রোডাক্ট দেখুন': 'View Products',
-  'সরান': 'Remove',
-  'সর্বমোট': 'Grand Total',
-  'চেকআউট করুন': 'Checkout',
-  'আমার Wishlist': 'My Wishlist',
-  'টি পছন্দের পণ্য': 'favorite items',
-  'আপনার Wishlist খালি': 'Your Wishlist is empty',
-  'পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন': 'Tap the heart icon to save your favorite products',
-  'Wishlist থেকে সরান': 'Remove from Wishlist',
-  'কার্টে যোগ': 'Add to Cart',
-
-  // WaitingOverlay
-  '📋 কপি': '📋 Copy',
-  '✅ কপি হয়েছে!': '✅ Copied!',
+  // Overlays, Confirmation & Waiting
   'অর্ডার স্ট্যাটাস': 'Order Status',
   'মিনিমাইজ করুন': 'Minimize',
   'ধন্যবাদ!': 'Thank You!',
@@ -285,14 +286,12 @@ export const staticDictionary: Record<string, string> = {
   'WhatsApp এ যোগাযোগ করুন': 'Contact via WhatsApp',
   'আবার চেষ্টা করুন': 'Try Again',
 
-  // Modals
+  // Modals & Invoices
   'দেখুন': 'View',
   'ওয়ারেন্টি তথ্য': 'Warranty Information',
   'বুঝেছি': 'Got It',
-  '🔔 স্টকে এলে জানিয়ে দেওয়া হবে': "🔔 You'll be notified when it's back in stock",
   'স্টক নোটিফিকেশন': 'Stock Notification',
-  'স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে "স্টক নোটিফিকেশন"-এ পাবেন।': 'You will be notified once it is back in stock. You can find this list on your account page under "Stock Notifications."',
-  'জানিয়ে দিন': "Notify Me",
+  'জানিয়ে দিন': 'Notify Me',
   'বাতিল': 'Cancel',
   'মেম্বারশিপ লেভেল': 'Membership Level',
   'সম্পন্ন অর্ডার:': 'Orders Completed:',
@@ -301,25 +300,18 @@ export const staticDictionary: Record<string, string> = {
   'আপনার একটা অসম্পূর্ণ অর্ডার আছে': 'You have an incomplete order',
   'চেকআউট চালিয়ে যান': 'Continue Checkout',
   'অর্ডার সুরক্ষিত রাখুন': 'Keep Your Order Secure',
-  'লগইন করলে পরবর্তীতে আপনার অর্ডার ট্র্যাক, ম্যানেজ ও দেখতে পারবেন।': 'Logging in lets you track, manage, and view your order later.',
   'নতুন অ্যাকাউন্ট তৈরি করতে': 'To create a new account',
   'পূর্বে অ্যাকাউন্ট তৈরি করা থাকলে': 'If you already have an account',
   'এখন না, অর্ডার করুন →': 'Not Now, Place Order →',
-
-  // Order status labels
   'অর্ডার গ্রহণ করা হয়েছে': 'Order Received',
   'কনফার্ম হয়েছে': 'Confirmed',
   'পাঠানো হয়েছে': 'Shipped',
   'ডেলিভারি সম্পন্ন': 'Delivered',
   'পেন্ডিং': 'Pending',
   'প্রত্যাখ্যাত': 'Rejected',
-
-  // TrackOrderModal
-  '📦 অর্ডার ট্র্যাক করুন': '📦 Track Order',
   'অর্ডার নম্বর': 'Order Number',
   'যেমন: VC-1082': 'e.g. VC-1082',
   'যে নম্বরে অর্ডার করেছিলেন': 'The number used to place the order',
-  '⏳ খোঁজা হচ্ছে...': '⏳ Searching...',
   'ট্র্যাক করুন': 'Track',
   'অন্য অর্ডার': 'Another Order',
   'অর্ডারটি বাতিল করা হয়েছে': 'The order has been declined',
@@ -331,36 +323,13 @@ export const staticDictionary: Record<string, string> = {
   'এই অর্ডার নম্বরে কোনো অর্ডার পাওয়া যায়নি। বানান/নম্বর আবার চেক করুন।': 'No order found with this order number. Please check the spelling/number again.',
   'অর্ডার নম্বর ও মোবাইল নম্বর মিলছে না। যে নম্বরে অর্ডার করেছিলেন সেটি দিন।': "The order number and mobile number don't match. Enter the number used to place the order.",
   'কিছু একটা সমস্যা হয়েছে, একটু পরে আবার চেষ্টা করুন।': 'Something went wrong, please try again in a moment.',
-
-  // InvoiceModal
-  '🧾 ইনভয়েস': '🧾 Invoice',
   'প্রিন্ট': 'Print',
   'অর্ডার পাওয়া যায়নি': 'Order not found',
   'শিপিং চার্জ': 'Shipping Charge',
   'বাকি বিল (COD)': 'Due Amount (COD)',
   'ডেলিভারি ঠিকানা': 'Delivery Address',
 
-  // Checkout Actions
-  'অবৈধ অনুরোধ': 'Invalid request',
-  'সঠিক নাম দিন': 'Enter a valid name',
-  'সঠিক মোবাইল নম্বর দিন': 'Enter a valid mobile number',
-  'সঠিক জেলা সিলেক্ট করুন': 'Select a valid district',
-  'সঠিক ঠিকানা দিন': 'Enter a valid address',
-  'সঠিক ইমেইল দিন': 'Enter a valid email',
-  'সঠিক শিপিং অপশন সিলেক্ট করুন': 'Select a valid shipping option',
-  'সঠিক বিকাশ ট্রানজেকশন আইডি দিন': 'Enter a valid bKash transaction ID',
-  'সঠিক শেষ ৪ ডিজিট দিন': 'Enter a valid last 4 digits',
-  'কার্ট খালি বা অস্বাভাবিক, রিফ্রেশ করে আবার চেষ্টা করুন': 'Your cart is empty or invalid, please refresh and try again',
-  'কার্টের একটি আইটেম সঠিক নয়, রিফ্রেশ করে আবার চেষ্টা করুন': 'One of your cart items is invalid, please refresh and try again',
-  'সার্ভার কনফিগারেশন সমস্যা, একটু পরে চেষ্টা করুন': 'Server configuration issue, please try again shortly',
-  'একটু পরে আবার চেষ্টা করুন': 'Please try again in a moment',
-  'একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন': 'Please wait a moment, then try again',
-  'একটি পণ্য আর পাওয়া যাচ্ছে না, পেজ রিফ্রেশ করে আবার চেষ্টা করুন': 'One of the products is no longer available, please refresh the page and try again',
-  'দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই': 'Sorry, one product is out of stock or the quantity is insufficient',
-  'স্টক যাচাই করা যায়নি, আবার চেষ্টা করুন': 'Could not verify stock, please try again',
-  'এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে': 'An order has already been placed with this transaction ID',
-
-  // Policies
+  // Policies & Legal
   '← হোমে ফিরুন': '← Back to Home',
   'সর্বশেষ আপডেট:': 'Last updated:',
   'আগস্ট ২০২৬': 'August 2026',
