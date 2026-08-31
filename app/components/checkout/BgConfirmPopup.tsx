@@ -68,7 +68,8 @@ function IconCopy() {
 function SolidDownloadIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
-      <path d="M12 16l-5-5h3V4h4v7h3l-5 5zm9 4v-2c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v2c0 .55.45 1 1 1h16c.55 0 1-.45 1-1z" />
+      <path d="M12 3a1 1 0 0 1 1 1v9.1l2.3-2.3a1 1 0 1 1 1.42 1.4l-4.02 4.03a1 1 0 0 1-1.4 0L7.28 12.2a1 1 0 0 1 1.42-1.4L11 13.1V4a1 1 0 0 1 1-1Z" />
+      <path d="M5 15a1 1 0 0 1 1 1v2.5A1.5 1.5 0 0 0 7.5 20h9a1.5 1.5 0 0 0 1.5-1.5V16a1 1 0 1 1 2 0v2.5a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 18.5V16a1 1 0 0 1 1-1Z" />
     </svg>
   );
 }
@@ -295,7 +296,7 @@ export default function BgConfirmPopup() {
             onClick={downloadInvoice}
             className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
           >
-            <span>{t('ইনভয়েস ডাউনলোড করুন')}</span>
+            <span>{t('ইনভয়েস ডাউনলোড করুন (বাধ্যতামূলক)')}</span>
             <SolidDownloadIcon />
           </button>
         </div>
