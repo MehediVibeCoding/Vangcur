@@ -57,7 +57,7 @@ function ItemThumb({ imgs }: { imgs?: string[] }) {
 }
 
 // ────────────────────────────────────────────────────────────────────────
-// টুলবার আইকনসমূহ (বাইরের কন্ট্রোল বার)
+// টুলবার আইকনসমূহ
 // ────────────────────────────────────────────────────────────────────────
 function IconChevronLeft() {
   return (
@@ -261,11 +261,9 @@ export default function InvoiceClient() {
     let cancelled = false;
 
     (async () => {
-      // ১. URL প্যারাম থেকে খোঁজা
       const paramOrderId = searchParams.get('id') || searchParams.get('orderId');
       const paramPhone = searchParams.get('phone');
 
-      // ২. লোকালস্টোরেজ / সেশন থেকে খোঁজা
       const pendingLsId = typeof window !== 'undefined' ? localStorage.getItem('vc_pending_ls') : null;
       const pendingPhone = typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') : null;
       const latestGuest = readLatestGuestOrder();
@@ -392,7 +390,7 @@ export default function InvoiceClient() {
 
   if (loading || !order) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
+      <div className="flex min-h-dvh sm:min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
         <div className="flex items-center gap-2 font-body text-sm font-semibold text-brand-light">
           <IconSpinner />
           <span>{t('লোড হচ্ছে...')}</span>
@@ -413,15 +411,15 @@ export default function InvoiceClient() {
     : `Great news — you've already paid in full! Once you receive your package, make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`;
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white flex flex-col justify-between">
+    <div className="relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
       {/* ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর */}
       <DesktopSideDecor />
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ১. প্রিমিয়াম কন্ট্রোল টুলবার (মাঝের অর্ডার পিল সরানো হয়েছে)    */}
+      {/* ১. প্রিমিয়াম কন্ট্রোল টুলবার                                     */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-3 shadow-xs backdrop-blur-md">
-        <div className="mx-auto flex max-w-[540px] items-center justify-between gap-3">
+      <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
+        <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
           <button
             onClick={handleGoBack}
             disabled={!canClose}
@@ -462,20 +460,13 @@ export default function InvoiceClient() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ২. মূল ইনভয়েস কার্ড (চেকআউট ধাপ ৩-এর হুবহু সমন্বিত লেআউট)    */}
+      {/* ২. মূল ইনভয়েস কার্ড (মোবাইলে এজ-টু-এজ ফুলস্ক্রিন, ডেস্কে ভাসমান)  */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <div className="relative z-10 flex-1 px-4 py-5 sm:py-7 flex items-center justify-center">
+      <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex items-center justify-center">
         <div
           ref={invoiceRef}
+          className="w-full min-h-dvh sm:min-h-0 sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(0,88,199,0.08)] relative overflow-hidden flex flex-col justify-between sm:justify-start"
           style={{
-            maxWidth: 520,
-            width: '100%',
-            backgroundColor: '#FFFFFF',
-            borderRadius: 24,
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 10px 32px rgba(0, 88, 199, 0.08)',
-            position: 'relative',
-            overflow: 'hidden',
             color: '#1E293B',
             fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
           }}
@@ -483,7 +474,7 @@ export default function InvoiceClient() {
           {/* সূক্ষ্ম ছোট ছোট ৫-৬টি গ্যাজেট ওয়াটারমার্ক */}
           <InvoiceSubtleWatermark />
 
-          <div style={{ padding: '20px 22px 18px', position: 'relative', zIndex: 1 }}>
+          <div style={{ padding: '20px 20px 24px', position: 'relative', zIndex: 1 }}>
             
             {/* হেডার: লোগো ও অর্ডার মেটা */}
             <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 12, marginBottom: 14 }}>
@@ -767,4 +758,4 @@ export default function InvoiceClient() {
       </div>
     </div>
   );
-        }
+}
