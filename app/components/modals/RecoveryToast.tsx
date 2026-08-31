@@ -8,7 +8,9 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 
 const DISMISS_KEY = 'vc_recovery_dismissed';
+const DISMISS_TIME_KEY = 'vc_toast_dismiss_time';
 const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+const HOMEPAGE_INITIAL_DELAY_MS = 5000; // হোমপেজে আসার ঠিক ৫ সেকেন্ড পর আসবে
 
 function HeaderDecor() {
   return (
@@ -67,18 +69,26 @@ export default function RecoveryToast() {
   const [draft, setDraft] = useState<CheckoutDraft | null>(null);
 
   useEffect(() => {
-    if (pathname?.startsWith('/checkout')) {
+    // 🛡️ শুধুমাত্র হোমপেজে (pathname === '/') আসবে
+    if (pathname !== '/') {
       setDraft(null);
       return;
     }
+
     try {
       if (sessionStorage.getItem(DISMISS_KEY)) return;
     } catch {
       // ignore
     }
+
     const d = getDraft();
     if (d && d.items && d.items.length > 0 && Date.now() - d.createdAt < MAX_AGE_MS) {
-      setDraft(d);
+      // হোমপেজে ঢোকার ঠিক ৫ সেকেন্ড পর আলতো করে ভেসে উঠবে
+      const timer = setTimeout(() => {
+        setDraft(d);
+      }, HOMEPAGE_INITIAL_DELAY_MS);
+
+      return () => clearTimeout(timer);
     }
   }, [pathname]);
 
@@ -87,6 +97,10 @@ export default function RecoveryToast() {
   const dismiss = () => {
     try {
       sessionStorage.setItem(DISMISS_KEY, '1');
+      sessionStorage.setItem(DISMISS_TIME_KEY, String(Date.now()));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('vc:toastDismissed', { detail: { type: 'recovery' } }));
+      }
     } catch {
       // ignore
     }
@@ -96,10 +110,7 @@ export default function RecoveryToast() {
   const resume = () => {
     if (!draft || !draft.items || draft.items.length === 0) return;
     try {
-      // ১. ফেলে রাখা ট্রলি বা প্রোডাক্টের তালিকা হস্তান্তর করা
       sessionStorage.setItem('vc_quick_order_items', JSON.stringify(draft.items));
-
-      // ২. কাস্টমারের পূর্বে লেখা নাম, মোবাইল নম্বর, জেলা ও ঠিকানা রিস্টোর করা
       sessionStorage.setItem('vc_form_draft', JSON.stringify({
         name: draft.name || '',
         phone: draft.phone || '',
@@ -107,13 +118,11 @@ export default function RecoveryToast() {
         addr: draft.addr || '',
         email: draft.email || '',
       }));
-
-      // ৩. শিপিং অপশন রিস্টোর করা
       if (draft.ship) {
         sessionStorage.setItem('vc_ship', draft.ship);
       }
-
       sessionStorage.setItem(DISMISS_KEY, '1');
+      sessionStorage.setItem(DISMISS_TIME_KEY, String(Date.now()));
     } catch {
       // ignore
     }
@@ -131,10 +140,8 @@ export default function RecoveryToast() {
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[380px] animate-section-reveal">
       <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-md">
         
-        {/* লাইন-আর্ট ওয়াটারমার্ক */}
         <HeaderDecor />
 
-        {/* ফ্রস্টেড সার্কুলার ক্লোজ বাটন */}
         <button
           onClick={dismiss}
           className="absolute right-3.5 top-3.5 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
@@ -143,7 +150,6 @@ export default function RecoveryToast() {
           ✕
         </button>
 
-        {/* হেডার শিরোনাম ও সাবটাইটেল */}
         <div className="relative z-10 pr-6">
           <h3 className="font-body text-[15px] font-extrabold text-ink leading-tight">
             {lang === 'en' ? 'Complete Your Order' : 'পেন্ডিং অর্ডারটি সম্পন্ন করুন'}
@@ -153,7 +159,6 @@ export default function RecoveryToast() {
           </p>
         </div>
 
-        {/* প্রোডাক্ট প্রিভিউ কার্ড */}
         <div className="relative z-10 my-3 rounded-[16px] border border-white/90 bg-white/80 p-2.5 shadow-xs backdrop-blur-md">
           <div className="flex items-center gap-3">
             <ItemThumbnail imgVal={(firstItem?.emoji as string) || ''} />
@@ -178,7 +183,6 @@ export default function RecoveryToast() {
           </div>
         </div>
 
-        {/* প্রোগ্রেস ব্যাজ */}
         <div className="relative z-10 mb-3.5 flex items-center gap-2 rounded-[12px] border border-emerald-300/80 bg-emerald-50/90 px-3 py-1.5 shadow-xs">
           <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-body text-[11.5px] font-bold text-emerald-800">
@@ -186,7 +190,6 @@ export default function RecoveryToast() {
           </span>
         </div>
 
-        {/* সিগনেচার অ্যাকশন বাটন */}
         <button
           onClick={resume}
           className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[11.5px] font-body text-[13.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
