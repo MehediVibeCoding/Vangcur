@@ -298,7 +298,7 @@ export default function CustomerGallery() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          {/* ৩D সমান্তরাল কভারফ্লো ভিউপোর্ট — পর্যাপ্ত ভার্টিক্যাল স্পেস সহ যাতে শ্যাডো কাট না হয় */}
+          {/* ৩D সমান্তরাল কভারফ্লো ভিউপোর্ট — নিখুঁত গ্যাপ সহ */}
           <div className="relative h-[390px] sm:h-[450px] md:h-[490px] w-full flex items-center justify-center">
             {reviews.map((r, i) => {
               let offset = (i - activeIdx + totalReviews) % totalReviews;
@@ -318,7 +318,7 @@ export default function CustomerGallery() {
                 ? r.image_url : null;
               const likeCount = parseInt(String(r.like_count), 10) || 0;
 
-              // সমান্তরাল (No Rotate) পজিশন স্টাইল
+              // নিখুঁত গ্যাপ নিশ্চিতকারী ট্রান্সফর্ম স্টাইল
               let transformStyle = '';
               let zIndex = 0;
               let opacity = 0;
@@ -330,21 +330,21 @@ export default function CustomerGallery() {
                 opacity = 1;
                 pointerEvents = 'auto';
               } else if (isLeft) {
-                transformStyle = 'translate3d(-62%, 0, 0) scale(0.85)';
+                transformStyle = 'translate3d(-102%, 0, 0) scale(0.85)';
                 zIndex = 10;
                 opacity = 0.65;
                 pointerEvents = 'auto';
               } else if (isRight) {
-                transformStyle = 'translate3d(62%, 0, 0) scale(0.85)';
+                transformStyle = 'translate3d(102%, 0, 0) scale(0.85)';
                 zIndex = 10;
                 opacity = 0.65;
                 pointerEvents = 'auto';
               } else if (isFarLeft) {
-                transformStyle = 'translate3d(-105%, 0, 0) scale(0.7)';
+                transformStyle = 'translate3d(-180%, 0, 0) scale(0.7)';
                 zIndex = 5;
                 opacity = 0;
               } else if (isFarRight) {
-                transformStyle = 'translate3d(105%, 0, 0) scale(0.7)';
+                transformStyle = 'translate3d(180%, 0, 0) scale(0.7)';
                 zIndex = 5;
                 opacity = 0;
               }
