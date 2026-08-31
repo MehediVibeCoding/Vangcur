@@ -1,11 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchFullOrder, readLatestGuestOrder, clearPendingOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
-import { GENERATE_INVOICE_EVENT, SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
+import { SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
 
@@ -115,6 +116,7 @@ const playSoundOnce = (orderId?: string | number) => {
 
 export default function BgConfirmPopup() {
   const { t, lang } = useT();
+  const router = useRouter();
   const supabase = useRef(createClient()).current;
   const currentUser = useAuthStore((s) => s.currentUser);
   const [open, setOpen] = useState(false);
@@ -172,7 +174,6 @@ export default function BgConfirmPopup() {
       return undefined;
     }
 
-    // যদি ইতিমধ্যে দেখা হয়ে গিয়ে থাকে, সাথে সাথে ক্যাশড কী মুছে ফেলবে
     if (typeof window !== 'undefined' && localStorage.getItem(`vc_confirm_seen_${saved.order.id}`)) {
       try { localStorage.removeItem(PENDING_CONFIRM_KEY); } catch { /* ignore */ }
       return undefined;
@@ -219,7 +220,7 @@ export default function BgConfirmPopup() {
       || o.customer?.phone 
       || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
 
-    // 🔒 স্থায়ীভাবে রেকর্ড করা যে এই অর্ডারের কনফার্মেশন কাস্টমার দেখে নিয়েছেন এবং ইনভয়েস জেনারেট করেছেন
+    // 🔒 স্থায়ীভাবে রেকর্ড করা যে এই অর্ডারের কনফার্মেশন কাস্টমার দেখে নিয়েছেন
     try {
       localStorage.setItem(`vc_confirm_seen_${o.id}`, '1');
       localStorage.removeItem(PENDING_CONFIRM_KEY);
@@ -229,13 +230,12 @@ export default function BgConfirmPopup() {
     }
 
     clearPendingOrder();
-    
-    window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
-      detail: { orderId: o.id, phone: finalInvoicePhone },
-    }));
-    
     setOpen(false);
     setOrder(null);
+    
+    // সরাসরি আমাদের নতুন সুরক্ষিত ডেডিকেটেড ইনভয়েস রুটে নেভিগেশন
+    const phoneParam = finalInvoicePhone ? `&phone=${encodeURIComponent(finalInvoicePhone)}` : '';
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}`);
   };
 
   if (!open || !order) return null;
