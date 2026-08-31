@@ -18,7 +18,7 @@ import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
-  OPEN_MEMBERSHIP_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
+  OPEN_MEMBERSHIP_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, QUICK_CART_EVENT,
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
@@ -29,7 +29,6 @@ import {
 import {
   getTier, tierIconSVG, crownSVG,
 } from '@/lib/membershipData';
-import Navbar from '@/app/components/layout/Navbar';
 import Footer from '@/app/components/layout/Footer';
 import OrderCard from '@/app/components/orders/OrderCard';
 import type { Order, DraftOrder, StockNotification } from '@/types';
@@ -66,6 +65,69 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
   );
 }
 
+function IconEdit() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function IconLogout() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+function IconTrash() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  );
+}
+
+function IconSun() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  );
+}
+
+function IconMoon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+function IconCrownNavbar() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+    </svg>
+  );
+}
+
+function IconLogoutWarning() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 export default function AccountClient() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -90,6 +152,7 @@ export default function AccountClient() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [stockNotifs, setStockNotifs] = useState<StockNotification[]>([]);
+  const [liveStockMap, setLiveStockMap] = useState<Record<string, { stock: number; price: number; name: string; img?: string }>>({});
   const [drafts, setDrafts] = useState<DraftOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
@@ -118,7 +181,35 @@ export default function AccountClient() {
       return;
     }
     setNameEditOpen(false);
-    setStockNotifs(getStockNotifications());
+    const notifs = getStockNotifications();
+    setStockNotifs(notifs);
+
+    if (notifs.length > 0) {
+      const ids = notifs.map((n) => n.prodId);
+      supabase
+        .from('custom_products')
+        .select('id, name, stock, price, imgs')
+        .in('id', ids)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const map: Record<string, { stock: number; price: number; name: string; img?: string }> = {};
+            data.forEach((p) => {
+              let imgsArr: string[] = [];
+              if (typeof p.imgs === 'string') {
+                try { imgsArr = JSON.parse(p.imgs); } catch { imgsArr = [p.imgs]; }
+              } else if (Array.isArray(p.imgs)) imgsArr = p.imgs;
+              map[String(p.id)] = {
+                stock: Number(p.stock) || 0,
+                price: Number(p.price) || 0,
+                name: p.name || '',
+                img: imgsArr[0] || '📦',
+              };
+            });
+            setLiveStockMap(map);
+          }
+        });
+    }
+
     setLoadingOrders(true);
     fetchMyOrders(supabase, currentUser).then((res) => {
       setOrders(res);
@@ -196,6 +287,44 @@ export default function AccountClient() {
     router.push(productHref({ id: item.prodId, name: item.prodName || '' }));
   };
 
+  const handleAddToCartFromStock = (item: StockNotification) => {
+    const live = liveStockMap[String(item.prodId)];
+    const price = live?.price || 0;
+    const name = live?.name || item.prodName || 'Product';
+    const emoji = live?.img || '📦';
+
+    useCartStore.getState().addToCart(
+      [{
+        id: item.prodId,
+        name,
+        price,
+        old: price,
+        imgs: [emoji],
+        stock: live?.stock || 10,
+        cat: 'general',
+        cats: ['general'],
+        specs: {},
+        warranty: '৭ দিন',
+        badge: '',
+        rating: 5,
+        discountColor: '',
+        desc: '',
+        _detailLoaded: false,
+      }],
+      item.prodId,
+      1
+    );
+
+    removeStockNotification(item.key);
+    setStockNotifs((prev) => prev.filter((i) => i.key !== item.key));
+    showToast(t('কার্টে যোগ হয়েছে'));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT));
+      window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: item.prodId } }));
+    }
+  };
+
   const handleDeleteDraft = async (draftId: string, sbId?: number) => {
     await deleteDraft(supabase, currentUser, draftId, sbId);
     setDrafts((prev) => prev.filter((d) => d.id !== draftId));
@@ -236,23 +365,84 @@ export default function AccountClient() {
     );
   };
 
-  const navbarProps = {
-    showHomeButton: true,
-    sticky: false as const,
-    cartCount: cartQty,
-    wishCount: wishQty,
-    currentUser,
-    onCartClick: () => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT)),
-    onWishClick: () => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT)),
-    onTrackClick: () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT)),
-    onLoginClick: () => setLoginOpen(true),
-    onAccountClick: () => router.push('/account'),
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
-      <Navbar {...navbarProps} />
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ১. কাস্টমাইজড অ্যাকাউন্ট পেজ ন্যাভবার                           */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
+        <nav className="navbar-glass relative rounded-[35px] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px]">
+          <div className="mx-auto flex h-[62px] max-w-[1300px] items-center justify-between gap-3 px-3 sm:px-5">
+            {/* ব্যাক টু হোম বাটন */}
+            <Link
+              href="/"
+              prefetch={true}
+              aria-label={t('হোম')}
+              className="group flex shrink-0 items-center gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </div>
+              <span className="font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
+                {lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
+              </span>
+            </Link>
 
+            {/* অ্যাকশন আইকনসমূহ: Wishlist, Cart, Membership, Track Order */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
+                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
+                title="Wishlist"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                </svg>
+                <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishQty > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishQty}</span>
+              </button>
+
+              <button
+                className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
+                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
+                title={t('কার্ট')}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                </svg>
+                <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartQty > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartQty}</span>
+              </button>
+
+              {/* মেম্বারশিপ বাটন */}
+              <button
+                onClick={openMembership}
+                title={t('মেম্বারশিপ')}
+                className="flex items-center justify-center gap-1.5 rounded-full border border-brand-light/35 bg-brand-bg/40 px-3 py-1.5 font-body text-xs font-bold text-brand-light shadow-2xs transition-all duration-brand hover:bg-brand-light hover:text-white active:scale-95"
+              >
+                <IconCrownNavbar />
+                <span className="hidden min-[480px]:inline">{currentTier ? (lang === 'en' ? currentTier.en : currentTier.bn) : t('মেম্বারশিপ')}</span>
+              </button>
+
+              <button
+                className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
+                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
+                title={t('অর্ডার ট্র্যাক করুন')}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ২. প্রোফাইল ড্যাশবোর্ড কনটেন্ট                                   */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       <main className="mx-auto max-w-[1100px] px-4 pb-16 pt-4 md:px-6">
         {!currentUser ? (
           <div className="mx-auto my-12 max-w-[420px] rounded-[28px] border border-white/80 bg-white/85 p-8 text-center shadow-sh2 backdrop-blur-md animate-section-reveal">
@@ -276,15 +466,15 @@ export default function AccountClient() {
           </div>
         ) : (
           <>
-            {/* প্রোফাইল হেডার */}
+            {/* হেডার: Welcome To Your Profile & Smart Contextual Greeting */}
             <div className="mb-6 text-center">
-              <h1 className="font-body text-2xl font-extrabold text-ink sm:text-[28px]">
-                {lang === 'en' ? 'Customer Profile' : 'কাস্টমার প্রোফাইল'}
+              <h1 className="font-body text-xl sm:text-2xl font-extrabold text-brand-light">
+                Welcome To Your Profile
               </h1>
-              <div className="mt-1 font-body text-sm font-semibold text-brand-light">
+              <div className="mt-1 font-body text-[13.5px] font-semibold text-ink/80">
                 {getGreeting(currentUser, now)}
               </div>
-              <div className="mt-0.5 font-body text-xs text-muted">
+              <div className="mt-0.5 font-body text-[11.5px] text-muted">
                 {formatLiveTimeDate(now)}
               </div>
             </div>
@@ -295,7 +485,7 @@ export default function AccountClient() {
               {/* বাম কলাম: সাইডবার উইজেটসমূহ */}
               <div className="flex flex-col gap-4">
                 
-                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল প্রোফাইল কার্ড */}
+                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড */}
                 <div
                   ref={cardRef}
                   className={`relative overflow-hidden rounded-[24px] p-5 shadow-sh2 ${
@@ -303,7 +493,6 @@ export default function AccountClient() {
                   }`}
                   style={{ minHeight: 240 }}
                 >
-                  {/* তারা */}
                   <svg className="pointer-events-none absolute inset-0 h-16 w-full opacity-80" viewBox="0 0 400 65" preserveAspectRatio="none">
                     {['10%', '20%', '35%', '50%', '65%', '80%', '92%', '15%', '45%', '75%'].map((left, i) => (
                       <circle
@@ -320,7 +509,6 @@ export default function AccountClient() {
                     ))}
                   </svg>
 
-                  {/* মেঘ */}
                   {['0%', '35%', '68%'].map((left, i) => (
                     <div
                       key={i}
@@ -333,7 +521,6 @@ export default function AccountClient() {
                     />
                   ))}
 
-                  {/* বৃষ্টি */}
                   {isRaining && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                       {['10%', '20%', '35%', '50%', '65%', '80%', '92%', '15%', '45%', '75%'].map((left, i) => (
@@ -349,7 +536,6 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* সূর্য / চাঁদ */}
                   {celestial.celestial !== 'none' && (
                     <div
                       className={`absolute h-6 w-6 rounded-full ${
@@ -361,23 +547,22 @@ export default function AccountClient() {
                     />
                   )}
 
-                  {/* দৃশ্যপট ল্যান্ডস্কেপ */}
                   <div
                     className="pointer-events-none absolute bottom-0 left-0 h-16 w-full opacity-90"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(celestial.sceneryHtml) }}
                   />
 
-                  {/* কার্ড কনটেন্ট */}
+                  {/* কার্ড কনটেন্ট ও ফ্রন্ট ক্রাউন পজিশন */}
                   <div className="relative z-10 flex h-full min-h-[200px] flex-col justify-between">
                     <div className="flex items-center gap-3.5">
                       <div className="relative shrink-0">
                         {currentTier.crown && (
                           <span
-                            className="pointer-events-none absolute -top-4 left-1/2 h-8 w-8 -translate-x-1/2 [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.35))]"
+                            className="pointer-events-none absolute -top-4 left-1/2 z-20 h-9 w-9 -translate-x-1/2 drop-shadow-md"
                             dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(crownSVG(currentTier.crown)) }}
                           />
                         )}
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/35 bg-white/20 text-sm font-bold text-white shadow-sm backdrop-blur-md">
+                        <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/40 bg-white/20 text-sm font-bold text-white shadow-sm backdrop-blur-md">
                           {initials}
                         </div>
                       </div>
@@ -398,14 +583,14 @@ export default function AccountClient() {
                           onClick={openNameEdit}
                           className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
                         >
-                          <span>✏️</span>
+                          <IconEdit />
                           <span>{t('এডিট')}</span>
                         </button>
                         <button
                           onClick={() => setShowLogoutConfirm(true)}
                           className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
                         >
-                          <span>↩</span>
+                          <IconLogout />
                           <span>{t('লগআউট')}</span>
                         </button>
                       </div>
@@ -445,36 +630,43 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ২. অর্ডার স্ট্যাটাস ও মেম্বারশিপ টায়ার চিপস */}
+                {/* ২. ৩-কার্ডের নতুন রিডিজাইন (সেন্টার অ্যালাইন্ড অর্ডার্স + ডার্ক মোড UI প্লেসহোল্ডার + মেম্বারশিপ) */}
                 <div className="grid grid-cols-3 gap-2.5">
-                  <div className="rounded-[18px] border border-white/80 bg-white/80 py-3 text-center shadow-xs backdrop-blur-md">
-                    <div className="font-body text-base font-extrabold text-ink">
+                  {/* মোট অর্ডার */}
+                  <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
+                    <div className="font-body text-base font-extrabold text-ink leading-tight">
                       {stats.total}{lang === 'en' ? '' : 'টি'}
                     </div>
-                    <div className="font-body text-[10.5px] font-semibold text-muted">{t('মোট অর্ডার')}</div>
+                    <div className="mt-1 font-body text-[11px] font-bold text-muted">{t('মোট অর্ডার')}</div>
                   </div>
 
-                  <div className="rounded-[18px] border border-white/80 bg-white/80 py-3 text-center shadow-xs backdrop-blur-md">
-                    <div className="font-body text-base font-extrabold text-brand-light">
-                      {stats.running}{lang === 'en' ? '' : 'টি'}
+                  {/* ডার্ক / লাইট মোড UI প্লেসহোল্ডার */}
+                  <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
+                    <div className="flex items-center gap-1 text-brand-light">
+                      <IconSun />
+                      <span className="text-[11px] text-muted">/</span>
+                      <IconMoon />
                     </div>
-                    <div className="font-body text-[10.5px] font-semibold text-muted">{t('রানিং অর্ডার')}</div>
+                    <div className="mt-1 font-body text-[11px] font-bold text-muted">
+                      {lang === 'en' ? 'Theme' : 'থিম মোড'}
+                    </div>
                   </div>
 
+                  {/* মেম্বারশিপ টায়ার কার্ড */}
                   <div
                     onClick={openMembership}
-                    className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[18px] border border-white/80 bg-white/80 py-2.5 shadow-xs backdrop-blur-md transition-all hover:border-brand-light/40 active:scale-95"
+                    className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/80 bg-white/85 py-3 px-2 text-center shadow-xs backdrop-blur-md transition-all hover:border-brand-light/40 active:scale-95"
                   >
-                    <div className="h-7 w-7" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(tierIconSVG(currentTier.key)) }} />
-                    <div className="font-body text-[10.5px] font-extrabold text-brand-light">
+                    <div className="h-6 w-6" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(tierIconSVG(currentTier.key)) }} />
+                    <div className="font-body text-[11px] font-extrabold text-brand-light truncate max-w-full">
                       {lang === 'en' ? currentTier.en : currentTier.bn}
                     </div>
-                    <div className="font-body text-[8.5px] font-semibold text-muted">{t('মেম্বারশিপ')}</div>
+                    <div className="font-body text-[9px] font-semibold text-muted">{t('মেম্বারশিপ')}</div>
                   </div>
                 </div>
 
                 {/* ৩. ভাষা পরিবর্তন উইজেট */}
-                <div className="rounded-[20px] border border-white/80 bg-white/80 p-4 shadow-xs backdrop-blur-md">
+                <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                   <div className="font-body text-[13px] font-bold text-ink">{t('ভাষা')}</div>
                   <div className="mt-0.5 font-body text-[11px] text-muted">{t('ওয়েবসাইটের ভাষা পরিবর্তন করুন')}</div>
                   <div className="mt-2.5 flex gap-2">
@@ -501,17 +693,19 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (Draft Orders) */}
+                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (Incomplete Orders) */}
                 {drafts.length > 0 && (
-                  <div className="rounded-[20px] border border-white/80 bg-white/80 p-4 shadow-xs backdrop-blur-md">
+                  <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="font-body text-[13px] font-bold text-ink">🛒 {t('অর্ডার করতে চেয়েছিলেন')}</div>
-                      <button
-                        onClick={handleClearAllDrafts}
-                        className="font-body text-[11px] font-semibold text-muted hover:text-red-500"
-                      >
-                        🗑️ {t('সব মুছুন')}
-                      </button>
+                      {drafts.length > 1 && (
+                        <button
+                          onClick={handleClearAllDrafts}
+                          className="font-body text-[11px] font-semibold text-muted hover:text-red-500"
+                        >
+                          {t('সব মুছুন')}
+                        </button>
+                      )}
                     </div>
                     <div className="flex flex-col gap-2.5">
                       {drafts.map((draft) => {
@@ -525,7 +719,7 @@ export default function AccountClient() {
                         const tot = items.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
 
                         return (
-                          <div key={draft.id} className="rounded-[14px] border border-border-base bg-white/90 p-3 shadow-xs">
+                          <div key={draft.id} className="rounded-[16px] border border-border-base bg-white/90 p-3 shadow-xs">
                             <div className="font-body text-[10.5px] text-muted">
                               📅 {dateStr} · {items.length} {t('আইটেম')}
                             </div>
@@ -559,49 +753,80 @@ export default function AccountClient() {
                   </div>
                 )}
 
-                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট */}
+                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট (ইন্টেলিজেন্ট লাইভ কালার সুইচিং) */}
                 {stockNotifs.length > 0 && (
-                  <div className="rounded-[20px] border border-white/80 bg-white/80 p-4 shadow-xs backdrop-blur-md">
+                  <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="font-body text-[13px] font-bold text-ink">🔔 {t('স্টকে আসলে জানানো')}</div>
-                      <button
-                        onClick={handleClearStockNotifs}
-                        className="font-body text-[11px] font-semibold text-muted hover:text-red-500"
-                      >
-                        {t('সব মুছুন')}
-                      </button>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {stockNotifs.map((item) => (
-                        <div
-                          key={item.key}
-                          className="flex items-center gap-2.5 rounded-[14px] border border-border-base bg-white/90 px-3 py-2 shadow-xs"
+                      {stockNotifs.length > 1 && (
+                        <button
+                          onClick={handleClearStockNotifs}
+                          className="font-body text-[11px] font-semibold text-muted hover:text-red-500"
                         >
-                          <div className="shrink-0 text-lg">📦</div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate font-body text-xs font-bold text-ink">
-                              {item.prodName || t('প্রোডাক্ট')}
+                          {t('সব মুছুন')}
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                      {stockNotifs.map((item) => {
+                        const live = liveStockMap[String(item.prodId)];
+                        const isBackInStock = (live?.stock || 0) > 0;
+
+                        return (
+                          <div
+                            key={item.key}
+                            className={`flex items-center gap-3 rounded-[16px] border p-3 shadow-xs transition-all duration-brand ${
+                              isBackInStock
+                                ? 'border-emerald-300/80 bg-emerald-50/70 text-emerald-950'
+                                : 'border-amber-200/80 bg-amber-50/60 text-amber-950'
+                            }`}
+                          >
+                            <div className="shrink-0">
+                              <ItemThumb imgVal={live?.img} />
                             </div>
-                            <div className="font-body text-[10.5px] font-semibold text-amber-600">
-                              {t('স্টক নেই')}
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-body text-xs font-bold text-ink">
+                                {live?.name || item.prodName || t('প্রোডাক্ট')}
+                              </div>
+                              <div className="mt-0.5">
+                                {isBackInStock ? (
+                                  <span className="font-body text-[11px] font-extrabold text-emerald-700">
+                                    {lang === 'en' ? 'Back in Stock! 🎉' : 'স্টকে এসেছে! 🎉'}
+                                  </span>
+                                ) : (
+                                  <span className="font-body text-[11px] font-bold text-amber-700">
+                                    {lang === 'en' ? 'Out of Stock ⏳' : 'স্টক নেই ⏳'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              {isBackInStock ? (
+                                <button
+                                  onClick={() => handleAddToCartFromStock(item)}
+                                  className="rounded-full bg-emerald-600 px-3 py-1.5 font-body text-[11px] font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-95"
+                                >
+                                  {lang === 'en' ? 'Add & Order' : 'অর্ডার করুন'}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => viewNotifiedProduct(item)}
+                                  className="rounded-full bg-brand-light px-3 py-1.5 font-body text-[11px] font-bold text-white shadow-xs hover:bg-brand-light-hover active:scale-95"
+                                >
+                                  {t('দেখুন')}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleRemoveStockNotif(item.key)}
+                                title={t('সরান')}
+                                className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-white hover:text-red-500 active:scale-95"
+                              >
+                                <IconTrash />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-1.5">
-                            <button
-                              onClick={() => viewNotifiedProduct(item)}
-                              className="rounded-full bg-brand-light px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs hover:bg-brand-light-hover"
-                            >
-                              {t('দেখুন')}
-                            </button>
-                            <button
-                              onClick={() => handleRemoveStockNotif(item.key)}
-                              className="flex h-6 w-6 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -624,7 +849,7 @@ export default function AccountClient() {
                   )}
                 </div>
 
-                <div className="rounded-[24px] border border-white/80 bg-white/80 p-5 shadow-xs backdrop-blur-md">
+                <div className="rounded-[24px] border border-white/80 bg-white/85 p-5 shadow-xs backdrop-blur-md">
                   {loadingOrders ? (
                     <div className="py-12 text-center font-body text-sm text-muted">
                       <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
@@ -659,27 +884,32 @@ export default function AccountClient() {
 
       <Footer />
 
-      {/* লগআউট কনফার্মেশন মোডাল */}
+      {/* প্রিমিয়াম ফ্রস্টেড গ্লাস লগআউট কনফার্মেশন মোডাল (No Emoji, Pure SVG Badge) */}
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[1200] flex items-center justify-center bg-ink/55 p-4 backdrop-blur-[3px] animate-section-reveal"
           onClick={(e) => { if (e.target === e.currentTarget) setShowLogoutConfirm(false); }}
         >
-          <div className="w-full max-w-[340px] rounded-[24px] bg-white p-6 text-center shadow-sh3">
-            <div className="mb-2.5 text-[38px]">👋</div>
-            <div className="mb-4 font-body text-[14px] font-bold text-ink">
-              {t('আপনি কি নিশ্চিতভাবে লগআউট করতে চান?')}
+          <div className="relative w-full max-w-[360px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg/40 via-white to-white p-6 text-center shadow-sh3 ring-1 ring-white/80">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-red-200/80 bg-red-50 shadow-xs">
+              <IconLogoutWarning />
             </div>
+            <h3 className="mb-1.5 font-body text-[17px] font-extrabold text-ink">
+              {lang === 'en' ? 'Confirm Logout' : 'লগআউট নিশ্চিতকরণ'}
+            </h3>
+            <p className="mb-5 font-body text-[13px] leading-relaxed text-muted">
+              {t('আপনি কি নিশ্চিতভাবে লগআউট করতে চান?')}
+            </p>
             <div className="flex gap-2.5">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 rounded-full border border-border-base py-2.5 font-body text-[13px] font-semibold text-ink hover:bg-surface-muted"
+                className="flex-1 rounded-full border border-border-base bg-white/80 py-2.5 font-body text-[13px] font-bold text-ink shadow-xs transition-all hover:bg-white active:scale-95"
               >
                 {t('না')}
               </button>
               <button
                 onClick={doLogout}
-                className="flex-1 rounded-full bg-brand-light py-2.5 font-body text-[13px] font-bold text-white shadow-xs hover:bg-brand-light-hover active:scale-95"
+                className="flex-1 rounded-full bg-red-500 py-2.5 font-body text-[13px] font-bold text-white shadow-xs transition-all hover:bg-red-600 active:scale-95"
               >
                 {t('লগআউট')}
               </button>
@@ -691,4 +921,4 @@ export default function AccountClient() {
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   );
-    }
+}
