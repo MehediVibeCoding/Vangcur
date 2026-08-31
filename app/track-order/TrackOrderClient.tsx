@@ -11,13 +11,12 @@ import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import OrderCard from '@/app/components/orders/OrderCard';
 import type { Order } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
-const AccountPage = dynamic(() => import('@/app/components/auth/AccountPage'));
 
 function ClearTrackSvgIcon({ className = '' }: { className?: string }) {
   return (
@@ -54,20 +53,10 @@ export default function TrackOrderClient() {
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notFound, setNotFound] = useState(false);
-
-  useEffect(() => {
-    const onOpenAccount = () => {
-      if (!useAuthStore.getState().currentUser) setLoginOpen(true);
-      else setAccountOpen(true);
-    };
-    window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-    return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -138,10 +127,9 @@ export default function TrackOrderClient() {
         onCartClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
         onWishClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
         onLoginClick={() => setLoginOpen(true)}
-        onAccountClick={() => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT))}
       />
 
-      <div className="mx-auto w-full max-w-[500px] px-5 pb-16 pt-8">
+      <div className="mx-auto w-full max-w-[520px] px-5 pb-16 pt-6">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
             <ClearTrackSvgIcon />
@@ -156,8 +144,7 @@ export default function TrackOrderClient() {
           </p>
         </div>
 
-        {/* Main Card Container on Seamless Canvas */}
-        <div className="rounded-[28px] border border-white/80 bg-gradient-to-b from-brand-bg/40 via-[#EFF6FE] to-white p-6 shadow-sh3">
+        <div className="rounded-[28px] border border-white/80 bg-white/85 p-6 shadow-sh2 backdrop-blur-md">
           {loading && (
             <div className="py-12 text-center font-body text-[13px] text-muted">
               <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
@@ -195,7 +182,6 @@ export default function TrackOrderClient() {
                 ))}
               </div>
 
-              {/* হাই-কন্ট্রাস্ট ফ্রস্টেড গ্লাস ভিআইপি কনভার্শন কার্ড */}
               <div className="rounded-[22px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
                 <div className="flex items-start gap-3">
                   <SparklesCrownSvgIcon />
@@ -225,7 +211,6 @@ export default function TrackOrderClient() {
       <Footer />
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
     </>
   );
 }
