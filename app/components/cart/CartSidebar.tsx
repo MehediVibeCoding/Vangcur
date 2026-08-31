@@ -6,7 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store/cartStore";
 import { useLanguageStore } from "@/lib/store/languageStore";
-import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
+
+export interface CartSidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
 // Header Watermark Gadget Line-Art (14% Opacity)
 const HeaderDecor: React.FC = () => (
@@ -60,34 +64,43 @@ const HeaderDecor: React.FC = () => (
   </svg>
 );
 
-export default function CartSidebar() {
+export default function CartSidebar({
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+}: CartSidebarProps) {
   const router = useRouter();
   const { lang } = useLanguageStore();
 
-  // Safely support both standard and alternative Zustand store field naming
+  // Safely support both props from GlobalOverlays and Zustand store
   const cartStore = useCartStore();
   const items = cartStore.items || cartStore.cart || [];
-  const isOpen = Boolean(cartStore.isCartOpen ?? cartStore.isOpen);
+  
+  const isStoreOpen = Boolean(cartStore.isCartOpen ?? cartStore.isOpen);
+  const isOpen = propIsOpen !== undefined ? propIsOpen : isStoreOpen;
+
   const closeCart = () => {
+    if (propOnClose) {
+      propOnClose();
+    }
     if (typeof cartStore.closeCart === "function") {
       cartStore.closeCart();
     } else if (typeof cartStore.setIsCartOpen === "function") {
       cartStore.setIsCartOpen(false);
     }
   };
+
   const updateQuantity = cartStore.updateQuantity;
   const removeItem = cartStore.removeItem || cartStore.removeFromCart;
 
-  // Lock body scroll when open
+  // Native Self-contained Body Scroll Lock
   useEffect(() => {
     if (isOpen) {
-      lockBodyScroll();
-    } else {
-      unlockBodyScroll();
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     }
-    return () => {
-      unlockBodyScroll();
-    };
   }, [isOpen]);
 
   // Handle ESC key press
