@@ -16,7 +16,7 @@ import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
-  OPEN_MEMBERSHIP_EVENT, GENERATE_INVOICE_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
+  OPEN_MEMBERSHIP_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
@@ -184,13 +184,17 @@ export default function AccountPage({ isOpen, onClose, currentUser }: AccountPag
       }));
       if (draft.ship) sessionStorage.setItem('vc_ship', draft.ship);
     } catch {
-      // sessionStorage full/blocked — checkout still opens, just without prefilled fields
+      // ignore
     }
     onClose();
     router.push('/checkout');
   };
 
-  const openInvoice = (orderId: string | number) => window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, { detail: { orderId, ctx: 'acc' } }));
+  const openInvoice = (orderId: string | number) => {
+    onClose();
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
+  };
+
   const currentTier = getTier(stats.completed);
   const openMembership = () => window.dispatchEvent(new CustomEvent(OPEN_MEMBERSHIP_EVENT, { detail: { completedCount: stats.completed } }));
 
