@@ -1,23 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import {
-  DEFAULT_FOOTER, DEFAULT_SERVICE_LINKS, resolveServiceLink,
-  fetchFooterSettings, subscribeFooterSettings,
+  DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
 } from '@/lib/footerData';
 import {
   DEFAULT_CATEGORIES, fetchCategories, makeCatSlug,
 } from '@/lib/categoryData';
 import {
-  OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
+  OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT,
 } from '@/lib/uiEvents';
-import { sanitizeHref, validateEmail } from '@/lib/security';
-import { showToast } from '@/lib/toast';
+import { sanitizeHref } from '@/lib/security';
 import { useT } from '@/lib/i18n/useT';
-import type { FooterContact, FooterExtras, FooterLogo, ServiceLink, Category } from '@/types';
+import type { FooterContact, FooterExtras, FooterLogo, Category } from '@/types';
 
 function computeLogo(raw: FooterLogo | null | undefined): FooterLogo {
   if (raw && raw.mode === 'image' && raw.img) {
@@ -101,17 +99,17 @@ function YouTubeIcon() {
   );
 }
 
-function ArrowIcon() {
+function SparklesIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
     </svg>
   );
 }
 
 function PinIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-0.5 h-4 w-4 shrink-0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-0.5 h-4 w-4 shrink-0 text-brand-light">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z" />
       <circle cx="12" cy="10" r="2.5" />
     </svg>
@@ -120,7 +118,7 @@ function PinIcon() {
 
 function MailIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0 text-brand-light">
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <path strokeLinecap="round" strokeLinejoin="round" d="m4 7 8 6 8-6" />
     </svg>
@@ -129,7 +127,7 @@ function MailIcon() {
 
 function PhoneIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4 shrink-0 text-brand-light">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -139,9 +137,26 @@ function PhoneIcon() {
   );
 }
 
-const colLinkClass = 'block bg-transparent border-0 p-0 text-left font-body text-[13.5px] font-medium text-slate-700 no-underline transition-colors hover:text-brand-primary cursor-pointer';
+function FacebookPageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0 text-brand-light">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
 
-const PAYMENT_BADGES = ['bKash', 'Nagad', 'Rocket', 'Cash on Delivery', 'VISA', 'Mastercard'];
+function UsersGroupIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-brand-light">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+const colLinkClass = 'block bg-transparent border-0 p-0 text-left font-body text-[13.5px] font-medium text-slate-700 no-underline transition-colors hover:text-brand-light cursor-pointer leading-snug';
 
 export default function Footer() {
   const { t, lang } = useT();
@@ -149,11 +164,7 @@ export default function Footer() {
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
   const [contact, setContact] = useState<FooterContact>(DEFAULT_FOOTER.contact);
   const [extras, setExtras] = useState<FooterExtras>({ desc: DEFAULT_FOOTER.desc, copy: DEFAULT_FOOTER.copy, social: DEFAULT_FOOTER.social });
-  const [serviceLinks, setServiceLinks] = useState<ServiceLink[] | null>(null);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
-
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
   useEffect(() => {
     let cancelled = false;
@@ -168,9 +179,6 @@ export default function Footer() {
       if (settings.vc_logo) setLogo(computeLogo(settings.vc_logo));
       if (settings.vc_contact) setContact(computeContact(settings.vc_contact));
       if (settings.vc_footer) setExtras(computeFooterExtras(settings.vc_footer));
-      if (Array.isArray(settings.vc_footer_links) && settings.vc_footer_links.length) {
-        setServiceLinks(settings.vc_footer_links.map(resolveServiceLink));
-      }
       if (Array.isArray(cats) && cats.length) {
         setCategories(cats);
       }
@@ -187,80 +195,43 @@ export default function Footer() {
   const openAccount = () => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
   const openTrackOrder = () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
   const openOfferPage = () => window.dispatchEvent(new CustomEvent(OPEN_OFFER_PAGE_EVENT));
-  const openInfo = (type: string) => window.dispatchEvent(new CustomEvent(OPEN_INFO_EVENT, { detail: { type } }));
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToCategories = () => document.getElementById('catCardsGrid')?.scrollIntoView({ behavior: 'smooth' });
-  const scrollToFaq = () => document.getElementById('faqSec')?.scrollIntoView({ behavior: 'smooth' });
 
-  const renderServiceLink = (lnk: ServiceLink, i: number) => {
-    switch (lnk.action) {
-      case 'faq':
-        return <button key={i} className={colLinkClass} onClick={scrollToFaq}>{lnk.label}</button>;
-      case 'info:shipping':
-        return <button key={i} className={colLinkClass} onClick={() => openInfo('shipping')}>{lnk.label}</button>;
-      case 'info:returns':
-        return <Link key={i} href="/refund-policy" className={colLinkClass}>{lnk.label}</Link>;
-      case 'info:privacy':
-        return <Link key={i} href="/privacy-policy" className={colLinkClass}>{lnk.label}</Link>;
-      case 'info:terms':
-        return <Link key={i} href="/terms" className={colLinkClass}>{lnk.label}</Link>;
-      case 'scroll':
-        return (
-          <button
-            key={i}
-            className={colLinkClass}
-            onClick={() => { try { document.querySelector(lnk.target || '')?.scrollIntoView({ behavior: 'smooth' }); } catch { /* noop */ } }}
-          >
-            {lnk.label}
-          </button>
-        );
-      case 'external':
-      default:
-        return <a key={i} className={colLinkClass} href={lnk.href} target="_blank" rel="noopener noreferrer">{lnk.label}</a>;
-    }
-  };
-
-  const handleSubscribe = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const cleanEmail = email.trim();
-    if (!cleanEmail || !validateEmail(cleanEmail)) {
-      showToast(lang === 'en' ? 'Please enter a valid email address' : 'সঠিক ইমেইল ঠিকানা দিন', 'warning');
-      return;
-    }
-
-    setStatus('loading');
-    try {
-      // লিড হ্যান্ডলারে সেইভ করার রিকোয়েস্ট
-      fetch('/api/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'addNewsletter',
-          email: cleanEmail,
-          date: new Date().toISOString(),
-        }),
-      }).catch(() => {});
-
-      setStatus('success');
-      setEmail('');
-      showToast(lang === 'en' ? 'Thank you for subscribing to our newsletter!' : 'নিউজলেটারে সাবস্ক্রাইব করার জন্য ধন্যবাদ!', 'success');
-      setTimeout(() => setStatus('idle'), 4000);
-    } catch {
-      setStatus('idle');
-      showToast(lang === 'en' ? 'Something went wrong, please try again' : 'সমস্যা হয়েছে, আবার চেষ্টা করুন।', 'error');
-    }
-  };
-
-  // শপ কলামে দেখানোর জন্য আসল ক্যাটাগরি তালিকা (All বাদে প্রথম ৬টি)
+  // ৫টি ক্যাটাগরি আইটেম
   const shopCategories = useMemo(() => {
-    return categories.filter((c) => c.id !== 'all').slice(0, 6);
+    return categories.filter((c) => c.id !== 'all').slice(0, 5);
   }, [categories]);
 
+  const fbGroupLink = 'https://facebook.com/groups/vangcurgadgets';
+
   return (
-    <footer className="mt-14">
-      {/* ইলাস্ট্রেশন — পান্ডা ও বাচ্চাদের গ্যাজেট লাইফস্টাইল ছবি, নিচে ওয়েভ শেপ সহ */}
-      <div className="relative aspect-[1536/606] w-full select-none pointer-events-none">
+    <footer className="relative mt-12 overflow-hidden">
+      
+      {/* ছবির উপরে পিওর কোডেড ভেক্টর ওয়েভ লেয়ার (Organic Top Wave) */}
+      <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+        <svg
+          viewBox="0 0 1440 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-8 sm:h-11 md:h-14"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+            fillOpacity="0.4"
+          />
+          <path
+            d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+          />
+        </svg>
+      </div>
+
+      {/* ইলাস্ট্রেশন — পান্ডা ও বাচ্চাদের গ্যাজেট লাইফস্টাইল ছবি */}
+      <div className="relative aspect-[1536/606] w-full select-none pointer-events-none bg-[#D3E7FC]">
         <Image
           src="/footer-illustration.webp"
           alt="Vangcur Gadgets Lifestyle"
@@ -271,43 +242,45 @@ export default function Footer() {
         />
       </div>
 
-      {/* ফুটার কনটেন্ট — ছবির ওয়েভের সাথে রঙ মিলিয়ে পারফেক্ট ব্লেন্ড (#D3E7FC) */}
+      {/* ফুটার কনটেন্ট — Nexiron স্টাইলে ৪-কলাম গ্রিড (#D3E7FC) */}
       <div className="bg-[#D3E7FC] px-5 pb-8 pt-8 md:px-10 lg:px-16">
-        <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
           
-          {/* কলাম ১: নিউজলেটার ও সোশ্যাল হাব */}
-          <div className="lg:col-span-1">
-            <h3 className="mb-3 font-body text-base font-extrabold text-brand-primary">
-              {lang === 'en' ? 'Newsletter' : 'নিউজলেটার'}
-            </h3>
-            
-            <form onSubmit={handleSubscribe} className="relative mb-3">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={lang === 'en' ? 'Your email address' : 'আপনার ইমেইল লিখুন'}
-                className="w-full rounded-full border border-blue-200/80 bg-white/90 py-2.5 pl-4 pr-11 font-body text-[13px] text-ink outline-none transition-brand placeholder:text-muted focus:border-brand-light focus:bg-white shadow-xs"
-              />
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                aria-label={lang === 'en' ? 'Subscribe' : 'সাবস্ক্রাইব করুন'}
-                className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition hover:bg-brand-light-hover active:scale-95 disabled:opacity-60"
-              >
-                <ArrowIcon />
-              </button>
-            </form>
+          {/* কলাম ১ (বামে): লোগো, ট্যাগলাইন, ২ লাইনের সংক্ষিপ্ত পরিচিতি ও সোশ্যাল হাব */}
+          <div>
+            <div className="mb-3">
+              {logo.mode === 'image' ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logo.img}
+                  alt={logo.alt}
+                  style={{ maxHeight: logo.height || 42 }}
+                  className="mb-2 block w-auto select-none"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div className="font-body text-[26px] font-extrabold tracking-tight text-ink">
+                  {logo.main}
+                </div>
+              )}
 
-            <p className="font-body text-[12.5px] leading-relaxed text-slate-600">
+              {/* ট্যাগলাইন পিল ব্যাজ */}
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-brand-light/35 bg-white/80 px-3 py-1 font-body text-[10.5px] font-bold uppercase tracking-wider text-brand-light shadow-xs backdrop-blur-md">
+                <SparklesIcon />
+                <span>Vangcur — Your First Choice For Gadgets</span>
+              </div>
+            </div>
+
+            {/* ২ লাইনের সংক্ষিপ্ত পরিচিতি */}
+            <p className="font-body text-[13px] leading-relaxed text-slate-700 max-w-sm mb-4">
               {lang === 'en'
-                ? 'Subscribe to get the latest gadget updates, new arrivals, and exclusive offers.'
-                : 'সর্বশেষ গ্যাজেট আপডেট, নতুন কালেকশন এবং এক্সক্লুসিভ অফার পেতে সাবস্ক্রাইব করুন।'}
+                ? 'Vangcur is one of Bangladesh’s leading innovative gadget & lifestyle tech brands. Committed to delivering authentic quality and warranty support.'
+                : 'Vangcur (ভাঙচুর) বাংলাদেশের অন্যতম উদ্ভাবনী গ্যাজেট ও লাইফস্টাইল ই-কমার্স ব্র্যান্ড। সেরা মানের ট্রেন্ডি টেক প্রোডাক্ট ও ওয়ারেন্টি সেবাই আমাদের অঙ্গীকার।'}
             </p>
 
             {/* সোশ্যাল মিডিয়া বাটনসমূহ */}
-            <div className="mt-4 flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2">
               <a
                 href={extras.social.fb}
                 target="_blank"
@@ -360,12 +333,12 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* কলাম ২: আসল ক্যাটাগরি শপ লিঙ্কস */}
+          {/* কলাম ২: ক্যাটাগরি সমূহ (নিখুঁত ৫টি আইটেম) */}
           <div>
-            <h3 className="mb-3.5 font-body text-base font-extrabold text-brand-primary">
+            <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Shop Categories' : 'ক্যাটাগরি সমূহ'}
             </h3>
-            <ul className="space-y-2.5 font-body text-[13.5px]">
+            <ul className="space-y-3 font-body text-[13.5px]">
               {shopCategories.map((c) => (
                 <li key={c.id}>
                   <Link
@@ -379,12 +352,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৩: কুইক লিঙ্কস */}
+          {/* কলাম ৩: কুইক লিঙ্কস (নিখুঁত ৫টি আইটেম) */}
           <div>
-            <h3 className="mb-3.5 font-body text-base font-extrabold text-brand-primary">
+            <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {t('কুইক লিঙ্কস')}
             </h3>
-            <ul className="space-y-2.5 font-body text-[13.5px]">
+            <ul className="space-y-3 font-body text-[13.5px]">
               <li><button className={colLinkClass} onClick={scrollTop}>{t('হোম')}</button></li>
               <li><button className={colLinkClass} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button></li>
               <li><button className={colLinkClass} onClick={openAccount}>{t('মাই প্রোফাইল')}</button></li>
@@ -400,61 +373,65 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৪: সাহায্য ও নীতিমালা (Customer Care) */}
+          {/* কলাম ৪: যোগাযোগ (ইউজারের নির্দিষ্ট ক্রমানুযায়ী নিখুঁত ৫টি আইটেম) */}
           <div>
-            <h3 className="mb-3.5 font-body text-base font-extrabold text-brand-primary">
-              {lang === 'en' ? 'Customer Care' : 'সাহায্য ও সহায়তা'}
-            </h3>
-            <ul className="space-y-2.5 font-body text-[13.5px]">
-              {(serviceLinks || DEFAULT_SERVICE_LINKS).map((lnk, i) => (
-                <li key={i}>{renderServiceLink(lnk, i)}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* কলাম ৫: আসল যোগাযোগ ও পেমেন্ট ব্যাজ */}
-          <div>
-            <h3 className="mb-3.5 font-body text-base font-extrabold text-brand-primary">
+            <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Contact Us' : 'যোগাযোগ'}
             </h3>
 
-            <ul className="space-y-2.5 font-body text-[13.5px] text-slate-700">
+            <ul className="space-y-3 font-body text-[13.5px] text-slate-700">
+              {/* ১. মোবাইল নম্বর */}
+              <li>
+                <a href={contact.phoneHref} className="flex items-center gap-2 transition hover:text-brand-light font-medium">
+                  <PhoneIcon />
+                  <span>{contact.phoneLabel}</span>
+                </a>
+              </li>
+
+              {/* ২. ফেসবুক পেজ */}
+              <li>
+                <a href={contact.fb} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 transition hover:text-brand-light font-medium">
+                  <FacebookPageIcon />
+                  <span>{lang === 'en' ? 'Facebook Page' : 'ফেসবুক পেজ'}</span>
+                </a>
+              </li>
+
+              {/* ৩. ফেসবুক গ্রুপ */}
+              <li>
+                <a href={fbGroupLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 transition hover:text-brand-light font-medium">
+                  <UsersGroupIcon />
+                  <span>{lang === 'en' ? 'Facebook Group' : 'ফেসবুক গ্রুপ'}</span>
+                </a>
+              </li>
+
+              {/* ৪. জিমেইল */}
+              <li>
+                <a href={`mailto:${contact.email}`} className="flex items-center gap-2 transition hover:text-brand-light font-medium">
+                  <MailIcon />
+                  <span>{contact.email}</span>
+                </a>
+              </li>
+
+              {/* ৫. লোকেশন (সবার নিচে) */}
               <li className="flex items-start gap-2">
-                <span className="text-brand-primary mt-0.5"><PinIcon /></span>
+                <PinIcon />
                 <span>{contact.addr}</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="text-brand-primary"><MailIcon /></span>
-                <a href={`mailto:${contact.email}`} className="transition hover:text-brand-primary font-medium">
-                  {contact.email}
-                </a>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-brand-primary"><PhoneIcon /></span>
-                <a href={contact.phoneHref} className="transition hover:text-brand-primary font-medium">
-                  {contact.phoneLabel}
-                </a>
-              </li>
             </ul>
-
-            {/* পেমেন্ট ব্যাজসমূহ */}
-            <div className="mt-4 flex flex-wrap items-center gap-1.5">
-              {PAYMENT_BADGES.map((method) => (
-                <span
-                  key={method}
-                  className="rounded-md border border-blue-200/80 bg-white/90 px-2 py-0.5 font-body text-[10.5px] font-bold text-slate-600 shadow-2xs"
-                >
-                  {method}
-                </span>
-              ))}
-            </div>
           </div>
 
         </div>
 
-        {/* বটম কপিরাইট বার */}
-        <div className="mx-auto mt-10 max-w-[1300px] border-t border-blue-200/80 pt-6 text-center font-body text-xs font-semibold text-slate-600">
-          {t(extras.copy)}
+        {/* বটম কপিরাইট ও লিগ্যাল লিঙ্কস বার */}
+        <div className="mx-auto mt-8 max-w-[1300px] border-t border-blue-200/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left font-body text-xs font-semibold text-slate-600">
+          <div>{t(extras.copy)}</div>
+          <div className="flex items-center gap-4 text-slate-600">
+            <Link href="/privacy-policy" className="hover:text-brand-light transition-colors">{t('প্রাইভেসি পলিসি')}</Link>
+            <span>•</span>
+            <Link href="/refund-policy" className="hover:text-brand-light transition-colors">{t('রিটার্ন ও রিফান্ড পলিসি')}</Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-brand-light transition-colors">{t('শর্তাবলী (Terms & Conditions)')}</Link>
+          </div>
         </div>
       </div>
     </footer>
