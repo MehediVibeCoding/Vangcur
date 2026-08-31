@@ -1,4 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/product/[slug]/ProductDetailClient.tsx
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -21,12 +20,11 @@ import {
 import { showToast } from '@/lib/toast';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_ACCOUNT_EVENT, WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
 import Navbar from '@/app/components/layout/Navbar';
 import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
 import LoginModal from '@/app/components/auth/LoginModal';
-import AccountPage from '@/app/components/auth/AccountPage';
 import ProductQnA from '@/app/components/product/ProductQnA';
 import ProductReviews from '@/app/components/product/ProductReviews';
 import { useT } from '@/lib/i18n/useT';
@@ -382,7 +380,6 @@ export default function ProductDetailClient({
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
 
-  // স্টক নোটিফিকেশন সাবস্ক্রিপশন স্টেট
   const [isStockNotified, setIsStockNotified] = useState(false);
 
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
@@ -392,18 +389,7 @@ export default function ProductDetailClient({
   const wishQty = useWishlistStore((s) => s.wishlist.length);
   const currentUser = useAuthStore((s) => s.currentUser);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
 
-  useEffect(() => {
-    const onOpenAccount = () => {
-      if (!useAuthStore.getState().currentUser) setLoginOpen(true);
-      else setAccountOpen(true);
-    };
-    window.addEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-    return () => window.removeEventListener(OPEN_ACCOUNT_EVENT, onOpenAccount);
-  }, []);
-
-  // চেক করা যে এই প্রোডাক্টে ইউজার ইতিমধ্যে নোটিফিকেশন সাবমিট করেছে কি না
   useEffect(() => {
     if (!prod?.id) return;
     try {
@@ -461,7 +447,6 @@ export default function ProductDetailClient({
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
-  // 🌟 মসৃণ ও ১০০% নির্ভরযোগ্য স্টিকি বটম বার ট্রিগার (যেকোনো ডিভাইস ও স্কেলিংয়ে কার্যকরী)
   useEffect(() => {
     let raf = 0;
     const checkSticky = () => {
@@ -527,7 +512,6 @@ export default function ProductDetailClient({
     startQuickOrder(router, prod, qty);
   };
 
-  // 🔔 অথ-গার্ডযুক্ত স্টক নোটিফিকেশন হ্যান্ডলার
   const notifyStock = () => {
     if (!prod) return;
     
@@ -636,7 +620,6 @@ export default function ProductDetailClient({
     onWishClick: () => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT)),
     onTrackClick: () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT)),
     onLoginClick: () => setLoginOpen(true),
-    onAccountClick: () => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT)),
   };
 
   if (!prod) {
@@ -649,7 +632,6 @@ export default function ProductDetailClient({
             {t('লোড হচ্ছে...')}
           </div>
           <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
-          <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
         </div>
       );
     }
@@ -674,7 +656,6 @@ export default function ProductDetailClient({
           </Link>
         </div>
         <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
-        <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
       </div>
     );
   }
@@ -693,7 +674,6 @@ export default function ProductDetailClient({
     return [];
   }, [prod?.faqs]);
 
-  // 🌟 নিরাপদ স্ট্রিং টাইপ ও কেস-ইনসেনসিটিভ রিলেটেড প্রোডাক্ট ফিল্টার
   const related = useMemo(() => {
     const currentCat = String(prod.cat || '').trim().toLowerCase();
     const currentIdStr = String(prod.id);
@@ -718,7 +698,6 @@ export default function ProductDetailClient({
 
       <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-5 md:grid-cols-2 md:px-8 md:pb-10">
         <div>
-          {/* 🌟 অরিজিনাল ক্লাসিক ব্র্যান্ড শেপের ফটো ফ্রেম (rounded-brand) */}
           <div
             className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-brand border border-border-base bg-white shadow-sh1 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
             onClick={toggleZoom}
@@ -760,7 +739,7 @@ export default function ProductDetailClient({
                     type="button"
                     key={i}
                     aria-label={lang === 'en' ? `View image ${i + 1}` : `ছবি ${i + 1} দেখুন`}
-                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-light shadow-[0_0_0_3px_rgba(0,88,199,.12)]' : 'border-border-base hover:border-brand-light/40'}`}
+                    className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] border-[1.5px] bg-white p-1 transition-brand duration-brand ${i === curImgIdx ? 'border-brand-light shadow-[0_0_0_3px_rgba(68,167,252,.12)]' : 'border-border-base hover:border-brand-light/40'}`}
                     onClick={() => goImg(i)}
                   >
                     <GalleryImg val={im} name={prod.name} isThumb />
@@ -850,7 +829,6 @@ export default function ProductDetailClient({
             </div>
           )}
 
-          {/* 🌟 পরিমাণ কাউন্টার (আউট অফ স্টক হলে ডিসেবল্ড) */}
           <div className="mb-5 flex flex-wrap items-center gap-3">
             <div className={`inline-flex items-center gap-2.5 rounded-full bg-brand-bg/35 py-1 pl-3.5 pr-1 ${sold ? 'opacity-50' : ''}`}>
               <span className="text-[13px] font-semibold text-ink">{t('পরিমাণ')}</span>
@@ -905,7 +883,6 @@ export default function ProductDetailClient({
           <div className="flex flex-col gap-2.5">
             {sold ? (
               isStockNotified ? (
-                /* 🌟 সাবমিট করা অবস্থা — সলিড স্কাই-ব্লু ও সাদা নোটিফিকেশন বেল আইকন */
                 <button
                   type="button"
                   disabled
@@ -915,7 +892,6 @@ export default function ProductDetailClient({
                   <span>{lang === 'en' ? 'You will be notified when back in stock' : 'স্টকে আসলে আপনাকে জানানো হবে'}</span>
                 </button>
               ) : (
-                /* 🔔 ফ্রেশ সলিড স্কাই-ব্লু স্টক নোটিফিকেশন বাটন */
                 <button
                   type="button"
                   className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-98"
@@ -939,7 +915,6 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* Sticky Tab Bar */}
       <div className="sticky top-0 z-30 border-b border-border-base bg-white/95 backdrop-blur-md" ref={tabsWrapRef}>
         <div
           className="no-scrollbar mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
@@ -957,7 +932,6 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* 🌟 Main Content Sections — রিলেটেড প্রোডাক্ট না থাকলেও pb-36 বটম প্যাডিং নিশ্চিত */}
       <div className={`mx-auto max-w-[1100px] px-4 md:px-8 ${related.length > 0 ? 'pb-10' : 'pb-36'}`}>
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
           <SectionHeading icon={<SolidDocIcon />}>
@@ -989,7 +963,6 @@ export default function ProductDetailClient({
           )}
         </div>
 
-        {/* 🌟 মিনিমাল ও দৃষ্টিনন্দন স্পেসিফিকেশন টেবিল */}
         <div className="border-b border-border-base py-8" id="ppSecSpecs" ref={(el) => { sectionRefs.current.ppSecSpecs = el; }}>
           <SectionHeading icon={<SolidWrenchIcon />}>
             {t('কারিগরি')} <span className="text-brand-light">{t('স্পেসিফিকেশন')}</span>
@@ -1052,7 +1025,6 @@ export default function ProductDetailClient({
           )}
         </div>
 
-        {/* প্রশ্নোত্তর সেকশন */}
         <div className="border-b border-border-base py-8" id="ppSecFaq" ref={(el) => { sectionRefs.current.ppSecFaq = el; }}>
           {faqs.length > 0 && (
             <div className="mb-10">
@@ -1097,7 +1069,6 @@ export default function ProductDetailClient({
           <ProductQnA productId={prod.id} productName={prod.name} />
         </div>
 
-        {/* ৩D কভারফ্লো রিভিউ গ্যালারি */}
         <div className="pt-8" id="ppSecReviews" ref={(el) => { sectionRefs.current.ppSecReviews = el; }}>
           <ProductReviews
             productId={prod.id}
@@ -1108,7 +1079,6 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* 🌟 একই ক্যাটাগরির আরও পণ্য — রিলেটেড প্রোডাক্ট থাকলে এর নিচে pb-36 থাকবে */}
       {related.length > 0 && (
         <div className="mx-auto max-w-[1100px] px-4 pb-36 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
@@ -1130,9 +1100,7 @@ export default function ProductDetailClient({
 
       <WarrantyModal isOpen={warrantyOpen} onClose={() => setWarrantyOpen(false)} warrantyText={prod.warranty} />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
-      <AccountPage isOpen={accountOpen} onClose={() => setAccountOpen(false)} currentUser={currentUser} />
 
-      {/* 🌟 স্টিকি বটম বার — z-[45] ও স্মুথ স্ক্রল অ্যানিমেশন সহ */}
       <div className={`fixed inset-x-0 bottom-0 z-[45] border-t border-border-base bg-white/95 pb-[max(10px,env(safe-area-inset-bottom))] shadow-sh3 backdrop-blur transition-transform duration-300 ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 pt-2.5 md:px-8">
           <div className="min-w-0 flex flex-1 flex-col justify-center pr-2">
@@ -1147,7 +1115,6 @@ export default function ProductDetailClient({
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {sold ? (
               isStockNotified ? (
-                /* স্টিকি বারে সাবমিট হওয়া অবস্থা */
                 <button
                   type="button"
                   disabled
@@ -1157,7 +1124,6 @@ export default function ProductDetailClient({
                   <span>{lang === 'en' ? 'Notified' : 'জানানো হবে'}</span>
                 </button>
               ) : (
-                /* স্টিকি বারে ফ্রেশ স্কাই-ব্লু বাটন */
                 <button
                   type="button"
                   className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[10px] bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
