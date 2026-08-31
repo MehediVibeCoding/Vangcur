@@ -1,26 +1,3 @@
-// আগে এখানে body-কে position:fixed + negative top offset দিয়ে লক করা হতো
-// (iOS Safari rubber-band scroll ঠেকানোর জন্য সাধারণ একটা পুরনো কৌশল)। কিন্তু
-// এই কৌশলটাই Navbar-এর sticky positioning ভেঙে দিচ্ছিল — body position:fixed
-// হওয়ার সাথে সাথে sticky element-এর reference frame গণ্ডগোল হয়ে যেত।
-//
-// এরপর overflow:hidden (html + body) দিয়ে লক করা শুরু হয়েছিল, যেটা sticky
-// Navbar ভাঙত না ঠিকই, কিন্তু এতে একটা নতুন বড় বাগ তৈরি হয়েছিল: ইউজার যদি
-// পেজে আগে থেকেই একটু স্ক্রল করে নিচে নেমে থাকে (যেমন ফুটার সেকশনে), তাহলে
-// overflow:hidden সেট করার সাথে সাথে ব্রাউজার ডকুমেন্টের স্ক্রলযোগ্য এরিয়া
-// মুছে ফেলে scroll position 0-তে রিসেট করে দিত — পুরো পেজ চোখের সামনে হুট করে
-// উপরে "লাফিয়ে" উঠে যেত, ফলে সার্চ ইনপুট/ড্রপডাউন যেখানে ছিল সেখান থেকে সরে
-// গিয়ে "গায়েব" হয়ে যাচ্ছে বলে মনে হতো (আর তখন স্ক্রলও ব্লকড থাকায় উপরে কী
-// হচ্ছে দেখাও যেত না)।
-//
-// এখন CSS-এর কোনো overflow/position একদম পরিবর্তন না করে সরাসরি wheel/touch/
-// keyboard ইভেন্ট আটকে (preventDefault) স্ক্রল লক করা হচ্ছে। এতে ডকুমেন্টের
-// আসল scrollTop কখনোই বদলায় না (কোনো জাম্প নেই), sticky Navbar পুরোপুরি
-// স্বাভাবিকভাবে কাজ করে (কারণ কোনো CSS-ই ছোঁয়া হয়নি), আর scrollbar
-// disappear করে না বলে আগের মতো width-shift compensate করারও দরকার নেই।
-// মডাল/ড্রয়ারের নিজস্ব ভিতরের স্ক্রলযোগ্য অংশ (cart list, dropdown result
-// list ইত্যাদি) স্বয়ংক্রিয়ভাবেই সনাক্ত হয়ে স্বাভাবিক স্ক্রল করা যায় — শুধু
-// তার বাইরের মূল পেজটাই লক থাকে।
-
 let lockCount = 0;
 let touchStartY = 0;
 
@@ -85,6 +62,14 @@ export function lockBody(): void {
   document.addEventListener('touchstart', onTouchStart, { passive: true });
   document.addEventListener('touchmove', onTouchMove, { passive: false });
   document.addEventListener('keydown', onKeyDown, { passive: false });
+  // মডাল/ড্রয়ার খোলা অবস্থায় পেজের নিজস্ব (html-লেভেল) স্ক্রলবারটা দৃশ্যত
+  // লুকানো হচ্ছে — শুধু ::-webkit-scrollbar { display:none } + scrollbar-width:none
+  // (.no-scrollbar ক্লাস দিয়ে), কোনো overflow/position ছোঁয়া হয়নি বলে উপরের
+  // sticky-nav ভাঙা বা scroll-jump বাগ এখানে ফিরে আসার কোনো ঝুঁকি নেই। এটা
+  // ছাড়া ড্রয়ারের নিজস্ব .sleek-scrollbar-এর পাশে পেজের আসল স্ক্রলবারটাও একই
+  // সাথে দেখা যেত — যেটাই সেই "ডাবল স্ক্রলবার / এক্সট্রা প্যাডিং" এফেক্ট তৈরি করছিল।
+  document.documentElement.classList.add('no-scrollbar');
+  document.body.classList.add('no-scrollbar');
 }
 
 export function unlockBody(): void {
@@ -95,4 +80,6 @@ export function unlockBody(): void {
   document.removeEventListener('touchstart', onTouchStart);
   document.removeEventListener('touchmove', onTouchMove);
   document.removeEventListener('keydown', onKeyDown);
+  document.documentElement.classList.remove('no-scrollbar');
+  document.body.classList.remove('no-scrollbar');
 }
