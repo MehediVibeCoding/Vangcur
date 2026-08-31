@@ -70,26 +70,67 @@ export default function WishlistDrawer({
   onClose: propOnClose,
 }: WishlistDrawerProps) {
   const { lang } = useLanguageStore();
+
+  // Safely support both props from GlobalOverlays and Zustand WishlistState
   const wishlistStore = useWishlistStore();
   const cartStore = useCartStore();
 
-  const items = wishlistStore.items || wishlistStore.wishlist || [];
-  const isStoreOpen = Boolean(wishlistStore.isWishlistOpen ?? wishlistStore.isOpen);
+  const rawWishlist = wishlistStore as unknown as Record<string, unknown>;
+  const rawCart = cartStore as unknown as Record<string, unknown>;
+
+  const items = Array.isArray(rawWishlist.wishlist)
+    ? (rawWishlist.wishlist as Array<{
+        id: string;
+        name: string;
+        nameBn?: string;
+        price: number;
+        originalPrice?: number;
+        image?: string;
+        slug?: string;
+        selectedColor?: string;
+        selectedSize?: string;
+      }>)
+    : Array.isArray(rawWishlist.items)
+    ? (rawWishlist.items as Array<{
+        id: string;
+        name: string;
+        nameBn?: string;
+        price: number;
+        originalPrice?: number;
+        image?: string;
+        slug?: string;
+        selectedColor?: string;
+        selectedSize?: string;
+      }>)
+    : [];
+
+  const isStoreOpen = Boolean(rawWishlist.isWishlistOpen ?? rawWishlist.isOpen);
   const isOpen = propIsOpen !== undefined ? propIsOpen : isStoreOpen;
 
   const closeWishlist = () => {
     if (propOnClose) {
       propOnClose();
     }
-    if (typeof wishlistStore.closeWishlist === "function") {
-      wishlistStore.closeWishlist();
-    } else if (typeof wishlistStore.setIsWishlistOpen === "function") {
-      wishlistStore.setIsWishlistOpen(false);
+    if (typeof rawWishlist.closeWishlist === "function") {
+      (rawWishlist.closeWishlist as () => void)();
+    } else if (typeof rawWishlist.setIsWishlistOpen === "function") {
+      (rawWishlist.setIsWishlistOpen as (val: boolean) => void)(false);
     }
   };
 
-  const removeItem = wishlistStore.removeItem || wishlistStore.removeFromWishlist;
-  const clearWishlist = wishlistStore.clearWishlist;
+  const handleRemoveItem = (id: string) => {
+    if (typeof rawWishlist.removeFromWishlist === "function") {
+      (rawWishlist.removeFromWishlist as (itemId: string) => void)(id);
+    } else if (typeof rawWishlist.removeItem === "function") {
+      (rawWishlist.removeItem as (itemId: string) => void)(id);
+    }
+  };
+
+  const handleClearWishlist = () => {
+    if (typeof rawWishlist.clearWishlist === "function") {
+      (rawWishlist.clearWishlist as () => void)();
+    }
+  };
 
   // Native Self-contained Body Scroll Lock
   useEffect(() => {
@@ -114,37 +155,50 @@ export default function WishlistDrawer({
   }, [isOpen]);
 
   // Add single item to cart
-  const handleAddToCart = (item: any) => {
-    const addToCartFn = cartStore.addItem || cartStore.addToCart;
-    if (addToCartFn) {
-      addToCartFn({
-        id: item.id,
-        name: item.name,
-        nameBn: item.nameBn,
-        price: Number(item.price) || 0,
-        originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
-        image: item.image,
-        quantity: 1,
-        slug: item.slug,
-        selectedColor: item.selectedColor,
-        selectedSize: item.selectedSize,
-      });
-      showToast(
-        lang === "bn"
-          ? "পণ্যটি কার্টে যুক্ত করা হয়েছে!"
-          : "Item added to cart successfully!",
-        "success"
-      );
+  const handleAddToCart = (item: {
+    id: string;
+    name: string;
+    nameBn?: string;
+    price: number;
+    originalPrice?: number;
+    image?: string;
+    slug?: string;
+    selectedColor?: string;
+    selectedSize?: string;
+  }) => {
+    const payload = {
+      id: item.id,
+      name: item.name,
+      nameBn: item.nameBn,
+      price: Number(item.price) || 0,
+      originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
+      image: item.image,
+      quantity: 1,
+      slug: item.slug,
+      selectedColor: item.selectedColor,
+      selectedSize: item.selectedSize,
+    };
+
+    if (typeof rawCart.addToCart === "function") {
+      (rawCart.addToCart as (it: unknown) => void)(payload);
+    } else if (typeof rawCart.addItem === "function") {
+      (rawCart.addItem as (it: unknown) => void)(payload);
     }
+
+    showToast(
+      lang === "bn"
+        ? "পণ্যটি কার্টে যুক্ত করা হয়েছে!"
+        : "Item added to cart successfully!",
+      "success"
+    );
   };
 
   // Move all items to cart
   const handleMoveAllToCart = () => {
-    const addToCartFn = cartStore.addItem || cartStore.addToCart;
-    if (!addToCartFn || items.length === 0) return;
+    if (items.length === 0) return;
 
-    items.forEach((item: any) => {
-      addToCartFn({
+    items.forEach((item) => {
+      const payload = {
         id: item.id,
         name: item.name,
         nameBn: item.nameBn,
@@ -155,7 +209,13 @@ export default function WishlistDrawer({
         slug: item.slug,
         selectedColor: item.selectedColor,
         selectedSize: item.selectedSize,
-      });
+      };
+
+      if (typeof rawCart.addToCart === "function") {
+        (rawCart.addToCart as (it: unknown) => void)(payload);
+      } else if (typeof rawCart.addItem === "function") {
+        (rawCart.addItem as (it: unknown) => void)(payload);
+      }
     });
 
     showToast(
@@ -166,10 +226,10 @@ export default function WishlistDrawer({
     );
 
     closeWishlist();
-    if (typeof cartStore.setIsCartOpen === "function") {
-      cartStore.setIsCartOpen(true);
-    } else if (typeof cartStore.openCart === "function") {
-      cartStore.openCart();
+    if (typeof rawCart.setIsCartOpen === "function") {
+      (rawCart.setIsCartOpen as (val: boolean) => void)(true);
+    } else if (typeof rawCart.openCart === "function") {
+      (rawCart.openCart as () => void)();
     }
   };
 
@@ -285,7 +345,7 @@ export default function WishlistDrawer({
         ) : (
           /* Items List */
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-            {items.map((item: any) => {
+            {items.map((item) => {
               const price = Number(item.price) || 0;
               const originalPrice = item.originalPrice ? Number(item.originalPrice) : null;
               const displayName =
@@ -357,9 +417,7 @@ export default function WishlistDrawer({
                   {/* Delete from Wishlist Button */}
                   <button
                     onClick={() => {
-                      if (removeItem) {
-                        removeItem(item.id);
-                      }
+                      handleRemoveItem(item.id);
                     }}
                     className="text-ink/40 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all active:scale-90 flex-shrink-0"
                     aria-label="Remove from wishlist"
@@ -412,22 +470,20 @@ export default function WishlistDrawer({
             </button>
 
             {/* Clear All Wishlist */}
-            {clearWishlist && (
-              <button
-                onClick={() => {
-                  clearWishlist();
-                  showToast(
-                    lang === "bn"
-                      ? "পছন্দের তালিকা খালি করা হয়েছে"
-                      : "Wishlist cleared",
-                    "info"
-                  );
-                }}
-                className="w-full text-center font-body text-[13px] font-semibold text-ink/50 hover:text-red-500 transition-colors py-1"
-              >
-                {lang === "bn" ? "তালিকা খালি করুন" : "Clear Wishlist"}
-              </button>
-            )}
+            <button
+              onClick={() => {
+                handleClearWishlist();
+                showToast(
+                  lang === "bn"
+                    ? "পছন্দের তালিকা খালি করা হয়েছে"
+                    : "Wishlist cleared",
+                  "info"
+                );
+              }}
+              className="w-full text-center font-body text-[13px] font-semibold text-ink/50 hover:text-red-500 transition-colors py-1"
+            >
+              {lang === "bn" ? "তালিকা খালি করুন" : "Clear Wishlist"}
+            </button>
           </div>
         )}
       </aside>
