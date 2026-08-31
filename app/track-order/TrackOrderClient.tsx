@@ -11,7 +11,7 @@ import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT, GENERATE_INVOICE_EVENT } from '@/lib/uiEvents';
+import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import OrderCard from '@/app/components/orders/OrderCard';
 import type { Order } from '@/types';
@@ -31,7 +31,7 @@ function ClearTrackSvgIcon({ className = '' }: { className?: string }) {
 function ReceiptEmptySvgIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
       <path d="M8 7h8M8 11h8M8 15h5" />
     </svg>
   );
@@ -118,9 +118,7 @@ export default function TrackOrderClient() {
   }, [currentUser, router, supabase]);
 
   const openInvoice = (orderId: string | number) => {
-    window.dispatchEvent(new CustomEvent(GENERATE_INVOICE_EVENT, {
-      detail: { orderId, ctx: 'guest-track' },
-    }));
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
   };
 
   const handleOpenLogin = () => {
