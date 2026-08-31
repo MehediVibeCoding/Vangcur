@@ -9,6 +9,7 @@ import { showToast } from '@/lib/toast';
 import { parseSupabaseVal } from '@/lib/categoryData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
+import { SHOW_POST_RECEIVE_INFO_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order } from '@/types';
 
@@ -209,7 +210,7 @@ function IconTiktokThemed() {
   return (
     <ThemedSocialBadge>
       <svg width="10" height="10" viewBox="0 0 24 24" fill="#FFFFFF">
-        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
+        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
       </svg>
     </ThemedSocialBadge>
   );
@@ -240,7 +241,8 @@ export default function InvoiceClient() {
     email: DEFAULT_FOOTER.contact.email,
   });
   const [downloading, setDownloading] = useState(false);
-  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const captureRef = useRef<HTMLDivElement>(null);
   const autoDownloadedRef = useRef(false);
 
   useEffect(() => {
@@ -320,7 +322,7 @@ export default function InvoiceClient() {
   }, [supabase]);
 
   const downloadPNG = useCallback(async () => {
-    if (!invoiceRef.current || downloading || !order || downloadCount >= MAX_DOWNLOAD_LIMIT) return;
+    if (!captureRef.current || downloading || !order || downloadCount >= MAX_DOWNLOAD_LIMIT) return;
     setDownloading(true);
 
     try {
@@ -329,7 +331,7 @@ export default function InvoiceClient() {
       }
 
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(invoiceRef.current, {
+      const canvas = await html2canvas(captureRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
@@ -371,10 +373,14 @@ export default function InvoiceClient() {
       if (order?.id) {
         sessionStorage.setItem(`vc_confirm_dismissed_${order.id}`, '1');
       }
+      sessionStorage.setItem('vc_show_post_receive_after_invoice', '1');
     } catch {
-      /* ignore */
+      // ignore
     }
     clearPendingOrder();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(SHOW_POST_RECEIVE_INFO_EVENT));
+    }
     router.push('/');
   };
 
@@ -400,13 +406,305 @@ export default function InvoiceClient() {
     ? `Hey! Please hand ৳${balanceDue.toLocaleString('en-US')} to the delivery man when you receive your package — that's your remaining balance (COD). Make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`
     : `Great news — you've already paid in full! Once you receive your package, make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`;
 
-  const remainingDownloads = Math.max(0, MAX_DOWNLOAD_LIMIT - downloadCount);
   const isLimitReached = downloadCount >= MAX_DOWNLOAD_LIMIT;
 
   return (
     <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
       <DesktopSideDecor />
 
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ১. ফিক্সড ৬০০px অফ-স্ক্রিন HD প্রিন্ট টেমপ্লেট                     */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div
+        ref={captureRef}
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: 0,
+          width: 580,
+          backgroundColor: '#ffffff',
+          color: '#1E293B',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          boxSizing: 'border-box',
+          padding: '30px 28px',
+          zIndex: -999,
+        }}
+      >
+        <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/vangcur-logo.png"
+              alt="Vangcur"
+              crossOrigin="anonymous"
+              style={{ height: 34, width: 'auto', display: 'block', margin: '0 auto' }}
+            />
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '2.5px',
+              color: '#64748B',
+              textTransform: 'uppercase',
+              marginBottom: 10,
+              lineHeight: '14px',
+            }}
+          >
+            YOUR FIRST CHOICE FOR GADGETS
+          </div>
+          
+          <div style={{ textAlign: 'center', margin: '0 auto' }}>
+            <div
+              style={{
+                display: 'inline-block',
+                padding: '4px 16px',
+                borderRadius: '20px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#334155',
+                lineHeight: '18px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
+              <span style={{ margin: '0 8px', color: '#CBD5E1' }}>•</span>
+              <span>Date: {ds}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: '#44A7FC',
+              marginBottom: 6,
+              lineHeight: '14px',
+            }}
+          >
+            CUSTOMER DETAILS
+          </div>
+          <div
+            style={{
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: 12,
+              padding: '12px 16px',
+              fontSize: 12,
+              lineHeight: '22px',
+            }}
+          >
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: '50%', padding: '2px 0' }}>
+                    <span style={{ color: '#64748B' }}>Name: </span>
+                    <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
+                  </td>
+                  <td style={{ width: '50%', padding: '2px 0' }}>
+                    <span style={{ color: '#64748B' }}>Phone: </span>
+                    <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ width: '50%', padding: '2px 0' }}>
+                    <span style={{ color: '#64748B' }}>District: </span>
+                    <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
+                  </td>
+                  <td style={{ width: '50%', padding: '2px 0' }}>
+                    <span style={{ color: '#64748B' }}>Address: </span>
+                    <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: 14,
+            padding: '14px 16px',
+            marginBottom: 14,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              color: '#44A7FC',
+              marginBottom: 10,
+              lineHeight: '14px',
+            }}
+          >
+            ORDER INVOICE
+          </div>
+
+          <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 10 }}>
+            {(order.items || []).map((i, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  padding: '6px 0',
+                  fontSize: 12.5,
+                  color: '#1E293B',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                  <ItemThumb imgs={i.imgs} />
+                  <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: '18px' }}>
+                    {i.name} × {i.qty}
+                  </span>
+                </div>
+                <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap', fontSize: 13 }}>
+                  ৳{(i.price * i.qty).toLocaleString('en-US')}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {order.subtotal ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#475569', padding: '3px 0' }}>
+              <span>Subtotal</span>
+              <span style={{ fontWeight: 600, color: '#1E293B' }}>৳{order.subtotal.toLocaleString('en-US')}</span>
+            </div>
+          ) : null}
+
+          {order.discountAmount && order.discountAmount > 0 ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#059669', fontWeight: 600, padding: '3px 0' }}>
+              <span>Coupon Discount ({order.couponCode || 'PROMO'})</span>
+              <span style={{ color: '#10B981', fontWeight: 700 }}>- ৳{order.discountAmount.toLocaleString('en-US')}</span>
+            </div>
+          ) : null}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, color: '#475569', padding: '3px 0' }}>
+            <span style={{ color: isFreeShipping ? '#059669' : '#475569', fontWeight: isFreeShipping ? 600 : 400 }}>
+              Delivery Charge ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
+            </span>
+            <span style={{ color: isFreeShipping ? '#10B981' : '#1E293B', fontWeight: isFreeShipping ? 800 : 600 }}>
+              {isFreeShipping ? 'FREE' : `৳${order.shippingCost}`}
+            </span>
+          </div>
+
+          <div style={{ margin: '8px 0', borderTop: '1px dashed #CBD5E1' }} />
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#0F172A', padding: '3px 0' }}>
+            <span>Total Bill</span>
+            <span>৳{(order.total || 0).toLocaleString('en-US')}</span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#44A7FC', padding: '3px 0' }}>
+            <span>Advance Payment</span>
+            <span style={{ fontWeight: 700 }}>- ৳{advancePaid.toLocaleString('en-US')}</span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#0F172A', padding: '4px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
+            <span>Cash on Delivery</span>
+            <span>৳{balanceDue.toLocaleString('en-US')}</span>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            padding: '8px 14px',
+            borderRadius: 20,
+            backgroundColor: '#F0F7FF',
+            border: '1px solid #DCEBFD',
+            fontSize: 11.5,
+            fontWeight: 700,
+            color: '#44A7FC',
+            marginBottom: 14,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+            <span>Payment: bKash (Verified)</span>
+          </div>
+          <span style={{ color: '#BAE0FD' }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
+            <span>Courier: Pathao</span>
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: '12px 16px',
+            background: 'linear-gradient(135deg, #F0F7FF 0%, #F8FAFC 100%)',
+            border: '1px solid #DCEBFD',
+            borderRadius: 12,
+            fontSize: 11,
+            lineHeight: '18px',
+            color: '#1E3A5F',
+            marginBottom: 16,
+          }}
+        >
+          {dueMsg}
+        </div>
+
+        <div
+          style={{
+            textAlign: 'center',
+            borderTop: '1px solid #F1F5F9',
+            paddingTop: 12,
+            fontSize: 11,
+            color: '#64748B',
+          }}
+        >
+          <div style={{ marginBottom: 8, fontWeight: 600, lineHeight: '16px' }}>
+            📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <IconFacebookThemed />
+              <IconYoutubeThemed />
+              <IconTiktokThemed />
+              <IconInstagramThemed />
+            </div>
+            <span
+              style={{
+                fontWeight: 800,
+                fontSize: 11.5,
+                color: '#0F172A',
+                letterSpacing: '-0.2px',
+                marginLeft: 2,
+              }}
+            >
+              Vangcur Gadgets
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ২. কন্ট্রোল টুলবার                                              */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
         <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
           <button
@@ -429,9 +727,9 @@ export default function InvoiceClient() {
               {downloading
                 ? t('তৈরি হচ্ছে...')
                 : isLimitReached
-                ? (lang === 'en' ? 'Limit reached (3/3)' : 'ডাউনলোড সীমা পূর্ণ (৩/৩)')
+                ? (lang === 'en' ? 'Downloaded' : 'ডাউনলোড সম্পন্ন')
                 : downloadCount > 0
-                ? (lang === 'en' ? `Download again (${remainingDownloads} left)` : `আবার ডাউনলোড (${remainingDownloads} বার বাকি)`)
+                ? (lang === 'en' ? 'Download again' : 'আবার ডাউনলোড')
                 : t('ছবি ডাউনলোড')}
             </span>
           </button>
@@ -447,28 +745,24 @@ export default function InvoiceClient() {
       {canClose && downloadCount > 0 && (
         <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-emerald-50 py-1.5 font-body text-[11.5px] font-semibold text-emerald-700 border-b border-emerald-200">
           <IconCheckCircle />
-          {lang === 'en' ? `Invoice downloaded successfully (${downloadCount}/${MAX_DOWNLOAD_LIMIT})` : `ইনভয়েস সফলভাবে ডাউনলোড হয়েছে (${downloadCount}/${MAX_DOWNLOAD_LIMIT})`}
+          {t('ইনভয়েস সফলভাবে ডাউনলোড হয়েছে')}
         </div>
       )}
 
-      <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex items-center justify-center">
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস (মোবাইলে ফুল সিমলেস এজ-টু-এজ হোয়াইট) */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex flex-col items-center justify-start bg-white sm:bg-transparent">
         <div
-          ref={invoiceRef}
+          className="w-full sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
           style={{
-            width: '100%',
-            maxWidth: 520,
-            backgroundColor: '#ffffff',
             color: '#1E293B',
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            boxSizing: 'border-box',
-            position: 'relative',
-            overflow: 'hidden',
+            fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
           }}
-          className="rounded-none sm:rounded-[24px] border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)]"
         >
           <InvoiceSubtleWatermark />
 
-          <div style={{ padding: '24px 22px 26px', position: 'relative', zIndex: 1 }}>
+          <div style={{ padding: '24px 20px 26px', position: 'relative', zIndex: 1 }}>
             
             <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
@@ -488,31 +782,29 @@ export default function InvoiceClient() {
                   color: '#64748B',
                   textTransform: 'uppercase',
                   marginBottom: 10,
-                  lineHeight: '14px',
                 }}
               >
                 YOUR FIRST CHOICE FOR GADGETS
               </div>
               
-              <div style={{ textAlign: 'center', margin: '0 auto' }}>
-                <div
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 14px',
-                    borderRadius: '20px',
-                    backgroundColor: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
-                    fontSize: '11.5px',
-                    fontWeight: 600,
-                    color: '#334155',
-                    lineHeight: '18px',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
-                  <span style={{ margin: '0 8px', color: '#CBD5E1' }}>•</span>
-                  <span>Date: {ds}</span>
-                </div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 14px',
+                  borderRadius: 20,
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  color: '#334155',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
+                <span style={{ color: '#CBD5E1' }}>•</span>
+                <span>Date: {ds}</span>
               </div>
             </div>
 
@@ -525,7 +817,6 @@ export default function InvoiceClient() {
                   letterSpacing: '1px',
                   color: '#44A7FC',
                   marginBottom: 6,
-                  lineHeight: '14px',
                 }}
               >
                 CUSTOMER DETAILS
@@ -536,29 +827,28 @@ export default function InvoiceClient() {
                   border: '1px solid #E2E8F0',
                   borderRadius: 12,
                   padding: '10px 14px',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '6px 12px',
                   fontSize: 11.5,
-                  lineHeight: '20px',
+                  lineHeight: 1.5,
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span style={{ color: '#64748B' }}>Name: </span>
-                    <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
-                  </div>
-                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span style={{ color: '#64748B' }}>Phone: </span>
-                    <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
-                  </div>
+                <div>
+                  <span style={{ color: '#64748B' }}>Name: </span>
+                  <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span style={{ color: '#64748B' }}>District: </span>
-                    <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
-                  </div>
-                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <span style={{ color: '#64748B' }}>Address: </span>
-                    <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
-                  </div>
+                <div>
+                  <span style={{ color: '#64748B' }}>Phone: </span>
+                  <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
+                </div>
+                <div>
+                  <span style={{ color: '#64748B' }}>District: </span>
+                  <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
+                </div>
+                <div>
+                  <span style={{ color: '#64748B' }}>Address: </span>
+                  <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
                 </div>
               </div>
             </div>
@@ -580,7 +870,6 @@ export default function InvoiceClient() {
                   letterSpacing: '1px',
                   color: '#44A7FC',
                   marginBottom: 10,
-                  lineHeight: '14px',
                 }}
               >
                 ORDER INVOICE
@@ -602,11 +891,11 @@ export default function InvoiceClient() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
                       <ItemThumb imgs={i.imgs} />
-                      <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: '16px', wordBreak: 'break-word' }}>
+                      <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: 1.35, wordBreak: 'break-word' }}>
                         {i.name} × {i.qty}
                       </span>
                     </div>
-                    <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap', fontSize: 12.5 }}>
+                    <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       ৳{(i.price * i.qty).toLocaleString('en-US')}
                     </span>
                   </div>
@@ -688,7 +977,7 @@ export default function InvoiceClient() {
                 border: '1px solid #DCEBFD',
                 borderRadius: 12,
                 fontSize: 10.5,
-                lineHeight: '17px',
+                lineHeight: 1.6,
                 color: '#1E3A5F',
                 marginBottom: 14,
               }}
@@ -705,7 +994,7 @@ export default function InvoiceClient() {
                 color: '#64748B',
               }}
             >
-              <div style={{ marginBottom: 8, fontWeight: 600, lineHeight: '16px' }}>
+              <div style={{ marginBottom: 8, fontWeight: 600 }}>
                 📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
               </div>
 
