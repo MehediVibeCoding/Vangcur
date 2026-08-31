@@ -63,10 +63,7 @@ function HeaderDecor() {
   );
 }
 
-// 🏺 রিয়েলস্টিক লাইভ স্যান্ড-ফল অ্যানিমেশন — WaitingOverlay.tsx-এর হুবহু
-// একই ডিজাইন: টপ চেম্বারের বালু ধীরে ধীরে নামতে থাকে, নেক দিয়ে অবিরাম কণা
-// পড়তে থাকে এবং বটম চেম্বারে ঢিবি জমতে থাকে — সম্পূর্ণ জ্যামিতিক
-// (clipPath + SMIL) মোশন, কোনো অপাসিটি পালস/ফ্লিকার ব্যবহার করা হয়নি।
+// 🏺 রিয়েলস্টিক লাইভ স্যান্ড-ফল অ্যানিমেটেড আইকন
 function AnimatedLiveHourglass() {
   const uid = useId();
   const gradId = `vc-sand-grad-${uid}`;
@@ -81,14 +78,12 @@ function AnimatedLiveHourglass() {
             <stop offset="0%" stopColor="#FCD34D" />
             <stop offset="100%" stopColor="#D97706" />
           </linearGradient>
-          {/* টপ চেম্বারের বালুর লেভেল — সময়ের সাথে নেকের দিকে নেমে আসে */}
           <clipPath id={topClipId}>
             <rect x="6" y="2" width="12" height="10">
               <animate attributeName="y" values="2;11.6" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
               <animate attributeName="height" values="10;0.4" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
             </rect>
           </clipPath>
-          {/* বটম চেম্বারের বালুর ঢিবি — ক্যাপের ওপর ক্রমশ উঁচু হয়ে জমতে থাকে */}
           <clipPath id={bottomClipId}>
             <rect x="6" y="21.6" width="12" height="0.4">
               <animate attributeName="y" values="21.6;12" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
@@ -97,14 +92,12 @@ function AnimatedLiveHourglass() {
           </clipPath>
         </defs>
 
-        {/* টপ চেম্বারের বালু */}
         <path
           d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"
           fill={`url(#${gradId})`}
           clipPath={`url(#${topClipId})`}
         />
 
-        {/* নেক দিয়ে অবিরাম পড়তে থাকা বালুকণার স্ট্রিম */}
         <circle cx="12" cy="11.3" r="0.55" fill="#D97706">
           <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0s" />
         </circle>
@@ -115,14 +108,12 @@ function AnimatedLiveHourglass() {
           <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0.56s" />
         </circle>
 
-        {/* বটম চেম্বারের ক্রমবর্ধমান বালুর ঢিবি — স্ট্রিমের ওপরে এঁকে কণাগুলো ঢিবিতে "মিশে" যাওয়ার ইলিউশন তৈরি করে */}
         <path
           d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"
           fill={`url(#${gradId})`}
           clipPath={`url(#${bottomClipId})`}
         />
 
-        {/* গ্লাস আউটলাইন — সবার উপরে, ক্রিস্প বর্ডার */}
         <path
           d="M5 2h14M5 22h14M6 2v3.5c0 2.2 1.5 4 3.5 5l1.5.8-1.5.8c-2 1-3.5 2.8-3.5 5V22M18 2v3.5c0 2.2-1.5 4-3.5 5l-1.5.8 1.5.8c2 1 3.5 2.8 3.5 5V22"
           stroke="#B45309"
@@ -342,12 +333,13 @@ export default function StatusClient() {
 
   return (
     <>
-      <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+      {/* 🌟 মোবাইলে ১০০% এজ-টু-এজ ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল ভাসমান কার্ড */}
+      <div className="relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10">
         {/* ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর */}
         <DesktopSideDecor />
 
-        {/* মেইন কন্টেইনার — ডেস্কটপে ফুল-পেজ মাউস স্ক্রলিং সমর্থনসহ */}
-        <div className="relative z-10 w-full max-w-[440px] rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal">
+        {/* মেইন কন্টেইনার */}
+        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
 
           {/* ========================================================================= */}
@@ -480,7 +472,7 @@ export default function StatusClient() {
                     rel="noopener noreferrer"
                     title="TikTok"
                   >
-                    <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" /></svg>
+                    <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" /></svg>
                   </a>
 
                   {/* WhatsApp (#25D366) */}
