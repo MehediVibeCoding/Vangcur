@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
@@ -22,7 +23,6 @@ export const ORDER_STATUS_DOT: Record<OrderStatus, string> = {
   rejected: 'bg-red-500',
 };
 
-// ১০০% ইমোজি-মুক্ত পরিষ্কার ইংরেজি ও বাংলা স্ট্যাটাস লেবেল
 export const ORDER_STATUS_LABEL_EN: Record<OrderStatus, string> = {
   pending: 'Pending',
   confirmed: 'Confirmed',
@@ -87,11 +87,13 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
 
 interface OrderCardProps {
   order: Order;
-  onInvoice: (orderId: string | number) => void;
+  onInvoice?: (orderId: string | number) => void;
 }
 
 export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
   const { t, lang } = useT();
+  const router = useRouter();
+
   const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
     year: 'numeric',
     month: 'short',
@@ -104,9 +106,17 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
 
   const dotClass = ORDER_STATUS_DOT[o.status] || 'bg-amber-500';
 
+  const handleInvoiceNavigation = () => {
+    if (onInvoice) {
+      onInvoice(o.id);
+    }
+    const phoneParam = o.customer?.phone ? `&phone=${encodeURIComponent(o.customer.phone)}` : '';
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}`);
+  };
+
   return (
     <div className="pb-4 border-b border-ink/10 last:border-b-0 last:pb-0">
-      {/* Top Header Row: অর্ডার নং + গ্লোয়িং ডট স্ট্যাটাস ব্যাজ (No Stark Box) */}
+      {/* Top Header Row: অর্ডার নং + গ্লোয়িং ডট স্ট্যাটাস ব্যাজ */}
       <div className="flex items-center justify-between pb-2">
         <span className="font-body text-[15px] font-extrabold text-ink tracking-tight">
           {o.orderNum}
@@ -134,7 +144,7 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
         </div>
       </div>
 
-      {/* Ordered Items List — QuickOrderModal-এর মতো পরিষ্কার বিন্যাস */}
+      {/* Ordered Items List */}
       <div className="space-y-3">
         {(o.items || []).map((i, idx) => (
           <div key={idx} className="flex items-start gap-3">
@@ -170,9 +180,9 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
           <span className="ml-1 text-[10.5px] font-normal text-muted">({t('শিপিং সহ')})</span>
         </div>
 
-        {/* 100% Sky-Blue Gradient Invoice Button */}
+        {/* 100% Sky-Blue Gradient Invoice Button — সরাসরি নতুন ইনভয়েস রুটে নেভিগেশন */}
         <button
-          onClick={() => onInvoice(o.id)}
+          onClick={handleInvoiceNavigation}
           className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
         >
           <DocumentSvgIcon />
