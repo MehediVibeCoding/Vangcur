@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback, useEffect, useId, useRef, useState,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -61,42 +63,72 @@ function HeaderDecor() {
   );
 }
 
+// 🏺 রিয়েলস্টিক লাইভ স্যান্ড-ফল অ্যানিমেশন — WaitingOverlay.tsx-এর হুবহু
+// একই ডিজাইন: টপ চেম্বারের বালু ধীরে ধীরে নামতে থাকে, নেক দিয়ে অবিরাম কণা
+// পড়তে থাকে এবং বটম চেম্বারে ঢিবি জমতে থাকে — সম্পূর্ণ জ্যামিতিক
+// (clipPath + SMIL) মোশন, কোনো অপাসিটি পালস/ফ্লিকার ব্যবহার করা হয়নি।
 function AnimatedLiveHourglass() {
+  const uid = useId();
+  const gradId = `vc-sand-grad-${uid}`;
+  const topClipId = `vc-sand-top-${uid}`;
+  const bottomClipId = `vc-sand-bottom-${uid}`;
+
   return (
     <div className="relative flex h-10 w-10 items-center justify-center">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="overflow-visible">
-        {/* Glass Outline */}
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" className="overflow-visible">
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FCD34D" />
+            <stop offset="100%" stopColor="#D97706" />
+          </linearGradient>
+          {/* টপ চেম্বারের বালুর লেভেল — সময়ের সাথে নেকের দিকে নেমে আসে */}
+          <clipPath id={topClipId}>
+            <rect x="6" y="2" width="12" height="10">
+              <animate attributeName="y" values="2;11.6" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
+              <animate attributeName="height" values="10;0.4" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
+            </rect>
+          </clipPath>
+          {/* বটম চেম্বারের বালুর ঢিবি — ক্যাপের ওপর ক্রমশ উঁচু হয়ে জমতে থাকে */}
+          <clipPath id={bottomClipId}>
+            <rect x="6" y="21.6" width="12" height="0.4">
+              <animate attributeName="y" values="21.6;12" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
+              <animate attributeName="height" values="0.4;10" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
+            </rect>
+          </clipPath>
+        </defs>
+
+        {/* টপ চেম্বারের বালু */}
+        <path
+          d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"
+          fill={`url(#${gradId})`}
+          clipPath={`url(#${topClipId})`}
+        />
+
+        {/* নেক দিয়ে অবিরাম পড়তে থাকা বালুকণার স্ট্রিম */}
+        <circle cx="12" cy="11.3" r="0.55" fill="#D97706">
+          <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0s" />
+        </circle>
+        <circle cx="12" cy="11.3" r="0.48" fill="#D97706">
+          <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0.28s" />
+        </circle>
+        <circle cx="12" cy="11.3" r="0.4" fill="#D97706">
+          <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0.56s" />
+        </circle>
+
+        {/* বটম চেম্বারের ক্রমবর্ধমান বালুর ঢিবি — স্ট্রিমের ওপরে এঁকে কণাগুলো ঢিবিতে "মিশে" যাওয়ার ইলিউশন তৈরি করে */}
+        <path
+          d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"
+          fill={`url(#${gradId})`}
+          clipPath={`url(#${bottomClipId})`}
+        />
+
+        {/* গ্লাস আউটলাইন — সবার উপরে, ক্রিস্প বর্ডার */}
         <path
           d="M5 2h14M5 22h14M6 2v3.5c0 2.2 1.5 4 3.5 5l1.5.8-1.5.8c-2 1-3.5 2.8-3.5 5V22M18 2v3.5c0 2.2-1.5 4-3.5 5l-1.5.8 1.5.8c2 1 3.5 2.8 3.5 5V22"
           stroke="#B45309"
           strokeWidth="1.6"
           strokeLinecap="round"
           strokeLinejoin="round"
-        />
-
-        {/* Top Sand Level (Smooth Drain) */}
-        <path
-          d="M7 6.5h10c0 0-.5 2.5-3 3.8h-4C7.5 9 7 6.5 7 6.5z"
-          fill="#D97706"
-          className="animate-[pulse_3s_ease-in-out_infinite]"
-        />
-
-        {/* Trickling Sand Stream */}
-        <line
-          x1="12"
-          y1="10.5"
-          x2="12"
-          y2="18"
-          stroke="#D97706"
-          strokeWidth="1.4"
-          strokeDasharray="2 2"
-          className="animate-[dash_0.8s_linear_infinite]"
-        />
-
-        {/* Bottom Sand Mound (Growing Dune) */}
-        <path
-          d="M7.5 20.5h9c-1-1.8-3-2.8-4.5-2.8s-3.5 1-4.5 2.8z"
-          fill="#D97706"
         />
       </svg>
     </div>
@@ -134,6 +166,16 @@ function IconCopy() {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="9" y="9" width="13" height="13" rx="2" />
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function IconBulb() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
     </svg>
   );
 }
@@ -353,7 +395,7 @@ export default function StatusClient() {
                     {lang === 'en' ? (
                       <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
                     ) : (
-                      <>⚠️ আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
+                      <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
                     )}
                   </div>
                 </div>
@@ -397,7 +439,10 @@ export default function StatusClient() {
 
               {/* নিখুঁত ২-লাইনের ফ্রেশ স্কাই-ব্লু টিপ বক্স */}
               <div className="relative z-10 mb-4 rounded-[16px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
-                <div>💡 {t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।')}</div>
+                <div className="flex items-center justify-center gap-1.5">
+                  <IconBulb />
+                  <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।')}</span>
+                </div>
                 <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
 
