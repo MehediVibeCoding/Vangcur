@@ -1,255 +1,426 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  productHref,
-  QUICK_ORDER_EVENT, QUICK_CART_EVENT,
-} from '@/lib/productData';
-import { useWishlistStore } from '@/lib/store/wishlistStore';
-import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { showToast } from '@/lib/toast';
-import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { useT } from '@/lib/i18n/useT';
-import type { WishlistItem } from '@/types';
+import React, { useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useWishlistStore } from "@/lib/store/wishlistStore";
+import { useCartStore } from "@/lib/store/cartStore";
+import { useLanguageStore } from "@/lib/store/languageStore";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
+import { showToast } from "@/lib/toast";
 
-function WishImg({ emoji }: { emoji?: string }) {
-  const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
-  if (isUrl) {
-    return (
-      <img
-        src={optimizeCloudinaryUrl(emoji, 140)}
-        alt=""
-        className="h-14 w-14 shrink-0 rounded-2xl border border-white/90 bg-white object-cover shadow-xs"
-        loading="lazy"
-        decoding="async"
-      />
-    );
-  }
-  return (
-    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/90 bg-white/90 text-2xl shadow-xs">
-      {emoji || '📦'}
-    </span>
-  );
-}
+// Header Watermark Gadget Line-Art (14% Opacity)
+const HeaderDecor: React.FC = () => (
+  <svg
+    className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.14] text-ink"
+    viewBox="0 0 400 90"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="none"
+  >
+    {/* Headphones Line-Art */}
+    <path
+      d="M25 65 C25 35, 65 35, 65 65"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <rect x="20" y="55" width="10" height="18" rx="5" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="60" y="55" width="10" height="18" rx="5" stroke="currentColor" strokeWidth="1.5" />
 
-function HeartEmptySvgIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-    </svg>
-  );
-}
+    {/* Smartwatch Line-Art */}
+    <rect x="110" y="32" width="22" height="28" rx="6" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M115 32 V22 H127 V32" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M115 60 V70 H127 V60" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="121" cy="46" r="5" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
 
-function TrashIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-  );
-}
+    {/* Gamepad / Controller Line-Art */}
+    <rect x="175" y="35" width="45" height="25" rx="8" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M185 43 H191 M188 40 V46" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="206" cy="43" r="2" fill="currentColor" />
+    <circle cx="212" cy="47" r="2" fill="currentColor" />
 
-function CartPlusIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
-  );
-}
+    {/* Phone / Tablet Line-Art */}
+    <rect x="260" y="25" width="28" height="48" rx="5" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="270" y1="30" x2="278" y2="30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="274" cy="65" r="2" stroke="currentColor" strokeWidth="1" />
 
-function HeaderDecor() {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
-      <svg width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 13a8 8 0 0 1 16 0" />
-        <rect x="3" y="13" width="4" height="6" rx="1.5" />
-        <rect x="17" y="13" width="4" height="6" rx="1.5" />
-      </svg>
-      <svg width="26" height="26" className="absolute right-14 top-3 rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="7" y="2.5" width="10" height="15" rx="3" />
-        <path d="M10 5.5h4" />
-        <circle cx="12" cy="20" r="1.6" />
-      </svg>
-    </div>
-  );
-}
+    {/* Earbuds Case Line-Art */}
+    <rect x="330" y="38" width="30" height="24" rx="8" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="330" y1="48" x2="360" y2="48" stroke="currentColor" strokeWidth="1" />
+    <circle cx="340" cy="43" r="2" fill="currentColor" />
+    <circle cx="350" cy="43" r="2" fill="currentColor" />
 
-interface WishlistDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+    {/* Connecting Circuit Waves */}
+    <path
+      d="M0 78 Q 90 70, 180 82 T 360 76 T 400 80"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeDasharray="4 4"
+    />
+  </svg>
+);
 
-export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
-  const { t, lang } = useT();
-  const router = useRouter();
-  const items = useWishlistStore((s) => s.wishlist);
+export default function WishlistDrawer() {
+  const { lang } = useLanguageStore();
+  const wishlistStore = useWishlistStore();
+  const cartStore = useCartStore();
 
+  const items = wishlistStore.items || wishlistStore.wishlist || [];
+  const isOpen = Boolean(wishlistStore.isWishlistOpen ?? wishlistStore.isOpen);
+
+  const closeWishlist = () => {
+    if (typeof wishlistStore.closeWishlist === "function") {
+      wishlistStore.closeWishlist();
+    } else if (typeof wishlistStore.setIsWishlistOpen === "function") {
+      wishlistStore.setIsWishlistOpen(false);
+    }
+  };
+
+  const removeItem = wishlistStore.removeItem || wishlistStore.removeFromWishlist;
+  const clearWishlist = wishlistStore.clearWishlist;
+
+  // Lock body scroll when open
   useEffect(() => {
-    router.prefetch('/checkout');
-    router.prefetch('/');
-  }, [router]);
-
-  useEffect(() => {
-    if (isOpen) lockBody();
-    else unlockBody();
-    return () => unlockBody();
+    if (isOpen) {
+      lockBodyScroll();
+    } else {
+      unlockBodyScroll();
+    }
+    return () => {
+      unlockBodyScroll();
+    };
   }, [isOpen]);
 
-  const openProduct = (item: WishlistItem) => {
-    onClose();
-    router.push(productHref(item));
+  // Handle ESC key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        closeWishlist();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  // Add single item to cart
+  const handleAddToCart = (item: any) => {
+    const addToCartFn = cartStore.addItem || cartStore.addToCart;
+    if (addToCartFn) {
+      addToCartFn({
+        id: item.id,
+        name: item.name,
+        nameBn: item.nameBn,
+        price: Number(item.price) || 0,
+        originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
+        image: item.image,
+        quantity: 1,
+        slug: item.slug,
+        selectedColor: item.selectedColor,
+        selectedSize: item.selectedSize,
+      });
+      showToast(
+        lang === "bn"
+          ? "পণ্যটি কার্টে যুক্ত করা হয়েছে!"
+          : "Item added to cart successfully!",
+        "success"
+      );
+    }
   };
 
-  const goToProducts = () => {
-    onClose();
-    document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Move all items to cart
+  const handleMoveAllToCart = () => {
+    const addToCartFn = cartStore.addItem || cartStore.addToCart;
+    if (!addToCartFn || items.length === 0) return;
 
-  const addToCart = (id: number | string) => {
-    window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id } }));
-    showToast(t('কার্টে যোগ হয়েছে'));
-  };
+    items.forEach((item: any) => {
+      addToCartFn({
+        id: item.id,
+        name: item.name,
+        nameBn: item.nameBn,
+        price: Number(item.price) || 0,
+        originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
+        image: item.image,
+        quantity: 1,
+        slug: item.slug,
+        selectedColor: item.selectedColor,
+        selectedSize: item.selectedSize,
+      });
+    });
 
-  const orderNow = (id: number | string) => {
-    onClose();
-    window.dispatchEvent(new CustomEvent(QUICK_ORDER_EVENT, { detail: { id } }));
-  };
+    showToast(
+      lang === "bn"
+        ? "সব পণ্য কার্টে যুক্ত করা হয়েছে!"
+        : "All items added to cart!",
+      "success"
+    );
 
-  const removeItem = (id: number | string) => {
-    useWishlistStore.getState().removeItem(id);
-    showToast(t('Wishlist থেকে সরানো হয়েছে'));
+    closeWishlist();
+    if (typeof cartStore.setIsCartOpen === "function") {
+      cartStore.setIsCartOpen(true);
+    } else if (typeof cartStore.openCart === "function") {
+      cartStore.openCart();
+    }
   };
-
-  if (!isOpen) return null;
 
   return (
-    <>
+    <div
+      className={`fixed inset-0 z-50 overflow-hidden transition-all duration-300 ease-in-out ${
+        isOpen
+          ? "visible pointer-events-auto opacity-100"
+          : "invisible pointer-events-none opacity-0"
+      }`}
+      aria-hidden={!isOpen}
+    >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={onClose}
+        className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-in-out ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={closeWishlist}
       />
 
-      {/* Centered Aesthetic Window */}
-      <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
-        <div className="relative flex max-h-[86vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
-          
-          {/* Header */}
-          <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
-            <HeaderDecor />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <h3 className="font-body text-[17px] font-extrabold text-ink">
-                  ❤️ {lang === 'en' ? 'My Wishlist' : 'আপনার Wishlist'}
-                </h3>
-                <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
-                  {lang === 'en'
-                    ? `${items.length} favorite item(s)`
-                    : `${items.length}টি পছন্দের পণ্য`}
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          {/* Product Items List */}
-          <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
-            {items.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center py-12 text-center">
-                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
-                  <HeartEmptySvgIcon className="h-8 w-8 text-brand-light" />
-                </div>
-                <p className="mb-1 font-body text-[15px] font-bold text-ink">
-                  {t('আপনার Wishlist খালি')}
-                </p>
-                <p className="mb-5 max-w-xs font-body text-[12.5px] text-muted">
-                  {t('পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন')}
-                </p>
-                <button
-                  onClick={goToProducts}
-                  className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
+      {/* Drawer Panel */}
+      <aside
+        className={`absolute top-0 right-0 h-full w-full max-w-[420px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Header with Gadget Line-Art */}
+        <div className="relative border-b border-ink/10 px-5 py-4 flex-shrink-0 overflow-hidden">
+          <HeaderDecor />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-brand-light/15 text-brand-light flex items-center justify-center">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  {t('প্রোডাক্ট দেখুন')} →
-                </button>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {items.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    className={`pb-4 ${
-                      idx !== items.length - 1 ? 'border-b border-ink/10' : ''
-                    }`}
-                  >
-                    {/* Top Row: Thumbnail + Multi-Line Title + Price + Subtle Muted Delete Button */}
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="cursor-pointer shrink-0"
-                        onClick={() => openProduct(item)}
-                        title={t('প্রোডাক্ট দেখুন')}
-                      >
-                        <WishImg emoji={item.emoji} />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="line-clamp-2 cursor-pointer font-body text-[13.5px] font-bold leading-snug text-ink transition-colors hover:text-brand-light"
-                          onClick={() => openProduct(item)}
-                          title={t('প্রোডাক্ট দেখুন')}
-                        >
-                          {item.name}
-                        </div>
-                        <div className="mt-1 font-body text-[13px] font-extrabold text-brand-light">
-                          ৳{Number(item.price).toLocaleString('en-US')}
-                        </div>
-                      </div>
-
-                      {/* Subtle & Discreet Trash Button (No Visual Competition with Close Button) */}
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.id)}
-                        title={t('Wishlist থেকে সরান')}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-transparent text-muted/35 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-
-                    {/* Bottom Row: Spacious & Ergonomic Action Buttons */}
-                    <div className="mt-3 flex items-center gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => addToCart(item.id)}
-                        className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-all hover:bg-brand-light hover:text-white hover:border-brand-light active:scale-95"
-                      >
-                        <CartPlusIcon />
-                        <span>{lang === 'en' ? 'Add to Cart' : 'কার্টে যোগ'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => orderNow(item.id)}
-                        className="flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03] active:scale-95"
-                      >
-                        <span>{lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <h2 className="font-body text-[17px] sm:text-[18px] font-bold text-ink">
+                  {lang === "bn" ? "পছন্দের তালিকা" : "Your Wishlist"}
+                </h2>
+                <p className="font-body text-[12px] font-semibold text-ink/60">
+                  {lang === "bn"
+                    ? `${items.length} টি পণ্য সংরক্ষিত রয়েছে`
+                    : `${items.length} items saved`}
+                </p>
               </div>
-            )}
+            </div>
+
+            {/* Frosted Close Button */}
+            <button
+              onClick={closeWishlist}
+              className="w-8 h-8 rounded-full bg-white/70 backdrop-blur-md border border-ink/10 flex items-center justify-center text-ink/70 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-sm"
+              aria-label="Close wishlist"
+            >
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
           </div>
         </div>
-      </div>
-    </>
+
+        {/* Content Body */}
+        {items.length === 0 ? (
+          /* Empty State */
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-20 h-20 rounded-full bg-brand-light/10 text-brand-light flex items-center justify-center mb-4 border border-brand-light/20 shadow-sm">
+              <svg
+                className="w-10 h-10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </div>
+            <h3 className="font-body text-[16px] font-bold text-ink mb-1">
+              {lang === "bn"
+                ? "পছন্দের তালিকা বর্তমানে খালি"
+                : "Your wishlist is currently empty"}
+            </h3>
+            <p className="font-body text-[13px] text-ink/60 max-w-[240px] mb-6">
+              {lang === "bn"
+                ? "যেকোনো পণ্যে হার্ট আইকনে ক্লিক করে সংরক্ষণ করুন।"
+                : "Click the heart icon on any product to save it for later."}
+            </p>
+            <button
+              onClick={closeWishlist}
+              className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-[14px] font-bold text-white shadow-sh2 hover:brightness-[1.03] active:scale-95 transition-all"
+            >
+              {lang === "bn" ? "পণ্য এক্সপ্লোর করুন" : "Explore Products"}
+            </button>
+          </div>
+        ) : (
+          /* Items List */
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+            {items.map((item: any) => {
+              const price = Number(item.price) || 0;
+              const originalPrice = item.originalPrice ? Number(item.originalPrice) : null;
+              const displayName =
+                lang === "bn" && item.nameBn ? item.nameBn : item.name;
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white/85 backdrop-blur-sm rounded-2xl p-3.5 border border-ink/5 shadow-sm flex items-center gap-3.5 transition-all hover:bg-white"
+                >
+                  {/* Product Image */}
+                  <Link
+                    href={item.slug ? `/product/${item.slug}` : "#"}
+                    onClick={closeWishlist}
+                    className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-brand-bg/60 border border-ink/5 flex-shrink-0 block"
+                  >
+                    <Image
+                      src={item.image || "/vangcur-logo.png"}
+                      alt={displayName || "Product"}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </Link>
+
+                  {/* Product Details */}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={item.slug ? `/product/${item.slug}` : "#"}
+                      onClick={closeWishlist}
+                      className="font-body text-[13.5px] sm:text-[14px] font-bold text-ink truncate mb-1 block hover:text-brand-light transition-colors"
+                    >
+                      {displayName}
+                    </Link>
+
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-body text-[14px] font-bold text-brand-light">
+                        ৳{price.toLocaleString("en-US")}
+                      </span>
+                      {originalPrice && originalPrice > price && (
+                        <span className="font-body text-[12px] font-semibold text-ink/40 line-through">
+                          ৳{originalPrice.toLocaleString("en-US")}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action: Add to Cart button */}
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-light/10 hover:bg-brand-light text-brand-light hover:text-white px-3 py-1 font-body text-[12px] font-bold transition-all active:scale-95"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                      </svg>
+                      <span>{lang === "bn" ? "কার্টে নিন" : "Add to Cart"}</span>
+                    </button>
+                  </div>
+
+                  {/* Delete from Wishlist Button */}
+                  <button
+                    onClick={() => {
+                      if (removeItem) {
+                        removeItem(item.id);
+                      }
+                    }}
+                    className="text-ink/40 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all active:scale-90 flex-shrink-0"
+                    aria-label="Remove from wishlist"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Footer Actions */}
+        {items.length > 0 && (
+          <div className="border-t border-ink/10 bg-white/90 backdrop-blur-md p-4 sm:p-5 space-y-3 flex-shrink-0">
+            {/* Primary Action: Move All to Cart */}
+            <button
+              onClick={handleMoveAllToCart}
+              className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 hover:brightness-[1.03] active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+              <span>
+                {lang === "bn" ? "সব আইটেম কার্টে নিন" : "Move All to Cart"}
+              </span>
+            </button>
+
+            {/* Clear All Wishlist */}
+            {clearWishlist && (
+              <button
+                onClick={() => {
+                  clearWishlist();
+                  showToast(
+                    lang === "bn"
+                      ? "পছন্দের তালিকা খালি করা হয়েছে"
+                      : "Wishlist cleared",
+                    "info"
+                  );
+                }}
+                className="w-full text-center font-body text-[13px] font-semibold text-ink/50 hover:text-red-500 transition-colors py-1"
+              >
+                {lang === "bn" ? "তালিকা খালি করুন" : "Clear Wishlist"}
+              </button>
+            )}
+          </div>
+        )}
+      </aside>
+    </div>
   );
 }
