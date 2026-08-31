@@ -44,7 +44,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
 
   return (
     <div
-      className={`fixed inset-0 z-[9800] items-start justify-center overflow-y-auto bg-black/60 p-0 ${open ? 'flex' : 'hidden'}`}
+      className={`sleek-scrollbar fixed inset-0 z-[9800] items-start justify-center overflow-y-auto bg-black/60 p-0 ${open ? 'flex' : 'hidden'}`}
       onClick={handleBackdropClick}
     >
       <div className="flex min-h-full w-full max-w-[540px] flex-col bg-white">

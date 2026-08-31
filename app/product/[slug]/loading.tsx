@@ -40,7 +40,7 @@ export default function ProductLoading() {
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-border-base" />
           </div>
           {/* থাম্বনেইল স্ট্রিপ */}
-          <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1">
+          <div className="no-scrollbar mt-3 flex gap-2.5 overflow-x-auto pb-1">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-16 w-16 shrink-0 animate-pulse rounded-[10px] border-[1.5px] border-border-base bg-brand-bg/25 p-1" />
             ))}

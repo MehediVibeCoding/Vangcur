@@ -106,7 +106,7 @@ export default function PostReceiveInfoModal() {
 
       {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
       <div className="fixed inset-0 z-[1215] flex items-center justify-center p-4">
-        <div className="relative w-full max-w-[440px] max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="no-scrollbar relative w-full max-w-[440px] max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal">
           <HeaderDecor />
 
           {/* ব্যাজ আইকন */}

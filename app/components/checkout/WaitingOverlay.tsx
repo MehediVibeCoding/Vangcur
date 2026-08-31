@@ -366,7 +366,7 @@ export default function WaitingOverlay() {
 
       {/* 🌟 মোবাইলে ১০০% এজ-টু-এজ ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মোডাল */}
       <div className="fixed inset-0 z-[1205] flex items-center justify-center p-0 sm:p-4">
-        <div className="relative w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex flex-col justify-center sm:justify-start">
+        <div className="no-scrollbar relative w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
 
           {/* ========================================================================= */}
