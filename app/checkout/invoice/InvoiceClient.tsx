@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { fetchFullOrder, readLatestGuestOrder, clearPendingOrder } from '@/lib/orderStatus';
@@ -17,6 +17,8 @@ interface InvoiceContact {
   email: string;
 }
 
+const MAX_DOWNLOAD_LIMIT = 3;
+
 function ItemThumb({ imgs }: { imgs?: string[] }) {
   const url = imgs && imgs[0];
   const isUrl = typeof url === 'string' && url.startsWith('http');
@@ -27,12 +29,13 @@ function ItemThumb({ imgs }: { imgs?: string[] }) {
         alt=""
         crossOrigin="anonymous"
         style={{
-          width: 26,
-          height: 26,
+          width: 28,
+          height: 28,
           objectFit: 'cover',
           borderRadius: 6,
           flexShrink: 0,
           border: '1px solid #E2E8F0',
+          display: 'block',
         }}
       />
     );
@@ -41,14 +44,15 @@ function ItemThumb({ imgs }: { imgs?: string[] }) {
     <span
       style={{
         fontSize: 16,
-        width: 26,
-        height: 26,
+        width: 28,
+        height: 28,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
         backgroundColor: '#F1F5F9',
         borderRadius: 6,
+        lineHeight: 1,
       }}
     >
       📦
@@ -56,9 +60,6 @@ function ItemThumb({ imgs }: { imgs?: string[] }) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// টুলবার আইকনসমূহ
-// ────────────────────────────────────────────────────────────────────────
 function IconChevronLeft() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -95,9 +96,6 @@ function IconCheckCircle() {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর (ডেস্কটপে খালি জায়গায় ভাসমান আইকন)
-// ────────────────────────────────────────────────────────────────────────
 function DesktopSideDecor() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">
@@ -117,9 +115,6 @@ function DesktopSideDecor() {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// ইনভয়েসের ভেতরের অত্যন্ত সূক্ষ্ম, ছোট ৫-৬টি গ্যাজেট ওয়াটারমার্ক (খালি জায়গায়)
-// ────────────────────────────────────────────────────────────────────────
 function InvoiceSubtleWatermark() {
   const strokeColor = '#44A7FC';
   return (
@@ -134,41 +129,35 @@ function InvoiceSubtleWatermark() {
       }}
       aria-hidden="true"
     >
-      {/* ১. হেডফোন (টপ-লেফট খালি কর্নার) */}
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={strokeColor} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 16, left: 16, transform: 'rotate(-12deg)' }}>
         <path d="M4 14v-3a8 8 0 0 1 16 0v3" />
         <rect x="2" y="14" width="4" height="6.5" rx="1.5" />
         <rect x="18" y="14" width="4" height="6.5" rx="1.5" />
       </svg>
 
-      {/* ২. স্মার্টওয়াচ (টপ-রাইট খালি কর্নার) */}
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={strokeColor} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 18, right: 18, transform: 'rotate(15deg)' }}>
         <rect x="7" y="7" width="10" height="10" rx="2.5" />
         <path d="M9 7V3.5h6V7M9 17v3.5h6V17" />
         <circle cx="12" cy="12" r="2" />
       </svg>
 
-      {/* ৩. পাওয়ার ব্যাংক (মিড-লেফট ফাঁকা মার্জিন) */}
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={strokeColor} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 190, left: 14, transform: 'rotate(-8deg)' }}>
         <rect x="5" y="4" width="11" height="16" rx="2.5" />
         <path d="M9 2.5h3" />
         <path d="M12.5 8.5 9.8 12.3h2.6L10 16.5" />
       </svg>
 
-      {/* ৪. ল্যাম্প / অ্যাম্বিয়েন্ট বাল্ব (মিড-রাইট ফাঁকা মার্জিন) */}
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={strokeColor} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', top: 290, right: 14, transform: 'rotate(10deg)' }}>
         <path d="M9 18h6" />
         <path d="M10 21h4" />
         <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
       </svg>
 
-      {/* ৫. শিল্ড / ওয়ারেন্টি (বটম-লেফট মার্জিন) */}
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={strokeColor} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', bottom: 70, left: 18, transform: 'rotate(-10deg)' }}>
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         <path d="m9 12 2 2 4-4" />
       </svg>
 
-      {/* ৬. স্পার্ক স্টার (বটম-রাইট মার্জিন) */}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={strokeColor} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', bottom: 65, right: 18, transform: 'rotate(15deg)' }}>
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
       </svg>
@@ -176,9 +165,6 @@ function InvoiceSubtleWatermark() {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────
-// ব্র্যান্ড থিমের সুসংগত সোশ্যাল ব্যাজসমূহ
-// ────────────────────────────────────────────────────────────────────────
 function ThemedSocialBadge({ children }: { children: React.ReactNode }) {
   return (
     <span
@@ -247,7 +233,7 @@ export default function InvoiceClient() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasDownloaded, setHasDownloaded] = useState(false);
+  const [downloadCount, setDownloadCount] = useState(0);
   const [allowEmergencyClose, setAllowEmergencyClose] = useState(false);
   const [contact, setContact] = useState<InvoiceContact>({
     phoneLabel: DEFAULT_FOOTER.contact.phoneLabel,
@@ -255,8 +241,8 @@ export default function InvoiceClient() {
   });
   const [downloading, setDownloading] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const autoDownloadedRef = useRef(false);
 
-  // 🛡️ বাইপাস গার্ড ও অর্ডার লোডার
   useEffect(() => {
     let cancelled = false;
 
@@ -304,7 +290,6 @@ export default function InvoiceClient() {
     };
   }, [searchParams, supabase, router, t]);
 
-  // স্টোর কন্টাক্ট সেটিংস ফেচ
   useEffect(() => {
     (async () => {
       try {
@@ -334,19 +319,23 @@ export default function InvoiceClient() {
     return () => clearTimeout(emergencyTimer);
   }, [supabase]);
 
-  // 📸 রক-সলিড পিক্সেল পারফেক্ট ডাউনলোড হ্যান্ডলার (html2canvas)
   const downloadPNG = useCallback(async () => {
-    if (!invoiceRef.current || downloading || !order) return;
+    if (!invoiceRef.current || downloading || !order || downloadCount >= MAX_DOWNLOAD_LIMIT) return;
     setDownloading(true);
 
     try {
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(invoiceRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
-        imageTimeout: 8000,
+        imageTimeout: 10000,
+        allowTaint: false,
       });
 
       const link = document.createElement('a');
@@ -355,25 +344,26 @@ export default function InvoiceClient() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setHasDownloaded(true);
+
+      setDownloadCount((prev) => prev + 1);
     } catch {
       showToast(t('❌ ডাউনলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।'));
       setAllowEmergencyClose(true);
     } finally {
       setDownloading(false);
     }
-  }, [downloading, order, t]);
+  }, [downloading, order, downloadCount, t]);
 
-  // প্রথমবার পেজ লোড হলে স্বয়ংক্রিয় ডাউনলোড
   useEffect(() => {
-    if (loading || !order) return undefined;
+    if (loading || !order || autoDownloadedRef.current) return undefined;
+    autoDownloadedRef.current = true;
     const timer = setTimeout(() => {
       downloadPNG();
-    }, 600);
+    }, 700);
     return () => clearTimeout(timer);
   }, [loading, order, downloadPNG]);
 
-  const canClose = hasDownloaded || allowEmergencyClose;
+  const canClose = downloadCount > 0 || allowEmergencyClose;
 
   const handleGoBack = () => {
     if (!canClose) return;
@@ -410,14 +400,13 @@ export default function InvoiceClient() {
     ? `Hey! Please hand ৳${balanceDue.toLocaleString('en-US')} to the delivery man when you receive your package — that's your remaining balance (COD). Make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`
     : `Great news — you've already paid in full! Once you receive your package, make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`;
 
+  const remainingDownloads = Math.max(0, MAX_DOWNLOAD_LIMIT - downloadCount);
+  const isLimitReached = downloadCount >= MAX_DOWNLOAD_LIMIT;
+
   return (
     <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
-      {/* ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর */}
       <DesktopSideDecor />
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ১. প্রিমিয়াম কন্ট্রোল টুলবার                                     */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
         <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
           <button
@@ -432,106 +421,111 @@ export default function InvoiceClient() {
 
           <button
             onClick={downloadPNG}
-            disabled={downloading}
-            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-5 py-2 font-body text-[13px] font-bold text-white shadow-sh1 transition-all duration-brand disabled:cursor-default disabled:opacity-70 enabled:hover:brightness-[1.03] enabled:active:scale-95"
+            disabled={downloading || isLimitReached}
+            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-5 py-2 font-body text-[13px] font-bold text-white shadow-sh1 transition-all duration-brand disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:brightness-[1.03] enabled:active:scale-95"
           >
-            {downloading ? <IconSpinner /> : (hasDownloaded ? <IconCheckCircle /> : <IconDownload />)}
+            {downloading ? <IconSpinner /> : (downloadCount > 0 && !isLimitReached ? <IconCheckCircle /> : <IconDownload />)}
             <span>
               {downloading
                 ? t('তৈরি হচ্ছে...')
-                : (hasDownloaded ? t('আবার ডাউনলোড') : t('ছবি ডাউনলোড'))}
+                : isLimitReached
+                ? (lang === 'en' ? 'Limit reached (3/3)' : 'ডাউনলোড সীমা পূর্ণ (৩/৩)')
+                : downloadCount > 0
+                ? (lang === 'en' ? `Download again (${remainingDownloads} left)` : `আবার ডাউনলোড (${remainingDownloads} বার বাকি)`)
+                : t('ছবি ডাউনলোড')}
             </span>
           </button>
         </div>
       </div>
 
-      {/* স্ট্যাটাস স্ট্রিপ */}
       {!canClose && (
         <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-brand-bg/40 py-1.5 font-body text-[11.5px] font-semibold text-brand-light border-b border-brand-light/20">
           <IconSpinner />
           {t('আপনার ইনভয়েস প্রস্তুত হচ্ছে, একটু অপেক্ষা করুন...')}
         </div>
       )}
-      {canClose && hasDownloaded && (
+      {canClose && downloadCount > 0 && (
         <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-emerald-50 py-1.5 font-body text-[11.5px] font-semibold text-emerald-700 border-b border-emerald-200">
           <IconCheckCircle />
-          {t('ইনভয়েস সফলভাবে ডাউনলোড হয়েছে')}
+          {lang === 'en' ? `Invoice downloaded successfully (${downloadCount}/${MAX_DOWNLOAD_LIMIT})` : `ইনভয়েস সফলভাবে ডাউনলোড হয়েছে (${downloadCount}/${MAX_DOWNLOAD_LIMIT})`}
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ২. মূল ইনভয়েস কার্ড (মোবাইলে এজ-টু-এজ ফুলস্ক্রিন, ডেস্কে ভাসমান)  */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
       <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex items-center justify-center">
         <div
           ref={invoiceRef}
-          className="no-scrollbar w-full min-h-dvh sm:min-h-0 sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(0,88,199,0.08)] relative overflow-hidden flex flex-col justify-between sm:justify-start"
           style={{
+            width: '100%',
+            maxWidth: 520,
+            backgroundColor: '#ffffff',
             color: '#1E293B',
-            fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            boxSizing: 'border-box',
+            position: 'relative',
+            overflow: 'hidden',
           }}
+          className="rounded-none sm:rounded-[24px] border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)]"
         >
-          {/* সূক্ষ্ম ছোট ছোট ৫-৬টি গ্যাজেট ওয়াটারমার্ক */}
           <InvoiceSubtleWatermark />
 
-          <div style={{ padding: '20px 20px 24px', position: 'relative', zIndex: 1 }}>
+          <div style={{ padding: '24px 22px 26px', position: 'relative', zIndex: 1 }}>
             
-            {/* হেডার: লোগো ও অর্ডার মেটা */}
-            <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 12, marginBottom: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
+            <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/vangcur-logo.png"
                   alt="Vangcur"
                   crossOrigin="anonymous"
-                  style={{ height: 32, width: 'auto', display: 'block' }}
+                  style={{ height: 32, width: 'auto', display: 'block', margin: '0 auto' }}
                 />
               </div>
               <div
                 style={{
-                  fontSize: 9,
+                  fontSize: 9.5,
                   fontWeight: 700,
                   letterSpacing: '2.5px',
                   color: '#64748B',
                   textTransform: 'uppercase',
-                  marginBottom: 8,
+                  marginBottom: 10,
+                  lineHeight: '14px',
                 }}
               >
                 YOUR FIRST CHOICE FOR GADGETS
               </div>
               
-              {/* অর্ডার মেটা পিল */}
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '3px 12px',
-                  borderRadius: 20,
-                  backgroundColor: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: '#334155',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
-                <span style={{ color: '#CBD5E1' }}>•</span>
-                <span>Date: {ds}</span>
+              <div style={{ textAlign: 'center', margin: '0 auto' }}>
+                <div
+                  style={{
+                    display: 'inline-block',
+                    padding: '4px 14px',
+                    borderRadius: '20px',
+                    backgroundColor: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    color: '#334155',
+                    lineHeight: '18px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
+                  <span style={{ margin: '0 8px', color: '#CBD5E1' }}>•</span>
+                  <span>Date: {ds}</span>
+                </div>
               </div>
             </div>
 
-            {/* কাস্টমার ডিটেইলস — পরিচ্ছন্ন ও কম্প্যাক্ট ২x২ গ্রিড */}
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: 16 }}>
               <div
                 style={{
-                  fontSize: 10,
+                  fontSize: 10.5,
                   fontWeight: 800,
                   textTransform: 'uppercase',
                   letterSpacing: '1px',
                   color: '#44A7FC',
                   marginBottom: 6,
+                  lineHeight: '14px',
                 }}
               >
                 CUSTOMER DETAILS
@@ -541,58 +535,58 @@ export default function InvoiceClient() {
                   backgroundColor: '#F8FAFC',
                   border: '1px solid #E2E8F0',
                   borderRadius: 12,
-                  padding: '9px 12px',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '4px 10px',
+                  padding: '10px 14px',
                   fontSize: 11.5,
-                  lineHeight: 1.5,
+                  lineHeight: '20px',
                 }}
               >
-                <div>
-                  <span style={{ color: '#64748B' }}>Name: </span>
-                  <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: '#64748B' }}>Name: </span>
+                    <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
+                  </div>
+                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: '#64748B' }}>Phone: </span>
+                    <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
+                  </div>
                 </div>
-                <div>
-                  <span style={{ color: '#64748B' }}>Phone: </span>
-                  <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748B' }}>District: </span>
-                  <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748B' }}>Address: </span>
-                  <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: '#64748B' }}>District: </span>
+                    <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
+                  </div>
+                  <div style={{ width: '48%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: '#64748B' }}>Address: </span>
+                    <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* 🌟 একক সমন্বিত বিলিং ও প্রোডাক্ট কার্ড (চেকআউট ধাপ ৩-এর হুবহু অনুকরণ) */}
             <div
               style={{
                 backgroundColor: '#F8FAFC',
                 border: '1px solid #E2E8F0',
                 borderRadius: 14,
-                padding: '12px 14px',
-                marginBottom: 12,
+                padding: '14px 16px',
+                marginBottom: 14,
               }}
             >
               <div
                 style={{
-                  fontSize: 10,
+                  fontSize: 10.5,
                   fontWeight: 800,
                   textTransform: 'uppercase',
                   letterSpacing: '1px',
                   color: '#44A7FC',
-                  marginBottom: 8,
+                  marginBottom: 10,
+                  lineHeight: '14px',
                 }}
               >
                 ORDER INVOICE
               </div>
 
-              {/* ১. প্রোডাক্টসমূহ */}
-              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 6, marginBottom: 8 }}>
+              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 10 }}>
                 {(order.items || []).map((i, idx) => (
                   <div
                     key={idx}
@@ -600,26 +594,25 @@ export default function InvoiceClient() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: 8,
-                      padding: '4px 0',
+                      gap: 10,
+                      padding: '5px 0',
                       fontSize: 12,
                       color: '#1E293B',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
                       <ItemThumb imgs={i.imgs} />
-                      <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                      <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: '16px', wordBreak: 'break-word' }}>
                         {i.name} × {i.qty}
                       </span>
                     </div>
-                    <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap', fontSize: 12.5 }}>
                       ৳{(i.price * i.qty).toLocaleString('en-US')}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* ২. সাবটোটাল */}
               {order.subtotal ? (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#475569', padding: '3px 0' }}>
                   <span>Subtotal</span>
@@ -627,7 +620,6 @@ export default function InvoiceClient() {
                 </div>
               ) : null}
 
-              {/* ৩. কুপন ছাড় (যদি থাকে) */}
               {order.discountAmount && order.discountAmount > 0 ? (
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#059669', fontWeight: 600, padding: '3px 0' }}>
                   <span>Coupon Discount ({order.couponCode || 'PROMO'})</span>
@@ -635,7 +627,6 @@ export default function InvoiceClient() {
                 </div>
               ) : null}
 
-              {/* ৪. ডেলিভারি চার্জ (শিপিং) */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#475569', padding: '3px 0' }}>
                 <span style={{ color: isFreeShipping ? '#059669' : '#475569', fontWeight: isFreeShipping ? 600 : 400 }}>
                   Delivery Charge ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
@@ -645,43 +636,38 @@ export default function InvoiceClient() {
                 </span>
               </div>
 
-              {/* ডিভাইডার */}
               <div style={{ margin: '8px 0', borderTop: '1px dashed #CBD5E1' }} />
 
-              {/* ৫. Grand Total (Total Bill) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '2px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '3px 0' }}>
                 <span>Total Bill</span>
                 <span>৳{(order.total || 0).toLocaleString('en-US')}</span>
               </div>
 
-              {/* ৬. Advance Paid (কোনো সবুজ টিকচিহ্ন ছাড়া স্কাই-ব্লু টোকেন) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#44A7FC', padding: '2px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#44A7FC', padding: '3px 0' }}>
                 <span>Advance Payment</span>
                 <span style={{ fontWeight: 700 }}>- ৳{advancePaid.toLocaleString('en-US')}</span>
               </div>
 
-              {/* ৭. Balance Due (Cash on Delivery) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '3px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '4px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
                 <span>Cash on Delivery</span>
                 <span>৳{balanceDue.toLocaleString('en-US')}</span>
               </div>
             </div>
 
-            {/* পেমেন্ট ও কুরিয়ার ব্যাজ (স্কাই-ব্লু থিমে সুসংগত) */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 12,
-                padding: '7px 10px',
+                gap: 14,
+                padding: '8px 12px',
                 borderRadius: 20,
                 backgroundColor: '#F0F7FF',
                 border: '1px solid #DCEBFD',
                 fontSize: 11,
                 fontWeight: 700,
                 color: '#44A7FC',
-                marginBottom: 12,
+                marginBottom: 14,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -695,33 +681,31 @@ export default function InvoiceClient() {
               </div>
             </div>
 
-            {/* আনবক্সিং ভিডিও ও ডেলিভারি গাইডলাইন কার্ড */}
             <div
               style={{
-                padding: '9px 12px',
+                padding: '10px 14px',
                 background: 'linear-gradient(135deg, #F0F7FF 0%, #F8FAFC 100%)',
                 border: '1px solid #DCEBFD',
                 borderRadius: 12,
                 fontSize: 10.5,
-                lineHeight: 1.55,
+                lineHeight: '17px',
                 color: '#1E3A5F',
-                marginBottom: 12,
+                marginBottom: 14,
               }}
             >
               {dueMsg}
             </div>
 
-            {/* ফুটার: কন্টাক্ট ও ব্র্যান্ডেড সোশ্যাল ব্যাজসমূহ (লোকেশন ছাড়া) */}
             <div
               style={{
                 textAlign: 'center',
                 borderTop: '1px solid #F1F5F9',
-                paddingTop: 10,
+                paddingTop: 12,
                 fontSize: 10.5,
                 color: '#64748B',
               }}
             >
-              <div style={{ marginBottom: 7, fontWeight: 600 }}>
+              <div style={{ marginBottom: 8, fontWeight: 600, lineHeight: '16px' }}>
                 📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
               </div>
 
