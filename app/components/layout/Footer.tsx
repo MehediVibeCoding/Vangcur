@@ -8,14 +8,11 @@ import {
   DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
 } from '@/lib/footerData';
 import {
-  DEFAULT_CATEGORIES, fetchCategories, makeCatSlug,
-} from '@/lib/categoryData';
-import {
-  OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT,
+  OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
 } from '@/lib/uiEvents';
 import { sanitizeHref } from '@/lib/security';
 import { useT } from '@/lib/i18n/useT';
-import type { FooterContact, FooterExtras, FooterLogo, Category } from '@/types';
+import type { FooterContact, FooterExtras, FooterLogo } from '@/types';
 
 function computeLogo(raw: FooterLogo | null | undefined): FooterLogo {
   if (raw && raw.mode === 'image' && raw.img) {
@@ -99,14 +96,6 @@ function YouTubeIcon() {
   );
 }
 
-function SparklesIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
-    </svg>
-  );
-}
-
 function PinIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="mt-0.5 h-4 w-4 shrink-0 text-brand-light">
@@ -164,24 +153,17 @@ export default function Footer() {
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
   const [contact, setContact] = useState<FooterContact>(DEFAULT_FOOTER.contact);
   const [extras, setExtras] = useState<FooterExtras>({ desc: DEFAULT_FOOTER.desc, copy: DEFAULT_FOOTER.copy, social: DEFAULT_FOOTER.social });
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      const [settings, cats] = await Promise.all([
-        fetchFooterSettings(supabase),
-        fetchCategories(supabase),
-      ]);
+      const settings = await fetchFooterSettings(supabase);
       if (cancelled) return;
 
       if (settings.vc_logo) setLogo(computeLogo(settings.vc_logo));
       if (settings.vc_contact) setContact(computeContact(settings.vc_contact));
       if (settings.vc_footer) setExtras(computeFooterExtras(settings.vc_footer));
-      if (Array.isArray(cats) && cats.length) {
-        setCategories(cats);
-      }
     })();
 
     const channel = subscribeFooterSettings(supabase, (key, val) => {
@@ -195,14 +177,11 @@ export default function Footer() {
   const openAccount = () => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
   const openTrackOrder = () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
   const openOfferPage = () => window.dispatchEvent(new CustomEvent(OPEN_OFFER_PAGE_EVENT));
+  const openInfo = (type: string) => window.dispatchEvent(new CustomEvent(OPEN_INFO_EVENT, { detail: { type } }));
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToCategories = () => document.getElementById('catCardsGrid')?.scrollIntoView({ behavior: 'smooth' });
-
-  // ৫টি ক্যাটাগরি আইটেম
-  const shopCategories = useMemo(() => {
-    return categories.filter((c) => c.id !== 'all').slice(0, 5);
-  }, [categories]);
+  const scrollToFaq = () => document.getElementById('faqSec')?.scrollIntoView({ behavior: 'smooth' });
 
   const fbGroupLink = 'https://facebook.com/groups/vangcurgadgets';
 
@@ -246,41 +225,26 @@ export default function Footer() {
       <div className="bg-[#D3E7FC] px-5 pb-8 pt-8 md:px-10 lg:px-16">
         <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
           
-          {/* কলাম ১ (বামে): লোগো, ট্যাগলাইন, ২ লাইনের সংক্ষিপ্ত পরিচিতি ও সোশ্যাল হাব */}
-          <div>
-            <div className="mb-3">
-              {logo.mode === 'image' ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logo.img}
-                  alt={logo.alt}
-                  style={{ maxHeight: logo.height || 42 }}
-                  className="mb-2 block w-auto select-none"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
-                <div className="font-body text-[26px] font-extrabold tracking-tight text-ink">
-                  {logo.main}
-                </div>
-              )}
+          {/* কলাম ১ (বামে): আসল ইমেজ লোগো, সাধারণ ট্যাগলাইন ও সেন্টার-অ্যালাইন সোশ্যাল আইকন */}
+          <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+            <Link href="/" className="mb-2 inline-block">
+              <Image
+                src="/vangcur-logo.png"
+                alt="Vangcur Gadgets"
+                width={140}
+                height={49}
+                className="h-8 sm:h-9 w-auto select-none"
+                priority={false}
+              />
+            </Link>
 
-              {/* ট্যাগলাইন পিল ব্যাজ */}
-              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-brand-light/35 bg-white/80 px-3 py-1 font-body text-[10.5px] font-bold uppercase tracking-wider text-brand-light shadow-xs backdrop-blur-md">
-                <SparklesIcon />
-                <span>Vangcur — Your First Choice For Gadgets</span>
-              </div>
-            </div>
-
-            {/* ২ লাইনের সংক্ষিপ্ত পরিচিতি */}
-            <p className="font-body text-[13px] leading-relaxed text-slate-700 max-w-sm mb-4">
-              {lang === 'en'
-                ? 'Vangcur is one of Bangladesh’s leading innovative gadget & lifestyle tech brands. Committed to delivering authentic quality and warranty support.'
-                : 'Vangcur (ভাঙচুর) বাংলাদেশের অন্যতম উদ্ভাবনী গ্যাজেট ও লাইফস্টাইল ই-কমার্স ব্র্যান্ড। সেরা মানের ট্রেন্ডি টেক প্রোডাক্ট ও ওয়ারেন্টি সেবাই আমাদের অঙ্গীকার।'}
+            {/* কোনো ব্যাজ ছাড়া সাধারণ মার্জিত ট্যাগলাইন */}
+            <p className="font-body text-[12px] font-bold uppercase tracking-[1.5px] text-brand-light mb-4">
+              Your First Choice For Gadgets
             </p>
 
-            {/* সোশ্যাল মিডিয়া বাটনসমূহ */}
-            <div className="flex flex-wrap gap-2">
+            {/* ব্র্যান্ডের কালার অনুযায়ী সোশ্যাল মিডিয়া বাটনসমূহ */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
               <a
                 href={extras.social.fb}
                 target="_blank"
@@ -333,26 +297,22 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* কলাম ২: ক্যাটাগরি সমূহ (নিখুঁত ৫টি আইটেম) */}
+          {/* কলাম ২: গ্রাহক সেবা (Customer Care — পলিসি ও প্রয়োজনীয় লিঙ্কস) */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
-              {lang === 'en' ? 'Shop Categories' : 'ক্যাটাগরি সমূহ'}
+              {lang === 'en' ? 'Customer Care' : 'গ্রাহক সেবা'}
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
-              {shopCategories.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/category/${makeCatSlug(c.id)}`}
-                    className={colLinkClass}
-                  >
-                    {c.name}
-                  </Link>
-                </li>
-              ))}
+              <li><button className={colLinkClass} onClick={scrollToFaq}>FAQ</button></li>
+              <li><button className={colLinkClass} onClick={() => openInfo('shipping')}>Shipping Info</button></li>
+              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Warranty Info' : 'ওয়ারেন্টি তথ্য'}</Link></li>
+              <li><Link href="/refund-policy" className={colLinkClass}>{lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}</Link></li>
+              <li><Link href="/privacy-policy" className={colLinkClass}>{lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}</Link></li>
+              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}</Link></li>
             </ul>
           </div>
 
-          {/* কলাম ৩: কুইক লিঙ্কস (নিখুঁত ৫টি আইটেম) */}
+          {/* কলাম ৩: কুইক লিঙ্কস */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {t('কুইক লিঙ্কস')}
@@ -373,7 +333,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৪: যোগাযোগ (ইউজারের নির্দিষ্ট ক্রমানুযায়ী নিখুঁত ৫টি আইটেম) */}
+          {/* কলাম ৪: যোগাযোগ (নির্দিষ্ট ক্রমানুযায়ী ৫টি আইটেম) */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Contact Us' : 'যোগাযোগ'}
@@ -422,16 +382,9 @@ export default function Footer() {
 
         </div>
 
-        {/* বটম কপিরাইট ও লিগ্যাল লিঙ্কস বার */}
-        <div className="mx-auto mt-8 max-w-[1300px] border-t border-blue-200/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left font-body text-xs font-semibold text-slate-600">
-          <div>{t(extras.copy)}</div>
-          <div className="flex items-center gap-4 text-slate-600">
-            <Link href="/privacy-policy" className="hover:text-brand-light transition-colors">{t('প্রাইভেসি পলিসি')}</Link>
-            <span>•</span>
-            <Link href="/refund-policy" className="hover:text-brand-light transition-colors">{t('রিটার্ন ও রিফান্ড পলিসি')}</Link>
-            <span>•</span>
-            <Link href="/terms" className="hover:text-brand-light transition-colors">{t('শর্তাবলী (Terms & Conditions)')}</Link>
-          </div>
+        {/* বটম কপিরাইট বার (১০০% সেন্টার-অ্যালাইন) */}
+        <div className="mx-auto mt-8 max-w-[1300px] border-t border-blue-200/80 pt-6 text-center font-body text-xs font-semibold text-slate-600">
+          {t(extras.copy)}
         </div>
       </div>
     </footer>
