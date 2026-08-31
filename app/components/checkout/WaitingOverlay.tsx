@@ -42,10 +42,7 @@ function HeaderDecor() {
   );
 }
 
-// 🏺 রিয়েলস্টিক লাইভ স্যান্ড-ফল অ্যানিমেশন: টপ চেম্বারের বালু ধীরে ধীরে
-// নামতে থাকে, নেক দিয়ে অবিরাম কণা পড়তে থাকে এবং বটম চেম্বারে ঢিবি জমতে
-// থাকে — সম্পূর্ণ জ্যামিতিক (clipPath + SMIL) মোশন, কোনো অপাসিটি
-// পালস/ফ্লিকার ব্যবহার করা হয়নি।
+// 🏺 রিয়েলস্টিক লাইভ স্যান্ড-ফল অ্যানিমেশন
 function AnimatedLiveHourglass() {
   const uid = useId();
   const gradId = `vc-sand-grad-${uid}`;
@@ -59,14 +56,12 @@ function AnimatedLiveHourglass() {
           <stop offset="0%" stopColor="#FCD34D" />
           <stop offset="100%" stopColor="#D97706" />
         </linearGradient>
-        {/* টপ চেম্বারের বালুর লেভেল — সময়ের সাথে নেকের দিকে নেমে আসে */}
         <clipPath id={topClipId}>
           <rect x="6" y="2" width="12" height="10">
             <animate attributeName="y" values="2;11.6" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
             <animate attributeName="height" values="10;0.4" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
           </rect>
         </clipPath>
-        {/* বটম চেম্বারের বালুর ঢিবি — ক্যাপের ওপর ক্রমশ উঁচু হয়ে জমতে থাকে */}
         <clipPath id={bottomClipId}>
           <rect x="6" y="21.6" width="12" height="0.4">
             <animate attributeName="y" values="21.6;12" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1" />
@@ -75,14 +70,12 @@ function AnimatedLiveHourglass() {
         </clipPath>
       </defs>
 
-      {/* টপ চেম্বারের বালু */}
       <path
         d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"
         fill={`url(#${gradId})`}
         clipPath={`url(#${topClipId})`}
       />
 
-      {/* নেক দিয়ে অবিরাম পড়তে থাকা বালুকণার স্ট্রিম */}
       <circle cx="12" cy="11.3" r="0.55" fill="#D97706">
         <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0s" />
       </circle>
@@ -93,14 +86,12 @@ function AnimatedLiveHourglass() {
         <animate attributeName="cy" values="11.3;20.6" dur="0.85s" repeatCount="indefinite" begin="0.56s" />
       </circle>
 
-      {/* বটম চেম্বারের ক্রমবর্ধমান বালুর ঢিবি — স্ট্রিমের ওপরে এঁকে কণাগুলো ঢিবিতে "মিশে" যাওয়ার ইলিউশন তৈরি করে */}
       <path
         d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"
         fill={`url(#${gradId})`}
         clipPath={`url(#${bottomClipId})`}
       />
 
-      {/* গ্লাস আউটলাইন — সবার উপরে, ক্রিস্প বর্ডার */}
       <path
         d="M5 2h14M5 22h14M6 2v3.5c0 2.2 1.5 4 3.5 5l1.5.8-1.5.8c-2 1-3.5 2.8-3.5 5V22M18 2v3.5c0 2.2-1.5 4-3.5 5l-1.5.8 1.5.8c2 1 3.5 2.8 3.5 5V22"
         stroke="#B45309"
@@ -252,7 +243,7 @@ export default function WaitingOverlay() {
   }, [supabase]);
 
   useEffect(() => {
-    if (pathname?.startsWith('/checkout/status')) {
+    if (pathname?.startsWith('/checkout/status') || pathname?.startsWith('/checkout/invoice')) {
       return;
     }
     if (orderId) return;
@@ -278,7 +269,7 @@ export default function WaitingOverlay() {
   }, []);
 
   useEffect(() => {
-    if (!orderId || pathname?.startsWith('/checkout/status')) return undefined;
+    if (!orderId || pathname?.startsWith('/checkout/status') || pathname?.startsWith('/checkout/invoice')) return undefined;
     const stop = watchOrderStatus(supabase, orderId, phoneRef.current, (newStatus) => {
       if (newStatus === 'confirmed' || newStatus === 'shipped' || newStatus === 'delivered') {
         clearPendingOrder();
@@ -319,7 +310,7 @@ export default function WaitingOverlay() {
     else unlockBody();
   }, [visible, minimized]);
 
-  if (visible && pathname?.startsWith('/checkout/status')) return null;
+  if (visible && (pathname?.startsWith('/checkout/status') || pathname?.startsWith('/checkout/invoice'))) return null;
   if (!visible || !order) return null;
 
   const isPending = status === 'pending';
@@ -327,25 +318,19 @@ export default function WaitingOverlay() {
   const isGuest = !currentUser;
   const advanceAmount = order.advancePaid || 200;
 
-  const dismiss = () => {
-    // 🛡️ রিজেক্টেড/ক্যান্সেল্ড অর্ডারের জন্য স্থায়ীভাবে রেকর্ড করে রাখা হচ্ছে যে
-    // কাস্টমার এই পপআপ ইতিমধ্যে দেখেছেন — যাতে পরে (নেভিগেশন বা রিলোডে) আবার না দেখায়
+  const dismiss强 = () => {
     if (isRejected && orderId && typeof window !== 'undefined') {
       try { localStorage.setItem(`vc_reject_seen_${orderId}`, '1'); } catch { /* ignore */ }
     }
     clearPendingOrder();
     setVisible(false);
     setMinimized(false);
-    // 🛡️ orderId/order কে null করে দেওয়া হচ্ছে যাতে watchOrderStatus এর useEffect
-    // (যেটা pathname বদলালেই re-run হয়) আবার নতুন করে সাবস্ক্রাইব না করে এবং
-    // পুরনো (এখনও rejected) স্ট্যাটাস আবার fetch করে popup পুনরায় না দেখায়
     setOrderId(null);
     setOrder(null);
   };
 
   const retryOrder = () => {
-    // শুধু হোমপেজে নিয়ে যাবে — কার্ট খালি থাকবে, কোনো অটোমেটিক রি-অর্ডার চেষ্টা হবে না
-    dismiss();
+    dismiss强();
     router.push('/');
   };
 
@@ -376,12 +361,12 @@ export default function WaitingOverlay() {
       {/* ব্যাকড্রপ ব্লার */}
       <div
         className="fixed inset-0 z-[1200] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={() => (isPending ? setMinimized(true) : dismiss())}
+        onClick={() => (isPending ? setMinimized(true) : dismiss强())}
       />
 
-      {/* মোবাইলে ১০০% ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মডাল — সম্পূর্ণ ইনভিজিবল স্লিক স্ক্রলবার সহ */}
-      <div className="fixed inset-0 z-[1205] flex items-center justify-center sm:p-4">
-        <div className="relative w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      {/* 🌟 মোবাইলে ১০০% এজ-টু-এজ ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মোডাল */}
+      <div className="fixed inset-0 z-[1205] flex items-center justify-center p-0 sm:p-4">
+        <div className="relative w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
 
           {/* ========================================================================= */}
@@ -389,7 +374,7 @@ export default function WaitingOverlay() {
           {/* ========================================================================= */}
           {isPending && (
             <>
-              {/* প্রিমিয়াম স্যান্ড-গ্লাস আইকন ব্যাজ */}
+              {/* স্যান্ড-গ্লাস আইকন ব্যাজ */}
               <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_4px_16px_rgba(245,158,11,0.20)]">
                 <AnimatedLiveHourglass />
               </div>
@@ -435,9 +420,9 @@ export default function WaitingOverlay() {
                 </div>
               )}
 
-              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন (স্বাভাবিক ডার্ক টেক্সট ও রেডিয়েন্ট গোল্ডেন গ্লো) */}
+              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন */}
               <div className="relative z-10 mb-4 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
-                {/* ধাপ ১: রিসিভড (গ্রিন) */}
+                {/* ধাপ ১: রিসিভড */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-xs">
                     <IconCheck />
@@ -448,7 +433,7 @@ export default function WaitingOverlay() {
                   </div>
                 </div>
 
-                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন (স্বাভাবিক ডার্ক টেক্সট + সোনালী আলো বিচ্ছুরণ হ্যালো ইফেক্ট) */}
+                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-100 text-amber-700 shadow-[0_0_16px_rgba(245,158,11,0.55)]">
                     <IconSearch />
@@ -459,7 +444,7 @@ export default function WaitingOverlay() {
                   </div>
                 </div>
 
-                {/* ধাপ ৩: কনফার্মেশন (ক্লিয়ার ও কালারফুল) */}
+                {/* ধাপ ৩: কনফার্মেশন */}
                 <div className="flex items-center gap-3 pt-0.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-light/40 bg-brand-bg/50 text-brand-light shadow-xs">
                     <IconCircleTarget />
@@ -480,11 +465,10 @@ export default function WaitingOverlay() {
                 <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
 
-              {/* সোশ্যাল মিডিয়া আইকনসমূহ — ১০০% অফিসিয়াল ব্র্যান্ড কালার */}
+              {/* সোশ্যাল মিডিয়া আইকনসমূহ */}
               <div className="relative z-10 mb-5">
                 <div className="mb-2.5 font-body text-[10.5px] font-bold uppercase tracking-wider text-muted">{t('আমাদের ফলো করুন')}</div>
                 <div className="flex justify-center gap-2.5">
-                  {/* Facebook (#1877F2) */}
                   <a
                     className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#1877F2] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
                     href={DEFAULT_FOOTER.social.fb}
@@ -495,7 +479,6 @@ export default function WaitingOverlay() {
                     <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
                   </a>
 
-                  {/* Instagram (Official Gradient) */}
                   <a
                     className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-gradient-to-tr from-[#FFDC80] via-[#FD1D1D] to-[#833AB4] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
                     href={DEFAULT_FOOTER.social.ig}
@@ -506,7 +489,6 @@ export default function WaitingOverlay() {
                     <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
                   </a>
 
-                  {/* TikTok (#010101) */}
                   <a
                     className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#010101] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
                     href={DEFAULT_FOOTER.social.tk}
@@ -514,10 +496,9 @@ export default function WaitingOverlay() {
                     rel="noopener noreferrer"
                     title="TikTok"
                   >
-                    <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" /></svg>
+                    <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" /></svg>
                   </a>
 
-                  {/* WhatsApp (#25D366) */}
                   <a
                     className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
                     href={DEFAULT_FOOTER.social.wa}
@@ -528,7 +509,6 @@ export default function WaitingOverlay() {
                     <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
                   </a>
 
-                  {/* YouTube (#FF0000) */}
                   <a
                     className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FF0000] text-white shadow-xs transition-transform hover:scale-110 active:scale-95 [&_svg]:h-[17px] [&_svg]:w-[17px] [&_svg]:fill-white"
                     href={DEFAULT_FOOTER.social.yt}
