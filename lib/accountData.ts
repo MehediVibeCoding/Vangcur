@@ -131,7 +131,7 @@ async function getWeatherCode(lat: number, lon: number): Promise<number | null> 
     try {
       localStorage.setItem('vc_weather_cache', JSON.stringify({ code, lat, lon, ts: Date.now() }));
     } catch {
-      // storage full/blocked — weather still resolves for this call, just not cached
+      // storage full/blocked
     }
     return code;
   } catch {
@@ -147,7 +147,7 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
         const obj = JSON.parse(cached);
         if (obj.ts && Date.now() - obj.ts < 7200000) return RAINY_CODES.includes(obj.code);
       } catch {
-        // corrupt cache entry — fall through to a fresh fetch below
+        // corrupt cache entry
       }
     }
     let lat = 23.811;
@@ -169,7 +169,7 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
             .limit(1);
           if (data && data.length && data[0].customer_district) userDistrict = data[0].customer_district;
         } catch {
-          // no orders table access yet — defaults to Dhaka below
+          // no orders table access
         }
       }
       if (userDistrict) {
@@ -186,7 +186,7 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
         }
       }
     } catch {
-      // district lookup failed — defaults to Dhaka coordinates above
+      // district lookup failed
     }
     const code = await getWeatherCode(lat, lon);
     return code !== null && RAINY_CODES.includes(code);
@@ -205,14 +205,58 @@ export function formatLiveTimeDate(now: Date): string {
   return `${hours}:${minutes} ${ampm} - ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
 }
 
+export function getFirstName(fullName?: string | null): string {
+  if (!fullName) return 'User';
+  const clean = fullName.trim();
+  if (!clean) return 'User';
+  const parts = clean.split(/\s+/);
+  return parts[0];
+}
+
 export function getGreeting(user: CurrentUser | null, now: Date): string {
-  const name = user?.name || 'User';
+  const firstName = getFirstName(user?.name);
+  const day = now.getDay(); // 0 = Sunday, 5 = Friday
   const hour = now.getHours();
-  if (hour >= 5 && hour < 12) return `Hi ${name}, Good Morning`;
-  if (hour >= 12 && hour < 17) return `Hi ${name}, Good Afternoon`;
-  if (hour >= 17 && hour < 21) return `Hi ${name}, Good Evening`;
-  if (hour >= 21 || hour < 5) return `Hi ${name}, Good Night`;
-  return `Hi ${name}, Good Day`;
+  const minute = now.getMinutes();
+  const timeVal = hour + minute / 60;
+
+  // শুক্রবার স্পেশাল গ্রিটিংস (Friday Special)
+  if (day === 5) {
+    if (timeVal >= 5 && timeVal < 14) {
+      return `Hi ${firstName}, Happy Friday & Jumma Mubarak 🕌`;
+    }
+    if (timeVal >= 14 && timeVal < 23) {
+      return `Hi ${firstName}, Happy Friday & Weekend Vibes ✨`;
+    }
+  }
+
+  // সময়ভিত্তিক হিউম্যান-লাইক স্মার্ট স্লটস:
+  // ভোর: 5:00 AM - 8:00 AM
+  if (timeVal >= 5 && timeVal < 8) {
+    return `Hi ${firstName}, Good Morning, Breakfast Time ☕`;
+  }
+  // সকাল: 8:00 AM - 12:00 PM
+  if (timeVal >= 8 && timeVal < 12) {
+    return `Hi ${firstName}, Good Morning, Productive Day Ahead ✨`;
+  }
+  // দুপুর: 12:00 PM - 2:30 PM
+  if (timeVal >= 12 && timeVal < 14.5) {
+    return `Hi ${firstName}, Good Afternoon, Lunch Time 🍱`;
+  }
+  // বিকেল: 2:30 PM - 5:30 PM
+  if (timeVal >= 14.5 && timeVal < 17.5) {
+    return `Hi ${firstName}, Good Afternoon, Tea Break Time 🍵`;
+  }
+  // সন্ধ্যা: 5:30 PM - 8:00 PM
+  if (timeVal >= 17.5 && timeVal < 20) {
+    return `Hi ${firstName}, Good Evening, Relax & Unwind 🌆`;
+  }
+  // রাত: 8:00 PM - 11:00 PM
+  if (timeVal >= 20 && timeVal < 23) {
+    return `Hi ${firstName}, Good Night, Dinner Time 🍽️`;
+  }
+  // গভীর রাত: 11:00 PM - 5:00 AM
+  return `Hi ${firstName}, Late Night Owl, Rest Well 😴`;
 }
 
 function mapOrderRow(o: Record<string, any>): Order {
@@ -264,12 +308,12 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
   try {
     await supabase.from('profiles').upsert({ id: currentUser.id, name: newName, updated_at: new Date().toISOString() });
   } catch {
-    // profiles table may not be reachable yet — auth metadata update above already applied
+    // profiles table fallback
   }
   try {
     await supabase.from('orders').update({ customer_name: newName }).eq('user_id', currentUser.id);
   } catch {
-    // order rows may not exist yet — profile name is still updated above
+    // order rows update fallback
   }
 }
 
@@ -284,7 +328,7 @@ export function getStockNotifications(): StockNotification[] {
       }
     }
   } catch {
-    // localStorage unavailable — no notifications to show
+    // localStorage unavailable
   }
   return items;
 }
@@ -293,7 +337,7 @@ export function removeStockNotification(key: string): void {
   try {
     localStorage.removeItem(key);
   } catch {
-    // storage unavailable — nothing to clean up
+    // storage unavailable
   }
 }
 
@@ -306,7 +350,7 @@ export function clearAllStockNotifications(): void {
     }
     toRemove.forEach((k) => localStorage.removeItem(k));
   } catch {
-    // localStorage unavailable — nothing to clean up
+    // localStorage unavailable
   }
 }
 
@@ -346,7 +390,7 @@ export async function fetchDrafts(supabase: SupabaseClient, currentUser: Current
         }));
       }
     } catch {
-      // abandoned_checkouts table may not be reachable yet — falls back to local draft below
+      // abandoned_checkouts fallback
     }
   }
   if (!drafts.length) {
@@ -362,7 +406,7 @@ export async function deleteDraft(supabase: SupabaseClient, currentUser: Current
     try {
       localStorage.removeItem('vc_abandoned_draft');
     } catch {
-      // storage unavailable — Supabase delete below still runs if applicable
+      // storage unavailable
     }
   }
   if (currentUser?.id) {
@@ -373,7 +417,7 @@ export async function deleteDraft(supabase: SupabaseClient, currentUser: Current
         await supabase.from('abandoned_checkouts').delete().eq('draft_id', draftId).eq('user_id', currentUser.id);
       }
     } catch {
-      // delete failed — draft may already be gone or table unreachable
+      // delete failed
     }
   }
 }
@@ -382,13 +426,13 @@ export async function deleteAllDrafts(supabase: SupabaseClient, currentUser: Cur
   try {
     localStorage.removeItem('vc_abandoned_draft');
   } catch {
-    // storage unavailable — Supabase delete below still runs if applicable
+    // storage unavailable
   }
   if (currentUser?.id) {
     try {
       await supabase.from('abandoned_checkouts').delete().eq('user_id', currentUser.id);
     } catch {
-      // delete failed — table may be unreachable
+      // delete failed
     }
   }
 }
