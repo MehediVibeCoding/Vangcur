@@ -7,7 +7,7 @@ import { useT } from '@/lib/i18n/useT';
 
 function HeaderDecor() {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.12]" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.10]" aria-hidden="true">
       <svg width="40" height="40" className="absolute -left-2 top-2 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 13a8 8 0 0 1 16 0" />
         <rect x="3" y="13" width="4" height="6" rx="1.5" />
@@ -24,7 +24,7 @@ function HeaderDecor() {
 
 function SparklesIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
     </svg>
   );
@@ -81,26 +81,42 @@ export default function About() {
 
   return (
     <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5">
-      {/* অ্যাপল-স্টাইল ফ্রস্টেড স্কাই-ব্লু ক্যানভাস */}
-      <div className="relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-b from-brand-bg/35 via-[#EFF6FE]/65 to-white/95 p-7 sm:p-10 shadow-sh2 backdrop-blur-md">
+      {/* অ্যাপল-স্টাইল মিনিমাল ফ্রস্টেড স্কাই-ব্লু ক্যানভাস (সফট শ্যাডো) */}
+      <div className="relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-b from-brand-bg/30 via-[#EFF6FE]/55 to-white/95 p-6 sm:p-10 shadow-[0_4px_24px_rgba(68,167,252,0.08)] ring-1 ring-white/80 backdrop-blur-md">
         
         {/* লাইন-আর্ট ওয়াটারমার্ক */}
         <HeaderDecor />
 
         <div className="relative z-10 mx-auto max-w-[860px] text-center">
           
-          {/* অফিসিয়াল ট্যাগলাইন ব্যাজ */}
-          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/35 bg-white/85 px-4 py-1.5 font-body text-[11px] sm:text-[12px] font-bold uppercase tracking-[1.5px] text-brand-light shadow-xs backdrop-blur-md">
+          {/* অফিসিয়াল ট্যাগলাইন ব্যাজ (মোবাইলে ১০০% এক লাইনে রেসপন্সিভ) */}
+          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/30 bg-white/85 px-3 py-1 min-[380px]:px-4 min-[380px]:py-1.5 font-body text-[9.5px] min-[360px]:text-[10.5px] sm:text-[12px] font-bold uppercase tracking-[0.8px] min-[380px]:tracking-[1.3px] text-brand-light shadow-xs backdrop-blur-md whitespace-nowrap">
             <SparklesIcon />
             <span>Vangcur — Your First Choice For Gadgets</span>
           </div>
 
-          {/* মূল শিরোনাম */}
-          <h2 className="mb-5 font-body text-2xl font-extrabold text-ink sm:text-[30px] leading-snug">
+          {/* মূল শিরোনাম — মোবাইলে নিখুঁত ২-লাইন এবং ডেস্কে ১-লাইন */}
+          <h2 className="mb-5 font-body font-extrabold text-ink leading-snug">
             {lang === 'en' ? (
-              <>Vangcur — <span className="text-brand-light">Your Trusted Tech & Lifestyle Store</span></>
+              <>
+                <span className="block text-[18px] min-[360px]:text-[20px] sm:inline sm:text-[28px] md:text-[30px]">
+                  Vangcur
+                </span>
+                <span className="hidden sm:inline"> — </span>
+                <span className="block text-[14px] min-[360px]:text-[15.5px] sm:inline sm:text-[28px] md:text-[30px] text-brand-light mt-1 sm:mt-0">
+                  Your Trusted Tech &amp; Lifestyle Store
+                </span>
+              </>
             ) : (
-              <>Vangcur (ভাঙচুর) — <span className="text-brand-light">আপনার বিশ্বস্ত গ্যাজেট ও লাইফস্টাইল শপ</span></>
+              <>
+                <span className="block text-[19px] min-[360px]:text-[21px] sm:inline sm:text-[28px] md:text-[30px]">
+                  Vangcur — ভাঙচুর
+                </span>
+                <span className="hidden sm:inline"> — </span>
+                <span className="block text-[13px] min-[360px]:text-[14.5px] min-[400px]:text-[16px] sm:inline sm:text-[28px] md:text-[30px] text-brand-light mt-1 sm:mt-0 whitespace-nowrap">
+                  আপনার বিশ্বস্ত গ্যাজেট ও লাইফস্টাইল শপ
+                </span>
+              </>
             )}
           </h2>
 
@@ -110,7 +126,7 @@ export default function About() {
               {t(customDesc)}
             </p>
           ) : (
-            <div className="space-y-4 font-body text-[14px] sm:text-[15px] leading-[1.9] text-ink/80 text-justify sm:text-center">
+            <div className="space-y-4 font-body text-[13.5px] sm:text-[15px] leading-[1.85] sm:leading-[1.9] text-ink/80 text-justify sm:text-center">
               <p>
                 {lang === 'en' ? (
                   <>Vangcur is one of Bangladesh&apos;s leading innovative gadget and lifestyle e-commerce brands. Catering to modern lifestyle tech and everyday creative needs, we bring you the finest collection of trending RGB &amp; neon lights, ambient crystal lamps, premium TWS earbuds, smartwatches, portable cooling fans, and unique utility gadgets.</>
