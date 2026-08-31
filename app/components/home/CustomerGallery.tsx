@@ -67,7 +67,6 @@ export default function CustomerGallery() {
   const pausedRef = useRef(false);
   const activeWrapRef = useRef<HTMLDivElement>(null);
 
-  // টাচ ও ড্র্যাগ রেফারেন্স
   const dragRef = useRef({ startX: 0, startY: 0, isDown: false, dragged: false });
 
   useEffect(() => { reviewsRef.current = reviews; }, [reviews]);
@@ -128,7 +127,6 @@ export default function CustomerGallery() {
     pausedRef.current = false;
   };
 
-  // টাচ সোয়াইপ হ্যান্ডলার
   const handleTouchStart = (e: React.TouchEvent) => {
     pausedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -149,7 +147,6 @@ export default function CustomerGallery() {
     }, RESUME_DELAY_MS);
   };
 
-  // ডেস্কে মাউস ড্র্যাগ সোয়াইপ হ্যান্ডলার
   const handleMouseDown = (e: React.MouseEvent) => {
     dragRef.current.isDown = true;
     dragRef.current.dragged = false;
@@ -287,7 +284,7 @@ export default function CustomerGallery() {
   }
 
   return (
-    <section className="mx-auto mb-16 max-w-[1300px] px-4 sm:px-5 overflow-hidden">
+    <section className="mx-auto mb-16 max-w-[1300px] px-4 sm:px-5">
       {headerBlock}
 
       {totalReviews > 0 && (
@@ -301,10 +298,9 @@ export default function CustomerGallery() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          {/* ৩D কভারফ্লো ভিউপোর্ট */}
-          <div className="relative h-[360px] sm:h-[410px] md:h-[450px] w-full [perspective:1200px] flex items-center justify-center">
+          {/* ৩D সমান্তরাল কভারফ্লো ভিউপোর্ট — পর্যাপ্ত ভার্টিক্যাল স্পেস সহ যাতে শ্যাডো কাট না হয় */}
+          <div className="relative h-[390px] sm:h-[450px] md:h-[490px] w-full flex items-center justify-center">
             {reviews.map((r, i) => {
-              // রিলেটিভ সার্কুলার অফসেট ক্যালকুলেশন
               let offset = (i - activeIdx + totalReviews) % totalReviews;
               if (offset > totalReviews / 2) offset -= totalReviews;
 
@@ -322,33 +318,33 @@ export default function CustomerGallery() {
                 ? r.image_url : null;
               const likeCount = parseInt(String(r.like_count), 10) || 0;
 
-              // ৩D ট্রান্সফর্ম স্টাইল
+              // সমান্তরাল (No Rotate) পজিশন স্টাইল
               let transformStyle = '';
               let zIndex = 0;
               let opacity = 0;
               let pointerEvents: 'auto' | 'none' = 'none';
 
               if (isActive) {
-                transformStyle = 'translate3d(0, 0, 0) scale(1.05) rotateY(0deg)';
+                transformStyle = 'translate3d(0, 0, 0) scale(1)';
                 zIndex = 20;
                 opacity = 1;
                 pointerEvents = 'auto';
               } else if (isLeft) {
-                transformStyle = 'translate3d(-64%, 0, -40px) scale(0.85) rotateY(12deg)';
+                transformStyle = 'translate3d(-62%, 0, 0) scale(0.85)';
                 zIndex = 10;
                 opacity = 0.65;
                 pointerEvents = 'auto';
               } else if (isRight) {
-                transformStyle = 'translate3d(64%, 0, -40px) scale(0.85) rotateY(-12deg)';
+                transformStyle = 'translate3d(62%, 0, 0) scale(0.85)';
                 zIndex = 10;
                 opacity = 0.65;
                 pointerEvents = 'auto';
               } else if (isFarLeft) {
-                transformStyle = 'translate3d(-110%, 0, -80px) scale(0.7) rotateY(20deg)';
+                transformStyle = 'translate3d(-105%, 0, 0) scale(0.7)';
                 zIndex = 5;
                 opacity = 0;
               } else if (isFarRight) {
-                transformStyle = 'translate3d(110%, 0, -80px) scale(0.7) rotateY(-20deg)';
+                transformStyle = 'translate3d(105%, 0, 0) scale(0.7)';
                 zIndex = 5;
                 opacity = 0;
               }
@@ -356,10 +352,10 @@ export default function CustomerGallery() {
               return (
                 <div
                   key={r.id}
-                  className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[320px] w-[205px] sm:h-[370px] sm:w-[240px] md:h-[410px] md:w-[270px] shrink-0 overflow-hidden rounded-[24px] transition-all duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] [-webkit-tap-highlight-color:transparent] ${
+                  className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[360px] w-[220px] min-[400px]:w-[235px] sm:h-[420px] sm:w-[270px] md:h-[460px] md:w-[295px] shrink-0 overflow-hidden rounded-[24px] transition-all duration-[500ms] ease-[cubic-bezier(0.22,1,0.36,1)] [-webkit-tap-highlight-color:transparent] ${
                     isActive
-                      ? 'border border-white/90 shadow-[0_10px_30px_rgba(0,0,0,0.16)] ring-1 ring-white/80 cursor-zoom-in'
-                      : 'cursor-pointer hover:opacity-85'
+                      ? 'border border-white/90 shadow-[0_8px_25px_rgba(0,0,0,0.10)] ring-1 ring-white/80 cursor-zoom-in'
+                      : 'cursor-pointer hover:opacity-80'
                   }`}
                   style={{
                     transform: `translate(-50%, -50%) ${transformStyle}`,
@@ -378,7 +374,7 @@ export default function CustomerGallery() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         className="block h-full w-full object-cover [will-change:transform]"
-                        src={optimizeCloudinaryUrl(imgUrl, 480)}
+                        src={optimizeCloudinaryUrl(imgUrl, 520)}
                         alt="Customer Unboxing"
                         loading="lazy"
                         draggable={false}
@@ -391,19 +387,19 @@ export default function CustomerGallery() {
                       </div>
                     )}
 
-                    {/* সফট গ্রেডিয়েন্ট ওভারলে */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+                    {/* সফট মসৃণ গ্রেডিয়েন্ট ওভারলে */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
                     {/* লাইক কাউন্টার ও হার্ট বাটন */}
-                    <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+                    <div className="absolute bottom-3.5 right-3.5 z-10 flex items-center gap-1.5">
                       {likeCount > 0 && (
-                        <span className="font-body text-[11px] font-extrabold text-white drop-shadow-md">
+                        <span className="font-body text-[11.5px] font-extrabold text-white drop-shadow-md">
                           {likeCount}
                         </span>
                       )}
                       <button
                         type="button"
-                        className={`flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition-transform duration-200 [-webkit-tap-highlight-color:transparent] hover:bg-black/60 active:scale-90 ${
+                        className={`flex h-[36px] w-[36px] items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition-transform duration-200 [-webkit-tap-highlight-color:transparent] hover:bg-black/60 active:scale-90 ${
                           beatId === r.id ? 'animate-heartbeat' : ''
                         }`}
                         onClick={(e) => handleHeart(e, r)}
@@ -441,7 +437,7 @@ export default function CustomerGallery() {
 
       {/* পেজিনেশন ডটস */}
       {totalReviews > 1 && (
-        <div className="mt-3 flex justify-center gap-1.5">
+        <div className="mt-4 flex justify-center gap-1.5">
           {reviews.map((r, i) => (
             <button
               key={r.id}
