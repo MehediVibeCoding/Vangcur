@@ -57,7 +57,6 @@ function IconCheck() {
   );
 }
 
-/** সংক্ষিপ্ত brand line-art — LoginModal-এর HeaderDecor-এর সাথে সামঞ্জস্যপূর্ণ, কোনো লোগো/টেক্সট পিল নেই */
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
@@ -125,8 +124,7 @@ export default function ResetPasswordClient() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
   const handleSubmit = async () => {
     setPassErr(false);
@@ -134,25 +132,30 @@ export default function ResetPasswordClient() {
     setGenErr('');
 
     const strength = await checkPasswordStrength(pass);
-    if (!strength.minLenOk || !strength.ok) { setPassErr(true); return; }
-    if (pass !== confirmPass) { setConfirmErr(t('দুটো পাসওয়ার্ড মিলছে না')); return; }
+    if (!strength.minLenOk || !strength.ok) {
+      setPassErr(true);
+      return;
+    }
+    if (pass !== confirmPass) {
+      setConfirmErr(t('দুটো পাসওয়ার্ড মিলছে না'));
+      showToast(t('উভয় পাসওয়ার্ড একই হতে হবে'), 'error');
+      return;
+    }
 
     setLoading(true);
     const { error } = await updatePassword(supabase, pass);
     if (error) {
       setLoading(false);
       setGenErr(t('পাসওয়ার্ড পরিবর্তন করা যায়নি, লিংকের মেয়াদ শেষ হয়ে থাকতে পারে'));
+      showToast(t('পাসওয়ার্ড পরিবর্তন করা যায়নি, লিংকের মেয়াদ শেষ হয়ে থাকতে পারে'), 'error');
       return;
     }
 
-    // পাসওয়ার্ড সফলভাবে বদলানোর সাথে সাথেই এই recovery session সাইন-আউট করে দেওয়া হচ্ছে,
-    // যাতে একই রিসেট-লিংক আবার খুলে (session মেয়াদ শেষ না হওয়া পর্যন্ত) দ্বিতীয়বার
-    // পাসওয়ার্ড পরিবর্তন করা না যায়। ইউজারকে নতুন পাসওয়ার্ড দিয়ে আবার লগইন করতে হবে।
     await supabase.auth.signOut();
     useAuthStore.getState().setCurrentUser(null);
     setLoading(false);
     setStatus('done');
-    showToast(t('পাসওয়ার্ড পরিবর্তন হয়েছে! নতুন পাসওয়ার্ড দিয়ে লগইন করুন'));
+    showToast(t('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে'), 'success');
     setTimeout(() => router.push('/'), 1500);
   };
 
