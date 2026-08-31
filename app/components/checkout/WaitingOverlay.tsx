@@ -214,8 +214,9 @@ export default function WaitingOverlay() {
     // 🛡️ পার্মানেন্ট লুপ ব্লকার গার্ড
     if (typeof window !== 'undefined') {
       const alreadySeen = localStorage.getItem(`vc_confirm_seen_${id}`);
+      const alreadyRejected = localStorage.getItem(`vc_reject_seen_${id}`);
       const alreadyDismissed = sessionStorage.getItem(`vc_confirm_dismissed_${id}`);
-      if (alreadySeen || alreadyDismissed) {
+      if (alreadySeen || alreadyRejected || alreadyDismissed) {
         clearPendingOrder();
         return;
       }
@@ -257,7 +258,7 @@ export default function WaitingOverlay() {
     if (orderId) return;
     const pending = readPendingOrder();
     if (pending) {
-      if (typeof window !== 'undefined' && (localStorage.getItem(`vc_confirm_seen_${pending.id}`) || sessionStorage.getItem(`vc_confirm_dismissed_${pending.id}`))) {
+      if (typeof window !== 'undefined' && (localStorage.getItem(`vc_confirm_seen_${pending.id}`) || localStorage.getItem(`vc_reject_seen_${pending.id}`) || sessionStorage.getItem(`vc_confirm_dismissed_${pending.id}`))) {
         clearPendingOrder();
         return;
       }
@@ -327,14 +328,25 @@ export default function WaitingOverlay() {
   const advanceAmount = order.advancePaid || 200;
 
   const dismiss = () => {
+    // 🛡️ রিজেক্টেড/ক্যান্সেল্ড অর্ডারের জন্য স্থায়ীভাবে রেকর্ড করে রাখা হচ্ছে যে
+    // কাস্টমার এই পপআপ ইতিমধ্যে দেখেছেন — যাতে পরে (নেভিগেশন বা রিলোডে) আবার না দেখায়
+    if (isRejected && orderId && typeof window !== 'undefined') {
+      try { localStorage.setItem(`vc_reject_seen_${orderId}`, '1'); } catch { /* ignore */ }
+    }
     clearPendingOrder();
     setVisible(false);
     setMinimized(false);
+    // 🛡️ orderId/order কে null করে দেওয়া হচ্ছে যাতে watchOrderStatus এর useEffect
+    // (যেটা pathname বদলালেই re-run হয়) আবার নতুন করে সাবস্ক্রাইব না করে এবং
+    // পুরনো (এখনও rejected) স্ট্যাটাস আবার fetch করে popup পুনরায় না দেখায়
+    setOrderId(null);
+    setOrder(null);
   };
 
   const retryOrder = () => {
+    // শুধু হোমপেজে নিয়ে যাবে — কার্ট খালি থাকবে, কোনো অটোমেটিক রি-অর্ডার চেষ্টা হবে না
     dismiss();
-    router.push('/checkout');
+    router.push('/');
   };
 
   const copyOrderNum = async () => {
