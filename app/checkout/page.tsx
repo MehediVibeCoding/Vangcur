@@ -595,7 +595,7 @@ export default function CheckoutPage() {
     if (!res.ok || !res.coupon) {
       const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
       setCouponError(errMsg);
-      showToast(errMsg);
+      showToast(errMsg, 'error');
       return false;
     }
 
@@ -774,7 +774,7 @@ export default function CheckoutPage() {
             window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total } }));
           }
         } else {
-          showToast(result.error || t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
+          showToast(result.error || t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'), 'error');
         }
         return;
       }

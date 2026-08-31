@@ -179,7 +179,7 @@ export default function QuickOrderModal() {
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
       removeAppliedCoupon();
       if (cart.length && couponInvalidReason) {
-        showToast(couponInvalidReason);
+        showToast(couponInvalidReason, 'warning');
       }
     }
   }, [open, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
@@ -207,7 +207,7 @@ export default function QuickOrderModal() {
     if (!res.ok || !res.coupon) {
       const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
       setCouponError(errMsg);
-      showToast(errMsg);
+      showToast(errMsg, 'error');
       return false;
     }
 

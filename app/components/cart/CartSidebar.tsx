@@ -212,7 +212,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
       removeAppliedCoupon();
       if (cart.length && couponInvalidReason) {
-        showToast(couponInvalidReason);
+        showToast(couponInvalidReason, 'warning');
       }
     }
   }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
@@ -240,7 +240,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     if (!res.ok || !res.coupon) {
       const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
       setCouponError(errMsg);
-      showToast(errMsg);
+      showToast(errMsg, 'error');
       return false;
     }
 

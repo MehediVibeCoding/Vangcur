@@ -33,7 +33,7 @@ function ToastSuccessIcon() {
 
 function ToastErrorIcon() {
   return (
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-800 text-white shadow-xs">
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-800 text-white shadow-xs">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
         <path d="M18 6L6 18M6 6l12 12" />
       </svg>
@@ -43,7 +43,7 @@ function ToastErrorIcon() {
 
 function ToastInfoIcon() {
   return (
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0058C7] text-white shadow-xs">
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-800 text-white shadow-xs">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
       </svg>
@@ -63,21 +63,25 @@ function ToastWarningIcon() {
   );
 }
 
-const TOAST_THEMES: Record<ToastType, { bg: string; icon: React.ReactNode }> = {
+const TOAST_THEMES: Record<ToastType, { bg: string; text: string; icon: React.ReactNode }> = {
   success: {
-    bg: 'bg-emerald-600/90 border-emerald-400/40',
+    bg: 'bg-emerald-50/95 border-emerald-300/80',
+    text: 'text-emerald-950',
     icon: <ToastSuccessIcon />,
   },
   error: {
-    bg: 'bg-red-600/90 border-red-400/40',
+    bg: 'bg-rose-50/95 border-rose-300/80',
+    text: 'text-rose-950',
     icon: <ToastErrorIcon />,
   },
   info: {
-    bg: 'bg-brand-light/95 border-white/40',
+    bg: 'bg-sky-50/95 border-sky-300/80',
+    text: 'text-sky-950',
     icon: <ToastInfoIcon />,
   },
   warning: {
-    bg: 'bg-amber-600/95 border-amber-300/50',
+    bg: 'bg-amber-50/95 border-amber-300/80',
+    text: 'text-amber-950',
     icon: <ToastWarningIcon />,
   },
 };
@@ -182,14 +186,18 @@ export default function GlobalOverlays() {
       {/* 🌟 ইউনিভার্সাল ডায়নামিক টোস্ট রেন্ডারার */}
       <div
         aria-live="polite"
-        className={`pointer-events-none fixed bottom-7 left-1/2 z-[1300] flex -translate-x-1/2 items-center gap-2.5 rounded-full border px-4 py-2.5 shadow-sh3 backdrop-blur-md transition-all duration-300 ease-out max-w-[92vw] sm:max-w-md ${
+        className={`pointer-events-none fixed bottom-7 left-1/2 z-[1300] flex -translate-x-1/2 items-center gap-2.5 rounded-full border px-4 py-2.5 shadow-sh2 backdrop-blur-md transition-all duration-300 ease-out max-w-[92vw] sm:max-w-md ${
           toast && toast.visible
             ? 'translate-y-0 opacity-100'
             : 'translate-y-4 opacity-0 pointer-events-none'
-        } ${toast ? TOAST_THEMES[toast.type].bg : 'bg-brand-light/95 border-white/40'}`}
+        } ${toast ? TOAST_THEMES[toast.type].bg : 'bg-sky-50/95 border-sky-300/80'}`}
       >
         {toast && TOAST_THEMES[toast.type].icon}
-        <span className="font-body text-[13px] font-bold text-white tracking-normal leading-snug">
+        <span
+          className={`font-body text-[13px] font-bold tracking-normal leading-snug ${
+            toast ? TOAST_THEMES[toast.type].text : 'text-sky-950'
+          }`}
+        >
           {toast?.message}
         </span>
       </div>
