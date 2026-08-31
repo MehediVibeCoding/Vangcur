@@ -26,6 +26,25 @@ const lineIcon = {
   strokeLinejoin: 'round' as const,
 };
 
+function DesktopSideDecor() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">
+      <div className="absolute left-[8%] top-[12%] text-brand-light/[0.16] -rotate-12">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 14.5a8 8 0 0 1 16 0" /><rect x="2.7" y="14.5" width="4.3" height="7" rx="1.6" /><rect x="17" y="14.5" width="4.3" height="7" rx="1.6" /></svg>
+      </div>
+      <div className="absolute right-[8%] top-[16%] text-brand-light/[0.16] rotate-12">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="7" y="6.2" width="10" height="11.6" rx="3" /><path d="M9.2 6.2V3.6h5.6v2.6M9.2 17.8v2.6h5.6v-2.6" /></svg>
+      </div>
+      <div className="absolute left-[6%] bottom-[20%] text-brand-light/[0.16] rotate-6">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="2" width="14" height="20" rx="3.2" /><circle cx="12" cy="8.3" r="3.1" /><circle cx="12" cy="17" r="1.4" /></svg>
+      </div>
+      <div className="absolute right-[7%] bottom-[18%] text-brand-light/[0.16] -rotate-6">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9 18.2h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.1 1 1.85v.75h5v-.75c0-.75.4-1.4 1-1.85A6 6 0 0 0 12 3Z" /></svg>
+      </div>
+    </div>
+  );
+}
+
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
@@ -42,17 +61,45 @@ function HeaderDecor() {
   );
 }
 
-function PremiumHourglassIcon() {
+function AnimatedLiveHourglass() {
   return (
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 22h14" />
-      <path d="M5 2h14" />
-      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" fill="#FEF3C7" />
-      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" fill="#FEF3C7" />
-      <circle cx="12" cy="12" r="1" fill="#D97706" />
-      <path d="M10 18h4" stroke="#D97706" strokeWidth="2" />
-      <path d="M11 16h2" stroke="#D97706" strokeWidth="1.5" />
-    </svg>
+    <div className="relative flex h-10 w-10 items-center justify-center">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="overflow-visible">
+        {/* Glass Outline */}
+        <path
+          d="M5 2h14M5 22h14M6 2v3.5c0 2.2 1.5 4 3.5 5l1.5.8-1.5.8c-2 1-3.5 2.8-3.5 5V22M18 2v3.5c0 2.2-1.5 4-3.5 5l-1.5.8 1.5.8c2 1 3.5 2.8 3.5 5V22"
+          stroke="#B45309"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Top Sand Level (Smooth Drain) */}
+        <path
+          d="M7 6.5h10c0 0-.5 2.5-3 3.8h-4C7.5 9 7 6.5 7 6.5z"
+          fill="#D97706"
+          className="animate-[pulse_3s_ease-in-out_infinite]"
+        />
+
+        {/* Trickling Sand Stream */}
+        <line
+          x1="12"
+          y1="10.5"
+          x2="12"
+          y2="18"
+          stroke="#D97706"
+          strokeWidth="1.4"
+          strokeDasharray="2 2"
+          className="animate-[dash_0.8s_linear_infinite]"
+        />
+
+        {/* Bottom Sand Mound (Growing Dune) */}
+        <path
+          d="M7.5 20.5h9c-1-1.8-3-2.8-4.5-2.8s-3.5 1-4.5 2.8z"
+          fill="#D97706"
+        />
+      </svg>
+    </div>
   );
 }
 
@@ -97,16 +144,6 @@ function IconWarningShield() {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  );
-}
-
-function IconBulb() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
-      <path d="M9 18h6" />
-      <path d="M10 22h4" />
-      <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
     </svg>
   );
 }
@@ -263,9 +300,12 @@ export default function StatusClient() {
 
   return (
     <>
-      <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white flex items-center justify-center sm:p-4">
-        {/* মোবাইলে ১০০% ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মডাল — সম্পূর্ণ ইনভিজিবল স্লিক স্ক্রলবার সহ */}
-        <div className="relative z-10 w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white flex flex-col items-center justify-center px-4 py-8 sm:py-12">
+        {/* ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর */}
+        <DesktopSideDecor />
+
+        {/* মেইন কন্টেইনার — ডেস্কটপে ফুল-পেজ মাউস স্ক্রলিং সমর্থনসহ */}
+        <div className="relative z-10 w-full max-w-[440px] rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal">
           <HeaderDecor />
 
           {/* ========================================================================= */}
@@ -273,9 +313,9 @@ export default function StatusClient() {
           {/* ========================================================================= */}
           {isPending && (
             <>
-              {/* প্রিমিয়াম স্যান্ড-গ্লাস আইকন ব্যাজ */}
-              <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_4px_16px_rgba(245,158,11,0.20)]">
-                <PremiumHourglassIcon />
+              {/* রিয়েলস্টিক লাইভ স্যান্ড-ফল অ্যানিমেটেড আইকন ব্যাজ */}
+              <div className="relative z-10 mx-auto mb-3.5 flex h-[76px] w-[76px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_6px_22px_rgba(245,158,11,0.22)]">
+                <AnimatedLiveHourglass />
               </div>
 
               {/* টাইটেল */}
@@ -319,9 +359,9 @@ export default function StatusClient() {
                 </div>
               )}
 
-              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন (স্বাভাবিক ডার্ক টেক্সট ও রেডিয়েন্ট গোল্ডেন গ্লো) */}
+              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন */}
               <div className="relative z-10 mb-4 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
-                {/* ধাপ ১: রিসিভড (গ্রিন) */}
+                {/* ধাপ ১: রিসিভড */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-xs">
                     <IconCheck />
@@ -332,7 +372,7 @@ export default function StatusClient() {
                   </div>
                 </div>
 
-                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন (স্বাভাবিক ডার্ক টেক্সট + সোনালী আলো বিচ্ছুরণ হ্যালো ইফেক্ট) */}
+                {/* ধাপ ২: পেমেন্ট ভেরিফিকেশন (সোনালী আলো ছড়ানো গ্লোয়িং ইফেক্ট) */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-100 text-amber-700 shadow-[0_0_16px_rgba(245,158,11,0.55)]">
                     <IconSearch />
@@ -343,7 +383,7 @@ export default function StatusClient() {
                   </div>
                 </div>
 
-                {/* ধাপ ৩: কনফার্মেশন (ক্লিয়ার ও কালারফুল) */}
+                {/* ধাপ ৩: কনফার্মেশন */}
                 <div className="flex items-center gap-3 pt-0.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-light/40 bg-brand-bg/50 text-brand-light shadow-xs">
                     <IconCircleTarget />
@@ -355,16 +395,10 @@ export default function StatusClient() {
                 </div>
               </div>
 
-              {/* ফ্রেশ স্কাই-ব্লু টিপ বক্স */}
-              <div className="relative z-10 mb-4 flex items-start gap-2 rounded-[14px] border border-brand-light/30 bg-brand-bg/30 p-3 text-left font-body text-[11.5px] leading-[1.65] text-ink/85">
-                <IconBulb />
-                <span>
-                  {lang === 'en' ? (
-                    <>You can browse the website freely now. An automatic notification popup will appear once your order is confirmed.</>
-                  ) : (
-                    <>আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন। অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।</>
-                  )}
-                </span>
+              {/* নিখুঁত ২-লাইনের ফ্রেশ স্কাই-ব্লু টিপ বক্স */}
+              <div className="relative z-10 mb-4 rounded-[16px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
+                <div>💡 {t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।')}</div>
+                <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
 
               {/* সোশ্যাল মিডিয়া আইকনসমূহ — ১০০% অফিসিয়াল ব্র্যান্ড কালার */}
