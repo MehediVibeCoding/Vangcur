@@ -754,7 +754,7 @@ export default function ProductDetailClient({
                   />
                 ))}
               </div>
-              <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1">
+              <div className="no-scrollbar mt-3 flex gap-2.5 overflow-x-auto pb-1">
                 {imgs.map((im, i) => (
                   <button
                     type="button"

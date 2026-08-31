@@ -138,7 +138,7 @@ export default function OfferPopup() {
     <>
       <div className={`fixed inset-0 z-[70] bg-black/50 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`} onClick={close} />
       <div className={`fixed inset-0 z-[75] flex items-center justify-center p-4 transition-opacity duration-brand ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}>
-        <div className="max-h-[85vh] w-full max-w-[480px] overflow-y-auto rounded-brand bg-white shadow-sh3">
+        <div className="sleek-scrollbar max-h-[85vh] w-full max-w-[480px] overflow-y-auto rounded-brand bg-white shadow-sh3">
           <div className="flex items-center justify-between border-b border-border-base px-5 py-4">
             <h3 className="font-display text-base font-bold text-ink">{headerTitle}</h3>
             <button className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted hover:bg-surface-muted" onClick={close}>✕</button>

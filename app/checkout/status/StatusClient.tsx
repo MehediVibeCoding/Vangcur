@@ -334,7 +334,7 @@ export default function StatusClient() {
   return (
     <>
       {/* 🌟 মোবাইলে ১০০% এজ-টু-এজ ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল ভাসমান কার্ড */}
-      <div className="relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10">
+      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10">
         {/* ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর */}
         <DesktopSideDecor />
 

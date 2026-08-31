@@ -411,7 +411,7 @@ export default function InvoiceClient() {
     : `Great news — you've already paid in full! Once you receive your package, make sure to record a continuous unboxing video from the top (no cuts or pauses). This video is mandatory for any warranty claim. Enjoy your order! 🎉`;
 
   return (
-    <div className="relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
+    <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
       {/* ডেস্কটপ সাইড অ্যাম্বিয়েন্স ডেকোর */}
       <DesktopSideDecor />
 
@@ -465,7 +465,7 @@ export default function InvoiceClient() {
       <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex items-center justify-center">
         <div
           ref={invoiceRef}
-          className="w-full min-h-dvh sm:min-h-0 sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(0,88,199,0.08)] relative overflow-hidden flex flex-col justify-between sm:justify-start"
+          className="no-scrollbar w-full min-h-dvh sm:min-h-0 sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(0,88,199,0.08)] relative overflow-hidden flex flex-col justify-between sm:justify-start"
           style={{
             color: '#1E293B',
             fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',

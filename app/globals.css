@@ -135,6 +135,68 @@ input[type='search']::-webkit-search-results-decoration {
 @media print{.invoice-wrap{box-shadow:none;border-radius:0}}
 @media(max-width:600px){.invoice-wrap{border-radius:0;box-shadow:none;max-width:100%}}
 
+/* ══════════════════════════════════════════════════════════════════════
+   🎨 Universal Premium Scrollbar Architecture (Vangcur)
+   গ্লোবাল বেস: ৪–৫পিক্সেল, স্বচ্ছ ট্র্যাক, সফট স্কাই-ব্লু রাউন্ডেড পিল থাম্ব
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ফায়ারফক্স গ্লোবাল বেস */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(68, 167, 252, 0.35) transparent;
+}
+
+/* Chromium/WebKit গ্লোবাল বেস (html, body ও সকল সাধারণ স্ক্রলযোগ্য এলিমেন্ট) */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(68, 167, 252, 0.35);
+  border-radius: 9999px;
+  border: none;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(68, 167, 252, 0.70);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   .sleek-scrollbar — ড্রয়ার, বড় মোডাল ও দীর্ঘ ড্রপডাউনের জন্য অতি সূক্ষ্ম
+   ৪পিক্সেল প্রিমিয়াম স্কাই-ব্লু পিল স্ক্রলবার (WaitingOverlay-লেভেল সিলেকশন)
+   ────────────────────────────────────────────────────────────────────── */
+.sleek-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(68, 167, 252, 0.35) transparent;
+}
+.sleek-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.sleek-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sleek-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(68, 167, 252, 0.35);
+  border-radius: 9999px;
+  border: none;
+}
+.sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(68, 167, 252, 0.70);
+}
+.sleek-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   .no-scrollbar — ওয়েটিং ওভারলে, পোস্ট-রিসিভ মোডাল, ইনভয়েস প্রিভিউ ও ট্যাব
+   বারের জন্য সম্পূর্ণ অদৃশ্য কিন্তু ফুল্লি-ফাংশনাল স্ক্রল
+   ────────────────────────────────────────────────────────────────────── */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;

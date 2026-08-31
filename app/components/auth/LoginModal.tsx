@@ -478,7 +478,7 @@ export default function LoginModal({
       onClick={handleBackdropClick}
     >
       <div
-        className={`relative max-h-[92vh] w-full max-w-[400px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
+        className={`no-scrollbar relative max-h-[92vh] w-full max-w-[400px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand ${isOpen ? 'scale-100' : 'scale-95'}`}
       >
         <div className={`relative overflow-hidden px-7 pt-8 text-center ${mode === 'forgot' && forgotSubmitted ? 'pb-3' : 'pb-5'}`}>
           <HeaderDecor />

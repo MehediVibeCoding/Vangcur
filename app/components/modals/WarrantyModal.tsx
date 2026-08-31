@@ -139,7 +139,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
           </div>
 
           {/* কন্টেন্ট বডি — ডিভাইডারের নিচ থেকে পর্যাপ্ত ব্রিদিং স্পেস (pt-5) */}
-          <div className="flex-1 overflow-y-auto px-6 pb-5 pt-5">
+          <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 pb-5 pt-5">
             {/* পলিসি টাইটেল ও বর্ণনা */}
             <div className="mb-4">
               <h4 className="font-body text-[15.5px] font-bold text-ink leading-snug">

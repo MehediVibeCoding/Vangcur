@@ -174,7 +174,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
           </div>
 
           {/* Content Body on Unified Seamless Canvas */}
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
             {/* Loading State */}
             {loading && (
               <div className="py-12 text-center font-body text-[13px] text-muted">

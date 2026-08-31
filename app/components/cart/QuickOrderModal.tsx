@@ -311,7 +311,7 @@ export default function QuickOrderModal() {
         </div>
 
         {/* Content List */}
-        <div className="flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
+        <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
           {cart.map((item) => (
             <div
               key={item.id}

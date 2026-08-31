@@ -246,7 +246,7 @@ function SearchDropdown({
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
-        <div className="overflow-y-auto">
+        <div className="sleek-scrollbar overflow-y-auto">
           <SearchDefaultPanel
             recentSearches={recentSearches}
             popularSearches={popularSearches}
@@ -268,7 +268,7 @@ function SearchDropdown({
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto">
+          <div className="sleek-scrollbar flex-1 overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border-base px-3.5 pb-1.5 pt-2 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
               <span>{lang === 'en' ? `${searchResults.length} products found` : `${searchResults.length}টি পণ্য পাওয়া গেছে`}</span>
               <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={onGoToSearch}>{t('সব দেখুন →')}</a>

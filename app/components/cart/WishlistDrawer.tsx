@@ -163,7 +163,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
           </div>
 
           {/* Product Items List */}
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
             {items.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center py-12 text-center">
                 <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
