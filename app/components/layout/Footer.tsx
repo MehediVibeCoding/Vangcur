@@ -8,7 +8,7 @@ import {
   DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
 } from '@/lib/footerData';
 import {
-  OPEN_ACCOUNT_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
+  OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
 } from '@/lib/uiEvents';
 import { sanitizeHref } from '@/lib/security';
 import { useT } from '@/lib/i18n/useT';
@@ -52,8 +52,6 @@ function computeFooterExtras(raw: { desc?: string; copy?: string; fb?: string; i
   return { desc, copy, social };
 }
 
-/* ---------------- সোশ্যাল আইকনসমূহ ---------------- */
-
 function FacebookIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -75,7 +73,7 @@ function InstagramIcon() {
 function TikTokIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
     </svg>
   );
 }
@@ -174,8 +172,6 @@ export default function Footer() {
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
-  const openAccount = () => window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
-  const openTrackOrder = () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
   const openOfferPage = () => window.dispatchEvent(new CustomEvent(OPEN_OFFER_PAGE_EVENT));
   const openInfo = (type: string) => window.dispatchEvent(new CustomEvent(OPEN_INFO_EVENT, { detail: { type } }));
 
@@ -188,7 +184,7 @@ export default function Footer() {
   return (
     <footer className="relative mt-12 overflow-hidden">
       
-      {/* ছবির উপরে পিওর কোডেড ভেক্টর ওয়েভ লেয়ার (Organic Top Wave) */}
+      {/* ছবির উপরে পিওর কোডেড ভেক্টর ওয়েভ লেয়ার */}
       <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
         <svg
           viewBox="0 0 1440 60"
@@ -209,7 +205,7 @@ export default function Footer() {
         </svg>
       </div>
 
-      {/* ইলাস্ট্রেশন — পান্ডা ও বাচ্চাদের গ্যাজেট লাইফস্টাইল ছবি */}
+      {/* ইলাস্ট্রেশন — গ্যাজেট লাইফস্টাইল ছবি */}
       <div className="relative aspect-[1536/606] w-full select-none pointer-events-none bg-[#D3E7FC]">
         <Image
           src="/footer-illustration.webp"
@@ -221,11 +217,11 @@ export default function Footer() {
         />
       </div>
 
-      {/* ফুটার কনটেন্ট — Nexiron স্টাইলে ৪-কলাম গ্রিড (#D3E7FC) */}
+      {/* ফুটার কনটেন্ট — ৪-কলাম গ্রিড */}
       <div className="bg-[#D3E7FC] px-5 pb-8 pt-8 md:px-10 lg:px-16">
         <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
           
-          {/* কলাম ১ (বামে): আসল ইমেজ লোগো, সাধারণ ট্যাগলাইন ও সেন্টার-অ্যালাইন সোশ্যাল আইকন */}
+          {/* কলাম ১ (বামে): ইমেজ লোগো, ট্যাগলাইন ও সোশ্যাল আইকনসমূহ */}
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
             <Link href="/" className="mb-2 inline-block">
               <Image
@@ -238,12 +234,10 @@ export default function Footer() {
               />
             </Link>
 
-            {/* কোনো ব্যাজ ছাড়া সাধারণ মার্জিত ট্যাগলাইন */}
             <p className="font-body text-[12px] font-bold uppercase tracking-[1.5px] text-brand-light mb-4">
               Your First Choice For Gadgets
             </p>
 
-            {/* ব্র্যান্ডের কালার অনুযায়ী সোশ্যাল মিডিয়া বাটনসমূহ */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
               <a
                 href={extras.social.fb}
@@ -297,7 +291,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* কলাম ২: গ্রাহক সেবা (Customer Care — পলিসি ও প্রয়োজনীয় লিঙ্কস) */}
+          {/* কলাম ২: গ্রাহক সেবা (Customer Care) */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Customer Care' : 'গ্রাহক সেবা'}
@@ -312,7 +306,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৩: কুইক লিঙ্কস */}
+          {/* কলাম ৩: কুইক লিঙ্কস (সরাসরি /account এবং /track-order রুটে লিংক) */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {t('কুইক লিঙ্কস')}
@@ -320,8 +314,8 @@ export default function Footer() {
             <ul className="space-y-3 font-body text-[13.5px]">
               <li><button className={colLinkClass} onClick={scrollTop}>{t('হোম')}</button></li>
               <li><button className={colLinkClass} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button></li>
-              <li><button className={colLinkClass} onClick={openAccount}>{t('মাই প্রোফাইল')}</button></li>
-              <li><button className={colLinkClass} onClick={openTrackOrder}>{t('ট্র্যাক অর্ডার')}</button></li>
+              <li><Link href="/account" className={colLinkClass}>{t('মাই প্রোফাইল')}</Link></li>
+              <li><Link href="/track-order" className={colLinkClass}>{t('ট্র্যাক অর্ডার')}</Link></li>
               <li>
                 <button
                   className={`${colLinkClass} font-bold text-amber-700 hover:text-amber-800`}
@@ -333,14 +327,13 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৪: যোগাযোগ (নির্দিষ্ট ক্রমানুযায়ী ৫টি আইটেম) */}
+          {/* কলাম ৪: যোগাযোগ */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Contact Us' : 'যোগাযোগ'}
             </h3>
 
             <ul className="space-y-3 font-body text-[13.5px] text-slate-700">
-              {/* ১. মোবাইল নম্বর */}
               <li>
                 <a href={contact.phoneHref} className="flex items-center gap-2 transition hover:text-brand-light font-medium">
                   <PhoneIcon />
@@ -348,7 +341,6 @@ export default function Footer() {
                 </a>
               </li>
 
-              {/* ২. ফেসবুক পেজ */}
               <li>
                 <a href={contact.fb} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 transition hover:text-brand-light font-medium">
                   <FacebookPageIcon />
@@ -356,7 +348,6 @@ export default function Footer() {
                 </a>
               </li>
 
-              {/* ৩. ফেসবুক গ্রুপ */}
               <li>
                 <a href={fbGroupLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 transition hover:text-brand-light font-medium">
                   <UsersGroupIcon />
@@ -364,7 +355,6 @@ export default function Footer() {
                 </a>
               </li>
 
-              {/* ৪. জিমেইল */}
               <li>
                 <a href={`mailto:${contact.email}`} className="flex items-center gap-2 transition hover:text-brand-light font-medium">
                   <MailIcon />
@@ -372,7 +362,6 @@ export default function Footer() {
                 </a>
               </li>
 
-              {/* ৫. লোকেশন (সবার নিচে) */}
               <li className="flex items-start gap-2">
                 <PinIcon />
                 <span>{contact.addr}</span>
@@ -382,7 +371,7 @@ export default function Footer() {
 
         </div>
 
-        {/* বটম কপিরাইট বার (১০০% সেন্টার-অ্যালাইন) */}
+        {/* বটম কপিরাইট বার */}
         <div className="mx-auto mt-8 max-w-[1300px] border-t border-blue-200/80 pt-6 text-center font-body text-xs font-semibold text-slate-600">
           {t(extras.copy)}
         </div>
