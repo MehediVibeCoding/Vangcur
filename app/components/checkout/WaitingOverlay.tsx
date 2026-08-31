@@ -1,3 +1,4 @@
+// [REPLACE] ফাইলের পাথ: app/components/checkout/WaitingOverlay.tsx
 'use client';
 
 import {
@@ -29,7 +30,7 @@ const lineIcon = {
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]" aria-hidden="true">
       <svg {...deco} width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
@@ -202,7 +203,6 @@ export default function WaitingOverlay() {
   useEffect(() => { orderRef.current = order; }, [order]);
 
   const openForPending = useCallback(async (id: string, orderNum: string, phone: string, opts?: { startMinimized?: boolean }) => {
-    // 🛡️ পার্মানেন্ট লুপ ব্লকার গার্ড
     if (typeof window !== 'undefined') {
       const alreadySeen = localStorage.getItem(`vc_confirm_seen_${id}`);
       const alreadyRejected = localStorage.getItem(`vc_reject_seen_${id}`);
@@ -318,7 +318,7 @@ export default function WaitingOverlay() {
   const isGuest = !currentUser;
   const advanceAmount = order.advancePaid || 200;
 
-  const dismiss强 = () => {
+  const dismissForce = () => {
     if (isRejected && orderId && typeof window !== 'undefined') {
       try { localStorage.setItem(`vc_reject_seen_${orderId}`, '1'); } catch { /* ignore */ }
     }
@@ -330,7 +330,7 @@ export default function WaitingOverlay() {
   };
 
   const retryOrder = () => {
-    dismiss强();
+    dismissForce();
     router.push('/');
   };
 
@@ -344,13 +344,17 @@ export default function WaitingOverlay() {
     setTimeout(() => setCopyLabel(lang === 'en' ? 'Copy' : 'কপি'), 2000);
   };
 
+  // 🌟 নতুন সিগনেচার ফ্রস্টেড গ্লাস ফ্লোটিং বাবল (মিনিমাইজড অবস্থা)
   if (minimized) {
     return (
       <button
         onClick={() => setMinimized(false)}
-        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 font-body text-[12.5px] font-bold text-white shadow-sh3 transition-brand duration-brand hover:bg-brand-primary active:scale-95"
+        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light active:scale-95 animate-section-reveal"
       >
-        <span className="inline-block h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+        <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+        </span>
         <span>{lang === 'en' ? `${order.orderNum} processing...` : `${order.orderNum} প্রসেস হচ্ছে...`}</span>
       </button>
     );
@@ -361,10 +365,10 @@ export default function WaitingOverlay() {
       {/* ব্যাকড্রপ ব্লার */}
       <div
         className="fixed inset-0 z-[1200] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={() => (isPending ? setMinimized(true) : dismiss强())}
+        onClick={() => (isPending ? setMinimized(true) : dismissForce())}
       />
 
-      {/* 🌟 মোবাইলে ১০০% এজ-টু-এজ ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মোডাল */}
+      {/* মোবাইলে ১০০% এজ-টু-এজ ফুলস্ক্রিন ও ডেস্কে সেন্ট্রাল মোডাল */}
       <div className="fixed inset-0 z-[1205] flex items-center justify-center p-0 sm:p-4">
         <div className="no-scrollbar relative w-full h-full min-h-dvh sm:min-h-0 sm:h-auto sm:max-w-[440px] sm:max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
