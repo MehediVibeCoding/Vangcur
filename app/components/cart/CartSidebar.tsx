@@ -1,561 +1,412 @@
-// [REPLACE] ফাইলের পাথ: app/components/cart/CartSidebar.tsx
-'use client';
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
-import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
-import { useAuthStore } from '@/lib/store/authStore';
-import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { showToast } from '@/lib/toast';
-import { useT } from '@/lib/i18n/useT';
-import { OPEN_BULK_ORDER_EVENT } from '@/lib/uiEvents';
-import { MAX_ONLINE_ORDER_TOTAL } from '@/lib/checkoutData';
-import {
-  getAppliedCoupon,
-  saveAppliedCoupon,
-  removeAppliedCoupon,
-  validateCoupon,
-  recalculateDiscount,
-  COUPON_CHANGE_EVENT,
-  type AppliedCoupon,
-} from '@/lib/couponData';
-import type { Product } from '@/types';
+import React, { useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/lib/store/cartStore";
+import { useLanguageStore } from "@/lib/store/languageStore";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/bodyScrollLock";
 
-function CartItemThumb({ emoji }: { emoji?: string }) {
-  const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
-  if (isUrl) {
-    return (
-      <img
-        src={optimizeCloudinaryUrl(emoji, 120)}
-        alt=""
-        className="h-12 w-12 shrink-0 rounded-xl border border-white/80 bg-white object-cover shadow-xs"
-        loading="lazy"
-        decoding="async"
-      />
-    );
-  }
-  return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-2xl shadow-xs">
-      {emoji || '📦'}
-    </span>
-  );
-}
+// Header Watermark Gadget Line-Art (14% Opacity)
+const HeaderDecor: React.FC = () => (
+  <svg
+    className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.14] text-ink"
+    viewBox="0 0 400 90"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="none"
+  >
+    {/* Headphones Line-Art */}
+    <path
+      d="M25 65 C25 35, 65 35, 65 65"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+    <rect x="20" y="55" width="10" height="18" rx="5" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="60" y="55" width="10" height="18" rx="5" stroke="currentColor" strokeWidth="1.5" />
 
-function NavCartSvgIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
-  );
-}
+    {/* Smartwatch Line-Art */}
+    <rect x="110" y="32" width="22" height="28" rx="6" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M115 32 V22 H127 V32" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M115 60 V70 H127 V60" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="121" cy="46" r="5" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
 
-function TrashIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-  );
-}
+    {/* Gamepad / Controller Line-Art */}
+    <rect x="175" y="35" width="45" height="25" rx="8" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M185 43 H191 M188 40 V46" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="206" cy="43" r="2" fill="currentColor" />
+    <circle cx="212" cy="47" r="2" fill="currentColor" />
 
-function CouponSvgIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
-      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
-      <line x1="12" y1="9" x2="12" y2="15" strokeDasharray="2 2" />
-    </svg>
-  );
-}
+    {/* Phone / Tablet Line-Art */}
+    <rect x="260" y="25" width="28" height="48" rx="5" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="270" y1="30" x2="278" y2="30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="274" cy="65" r="2" stroke="currentColor" strokeWidth="1" />
 
-function LockSecurityIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="10.5" width="14" height="10" rx="3" />
-      <path d="M8.25 10.5V8a3.75 3.75 0 0 1 7.5 0v2.5" />
-    </svg>
-  );
-}
+    {/* Earbuds Case Line-Art */}
+    <rect x="330" y="38" width="30" height="24" rx="8" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="330" y1="48" x2="360" y2="48" stroke="currentColor" strokeWidth="1" />
+    <circle cx="340" cy="43" r="2" fill="currentColor" />
+    <circle cx="350" cy="43" r="2" fill="currentColor" />
 
-function IconSpinner() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="animate-spin">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.75" opacity="0.22" />
-      <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
-    </svg>
-  );
-}
+    {/* Connecting Circuit Waves */}
+    <path
+      d="M0 78 Q 90 70, 180 82 T 360 76 T 400 80"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeDasharray="4 4"
+    />
+  </svg>
+);
 
-function IconCheck() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4.5 12.5 9.5 17.5 19.5 6" />
-    </svg>
-  );
-}
-
-function HeaderDecor() {
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
-      <svg width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 13a8 8 0 0 1 16 0" />
-        <rect x="3" y="13" width="4" height="6" rx="1.5" />
-        <rect x="17" y="13" width="4" height="6" rx="1.5" />
-      </svg>
-      <svg width="26" height="26" className="absolute right-14 top-3 rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="7" y="2.5" width="10" height="15" rx="3" />
-        <path d="M10 5.5h4" />
-        <circle cx="12" cy="20" r="1.6" />
-      </svg>
-    </div>
-  );
-}
-
-interface CartSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
-  const { t, lang } = useT();
+export default function CartSidebar() {
   const router = useRouter();
-  const supabase = useRef(createClient()).current;
-  const currentUser = useAuthStore((s) => s.currentUser);
-  
-  const cart = useCartStore((s) => s.cart);
-  const prodsRef = useRef<Product[]>([]);
+  const { lang } = useLanguageStore();
 
-  // কুপন স্টেট
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [couponError, setCouponError] = useState('');
-
-  // চেকআউট বাটন লোডিং ও সাকসেস ট্রানজিশন স্টেট
-  const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
-
-  useEffect(() => {
-    router.prefetch('/checkout');
-    router.prefetch('/');
-  }, [router]);
-
-  useEffect(() => {
-    setAppliedCoupon(getAppliedCoupon());
-    const onCouponChange = (e: Event) => {
-      const c = (e as CustomEvent<{ coupon: AppliedCoupon | null }>).detail?.coupon;
-      setAppliedCoupon(c || null);
-    };
-    window.addEventListener(COUPON_CHANGE_EVENT, onCouponChange);
-    return () => window.removeEventListener(COUPON_CHANGE_EVENT, onCouponChange);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const customRows = await fetchCustomProducts(supabase);
-      if (!cancelled && customRows.length) {
-        prodsRef.current = customRows;
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [supabase]);
-
-  useEffect(() => {
-    const onQuickCart = (e: Event) => {
-      const id = (e as CustomEvent).detail?.id;
-      if (id === undefined) return;
-      const res = useCartStore.getState().addToCart(prodsRef.current, id, 1);
-      if (res.ok) showToast(t('কার্টে যোগ হয়েছে'));
-      else if (res.reason === 'stock') showToast(t('স্টক শেষ!'));
-    };
-    window.addEventListener(QUICK_CART_EVENT, onQuickCart);
-    return () => window.removeEventListener(QUICK_CART_EVENT, onQuickCart);
-  }, [t]);
-
-  useEffect(() => {
-    if (isOpen) lockBody();
-    else {
-      unlockBody();
-      setCheckoutStatus('idle');
+  // Safely support both standard and alternative Zustand store field naming
+  const cartStore = useCartStore();
+  const items = cartStore.items || cartStore.cart || [];
+  const isOpen = Boolean(cartStore.isCartOpen ?? cartStore.isOpen);
+  const closeCart = () => {
+    if (typeof cartStore.closeCart === "function") {
+      cartStore.closeCart();
+    } else if (typeof cartStore.setIsCartOpen === "function") {
+      cartStore.setIsCartOpen(false);
     }
+  };
+  const updateQuantity = cartStore.updateQuantity;
+  const removeItem = cartStore.removeItem || cartStore.removeFromCart;
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      lockBodyScroll();
+    } else {
+      unlockBodyScroll();
+    }
+    return () => {
+      unlockBodyScroll();
+    };
   }, [isOpen]);
 
-  const handleQty = (id: number | string, delta: number) => {
-    const res = useCartStore.getState().updateQty(prodsRef.current, id, delta);
-    if (!res.ok && res.reason === 'stock') {
-      showToast(t(`সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে ({count}টি)`).replace('{count}', String(res.maxStock)));
-    }
-  };
-
-  const handleRemove = (id: number | string) => {
-    useCartStore.getState().removeItem(id);
-    showToast(t('কার্ট থেকে সরানো হয়েছে'));
-  };
-
-  const subtotal = cartTotal(cart);
-  const totalCount = cartCount(cart);
-
-  // কুপন ডিসকাউন্ট রিক্যালকুলেশন
-  const { discountAmount, isValid: isCouponStillValid, reason: couponInvalidReason } = useMemo(() => {
-    return recalculateDiscount(appliedCoupon, subtotal);
-  }, [appliedCoupon, subtotal]);
-
-  // 🛡️ শুধুমাত্র ড্রয়ার ওপেন থাকলেই কুপন রিমুভ চেক চলবে (ব্যাকগ্রাউন্ড ডিলিট ফিক্স)
+  // Handle ESC key press
   useEffect(() => {
-    if (!isOpen) return;
-    if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
-      removeAppliedCoupon();
-      if (cart.length && couponInvalidReason) {
-        showToast(couponInvalidReason, 'warning');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        closeCart();
       }
-    }
-  }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার
-  const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
-    if (e) e.preventDefault();
-    setCouponError('');
-    const clean = (customCode !== undefined ? customCode : couponCode).trim().toUpperCase();
-    if (!clean) {
-      setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
-      showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
-      return false;
-    }
+  // Calculate totals
+  const subtotal = items.reduce((sum, item) => {
+    const itemPrice = Number(item.price) || 0;
+    const qty = Number(item.quantity) || 1;
+    return sum + itemPrice * qty;
+  }, 0);
 
-    if (subtotal <= 0) {
-      showToast(lang === 'en' ? 'Add products to cart first' : 'প্রথমে কার্টে পণ্য যোগ করুন');
-      return false;
-    }
+  const totalItemsCount = items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
-    setCouponLoading(true);
-    const res = await validateCoupon(supabase, clean, subtotal, currentUser?.phone, currentUser?.id);
-    setCouponLoading(false);
-
-    if (!res.ok || !res.coupon) {
-      const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
-      setCouponError(errMsg);
-      showToast(errMsg, 'error');
-      return false;
-    }
-
-    saveAppliedCoupon(res.coupon);
-    setAppliedCoupon(res.coupon);
-    setCouponCode('');
-    setCouponError('');
-    showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
-    return true;
-  };
-
-  const handleRemoveCoupon = () => {
-    removeAppliedCoupon();
-    setAppliedCoupon(null);
-    setCouponError('');
-    showToast(lang === 'en' ? 'Coupon removed' : 'কুপন সরানো হয়েছে');
-  };
-
-  const finalTotal = Math.max(0, subtotal - discountAmount);
-
-  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ চেকআউট ট্রানজিশন হ্যান্ডলার
-  const handleCheckout = async () => {
-    if (!cart.length || checkoutStatus !== 'idle') {
-      if (!cart.length) showToast(t('কার্ট খালি!'));
-      return;
-    }
-
-    let currentDiscount = discountAmount;
-
-    // ১. যদি কুপন কোড বক্সে লেখা থাকে কিন্তু প্রয়োগে ক্লিক করা না হয়ে থাকে
-    if (couponCode.trim() && !appliedCoupon) {
-      setCheckoutStatus('verifying');
-      const success = await handleApplyCoupon(undefined, couponCode);
-      if (!success) {
-        setCheckoutStatus('idle');
-        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
-      }
-
-      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ ব্যাজ ও ডিসকাউন্ট দেখার জন্য ঠিক ৯০০ms অপেক্ষা
-      await new Promise((r) => setTimeout(r, 900));
-
-      const freshlyApplied = getAppliedCoupon();
-      if (freshlyApplied) {
-        currentDiscount = freshlyApplied.discountAmount || 0;
-      }
-      setCheckoutStatus('success');
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
-    const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
-
-    // ২. ২০,০০০ টাকার বেশি বিল হলে বাল্ক অর্ডার মডাল ওপেন
-    if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
-      setCheckoutStatus('idle');
-      onClose();
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
-      }
-      return;
-    }
-
-    try {
-      sessionStorage.removeItem('vc_quick_order_items');
-    } catch {
-      // ignore
-    }
-    onClose();
-    router.push('/checkout');
-  };
-
-  const goToProducts = () => {
-    onClose();
-    document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth' });
+  const handleCheckoutClick = () => {
+    closeCart();
+    router.push("/checkout");
   };
 
   return (
-    <>
+    <div
+      className={`fixed inset-0 z-50 overflow-hidden transition-all duration-300 ease-in-out ${
+        isOpen
+          ? "visible pointer-events-auto opacity-100"
+          : "invisible pointer-events-none opacity-0"
+      }`}
+      aria-hidden={!isOpen}
+    >
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand ${
-          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-in-out ${
+          isOpen ? "opacity-100" : "opacity-0"
         }`}
-        onClick={onClose}
+        onClick={closeCart}
       />
 
-      {/* Main Cart Drawer */}
-      <div
-        className={`fixed inset-0 z-[965] flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:inset-y-0 sm:left-auto sm:right-0 sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:max-w-[440px] sm:rounded-[28px] ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+      {/* Drawer Panel */}
+      <aside
+        className={`absolute top-0 right-0 h-full w-full max-w-[420px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Header */}
-        <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
+        {/* Header with Gadget Line-Art */}
+        <div className="relative border-b border-ink/10 px-5 py-4 flex-shrink-0 overflow-hidden">
           <HeaderDecor />
           <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h3 className="font-body text-[17px] font-extrabold text-ink">
-                🛒 {lang === 'en' ? 'Your Cart' : 'আপনার কার্ট'}
-              </h3>
-              <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
-                {lang === 'en'
-                  ? `${totalCount} item(s) selected`
-                  : `${totalCount}টি প্রোডাক্ট নির্বাচিত`}
-              </p>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-brand-light/15 text-brand-light flex items-center justify-center">
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-body text-[17px] sm:text-[18px] font-bold text-ink">
+                  {lang === "bn" ? "আপনার শপিং কার্ট" : "Your Shopping Cart"}
+                </h2>
+                <p className="font-body text-[12px] font-semibold text-ink/60">
+                  {lang === "bn"
+                    ? `${totalItemsCount} টি আইটেম যুক্ত রয়েছে`
+                    : `${totalItemsCount} items added`}
+                </p>
+              </div>
             </div>
+
+            {/* Frosted Close Button */}
             <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-              aria-label="Close"
+              onClick={closeCart}
+              className="w-8 h-8 rounded-full bg-white/70 backdrop-blur-md border border-ink/10 flex items-center justify-center text-ink/70 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-sm"
+              aria-label="Close cart"
             >
-              ✕
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
         </div>
 
-        {/* Body / Scrollable Cart Items */}
-        <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-3.5">
-          {cart.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center py-10">
-              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/80 text-brand-light shadow-sm">
-                <NavCartSvgIcon className="h-8 w-8" />
-              </div>
-              <p className="mb-1 font-body text-[15px] font-bold text-ink">
-                {t('আপনার কার্ট খালি')}
-              </p>
-              <p className="mb-5 max-w-xs font-body text-[12.5px] text-muted">
-                {t('পছন্দের প্রোডাক্ট যোগ করে কেনাকাটা শুরু করুন')}
-              </p>
-              <button
-                onClick={goToProducts}
-                className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-brand hover:brightness-[1.03] active:scale-95"
+        {/* Content Body */}
+        {items.length === 0 ? (
+          /* Empty State */
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-20 h-20 rounded-full bg-brand-light/10 text-brand-light flex items-center justify-center mb-4 border border-brand-light/20 shadow-sm">
+              <svg
+                className="w-10 h-10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                {t('প্রোডাক্ট দেখুন')} →
-              </button>
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
             </div>
-          ) : (
-            <div className="space-y-3.5">
-              {cart.map((item) => (
+            <h3 className="font-body text-[16px] font-bold text-ink mb-1">
+              {lang === "bn" ? "কার্ট বর্তমানে খালি আছে" : "Your cart is currently empty"}
+            </h3>
+            <p className="font-body text-[13px] text-ink/60 max-w-[240px] mb-6">
+              {lang === "bn"
+                ? "আপনার পছন্দের আকর্ষণীয় গ্যাজেটগুলো কার্টে যুক্ত করুন।"
+                : "Add your favorite trending gadgets to your cart."}
+            </p>
+            <button
+              onClick={closeCart}
+              className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-[14px] font-bold text-white shadow-sh2 hover:brightness-[1.03] active:scale-95 transition-all"
+            >
+              {lang === "bn" ? "কেনাকাটা শুরু করুন" : "Start Shopping"}
+            </button>
+          </div>
+        ) : (
+          /* Items List */
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+            {items.map((item) => {
+              const itemPrice = Number(item.price) || 0;
+              const itemQty = Number(item.quantity) || 1;
+              const itemTotal = itemPrice * itemQty;
+              const displayName =
+                lang === "bn" && item.nameBn ? item.nameBn : item.name;
+
+              return (
                 <div
-                  key={item.id}
-                  className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
+                  key={`${item.id}-${item.selectedColor || "default"}-${item.selectedSize || "default"}`}
+                  className="bg-white/85 backdrop-blur-sm rounded-2xl p-3.5 border border-ink/5 shadow-sm flex items-center gap-3.5 transition-all hover:bg-white"
                 >
-                  <CartItemThumb emoji={item.emoji} />
+                  {/* Product Image */}
+                  <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-brand-bg/60 border border-ink/5 flex-shrink-0">
+                    <Image
+                      src={item.image || "/vangcur-logo.png"}
+                      alt={displayName || "Product"}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
-                      {item.name}
-                    </div>
-                    <div className="mt-0.5 font-body text-[12px] text-muted">
-                      ৳{item.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'}
-                    </div>
+                  {/* Product Details */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-body text-[13.5px] sm:text-[14px] font-bold text-ink truncate mb-1">
+                      {displayName}
+                    </h4>
 
-                    <div className="mt-2.5 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleQty(item.id, -1)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
-                        aria-label="Decrease"
-                      >
-                        −
-                      </button>
-                      <span className="min-w-[18px] text-center font-body text-xs font-bold text-ink">
-                        {item.qty}
+                    {/* Variant Badge (if any) */}
+                    {(item.selectedColor || item.selectedSize) && (
+                      <p className="font-body text-[11.5px] font-semibold text-ink/60 mb-1.5 flex items-center gap-1.5">
+                        {item.selectedColor && (
+                          <span className="bg-brand-bg px-2 py-0.5 rounded-md border border-ink/5">
+                            {item.selectedColor}
+                          </span>
+                        )}
+                        {item.selectedSize && (
+                          <span className="bg-brand-bg px-2 py-0.5 rounded-md border border-ink/5">
+                            {item.selectedSize}
+                          </span>
+                        )}
+                      </p>
+                    )}
+
+                    {/* Price and Quantity Controls */}
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="font-body text-[14px] font-bold text-brand-light">
+                        ৳{itemTotal.toLocaleString("en-US")}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => handleQty(item.id, 1)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
-                        aria-label="Increase"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col items-end justify-between self-stretch pl-1">
-                    <div className="font-body text-[14px] font-bold text-ink">
-                      ৳{(item.price * item.qty).toLocaleString('en-US')}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(item.id)}
-                      title={t('সরান')}
-                      className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {/* কুপন সেকশন */}
-              <div className="pt-0.5">
-                {appliedCoupon && (
-                  <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
-                    <span>{lang === 'en' ? 'Subtotal' : 'সাবটোটাল'}:</span>
-                    <span>৳{subtotal.toLocaleString('en-US')}</span>
-                  </div>
-                )}
-
-                {appliedCoupon ? (
-                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs animate-section-reveal">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
-                        ✓
-                      </span>
-                      <div>
-                        <div className="font-body text-[12.5px] font-bold text-emerald-800">
-                          {appliedCoupon.code}
-                        </div>
-                        <div className="font-body text-[11px] font-medium text-emerald-700">
-                          {appliedCoupon.freeShipping
-                            ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
-                            : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleRemoveCoupon}
-                      className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
-                      title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
-                      <CouponSvgIcon />
-                      <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
-                    </div>
-
-                    <form onSubmit={handleApplyCoupon} className="relative flex flex-col gap-1">
-                      <div className="relative flex items-center">
-                        <input
-                          type="text"
-                          value={couponCode}
-                          onFocus={() => setIsInputFocused(true)}
-                          onBlur={() => setIsInputFocused(false)}
-                          onChange={(e) => {
-                            setCouponCode(e.target.value.toUpperCase());
-                            if (couponError) setCouponError('');
-                          }}
-                          placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
-                          className={`w-full rounded-[10px] border bg-transparent py-2.5 pl-3.5 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 ${
-                            couponError ? 'border-red-400 bg-red-50/40 focus:border-red-500' : 'border-ink/20 focus:border-brand-light'
-                          }`}
-                        />
+                      {/* Stepper Buttons */}
+                      <div className="flex items-center rounded-lg bg-brand-bg/80 border border-ink/10 p-0.5">
                         <button
-                          type="submit"
-                          disabled={couponLoading}
-                          className={`absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold text-brand-light transition-opacity active:scale-95 ${
-                            isInputFocused && !couponCode.trim() ? 'opacity-40' : 'opacity-100'
-                          }`}
+                          onClick={() => {
+                            if (itemQty > 1 && updateQuantity) {
+                              updateQuantity(item.id, itemQty - 1);
+                            } else if (removeItem) {
+                              removeItem(item.id);
+                            }
+                          }}
+                          className="w-6 h-6 rounded-md bg-white text-ink/70 flex items-center justify-center hover:text-ink active:scale-90 transition-all font-bold text-[13px] shadow-xs"
+                          aria-label="Decrease quantity"
                         >
-                          {couponLoading
-                            ? (lang === 'en' ? 'Applying...' : 'যাচাই...')
-                            : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
+                          -
+                        </button>
+                        <span className="w-7 text-center font-body text-[12.5px] font-bold text-ink">
+                          {itemQty}
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (updateQuantity) {
+                              updateQuantity(item.id, itemQty + 1);
+                            }
+                          }}
+                          className="w-6 h-6 rounded-md bg-white text-ink/70 flex items-center justify-center hover:text-ink active:scale-90 transition-all font-bold text-[13px] shadow-xs"
+                          aria-label="Increase quantity"
+                        >
+                          +
                         </button>
                       </div>
-                      {couponError && (
-                        <p className="pl-1 font-body text-[11px] font-semibold text-red-500">{couponError}</p>
-                      )}
-                    </form>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        {cart.length > 0 && (
-          <div className="shrink-0 px-6 pb-6 pt-3">
-            <div className="mb-4 flex items-center justify-between px-2">
-              <span className="font-body text-[13.5px] font-bold text-muted">
-                {t('মোট')}:
-              </span>
-              <span className="font-body text-[18px] font-extrabold text-brand-light">
-                ৳{finalTotal.toLocaleString('en-US')}
-              </span>
-            </div>
-
-            <button
-              onClick={handleCheckout}
-              disabled={checkoutStatus !== 'idle'}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-90"
-            >
-              {checkoutStatus === 'verifying' ? (
-                <>
-                  <IconSpinner />
-                  <span>{lang === 'en' ? 'Verifying Coupon...' : 'কুপন যাচাই হচ্ছে...'}</span>
-                </>
-              ) : checkoutStatus === 'success' ? (
-                <>
-                  <IconCheck />
-                  <span>{lang === 'en' ? 'Success!' : 'সফল!'}</span>
-                </>
-              ) : (
-                <span>{lang === 'en' ? 'Checkout' : 'চেকআউট করুন'}</span>
-              )}
-            </button>
-
-            <div className="mt-2.5 flex items-center justify-center gap-1.5 font-body text-[11px] font-medium text-muted">
-              <LockSecurityIcon />
-              <span>
-                {lang === 'en'
-                  ? '100% Safe & Secure Checkout'
-                  : '১০০% নিরাপদ ও সুরক্ষিত চেকআউট'}
-              </span>
-            </div>
+                  {/* Remove Button */}
+                  <button
+                    onClick={() => {
+                      if (removeItem) {
+                        removeItem(item.id);
+                      }
+                    }}
+                    className="text-ink/40 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all active:scale-90 flex-shrink-0"
+                    aria-label="Remove item"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
-      </div>
-    </>
+
+        {/* Footer / Checkout CTA */}
+        {items.length > 0 && (
+          <div className="border-t border-ink/10 bg-white/90 backdrop-blur-md p-4 sm:p-5 space-y-3.5 flex-shrink-0">
+            {/* Subtotal summary */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between font-body text-[14px] text-ink/70">
+                <span>{lang === "bn" ? "মোট আইটেম" : "Total Items"}</span>
+                <span className="font-bold text-ink">
+                  {lang === "bn"
+                    ? `- ${totalItemsCount} পিছ`
+                    : `- ${totalItemsCount} Pcs`}
+                </span>
+              </div>
+              <div className="flex items-center justify-between font-body text-[16px] font-bold text-ink">
+                <span>{lang === "bn" ? "সাবটোটাল" : "Subtotal"}</span>
+                <span className="text-[17px] text-brand-light">
+                  ৳{subtotal.toLocaleString("en-US")}
+                </span>
+              </div>
+            </div>
+
+            {/* Delivery Assurance */}
+            <div className="flex items-center gap-2 rounded-xl bg-brand-bg/70 px-3 py-2 border border-brand-light/20 text-[12px] font-semibold text-ink/80">
+              <svg
+                className="w-4 h-4 text-brand-light flex-shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>
+                {lang === "bn"
+                  ? "ক্যাশ অন ডেলিভারি এবং দ্রুততম হোম ডেলিভারি সুবিধা"
+                  : "Cash on Delivery & Express Fast Delivery"}
+              </span>
+            </div>
+
+            {/* Primary Checkout Button */}
+            <button
+              onClick={handleCheckoutClick}
+              className="w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 hover:brightness-[1.03] active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <span>{lang === "bn" ? "চেকআউট করুন" : "Proceed to Checkout"}</span>
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </aside>
+    </div>
   );
 }
