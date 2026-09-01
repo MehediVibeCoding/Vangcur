@@ -44,6 +44,54 @@ const STATE_BG: Record<string, string> = {
   rain: 'bg-gradient-to-b from-[#3d4451] via-[#5a6472] to-[#7d8a99]',
 };
 
+function IconOrdersBox({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16.5 9.4 7.55 4.24a1.8 1.8 0 0 0-1.8 0L2.5 6.1a1.8 1.8 0 0 0-.9 1.56v8.68a1.8 1.8 0 0 0 .9 1.56l3.25 1.86a1.8 1.8 0 0 0 1.8 0l8.95-5.16a1.8 1.8 0 0 0 .9-1.56V9.4z" />
+      <polyline points="3.29 7 12 12 20.71 7" />
+      <line x1="12" y1="22" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function IconCartBag({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  );
+}
+
+function IconBellNotify({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
+function IconLockAlt({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
+function IconEmptyBox({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
+      <path d="M3 8.5v7L12 20l9-4.5v-7" />
+      <path d="M12 13v7" />
+    </svg>
+  );
+}
+
 function ItemThumb({ imgVal }: { imgVal?: string }) {
   const isUrl = typeof imgVal === 'string' && imgVal.startsWith('http');
   if (isUrl) {
@@ -59,9 +107,9 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
     );
   }
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-xl shadow-xs">
-      {imgVal || '📦'}
-    </span>
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-bg/40 text-brand-light shadow-xs">
+      <IconOrdersBox className="h-5 w-5" />
+    </div>
   );
 }
 
@@ -202,7 +250,7 @@ export default function AccountClient() {
                 stock: Number(p.stock) || 0,
                 price: Number(p.price) || 0,
                 name: p.name || '',
-                img: imgsArr[0] || '📦',
+                img: imgsArr[0] || '',
               };
             });
             setLiveStockMap(map);
@@ -291,7 +339,7 @@ export default function AccountClient() {
     const live = liveStockMap[String(item.prodId)];
     const price = live?.price || 0;
     const name = live?.name || item.prodName || 'Product';
-    const emoji = live?.img || '📦';
+    const emoji = live?.img || '';
 
     useCartStore.getState().addToCart(
       [{
@@ -299,7 +347,7 @@ export default function AccountClient() {
         name,
         price,
         old: price,
-        imgs: [emoji],
+        imgs: emoji ? [emoji] : [],
         stock: live?.stock || 10,
         cat: 'general',
         cats: ['general'],
@@ -446,8 +494,8 @@ export default function AccountClient() {
       <main className="mx-auto max-w-[1100px] px-4 pb-16 pt-4 md:px-6">
         {!currentUser ? (
           <div className="mx-auto my-12 max-w-[420px] rounded-[28px] border border-white/80 bg-white/85 p-8 text-center shadow-sh2 backdrop-blur-md animate-section-reveal">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light text-2xl shadow-xs">
-              🔒
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light shadow-xs">
+              <IconLockAlt />
             </div>
             <h1 className="mb-1.5 font-body text-xl font-bold text-ink">
               {t('প্রোফাইল দেখতে লগইন করুন')}
@@ -694,7 +742,12 @@ export default function AccountClient() {
                 {drafts.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
-                      <div className="font-body text-[13px] font-bold text-ink">🛒 {t('অর্ডার করতে চেয়েছিলেন')}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                          <IconCartBag className="h-3.5 w-3.5" />
+                        </span>
+                        <div className="font-body text-[13.5px] font-extrabold text-ink">{t('অর্ডার করতে চেয়েছিলেন')}</div>
+                      </div>
                       {drafts.length > 1 && (
                         <button
                           onClick={handleClearAllDrafts}
@@ -721,7 +774,7 @@ export default function AccountClient() {
                               📅 {dateStr} · {items.length} {t('আইটেম')}
                             </div>
                             <div className="mt-1.5 flex items-center gap-2.5">
-                              {firstItem ? <ItemThumb imgVal={(firstItem.imgs || ['📦'])[0]} /> : <ItemThumb />}
+                              {firstItem ? <ItemThumb imgVal={(firstItem.imgs || [])[0]} /> : <ItemThumb />}
                               <div className="min-w-0 flex-1 truncate font-body text-xs font-bold text-ink">
                                 {prodName}
                               </div>
@@ -754,7 +807,12 @@ export default function AccountClient() {
                 {stockNotifs.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
-                      <div className="font-body text-[13px] font-bold text-ink">🔔 {t('স্টকে আসলে জানানো')}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                          <IconBellNotify className="h-3.5 w-3.5" />
+                        </span>
+                        <div className="font-body text-[13.5px] font-extrabold text-ink">{t('স্টকে আসলে জানানো')}</div>
+                      </div>
                       {stockNotifs.length > 1 && (
                         <button
                           onClick={handleClearStockNotifs}
@@ -787,12 +845,14 @@ export default function AccountClient() {
                               </div>
                               <div className="mt-0.5">
                                 {isBackInStock ? (
-                                  <span className="font-body text-[11px] font-extrabold text-emerald-700">
-                                    {lang === 'en' ? 'Back in Stock! 🎉' : 'স্টকে এসেছে! 🎉'}
+                                  <span className="inline-flex items-center gap-1.5 font-body text-[11px] font-extrabold text-emerald-700">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span>{lang === 'en' ? 'Back in Stock!' : 'স্টকে এসেছে!'}</span>
                                   </span>
                                 ) : (
-                                  <span className="font-body text-[11px] font-bold text-amber-700">
-                                    {lang === 'en' ? 'Out of Stock ⏳' : 'স্টক নেই ⏳'}
+                                  <span className="inline-flex items-center gap-1.5 font-body text-[11px] font-bold text-amber-700">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                    <span>{lang === 'en' ? 'Out of Stock' : 'স্টক নেই'}</span>
                                   </span>
                                 )}
                               </div>
@@ -833,9 +893,14 @@ export default function AccountClient() {
               {/* ডান কলাম: আমার অর্ডার সমূহ */}
               <div>
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="font-body text-[16px] font-extrabold text-ink">
-                    📦 {t('আমার অর্ডার সমূহ')}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                      <IconOrdersBox className="h-4 w-4" />
+                    </span>
+                    <span className="font-body text-[16px] font-extrabold text-ink">
+                      {t('আমার অর্ডার সমূহ')}
+                    </span>
+                  </div>
                   {orders.length > 0 && (
                     <Link
                       href="/account/orders"
@@ -854,7 +919,9 @@ export default function AccountClient() {
                     </div>
                   ) : orders.length === 0 ? (
                     <div className="py-12 text-center">
-                      <div className="mx-auto mb-3 text-[42px]">📦</div>
+                      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/30 text-brand-light/70 shadow-xs">
+                        <IconEmptyBox />
+                      </div>
                       <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
                       <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
                       <Link
@@ -881,7 +948,7 @@ export default function AccountClient() {
 
       <Footer />
 
-      {/* প্রিমিয়াম ফ্রস্টেড গ্লাস লগআউট কনফার্মেশন মোডাল (No Emoji, Pure SVG Badge) */}
+      {/* প্রিমিয়াম ফ্রস্টেড গ্লাস লগআউট কনফার্মেশন মোডাল */}
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[1200] flex items-center justify-center bg-ink/55 p-4 backdrop-blur-[3px] animate-section-reveal"
