@@ -3,72 +3,134 @@ import type { CurrentUser, Order, OrderStats, DraftOrder, StockNotification, Cel
 import { logWarn } from './logger';
 
 const SCENERY_BY_STATE: Record<string, string> = {
-  dawn: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
-           <path d="M0,42 Q80,18 170,30 T340,24 Q375,32 400,38 L400,85 L0,85 Z" fill="#2E1537" opacity="0.45" />
-           <path d="M0,54 Q100,32 210,44 T400,42 L400,85 L0,85 Z" fill="#3D1C2E" opacity="0.75" />
-           <polygon points="35,85 45,35 55,85" fill="#240D1D" />
-           <polygon points="48,85 58,24 68,85" fill="#1C0916" />
-           <polygon points="60,85 70,40 80,85" fill="#240D1D" />
-           <polygon points="310,85 322,30 334,85" fill="#240D1D" />
-           <polygon points="325,85 336,18 347,85" fill="#1C0916" />
-           <polygon points="340,85 350,34 360,85" fill="#240D1D" />
-           <path d="M0,68 Q120,52 240,62 T400,60 L400,85 L0,85 Z" fill="#180713" />
+  dawn: `<svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+           <path d="M0,42 Q80,18 170,30 T340,24 Q375,32 400,38 L400,100 L0,100 Z" fill="#2E1537" opacity="0.45" />
+           <path d="M0,54 Q100,32 210,44 T400,42 L400,100 L0,100 Z" fill="#3D1C2E" opacity="0.75" />
+           
+           <polygon points="35,100 45,35 55,100" fill="#240D1D" />
+           <polygon points="48,100 58,24 68,100" fill="#1C0916" />
+           <polygon points="60,100 70,40 80,100" fill="#240D1D" />
+           
+           <polygon points="310,100 322,30 334,100" fill="#240D1D" />
+           <polygon points="325,100 336,18 347,100" fill="#1C0916" />
+           <polygon points="340,100 350,34 360,100" fill="#240D1D" />
+           
+           <path d="M0,64 Q120,48 250,58 T400,56 L400,100 L0,100 Z" fill="#180713" />
          </svg>`,
-  morning: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
-              <path d="M0,38 Q90,14 190,26 T370,22 Q390,28 400,34 L400,85 L0,85 Z" fill="#2B6F96" opacity="0.35" />
-              <path d="M0,50 Q110,28 220,40 T400,38 L400,85 L0,85 Z" fill="#1B4D24" opacity="0.7" />
-              <polygon points="28,85 40,32 52,85" fill="#143F1F" />
-              <polygon points="44,85 54,20 64,85" fill="#0E2F16" />
-              <polygon points="56,85 68,36 80,85" fill="#143F1F" />
-              <rect x="280" y="52" width="34" height="24" fill="#5C4033" rx="2" />
-              <polygon points="272,52 297,28 322,52" fill="#8B4513" />
-              <rect x="292" y="58" width="10" height="12" fill="#FEF08A" rx="1" opacity="0.85" />
-              <polygon points="330,85 342,28 354,85" fill="#143F1F" />
-              <polygon points="345,85 356,16 367,85" fill="#0E2F16" />
-              <path d="M0,66 Q130,48 260,58 T400,56 L400,85 L0,85 Z" fill="#0A2411" />
+
+  morning: `<svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+              <path d="M0,45 Q75,18 150,30 T320,20 Q365,28 400,34 L400,100 L0,100 Z" fill="#2B6F96" opacity="0.35" />
+              <path d="M0,58 Q110,36 220,48 T400,44 L400,100 L0,100 Z" fill="#1B4D24" opacity="0.75" />
+              
+              <polygon points="26,100 38,42 50,100" fill="#143F1F" />
+              <polygon points="42,100 52,28 62,100" fill="#0E2F16" />
+              <polygon points="54,100 66,46 78,100" fill="#143F1F" />
+              
+              <rect x="278" y="58" width="38" height="26" fill="#452A1D" rx="1.5" />
+              <polygon points="270,58 297,34 324,58" fill="#78350F" />
+              <rect x="310" y="36" width="5" height="12" fill="#3E2215" />
+              <path d="M312,34 Q315,28 311,22 Q308,16 313,10" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" fill="none" stroke-linecap="round" />
+              <rect x="291" y="64" width="12" height="12" fill="#FEF08A" rx="1.5" />
+              <line x1="297" y1="64" x2="297" y2="76" stroke="#452A1D" stroke-width="1" />
+              <line x1="291" y1="70" x2="303" y2="70" stroke="#452A1D" stroke-width="1" />
+              
+              <path d="M250,80 L275,80 M254,74 L254,84 M262,74 L262,84 M270,74 L270,84" stroke="#452A1D" stroke-width="1.5" stroke-linecap="round" />
+
+              <polygon points="334,100 346,36 358,100" fill="#143F1F" />
+              <polygon points="348,100 358,22 368,100" fill="#0E2F16" />
+              
+              <path d="M0,66 Q130,50 260,60 T400,58 L400,100 L0,100 Z" fill="#0A2411" />
             </svg>`,
-  noon: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
-           <path d="M0,44 Q80,22 170,34 T350,28 Q380,36 400,40 L400,85 L0,85 Z" fill="#22C55E" opacity="0.35" />
-           <path d="M0,56 Q110,34 230,46 T400,44 L400,85 L0,85 Z" fill="#16A34A" opacity="0.75" />
-           <path d="M 25,85 Q 32,24 42,85" stroke="#15803D" stroke-width="3.5" fill="none" stroke-linecap="round" />
-           <path d="M 38,85 Q 46,16 56,85" stroke="#166534" stroke-width="3" fill="none" stroke-linecap="round" />
-           <circle cx="46" cy="24" r="5" fill="#FEF08A" />
-           <path d="M 320,85 Q 328,26 338,85" stroke="#15803D" stroke-width="3.5" fill="none" stroke-linecap="round" />
-           <circle cx="328" cy="33" r="5" fill="#FEF08A" />
-           <path d="M 332,85 Q 340,18 350,85" stroke="#166534" stroke-width="3" fill="none" stroke-linecap="round" />
-           <circle cx="340" cy="24" r="4.5" fill="#FEF08A" />
-           <path d="M0,68 Q120,52 240,62 T400,60 L400,85 L0,85 Z" fill="#14532D" />
+
+  noon: `<svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+           <path d="M0,44 Q80,22 170,34 T350,28 Q380,36 400,40 L400,100 L0,100 Z" fill="#22C55E" opacity="0.35" />
+           <path d="M0,56 Q110,34 230,46 T400,44 L400,100 L0,100 Z" fill="#16A34A" opacity="0.75" />
+           
+           <path d="M195,50 Q175,66 210,80 T185,100" stroke="#67E8F9" stroke-width="8" fill="none" opacity="0.55" stroke-linecap="round" />
+           
+           <path d="M 28,100 Q 36,28 46,100" stroke="#15803D" stroke-width="4" fill="none" stroke-linecap="round" />
+           <path d="M 42,100 Q 50,18 60,100" stroke="#166534" stroke-width="3.5" fill="none" stroke-linecap="round" />
+           <circle cx="50" cy="28" r="5.5" fill="#FEF08A" />
+           <circle cx="34" cy="46" r="4" fill="#F472B6" />
+           <circle cx="58" cy="52" r="4.5" fill="#FACC15" />
+
+           <path d="M 324,100 Q 332,30 342,100" stroke="#15803D" stroke-width="4" fill="none" stroke-linecap="round" />
+           <circle cx="332" cy="36" r="5.5" fill="#FEF08A" />
+           <path d="M 336,100 Q 344,22 354,100" stroke="#166534" stroke-width="3.5" fill="none" stroke-linecap="round" />
+           <circle cx="344" cy="28" r="5" fill="#FEF08A" />
+           <circle cx="356" cy="48" r="4" fill="#F472B6" />
+           
+           <path d="M0,64 Q120,48 240,58 T400,56 L400,100 L0,100 Z" fill="#14532D" />
          </svg>`,
-  sunset: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
-             <path d="M0,40 Q90,16 180,28 T360,24 Q385,30 400,36 L400,85 L0,85 Z" fill="#5B1D42" opacity="0.45" />
-             <path d="M0,52 Q100,30 210,42 T400,40 L400,85 L0,85 Z" fill="#65220C" opacity="0.75" />
-             <polygon points="35,85 45,34 55,85" fill="#451406" />
-             <polygon points="46,85 56,22 66,85" fill="#330E04" />
-             <path d="M 315,85 Q 322,40 318,18" stroke="#330E04" stroke-width="3.5" fill="none" stroke-linecap="round" />
-             <path d="M 318,18 Q 300,10 292,20" stroke="#330E04" stroke-width="2.5" fill="none" stroke-linecap="round" />
-             <path d="M 318,18 Q 338,10 346,20" stroke="#330E04" stroke-width="2.5" fill="none" stroke-linecap="round" />
-             <path d="M 318,18 Q 302,28 296,36" stroke="#330E04" stroke-width="2.2" fill="none" stroke-linecap="round" />
-             <path d="M 318,18 Q 336,28 344,36" stroke="#330E04" stroke-width="2.2" fill="none" stroke-linecap="round" />
-             <circle cx="318" cy="18" r="3.5" fill="#F97316" />
-             <path d="M0,66 Q120,50 250,60 T400,58 L400,85 L0,85 Z" fill="#240A03" />
+
+  sunset: `<svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+             <path d="M0,40 Q90,16 180,28 T360,24 Q385,30 400,36 L400,100 L0,100 Z" fill="#5B1D42" opacity="0.45" />
+             <path d="M0,52 Q100,30 210,42 T400,40 L400,100 L0,100 Z" fill="#65220C" opacity="0.75" />
+             
+             <polygon points="35,100 45,34 55,100" fill="#451406" />
+             <polygon points="46,100 56,22 66,100" fill="#330E04" />
+             
+             <path d="M 320,100 Q 328,48 322,22" stroke="#2B0C03" stroke-width="4.5" fill="none" stroke-linecap="round" />
+             <path d="M 322,22 Q 302,12 292,24" stroke="#2B0C03" stroke-width="3" fill="none" stroke-linecap="round" />
+             <path d="M 322,22 Q 344,12 354,24" stroke="#2B0C03" stroke-width="3" fill="none" stroke-linecap="round" />
+             <path d="M 322,22 Q 304,32 298,42" stroke="#2B0C03" stroke-width="2.6" fill="none" stroke-linecap="round" />
+             <path d="M 322,22 Q 342,32 350,42" stroke="#2B0C03" stroke-width="2.6" fill="none" stroke-linecap="round" />
+             <circle cx="322,22" r="4" fill="#F97316" />
+             
+             <path d="M0,64 Q120,48 250,58 T400,56 L400,100 L0,100 Z" fill="#240A03" />
            </svg>`,
-  night: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
-            <path d="M0,42 Q80,18 170,30 T340,24 Q375,32 400,38 L400,85 L0,85 Z" fill="#0E1738" opacity="0.55" />
-            <path d="M0,54 Q100,32 210,44 T400,42 L400,85 L0,85 Z" fill="#0B1522" opacity="0.8" />
-            <polygon points="20,85 36,36 52,85" fill="#070D16" />
-            <polygon points="40,85 54,22 68,85" fill="#04080F" />
-            <polygon points="56,85 70,40 84,85" fill="#070D16" />
-            <polygon points="300,85 316,32 332,85" fill="#070D16" />
-            <polygon points="320,85 334,18 348,85" fill="#04080F" />
-            <polygon points="338,85 352,38 366,85" fill="#070D16" />
-            <path d="M0,68 Q120,52 240,62 T400,60 L400,85 L0,85 Z" fill="#03060B" />
+
+  night: `<svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+            <path d="M0,42 Q80,18 170,30 T340,24 Q375,32 400,38 L400,100 L0,100 Z" fill="#0E1738" opacity="0.55" />
+            <path d="M0,54 Q100,32 210,44 T400,42 L400,100 L0,100 Z" fill="#0B1522" opacity="0.8" />
+            
+            <polygon points="20,100 36,36 52,100" fill="#070D16" />
+            <polygon points="40,100 54,22 68,100" fill="#04080F" />
+            <polygon points="56,100 70,40 84,100" fill="#070D16" />
+            
+            <rect x="258" y="64" width="30" height="20" fill="#070D16" rx="1.5" />
+            <polygon points="252,64 273,44 294,64" fill="#0A121F" />
+            <rect x="268" y="68" width="9" height="9" fill="#FEF08A" rx="1" opacity="0.9" />
+
+            <polygon points="310,100 326,32 342,100" fill="#070D16" />
+            <polygon points="330,100 344,18 358,100" fill="#04080F" />
+            <polygon points="348,100 362,38 376,100" fill="#070D16" />
+            
+            <path d="M0,66 Q120,50 240,60 T400,58 L400,100 L0,100 Z" fill="#03060B" />
           </svg>`,
-  rain: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
-           <path d="M0,38 Q90,16 180,28 T360,24 Q385,30 400,36 L400,85 L0,85 Z" fill="#1F2937" opacity="0.5" />
-           <path d="M0,50 Q100,28 220,40 T400,38 L400,85 L0,85 Z" fill="#18202C" opacity="0.8" />
-           <path d="M 45,85 Q 65,40 35,14" stroke="#0F172A" stroke-width="4" fill="none" stroke-linecap="round" />
-           <path d="M 320,85 Q 340,40 310,14" stroke="#0F172A" stroke-width="4" fill="none" stroke-linecap="round" />
-           <path d="M0,66 Q120,50 250,60 T400,58 L400,85 L0,85 Z" fill="#0B0F19" />
+
+  rain: `<svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+           <path d="M0,40 Q90,18 180,30 T360,26 Q385,32 400,38 L400,100 L0,100 Z" fill="#1F2937" opacity="0.5" />
+           <path d="M0,52 Q100,30 220,42 T400,40 L400,100 L0,100 Z" fill="#18202C" opacity="0.8" />
+           
+           <!-- বামের বিস্তারিত ঝড়ো গাছ (বাতাসে নুয়ে পড়া) -->
+           <path d="M 52,100 Q 58,58 64,30" stroke="#090E16" stroke-width="4.5" stroke-linecap="round" fill="none" />
+           <polygon points="64,30 46,44 76,40" fill="#090E16" />
+           <polygon points="61,40 40,56 78,52" fill="#090E16" />
+           <polygon points="58,52 34,70 82,66" fill="#090E16" />
+           
+           <!-- ডানের বিস্তারিত ঝড়ো গাছ -->
+           <path d="M 334,100 Q 328,52 320,26" stroke="#090E16" stroke-width="4.5" stroke-linecap="round" fill="none" />
+           <polygon points="320,26 304,38 334,35" fill="#090E16" />
+           <polygon points="322,35 298,50 338,47" fill="#090E16" />
+           <polygon points="326,47 292,66 344,62" fill="#090E16" />
+
+           <!-- ☔ পাহাড়ি পথে ছাতা মাথায় দিয়ে হেঁটে যাওয়া মানুষের জীবন্ত সিলুয়েট -->
+           <g transform="translate(196, 26)">
+             <!-- ছাতা (Umbrella Canopy) -->
+             <path d="M 0,22 Q 18,6 36,22 Q 18,18 0,22 Z" fill="#060910" />
+             <!-- ছাতার ডাঁট ও বাঁকা হাতল (Handle) -->
+             <path d="M 18,6 L 18,32 Q 18,35 15,35" stroke="#060910" stroke-width="2" fill="none" stroke-linecap="round" />
+             <!-- মানুষের মাথা -->
+             <circle cx="16" cy="25" r="3.6" fill="#060910" />
+             <!-- কোট ও শরীর -->
+             <path d="M 11,28 L 22,28 L 24,45 L 9,45 Z" fill="#060910" />
+             <!-- পা (হাঁটার ভঙ্গি) -->
+             <path d="M 13,45 L 9,58 M 20,45 L 25,56" stroke="#060910" stroke-width="2.6" stroke-linecap="round" />
+           </g>
+
+           <!-- সামনের পাহাড়ি ঢাল ও ভেজা মাটি (Fills to bottom seamlessly) -->
+           <path d="M0,64 Q110,48 220,66 T400,58 L400,100 L0,100 Z" fill="#0B0F19" />
          </svg>`,
 };
 
@@ -464,4 +526,114 @@ export async function deleteAllDrafts(supabase: SupabaseClient, currentUser: Cur
       // delete failed
     }
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 🎡 মেম্বারশিপ স্পিন হুইল ও ভিআইপি রিওয়ার্ড আর্কিটেকচার
+// ══════════════════════════════════════════════════════════════════════
+
+export interface SpinSlice {
+  id: number;
+  label: string;
+  labelEn: string;
+  value: number;
+  type: 'fixed' | 'free_shipping';
+  minOrder: number;
+  weight: number;
+  color: string;
+  bg: string;
+}
+
+export interface TierSpinReward {
+  tierKey: string;
+  code: string;
+  slice: SpinSlice;
+  wonAt: number;
+  expiresAt: number;
+}
+
+export const SILVER_SPIN_SLICES: SpinSlice[] = [
+  { id: 0, label: '৳৫০ ছাড়', labelEn: '৳50 OFF', value: 50, type: 'fixed', minOrder: 800, weight: 70, color: '#0F172A', bg: '#F8FAFC' },
+  { id: 1, label: '৳২০০ ছাড়', labelEn: '৳200 OFF', value: 200, type: 'fixed', minOrder: 2500, weight: 0, color: '#0F172A', bg: '#EFF6FE' },
+  { id: 2, label: '৳২০ ছাড়', labelEn: '৳20 OFF', value: 20, type: 'fixed', minOrder: 500, weight: 25, color: '#0F172A', bg: '#F8FAFC' },
+  { id: 3, label: '৳৫০০ ছাড়', labelEn: '৳500 OFF', value: 500, type: 'fixed', minOrder: 5000, weight: 0, color: '#0F172A', bg: '#EFF6FE' },
+  { id: 4, label: '৳১০০ ছাড়', labelEn: '৳100 OFF', value: 100, type: 'fixed', minOrder: 1500, weight: 5, color: '#0F172A', bg: '#F8FAFC' },
+  { id: 5, label: '৳৩০০ ছাড়', labelEn: '৳300 OFF', value: 300, type: 'fixed', minOrder: 3500, weight: 0, color: '#0F172A', bg: '#EFF6FE' },
+];
+
+export const GOLD_SPIN_SLICES: SpinSlice[] = [
+  { id: 0, label: 'ফ্রি ডেলিভারি', labelEn: 'Free Delivery', value: 0, type: 'free_shipping', minOrder: 0, weight: 65, color: '#0F172A', bg: '#F8FAFC' },
+  { id: 1, label: 'SAVE500', labelEn: 'SAVE500', value: 500, type: 'fixed', minOrder: 5000, weight: 0, color: '#0F172A', bg: '#FEF3C7' },
+  { id: 2, label: 'SAVE100', labelEn: 'SAVE100', value: 100, type: 'fixed', minOrder: 1200, weight: 30, color: '#0F172A', bg: '#F8FAFC' },
+  { id: 3, label: 'SAVE200', labelEn: 'SAVE200', value: 200, type: 'fixed', minOrder: 2500, weight: 0, color: '#0F172A', bg: '#FEF3C7' },
+  { id: 4, label: 'SAVE150', labelEn: 'SAVE150', value: 150, type: 'fixed', minOrder: 2000, weight: 5, color: '#0F172A', bg: '#F8FAFC' },
+  { id: 5, label: 'সারপ্রাইজ গিফট', labelEn: 'Mystery Gift', value: 0, type: 'free_shipping', minOrder: 0, weight: 0, color: '#0F172A', bg: '#FEF3C7' },
+];
+
+export function computeWinningSlice(slices: SpinSlice[]): { slice: SpinSlice; index: number } {
+  const eligible = slices
+    .map((s, idx) => ({ slice: s, index: idx }))
+    .filter((x) => x.slice.weight > 0);
+
+  const totalWeight = eligible.reduce((acc, curr) => acc + curr.slice.weight, 0);
+  let random = Math.random() * totalWeight;
+
+  for (const item of eligible) {
+    if (random < item.slice.weight) {
+      return item;
+    }
+    random -= item.slice.weight;
+  }
+
+  return eligible[0] || { slice: slices[0], index: 0 };
+}
+
+const SPIN_STORAGE_PREFIX = 'vc_tier_spin_';
+
+export function getTierSpinReward(tierKey: string): TierSpinReward | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(`${SPIN_STORAGE_PREFIX}${tierKey}`);
+    if (!raw) return null;
+    const data: TierSpinReward = JSON.parse(raw);
+    if (Date.now() > data.expiresAt) {
+      localStorage.removeItem(`${SPIN_STORAGE_PREFIX}${tierKey}`);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export function saveTierSpinReward(tierKey: string, slice: SpinSlice): TierSpinReward {
+  const now = Date.now();
+  const expiresAt = now + 24 * 60 * 60 * 1000;
+  
+  let code = `VC-${tierKey.toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  if (slice.type === 'free_shipping') {
+    code = `FREESHIP-${tierKey.toUpperCase()}`;
+  } else if (slice.value > 0) {
+    code = `SAVE${slice.value}-${tierKey.toUpperCase()}`;
+  }
+
+  const reward: TierSpinReward = {
+    tierKey,
+    code,
+    slice,
+    wonAt: now,
+    expiresAt,
+  };
+
+  try {
+    localStorage.setItem(`${SPIN_STORAGE_PREFIX}${tierKey}`, JSON.stringify(reward));
+  } catch {
+    // ignore
+  }
+
+  return reward;
+}
+
+export function hasUserSpunTier(tierKey: string): boolean {
+  return getTierSpinReward(tierKey) !== null;
 }
