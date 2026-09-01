@@ -1,7 +1,7 @@
-// [REPLACE] ফাইলের পাথ: app/components/modals/StockNotifyModal.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { STOCK_NOTIFY_EVENT } from '@/lib/productData';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -129,7 +129,6 @@ export default function StockNotifyModal() {
     setSubmitting(true);
 
     try {
-      // ১. ব্রাউজারের লোকাল স্টোরেজে সংরক্ষণ
       localStorage.setItem(
         `vc_sn_${detail.id}`,
         JSON.stringify({
@@ -141,7 +140,6 @@ export default function StockNotifyModal() {
         }),
       );
 
-      // ২. গুগল শীটের "Stock Requests" ট্যাবে স্বয়ংক্রিয়ভাবে ডাটা পাঠানো
       fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,7 +152,6 @@ export default function StockNotifyModal() {
         }),
       }).catch(() => {});
 
-      // ৩. প্রোডাক্ট পেজকে জানানো যাতে সাথে সাথে বাটনটি "স্টকে আসলে আপনাকে জানানো হবে" তে আপডেট হয়
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('vc:stockSubscribed', {
@@ -163,7 +160,7 @@ export default function StockNotifyModal() {
         );
       }
 
-      showToast(lang === 'en' ? '🔔 We will notify you once back in stock!' : '🔔 রিকোয়েস্ট সফল! স্টকে এলে জানিয়ে দেওয়া হবে।');
+      showToast(lang === 'en' ? 'We will notify you once back in stock!' : 'রিকোয়েস্ট সফল! স্টকে এলে জানিয়ে দেওয়া হবে।');
       close();
     } catch {
       showToast(t('একটি সমস্যা হয়েছে, আবার চেষ্টা করুন'));
@@ -172,118 +169,127 @@ export default function StockNotifyModal() {
     }
   };
 
-  if (!isOpen || !detail) return null;
-
   return (
-    <>
-      {/* ব্যাকড্রপ ব্লার */}
-      <div
-        className="fixed inset-0 z-[1200] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={close}
-      />
-
-      {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
-      <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
-        <div className="relative flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
-          
-          {/* হেডার ডেকোর ও ক্লোজ বাটন */}
-          <HeaderDecor />
-          <button
+    <AnimatePresence>
+      {isOpen && detail && (
+        <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
+          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 bg-ink/55 backdrop-blur-[3px]"
             onClick={close}
-            className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-            aria-label={t('বন্ধ করুন')}
+          />
+
+          {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 shadow-sh3 ring-1 ring-white/80"
           >
-            ✕
-          </button>
+            {/* হেডার ডেকোর ও ক্লোজ বাটন */}
+            <HeaderDecor />
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={close}
+              className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
+              aria-label={t('বন্ধ করুন')}
+            >
+              ✕
+            </motion.button>
 
-          {/* নোটিফিকেশন বেল ব্যাজ */}
-          <div className="relative z-10 mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/40 bg-brand-light text-white shadow-xs">
-            <BellIcon />
-          </div>
+            {/* নোটিফিকেশন বেল ব্যাজ */}
+            <div className="relative z-10 mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/40 bg-brand-light text-white shadow-xs">
+              <BellIcon />
+            </div>
 
-          {/* টাইটেল — "স্টক নোটিফিকেশন" */}
-          <h3 className="relative z-10 text-center font-body text-[17px] font-extrabold text-ink">
-            {lang === 'en' ? 'Stock Notification' : 'স্টক নোটিফিকেশন'}
-          </h3>
-          
-          {/* ৪ নম্বর ছবির মতো ডিরেক্ট ব্যাকগ্রাউন্ড টেক্সট (কোনো বাড়তি সাদা কার্ড ছাড়াই) */}
-          <p className="relative z-10 my-3 text-center font-body text-[13px] leading-relaxed text-ink/85">
-            <strong className="font-bold text-ink">{detail.name}</strong>{' '}
-            {lang === 'en'
-              ? 'will be notified to you directly once back in stock. You can find this list on your account page under "Stock Notifications".'
-              : 'স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে "স্টক নোটিফিকেশন"-এ পাবেন।'}
-          </p>
+            {/* টাইটেল */}
+            <h3 className="relative z-10 text-center font-body text-[17px] font-extrabold text-ink">
+              {lang === 'en' ? 'Stock Notification' : 'স্টক নোটিফিকেশন'}
+            </h3>
+            
+            <p className="relative z-10 my-3 text-center font-body text-[13px] leading-relaxed text-ink/85">
+              <strong className="font-bold text-ink">{detail.name}</strong>{' '}
+              {lang === 'en'
+                ? 'will be notified to you directly once back in stock. You can find this list on your account page under "Stock Notifications".'
+                : 'স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে "স্টক নোটিফিকেশন"-এ পাবেন।'}
+            </p>
 
-          {/* ফর্ম ইনপুটসমূহ */}
-          <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3 pt-1">
-            {/* আপনার নাম ইনপুট */}
-            <div>
-              <label className="mb-1 block font-body text-[12px] font-bold text-ink">
-                {t('আপনার নাম')}
-              </label>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light">
-                  <IconUser />
-                </span>
-                <input
-                  type="text"
-                  value={name}
-                  maxLength={MAX_NAME_LEN}
-                  onChange={(e) => {
-                    setName(sanitizePlainName(e.target.value));
-                    if (nameErr) setNameErr('');
-                  }}
-                  placeholder={lang === 'en' ? 'Your Full Name' : 'আপনার পূর্ণ নাম লিখুন'}
-                  className={`w-full rounded-[14px] border-[1.5px] bg-white py-2.5 pl-10 pr-3.5 font-body text-sm text-ink outline-none transition-brand ${
-                    nameErr ? 'border-red-400 bg-red-50/50' : 'border-border-base focus:border-brand-light focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)]'
-                  }`}
-                />
+            {/* ফর্ম ইনপুটসমূহ */}
+            <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3 pt-1">
+              <div>
+                <label className="mb-1 block font-body text-[12px] font-bold text-ink">
+                  {t('আপনার নাম')}
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light">
+                    <IconUser />
+                  </span>
+                  <input
+                    type="text"
+                    value={name}
+                    maxLength={MAX_NAME_LEN}
+                    onChange={(e) => {
+                      setName(sanitizePlainName(e.target.value));
+                      if (nameErr) setNameErr('');
+                    }}
+                    placeholder={lang === 'en' ? 'Your Full Name' : 'আপনার পূর্ণ নাম লিখুন'}
+                    className={`w-full rounded-[14px] border-[1.5px] bg-white py-2.5 pl-10 pr-3.5 font-body text-sm text-ink outline-none transition-brand ${
+                      nameErr ? 'border-red-400 bg-red-50/50' : 'border-border-base focus:border-brand-light focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)]'
+                    }`}
+                  />
+                </div>
+                {nameErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{nameErr}</p>}
               </div>
-              {nameErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{nameErr}</p>}
-            </div>
 
-            {/* মোবাইল নম্বর ইনপুট */}
-            <div>
-              <label className="mb-1 block font-body text-[12px] font-bold text-ink">
-                {t('মোবাইল নম্বর')}
-              </label>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light">
-                  <IconPhone />
-                </span>
-                <input
-                  type="tel"
-                  value={phone}
-                  maxLength={11}
-                  onChange={(e) => {
-                    setPhone(e.target.value.replace(/\D/g, ''));
-                    if (phoneErr) setPhoneErr('');
-                  }}
-                  placeholder="01XXXXXXXXX"
-                  className={`w-full rounded-[14px] border-[1.5px] bg-white py-2.5 pl-10 pr-3.5 font-body text-sm text-ink outline-none transition-brand ${
-                    phoneErr ? 'border-red-400 bg-red-50/50' : 'border-border-base focus:border-brand-light focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)]'
-                  }`}
-                />
+              <div>
+                <label className="mb-1 block font-body text-[12px] font-bold text-ink">
+                  {t('মোবাইল নম্বর')}
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light">
+                    <IconPhone />
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    maxLength={11}
+                    onChange={(e) => {
+                      setPhone(e.target.value.replace(/\D/g, ''));
+                      if (phoneErr) setPhoneErr('');
+                    }}
+                    placeholder="01XXXXXXXXX"
+                    className={`w-full rounded-[14px] border-[1.5px] bg-white py-2.5 pl-10 pr-3.5 font-body text-sm text-ink outline-none transition-brand ${
+                      phoneErr ? 'border-red-400 bg-red-50/50' : 'border-border-base focus:border-brand-light focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)]'
+                    }`}
+                  />
+                </div>
+                {phoneErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{phoneErr}</p>}
               </div>
-              {phoneErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{phoneErr}</p>}
-            </div>
 
-            {/* জমা দিন সিগনেচার বাটন */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-60"
-              >
-                {submitting
-                  ? (lang === 'en' ? 'Submitting...' : 'জমা হচ্ছে...')
-                  : (lang === 'en' ? 'Submit' : 'জমা দিন')}
-              </button>
-            </div>
-          </form>
+              {/* জমা দিন স্প্রিং বাটন */}
+              <div className="pt-2">
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] disabled:opacity-60"
+                >
+                  {submitting
+                    ? (lang === 'en' ? 'Submitting...' : 'জমা হচ্ছে...')
+                    : (lang === 'en' ? 'Submit' : 'জমা দিন')}
+                </motion.button>
+              </div>
+            </form>
 
+          </motion.div>
         </div>
-      </div>
-    </>
+      )}
+    </AnimatePresence>
   );
 }
