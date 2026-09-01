@@ -1,8 +1,8 @@
-// [REPLACE] ফাইলের পাথ: app/components/modals/WarrantyModal.tsx
 'use client';
 
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { getWarrantyModalContent } from '@/lib/warrantyData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
@@ -122,7 +122,6 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                   <h3 className="font-body text-[17px] font-extrabold text-ink">
                     {lang === 'en' ? 'Warranty Information' : 'ওয়ারেন্টি তথ্য'}
                   </h3>
-                  {/* স্কাই-ব্লু কালার */}
                   <p className="font-body text-[12px] font-bold text-brand-light">
                     {warrantyText || (lang === 'en' ? 'Official Brand Coverage' : 'অফিসিয়াল পলিসি কভারেজ')}
                   </p>
@@ -138,7 +137,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
             </div>
           </div>
 
-          {/* কন্টেন্ট বডি — ডিভাইডারের নিচ থেকে পর্যাপ্ত ব্রিদিং স্পেস (pt-5) */}
+          {/* কন্টেন্ট বডি */}
           <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 pb-5 pt-5">
             {/* পলিসি টাইটেল ও বর্ণনা */}
             <div className="mb-4">
@@ -150,10 +149,9 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
               </p>
             </div>
 
-            {/* শর্তাবলির তালিকা — স্পষ্ট ক্রিস্টাল ক্লিয়ার নাম্বার সার্কেল */}
+            {/* শর্তাবলির তালিকা — কনসেন্ট্রিক বর্ডার রেডিয়াস অপটিমাইজড (rounded-[10px]) */}
             <div className="space-y-3">
-              {/* পয়েন্ট ১: আনবক্সিং ভিডিও */}
-              <div className="flex items-start gap-3 rounded-[16px] border border-white/80 bg-white/70 p-3 shadow-xs">
+              <div className="flex items-start gap-3 rounded-[10px] border border-white/80 bg-white/70 p-3 shadow-xs">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
                   1
                 </span>
@@ -164,8 +162,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                 </p>
               </div>
 
-              {/* পয়েন্ট ২: মূল বক্স ও ইনভয়েস */}
-              <div className="flex items-start gap-3 rounded-[16px] border border-white/80 bg-white/70 p-3 shadow-xs">
+              <div className="flex items-start gap-3 rounded-[10px] border border-white/80 bg-white/70 p-3 shadow-xs">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
                   2
                 </span>
@@ -176,8 +173,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                 </p>
               </div>
 
-              {/* পয়েন্ট ৩: বিস্তারিত সুরক্ষামূলক কভারেজ ও ব্যতিক্রম */}
-              <div className="flex items-start gap-3 rounded-[16px] border border-white/80 bg-white/70 p-3 shadow-xs">
+              <div className="flex items-start gap-3 rounded-[10px] border border-white/80 bg-white/70 p-3 shadow-xs">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
                   3
                 </span>
@@ -189,8 +185,8 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
               </div>
             </div>
 
-            {/* পলিসি রেফারেন্স কলআউট বক্স (Hyperlinked Reference) */}
-            <div className="mt-4 rounded-[18px] border border-brand-light/35 bg-white/80 p-3.5 shadow-xs backdrop-blur-md">
+            {/* পলিসি রেফারেন্স কলআউট বক্স — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[12px]) */}
+            <div className="mt-4 rounded-[12px] border border-brand-light/35 bg-white/80 p-3.5 shadow-xs backdrop-blur-md">
               <div className="flex items-center justify-between gap-2">
                 <div className="font-body text-[12px] text-ink/80 leading-relaxed">
                   {lang === 'en'
@@ -209,14 +205,16 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
             </div>
           </div>
 
-          {/* ফুটার — কুইক অর্ডার ও উইশলিস্ট মডালের সাথে হুবহু ম্যাচ করা গ্রেডিয়েন্ট বাটন (from-info to-brand-light) */}
+          {/* ফুটার — স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন বাটন */}
           <div className="shrink-0 px-6 pb-6 pt-2">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               onClick={onClose}
-              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 focus-visible:outline-none"
+              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] focus-visible:outline-none"
             >
               {lang === 'en' ? 'Got It' : 'বুঝেছি'}
-            </button>
+            </motion.button>
           </div>
 
         </div>
