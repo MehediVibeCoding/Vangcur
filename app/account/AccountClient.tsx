@@ -532,7 +532,7 @@ export default function AccountClient() {
               {/* বাম কলাম: সাইডবার উইজেটসমূহ */}
               <div className="flex flex-col gap-4">
                 
-                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড (উঁচু সিনারি বেসলাইন ও নিখুঁত ভিজ্যুয়াল স্পেসিং) */}
+                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড (তুলতুলে মেঘ, উঁচু সিনারি ও সিমলেস গ্রাউন্ড) */}
                 <div
                   ref={cardRef}
                   className={`relative flex flex-col justify-between overflow-hidden rounded-[24px] p-5 shadow-sh2 select-none ${
@@ -570,23 +570,36 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* ভাসমান তুলতুলে মেঘ (দিনের ও ভোরের আকাশে) */}
-                  {celestial.state !== 'night' && (
+                  {/* ☁️ তুলতুলে থ্রি-ডি অর্গানিক ক্লাউড (ফ্ল্যাট শেপ সম্পূর্ণ মুক্ত) */}
+                  {celestial.state !== 'night' && celestial.state !== 'rain' && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      {/* মেঘ ১ (সামনের ফ্লাফি মেঘ) */}
                       <div
-                        className="absolute top-2 opacity-75"
-                        style={{ animation: 'cloudDrift 22s linear infinite 0s' }}
+                        className="absolute top-2.5 opacity-85"
+                        style={{ animation: 'cloudDrift 24s linear infinite 0s' }}
                       >
-                        <svg width="64" height="24" viewBox="0 0 64 24" fill="rgba(255,255,255,0.7)">
-                          <path d="M12 20h40a8 8 0 0 0 1.5-15.8A12 12 0 0 0 30 2.2 9 9 0 0 0 12 11a7 7 0 0 0 0 9z" />
+                        <svg width="86" height="32" viewBox="0 0 100 40" fill="none">
+                          <path
+                            d="M20,35 Q10,35 10,25 Q10,18 16,14 Q16,5 26,5 Q34,5 38,11 Q44,2 56,2 Q68,2 74,10 Q82,7 88,14 Q94,18 94,26 Q94,35 82,35 Z"
+                            fill="rgba(255, 255, 255, 0.75)"
+                          />
+                          <path
+                            d="M25,32 Q16,32 16,24 Q16,18 22,15 Q22,8 30,8 Q38,8 41,13 Q46,5 57,5 Q67,5 72,12 Q79,10 84,16 Q88,20 88,26 Q88,32 78,32 Z"
+                            fill="rgba(255, 255, 255, 0.95)"
+                          />
                         </svg>
                       </div>
+
+                      {/* মেঘ ২ (পেছনের নরম মেঘ) */}
                       <div
-                        className="absolute top-7 opacity-60"
-                        style={{ animation: 'cloudDrift 30s linear infinite -10s' }}
+                        className="absolute top-8 opacity-65"
+                        style={{ animation: 'cloudDrift 34s linear infinite -12s' }}
                       >
-                        <svg width="48" height="18" viewBox="0 0 64 24" fill="rgba(255,255,255,0.6)">
-                          <path d="M12 20h40a8 8 0 0 0 1.5-15.8A12 12 0 0 0 30 2.2 9 9 0 0 0 12 11a7 7 0 0 0 0 9z" />
+                        <svg width="68" height="26" viewBox="0 0 100 40" fill="none">
+                          <path
+                            d="M20,35 Q10,35 10,25 Q10,18 16,14 Q16,5 26,5 Q34,5 38,11 Q44,2 56,2 Q68,2 74,10 Q82,7 88,14 Q94,18 94,26 Q94,35 82,35 Z"
+                            fill="rgba(255, 255, 255, 0.65)"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -663,18 +676,10 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* 🌟 উঁচু বেসলাইনে স্পষ্ট দৃশ্যমান মাল্টি-লেয়ার ল্যান্ডস্কেপ সিলুয়েট (বাটনের উপরে মাঝ বরাবর) */}
+                  {/* 🌟 উঁচু ও নিখুঁত সিনারি (বাটনের নিচ পর্যন্ত এক টানা ল্যান্ডস্কেপ ফ্লো) */}
                   <div
-                    className="pointer-events-none absolute bottom-[56px] left-0 right-0 h-28 w-full opacity-95 z-10"
+                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 w-full opacity-95 z-10"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(celestial.sceneryHtml) }}
-                  />
-
-                  {/* হালকা গ্রাউন্ড ব্লেন্ডিং শেড */}
-                  <div
-                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 w-full z-10"
-                    style={{
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 60%, transparent 100%)',
-                    }}
                   />
 
                   {/* জোনাকি পোকা */}
@@ -700,7 +705,7 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* কার্ডের শীর্ষ অংশ: অবতার ও কাস্টমার ইনফো */}
+                  {/* শীর্ষ অংশ: অবতার ও কাস্টমার ইনফো */}
                   <div className="relative z-20 flex items-center gap-3.5">
                     <div className="relative shrink-0">
                       {currentTier.crown && (
@@ -724,7 +729,7 @@ export default function AccountClient() {
                     </div>
                   </div>
 
-                  {/* কার্ডের নিচের অংশ: এডিট ও লগআউট বাটন (ফ্রস্টেড গ্লাস কন্টেইনারে আলাদা স্ট্রিপ) */}
+                  {/* নিচের অংশ: এডিট ও লগআউট বাটন (কালো ছোপ ছাড়া সফট ফ্রস্টেড গ্লাস স্ট্রিপ) */}
                   <div className="relative z-20 mt-auto pt-3">
                     <div className="flex gap-2 border-t border-white/[0.16] pt-3">
                       <button
@@ -777,7 +782,7 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ২. ৩-কার্ডের নতুন রিডিজাইন (মেম্বারশিপ ক্লিকে ডিরেক্ট স্টেট ওপেন) */}
+                {/* ২. ৩-কার্ডের নতুন রিডিজাইন */}
                 <div className="grid grid-cols-3 gap-2.5">
                   <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
                     <div className="font-body text-base font-extrabold text-ink leading-tight">
@@ -837,7 +842,7 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (হেডারে ডিরেক্ট অল-ডিলিট বাটন সহ) */}
+                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড */}
                 {drafts.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md animate-section-reveal">
                     <div className="mb-3 flex items-center justify-between">
@@ -1085,7 +1090,6 @@ export default function AccountClient() {
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
       
-      {/* ডিরেক্ট স্টেট কন্ট্রোল্ড মেম্বারশিপ মোডাল (০ms ল্যাগ ছাড়া তাৎক্ষণিক ওপেন) */}
       <MembershipModal
         isOpen={membershipOpen}
         onClose={() => setMembershipOpen(false)}
