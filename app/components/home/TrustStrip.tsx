@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'motion/react';
 import { useT } from '@/lib/i18n/useT';
 
 interface TrustItem {
@@ -84,22 +85,33 @@ const TRUST_ITEMS: TrustItem[] = [
 
 export default function TrustStrip() {
   const { t } = useT();
+
   return (
     <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
       <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/60 bg-white/80 px-4 py-3 shadow-sh2 backdrop-blur-[8px] md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
         {TRUST_ITEMS.map((item, i) => (
-          <div
+          <motion.div
             key={item.label}
+            initial={{ opacity: 0, scale: 0.94, y: 8 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: '-20px' }}
+            transition={{ duration: 0.42, delay: i * 0.07, ease: [0.4, 0, 0.2, 1] }}
             className={`flex items-center gap-2 ${i >= 3 ? 'hidden md:flex' : ''}`}
           >
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform duration-brand ease-brand hover:scale-125 md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}>
+            <div
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform duration-brand ease-brand hover:scale-110 md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}
+            >
               {item.icon}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[11px] font-bold text-ink md:text-[12.5px]">{t(item.label)}</div>
-              <div className="truncate text-[10px] text-muted md:text-[11px]">{t(item.sub)}</div>
+              <div className="truncate text-[11px] font-bold text-ink md:text-[12.5px]">
+                {t(item.label)}
+              </div>
+              <div className="truncate text-[10px] text-muted md:text-[11px]">
+                {t(item.sub)}
+              </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
