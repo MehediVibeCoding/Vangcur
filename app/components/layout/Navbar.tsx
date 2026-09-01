@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, type RefObject } fro
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -591,7 +592,11 @@ export default function Navbar({
         />
       )}
 
-      <nav
+      {/* 🌟 প্রিমিয়াম সফট ড্রপ-ডাউন এন্ট্রি মোশন */}
+      <motion.nav
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className={`navbar-glass relative z-[900] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
@@ -686,13 +691,21 @@ export default function Navbar({
               </div>
 
               <div className="flex items-center gap-1.5">
-                <button className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onWishClick} title="Wishlist">
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+                  onClick={onWishClick}
+                  title="Wishlist"
+                >
                   <NavWishlistIcon wrapRef={wishIconWrapRef} liquidPhase={wishLiquidPhase} />
                   <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
-                </button>
+                </motion.button>
 
-                <button
-                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title={t('কার্ট')}
@@ -702,34 +715,47 @@ export default function Navbar({
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
                   <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
-                </button>
+                </motion.button>
 
                 {currentUser ? (
-                  <button
-                    className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-brand duration-brand hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5"
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                    className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5"
                     onClick={handleAccountClick}
                   >
                     <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-white shadow-sh1">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                     <span className="truncate">{currentUser.name || t('আমার অ্যাকাউন্ট')}</span>
-                  </button>
+                  </motion.button>
                 ) : (
-                  <button className="shrink-0 rounded-full bg-brand-light px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]" onClick={onLoginClick}>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                    className="shrink-0 rounded-full bg-brand-light px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]"
+                    onClick={onLoginClick}
+                  >
                     {t('লগইন করুন')}
-                  </button>
+                  </motion.button>
                 )}
 
-                <button className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light" onClick={onTrackClick} title={t('অর্ডার ট্র্যাক করুন')}>
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+                  onClick={onTrackClick}
+                  title={t('অর্ডার ট্র্যাক করুন')}
+                >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
-                </button>
+                </motion.button>
 
                 <button
                   ref={mobileSearchToggleRef}
-                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light md:hidden"
+                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light md:hidden"
                   onClick={(e) => {
                     e.stopPropagation();
                     const next = !mobileSearchOpen;
@@ -746,7 +772,7 @@ export default function Navbar({
             </div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* মোবাইল সার্চ এরিয়া */}
       <div className="relative md:hidden" ref={mobileSearchAreaRef}>
