@@ -1,8 +1,8 @@
-// [REPLACE] ফাইলের পাথ: app/components/modals/OrderRateLimitModal.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_ORDER_LIMIT_EVENT } from '@/lib/uiEvents';
@@ -57,7 +57,7 @@ function HeaderDecor() {
 }
 
 export default function OrderRateLimitModal() {
-  const { t, lang } = useT();
+  const { lang } = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
@@ -138,7 +138,7 @@ export default function OrderRateLimitModal() {
             {lang === 'en' ? 'Daily Order Limit Reached' : 'দৈনিক অর্ডার সীমা পূর্ণ হয়েছে'}
           </h3>
 
-          {/* মূল বক্তব্য — স্কাই-ব্লু হাইলাইট */}
+          {/* মূল বক্তব্য */}
           <p className="relative z-10 mt-2 font-body text-[12.5px] leading-relaxed text-ink/80">
             {lang === 'en' ? (
               <>You have completed the maximum of <strong className="font-bold text-brand-light">3 orders within the last 24 hours</strong>. To prevent spam and fake bookings, a maximum of 3 orders are permitted per device or number per day.</>
@@ -147,8 +147,8 @@ export default function OrderRateLimitModal() {
             )}
           </p>
 
-          {/* সাপোর্ট কলআউট বক্স */}
-          <div className="relative z-10 my-4 rounded-[18px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
+          {/* সাপোর্ট কলআউট বক্স — কনসেন্ট্রিক বর্ডার রেডিয়াস ফিক্স (rounded-[12px]) */}
+          <div className="relative z-10 my-4 rounded-[12px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
             <p className="font-body text-[12px] leading-relaxed text-ink/85">
               {lang === 'en' ? (
                 <>💡 Need to order more items urgently? Please contact our official WhatsApp support directly for immediate processing.</>
@@ -158,24 +158,28 @@ export default function OrderRateLimitModal() {
             </p>
           </div>
 
-          {/* অ্যাকশন বাটনসমূহ */}
+          {/* অ্যাকশন বাটনসমূহ — স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন */}
           <div className="relative z-10 flex flex-col gap-2.5 pt-1">
             {/* WhatsApp সাপোর্ট বাটন */}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               onClick={handleWhatsAppClick}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-[12.5px] font-body text-[14px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-105 active:scale-95"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-[12.5px] font-body text-[14px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-105"
             >
               <WhatsAppIcon />
               <span>{lang === 'en' ? 'Contact via WhatsApp' : 'WhatsApp এ যোগাযোগ করুন'}</span>
-            </button>
+            </motion.button>
 
-            {/* বুঝেছি বাটন — ক্লিক করলেই সরাসরি হোমপেজে রিডাইরেক্ট */}
-            <button
+            {/* বুঝেছি বাটন */}
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               onClick={closeAndGoHome}
-              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12.5px] font-body text-[14px] font-bold text-white shadow-sh1 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
+              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12.5px] font-body text-[14px] font-bold text-white shadow-sh1 transition-[filter] duration-brand hover:brightness-[1.03]"
             >
               {lang === 'en' ? 'Got It / Go Home' : 'বুঝেছি'}
-            </button>
+            </motion.button>
           </div>
 
         </div>
