@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
@@ -59,7 +60,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const wrapWidth = wrap.clientWidth || wrap.getBoundingClientRect().width;
     if (!wrapWidth || wrapWidth < 50) return;
     
-    // বাম ও ডান দুটি কার্ডের একদম নিখুঁত সমান উইডথ ক্যালকুলেশন
     const cardWidth = Math.floor((wrapWidth - GAP * (perPage - 1)) / perPage);
     if (!cardWidth || cardWidth < 10) return;
 
@@ -114,7 +114,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     );
     observer.observe(wrap);
 
-    // টাচ বা আঙুল রাখার সাথে সাথে স্লাইডার সম্পূর্ণ পজ (Pause) থাকবে
     const onTouchStart = (e: TouchEvent) => {
       touchRef.current.startX = e.touches[0].clientX;
       touchRef.current.startY = e.touches[0].clientY;
@@ -137,7 +136,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       startAuto(AUTOPLAY_MS);
     };
 
-    // ডেস্কে মাউস হোভার করলে গতি কমে ৮ সেকেন্ড হবে
     const onMouseEnter = () => {
       if (window.innerWidth >= 769) {
         startAuto(HOVER_AUTOPLAY_MS);
@@ -276,10 +274,17 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const label = card.label || '';
             const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
+            
+            // দৃশ্যমান প্রাথমিক ব্যাচের জন্য স্ট্যাগার্ড ডিলে ক্যালকুলেশন
+            const staggerDelay = i >= DUO_TOTAL && i < DUO_TOTAL + 6 ? (i - DUO_TOTAL) * 0.08 : 0;
+
             return (
-              <div
+              <motion.div
                 data-cath-card
                 key={`${catId}-${i}`}
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: staggerDelay, ease: [0.4, 0, 0.2, 1] }}
                 className="group relative flex aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98] sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
                 style={{ background: bg }}
                 onClick={() => goCategory(catId)}
@@ -317,7 +322,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                     {label} <span className="text-[12px] transition-transform duration-200 group-hover:translate-x-0.5">→</span>
                   </span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
