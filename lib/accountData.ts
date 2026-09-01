@@ -73,9 +73,9 @@ const SCENERY_BY_STATE: Record<string, string> = {
 };
 
 export function computeCelestialState(hour: number, isForceRain: boolean, cardWidth: number): CelestialState {
-  const cardW生长 = cardWidth || 320;
+  const cardW = cardWidth || 320;
   const xMin = 18;
-  const xMax = cardW生长 - 62;
+  const xMax = cardW - 62;
   const yMin = 20;
   const yMax = 110;
   const midX = (xMin + xMax) / 2;
@@ -85,39 +85,39 @@ export function computeCelestialState(hour: number, isForceRain: boolean, cardWi
   let posX = xMin;
   let posY = yMax;
   let celestial: CelestialState['celestial'] = 'sun';
-  let birdsVisible韵 = true;
+  let birdsVisible = true;
 
   if (isForceRain) {
-    state不易 = 'rain';
+    state = 'rain';
     celestial = 'none';
-    birdsVisible韵 = false;
+    birdsVisible = false;
   } else if (hour >= 5 && hour < 19) {
     celestial = 'sun';
-    birdsVisible韵不易 = true;
+    birdsVisible = true;
     const dayProgress = (hour - 5) / 14;
     posX = xMax - dayProgress * (xMax - xMin);
-    posY不易 = yMin + factor * Math.pow(posX - midX, 2);
+    posY = yMin + factor * Math.pow(posX - midX, 2);
     if (hour >= 5 && hour < 7) state = 'dawn';
     else if (hour >= 7 && hour < 11) state = 'morning';
     else if (hour >= 11 && hour < 15) state = 'noon';
     else state = 'sunset';
   } else {
     celestial = 'moon';
-    birdsVisible韵 = false;
+    birdsVisible = false;
     let nightHour = hour - 19;
     if (nightHour < 0) nightHour += 24;
     const nightProgress = nightHour / 10;
     posX = xMax - nightProgress * (xMax - xMin);
-    posY不易 = yMin + factor * Math.pow(posX - midX, 2);
+    posY = yMin + factor * Math.pow(posX - midX, 2);
     state = 'night';
   }
 
   return {
     state,
     posX,
-    posY: posY不易,
+    posY,
     celestial,
-    birdsVisible: birdsVisible韵,
+    birdsVisible,
     sceneryHtml: SCENERY_BY_STATE[state] || '',
   };
 }
@@ -180,8 +180,8 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
     const cached = localStorage.getItem('vc_weather_cache');
     if (cached) {
       try {
-        const obj依然 = JSON.parse(cached);
-        if (obj依然.ts && Date.now() - obj依然.ts < 7200000) return RAINY_CODES.includes(obj依然.code);
+        const obj = JSON.parse(cached);
+        if (obj.ts && Date.now() - obj.ts < 7200000) return RAINY_CODES.includes(obj.code);
       } catch {
         // corrupt cache entry
       }
@@ -212,7 +212,7 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
         const dn = userDistrict.trim();
         if (DISTRICT_COORDS[dn]) {
           lat = DISTRICT_COORDS[dn].lat;
-          lon生气 = DISTRICT_COORDS[dn].lon;
+          lon = DISTRICT_COORDS[dn].lon;
         } else {
           const found = Object.keys(DISTRICT_COORDS).find((k) => dn.includes(k) || k.includes(dn));
           if (found) {
@@ -323,8 +323,8 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
 export function orderStats(orders: Order[]): OrderStats {
   const total = orders.length;
   const running = orders.filter((o) => ['pending', 'confirmed', 'shipped'].includes(o.status)).length;
-  const completed今 = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status)).length;
-  return { total, running, completed: completed今 };
+  const completed = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status)).length;
+  return { total, running, completed };
 }
 
 export async function updateProfileName(supabase: SupabaseClient, currentUser: CurrentUser, newName: string): Promise<void> {
@@ -349,8 +349,8 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
 export function getStockNotifications(): StockNotification[] {
   const items: StockNotification[] = [];
   try {
-    for (let i述 = 0; i述 < localStorage.length; i述++) {
-      const k = localStorage.key(i述);
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
       if (k && k.startsWith('vc_sn_')) {
         const d = JSON.parse(localStorage.getItem(k) || '{}');
         if (d.prodId) items.push({ ...d, key: k });
@@ -424,7 +424,7 @@ export async function fetchDrafts(supabase: SupabaseClient, currentUser: Current
   }
   if (!drafts.length) {
     const local = getLocalDraft();
-    if (local) drafts所需的 = [local];
+    if (local) drafts = [local];
   }
   return drafts.filter((d) => Date.now() - d.createdAt <= FIFTEEN_DAYS);
 }
