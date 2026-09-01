@@ -31,7 +31,9 @@ interface HeroSliderProps {
 
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
-  const [cards, setCards] = useState<HeroCard[]>(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS);
+  const [cards, setCards] = useState<HeroCard[]>(
+    initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS
+  );
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const duoIdxRef = useRef(globalSavedIndex);
@@ -46,7 +48,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const span = DUO_TOTAL;
     const idx = duoIdxRef.current;
     if (idx >= span && idx < span * 2) return;
-    duoIdxRef.current = ((idx - span) % span + span) % span + span;
+    duoIdxRef.current = (((idx - span) % span) + span) % span + span;
     globalSavedIndex = duoIdxRef.current;
   };
 
@@ -59,7 +61,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const perPage = getDuoPerPage();
     const wrapWidth = wrap.clientWidth || wrap.getBoundingClientRect().width;
     if (!wrapWidth || wrapWidth < 50) return;
-    
+
     const cardWidth = Math.floor((wrapWidth - GAP * (perPage - 1)) / perPage);
     if (!cardWidth || cardWidth < 10) return;
 
@@ -274,55 +276,61 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const label = card.label || '';
             const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
-            
-            // দৃশ্যমান প্রাথমিক ব্যাচের জন্য স্ট্যাগার্ড ডিলে ক্যালকুলেশন
-            const staggerDelay = i >= DUO_TOTAL && i < DUO_TOTAL + 6 ? (i - DUO_TOTAL) * 0.08 : 0;
+
+            // দৃশ্যমান ব্যাচের জন্য কোনো রিফ্লো ক্লাশিং ছাড়া মসৃণ ক্যাসকেড ডিলে
+            const isInitialVisible = i >= DUO_TOTAL && i < DUO_TOTAL + 6;
+            const staggerDelay = isInitialVisible ? (i - DUO_TOTAL) * 0.08 : 0;
 
             return (
-              <motion.div
+              <div
                 data-cath-card
                 key={`${catId}-${i}`}
-                initial={{ opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: staggerDelay, ease: [0.4, 0, 0.2, 1] }}
-                className="group relative flex aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98] sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
-                style={{ background: bg }}
-                onClick={() => goCategory(catId)}
+                className="aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
               >
-                {card.img ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-[550ms] ease-brand group-hover:scale-[1.05]"
-                    src={optimizeCloudinaryUrl(card.img, 360)}
-                    alt={label}
-                    loading={isEager ? 'eager' : 'lazy'}
-                    fetchPriority={isEager ? 'high' : undefined}
-                    decoding="async"
-                  />
-                ) : isSvgEmoji ? (
+                <motion.div
+                  initial={isInitialVisible ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
+                  className="group relative flex h-full w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98]"
+                  style={{ background: bg }}
+                  onClick={() => goCategory(catId)}
+                >
+                  {card.img ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-[550ms] ease-brand group-hover:scale-[1.05]"
+                      src={optimizeCloudinaryUrl(card.img, 360)}
+                      alt={label}
+                      loading={isEager ? 'eager' : 'lazy'}
+                      fetchPriority={isEager ? 'high' : undefined}
+                      decoding="async"
+                    />
+                  ) : isSvgEmoji ? (
+                    <div
+                      className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.06] [&_svg]:h-20 [&_svg]:w-20"
+                      dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(card.emoji) }}
+                    />
+                  ) : card.emoji ? (
+                    <div className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.06]">
+                      {card.emoji}
+                    </div>
+                  ) : null}
+
                   <div
-                    className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.06] [&_svg]:h-20 [&_svg]:w-20"
-                    dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(card.emoji) }}
+                    className="pointer-events-none absolute inset-0 z-[1]"
+                    style={{
+                      background:
+                        'linear-gradient(to bottom, transparent 0%, transparent 55%, rgba(0,0,0,.40) 78%, rgba(0,0,0,.65) 100%)',
+                    }}
                   />
-                ) : card.emoji ? (
-                  <div className="absolute inset-0 z-0 flex items-center justify-center pb-[60px] text-[72px] leading-none transition-transform duration-[550ms] ease-brand [filter:drop-shadow(0_4px_20px_rgba(0,0,0,.6))] group-hover:scale-[1.06]">
-                    {card.emoji}
+
+                  <div className="relative z-[2] flex flex-col items-start gap-[5px] px-3 pb-[14px]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/[.16] px-2.5 py-[4px] text-[10.5px] font-bold uppercase tracking-[.3px] text-white shadow-[0_2px_10px_rgba(0,0,0,.2)] backdrop-blur-[8px] transition-[background,border-color,transform] duration-200 group-hover:translate-x-0.5 group-hover:border-white/50 group-hover:bg-white/[.26]">
+                      {label} <span className="text-[12px] transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+                    </span>
                   </div>
-                ) : null}
-
-                <div
-                  className="pointer-events-none absolute inset-0 z-[1]"
-                  style={{
-                    background: 'linear-gradient(to bottom, transparent 0%, transparent 55%, rgba(0,0,0,.40) 78%, rgba(0,0,0,.65) 100%)',
-                  }}
-                />
-
-                <div className="relative z-[2] flex flex-col items-start gap-[5px] px-3 pb-[14px]">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/[.16] px-2.5 py-[4px] text-[10.5px] font-bold uppercase tracking-[.3px] text-white shadow-[0_2px_10px_rgba(0,0,0,.2)] backdrop-blur-[8px] transition-[background,border-color,transform] duration-200 group-hover:translate-x-0.5 group-hover:border-white/50 group-hover:bg-white/[.26]">
-                    {label} <span className="text-[12px] transition-transform duration-200 group-hover:translate-x-0.5">→</span>
-                  </span>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
             );
           })}
         </div>
