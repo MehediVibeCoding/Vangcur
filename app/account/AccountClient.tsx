@@ -34,6 +34,7 @@ import OrderCard from '@/app/components/orders/OrderCard';
 import type { Order, DraftOrder, StockNotification } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
+const MembershipModal = dynamic(() => import('@/app/components/modals/MembershipModal'), { ssr: false });
 
 const STATE_BG: Record<string, string> = {
   dawn: 'bg-gradient-to-b from-[#3d2145] via-[#7c4a6b] to-[#e8935f]',
@@ -534,7 +535,7 @@ export default function AccountClient() {
               {/* বাম কলাম: সাইডবার উইজেটসমূহ */}
               <div className="flex flex-col gap-4">
                 
-                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড (স্মুথ ও রিয়েলস্টিক অ্যানিমেশন) */}
+                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড */}
                 <div
                   ref={cardRef}
                   className={`relative overflow-hidden rounded-[24px] p-5 shadow-sh2 select-none ${
@@ -645,7 +646,7 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* সূর্য / চাঁদ (রেডিয়েন্ট সোলার আভা ও লুনার হ্যালো সহ) */}
+                  {/* সূর্য / চাঁদ */}
                   {celestial.celestial !== 'none' && (
                     <div
                       className={`absolute h-7 w-7 rounded-full transition-all duration-700 ${
@@ -665,13 +666,13 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* মাল্টি-লেয়ার হাই-ডেফিনিশন ল্যান্ডস্কেপ সিলুয়েট */}
+                  {/* ল্যান্ডস্কেপ সিলুয়েট */}
                   <div
                     className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 w-full opacity-95"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(celestial.sceneryHtml) }}
                   />
 
-                  {/* জোনাকি পোকা (রাতের শান্ত জমিনে) */}
+                  {/* জোনাকি পোকা */}
                   {celestial.state === 'night' && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                       {[
@@ -694,7 +695,7 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* কার্ড কনটেন্ট ও ফ্রন্ট ক্রাউন পজিশন */}
+                  {/* কার্ড কনটেন্ট */}
                   <div className="relative z-10 flex h-full min-h-[200px] flex-col justify-between">
                     <div className="flex items-center gap-3.5">
                       <div className="relative shrink-0">
@@ -832,7 +833,7 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (হেডারে ডিরেক্ট অল-ডিলিট বাটন সহ) */}
+                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড */}
                 {drafts.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md animate-section-reveal">
                     <div className="mb-3 flex items-center justify-between">
@@ -843,7 +844,6 @@ export default function AccountClient() {
                         <div className="font-body text-[13.5px] font-extrabold text-ink">{t('অর্ডার করতে চেয়েছিলেন')}</div>
                       </div>
                       
-                      {/* পুরো সেকশন এক-ক্লিকে রিমুভ করার বাটন */}
                       <button
                         onClick={handleClearAllDrafts}
                         title={t('সব মুছুন')}
@@ -900,7 +900,7 @@ export default function AccountClient() {
                   </div>
                 )}
 
-                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট (ইন্টেলিজেন্ট লাইভ কালার ও নো-ইমোজি ডট) */}
+                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট */}
                 {stockNotifs.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
@@ -1080,6 +1080,7 @@ export default function AccountClient() {
       )}
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      <MembershipModal />
     </div>
   );
 }
