@@ -334,7 +334,7 @@ export default function CheckoutPage() {
       }
     }
 
-    // ৩. 🛡️ স্মার্ট রেজিলিয়েন্ট ড্রাফট রিকভারি (যদি কার্ট খালি থাকে কিন্তু ড্রাফট থাকে)
+    // ৩. 🛡️ স্মার্ট রেজিলিয়েন্ট ড্রাফট রিকভারি (টাইপ-সেফ ন্যারোয়িং সহ)
     if (!hasItems) {
       try {
         const draft = getDraft();
@@ -343,12 +343,12 @@ export default function CheckoutPage() {
           loadedItems = draft.items;
           hasItems = true;
           setIsDirectQuickOrder(draft.items.length === 1);
-          if (draft.name) setName((prev) => prev || draft.name);
-          if (draft.phone) setPhone((prev) => prev || draft.phone);
-          if (draft.dist) setDist((prev) => prev || draft.dist);
-          if (draft.addr) setAddr((prev) => prev || draft.addr);
-          if (draft.email) setEmail((prev) => prev || draft.email);
-          if (draft.ship) setSelectedShip((prev) => prev || draft.ship);
+          if (draft.name) setName((prev) => prev || draft.name || '');
+          if (draft.phone) setPhone((prev) => prev || draft.phone || '');
+          if (draft.dist) setDist((prev) => prev || draft.dist || '');
+          if (draft.addr) setAddr((prev) => prev || draft.addr || '');
+          if (draft.email) setEmail((prev) => prev || draft.email || '');
+          if (draft.ship) setSelectedShip((prev) => prev || draft.ship || '');
         }
       } catch {
         // ignore
