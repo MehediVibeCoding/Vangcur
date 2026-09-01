@@ -1,4 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/components/home/ProductCard.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -86,31 +85,18 @@ function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?:
 interface ProductCardProps {
   prod: Product;
   isFirst?: boolean;
+  index?: number;
 }
 
-// 🌟 ফিক্সড-টাইম বাটন-অ্যানিমেশন বনাম prefetch race
-// ─────────────────────────────────────────────────────────────────────
-// ক্লিক করামাত্র এই সময়টা (নেট স্পিড/ডিভাইস যাই হোক না কেন) কখনো বদলায় না।
-// এই সময়ের মধ্যে টার্গেট পেজ prefetch হয়ে গেলে Next.js নিজেই router.push()-কে
-// ইনস্ট্যান্ট রেন্ডার করে দেবে (কোনো স্কেলেটন ছাড়াই — কারণ prefetch cache-এ
-// ডেটা রেডি থাকে)। prefetch শেষ না হলে, ফিক্সড সময় শেষ হওয়ার সাথে সাথেই
-// navigate হয়ে যাবে আর বাকিটা টার্গেট রুটের নিজস্ব `loading.tsx` (Suspense
-// fallback) দেখাবে — এখানে "prefetch শেষ হয়েছে কিনা" আলাদা করে ডিটেক্ট করার
-// কোনো দরকার নেই, Next.js App Router-এর prefetch cache + streaming এমনিতেই
-// এই race-টা হ্যান্ডেল করে।
 const NAV_ANIM_MS = 300;
 
-export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
+export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCardProps) {
   const { t, lang } = useT();
   const router = useRouter();
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
-  const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
 
-  // 'product' = ছবি/নাম লিংকে ক্লিক করে প্রোডাক্ট পেজে যাওয়া হচ্ছে
-  // 'checkout' = "Order Now"-এ ক্লিকে সরাসরি চেকআউটে যাওয়া হচ্ছে (শুধু
-  // startQuickOrder-এর "কার্ট খালি + ২০k নিচে" ব্র্যাঞ্চেই সেট হয়)
   const [pendingNav, setPendingNav] = useState<'product' | 'checkout' | null>(null);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -123,7 +109,7 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   }, []);
 
   const runFixedTimeNav = (kind: 'product' | 'checkout', navHref: string) => {
-    if (pendingNav) return; // ডাবল-ক্লিক গার্ড
+    if (pendingNav) return;
     if (prefersReducedMotion()) {
       router.push(navHref);
       return;
@@ -144,10 +130,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     const added = useWishlistStore.getState().toggleWish(p);
-    if (!prefersReducedMotion()) {
-      setHeartBeat(false);
-      requestAnimationFrame(() => setHeartBeat(true));
-    }
     if (added && wishBtnRef.current) {
       const r = wishBtnRef.current.getBoundingClientRect();
       window.dispatchEvent(new CustomEvent(WISHLIST_FLY_EVENT, {
@@ -156,7 +138,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
     }
   };
 
-  // 🌟 ডিরেক্ট স্টোর মেথড সহ ১০০% ইনস্ট্যান্ট কার্ট হ্যান্ডলার (iPhone 7 / iOS 15 ফিক্স)
   const handleAddToCartDirect = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -177,10 +158,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     if (sold || pendingNav) return;
-    // navigate override শুধু তখনই কল হয় যখন startQuickOrder ভেতরে সিদ্ধান্ত নেয়
-    // যে কার্ট খালি এবং মোট ২০k-এর নিচে — অর্থাৎ সরাসরি /checkout-এ যাওয়া হবে।
-    // বাকি দুই ব্র্যাঞ্চে (bulk-order গার্ড, বা কার্টে যোগ করে quick-cart মডাল
-    // ওপেন) এই ফাংশন একদমই কল হয় না, তাই সেগুলো আগের মতোই instant থাকে।
     startQuickOrder(router, p, 1, (navHref) => {
       if (prefersReducedMotion()) {
         router.push(navHref);
@@ -194,21 +171,28 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   };
 
   const handleCardLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // মডিফায়েড ক্লিক (নতুন ট্যাব/উইন্ডো, মিডল-ক্লিক ইত্যাদি) — ব্রাউজারের
-    // ডিফল্ট Link আচরণ অক্ষুণ্ন রাখা হচ্ছে, ফিক্সড-টাইম নেভিগেশন প্রযোজ্য না
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (pendingNav) {
       e.preventDefault();
       return;
     }
-    if (prefersReducedMotion()) return; // ডিফল্ট Link নেভিগেশন সরাসরি চলুক
+    if (prefersReducedMotion()) return;
     e.preventDefault();
     runFixedTimeNav('product', href);
   };
 
+  // স্ট্যাগার্ড ডিলে ক্যালকুলেশন (পরপর ক্যাসকেড ইফেক্ট)
+  const staggerDelay = Math.min(index % 20, 10) * 0.045;
+
   return (
-    <div className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]">
-      <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
+    <motion.div
+      initial={{ opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ duration: 0.45, delay: staggerDelay, ease: [0.4, 0, 0.2, 1] }}
+      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
+    >
+      <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
         <Link
           href={href}
           prefetch={true}
@@ -239,16 +223,21 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           </div>
         )}
 
-        <button
+        <motion.button
           ref={wishBtnRef}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full backdrop-blur-[6px] transition-transform duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${wished ? 'bg-white/95 text-[#FF5A6E]' : 'border border-white/50 bg-white/40 text-white'} ${heartBeat ? 'animate-heartbeat' : ''}`}
+          whileTap={{ scale: 0.8 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full backdrop-blur-[6px] transition-transform duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${
+            wished ? 'bg-white/95 text-[#FF5A6E]' : 'border border-white/50 bg-white/40 text-white'
+          }`}
           onClick={handleWish}
-          onAnimationEnd={() => setHeartBeat(false)}
           title="Wishlist"
           aria-label="Wishlist"
         >
-          <span className="flex h-full w-full items-center justify-center"><HeartIcon filled={wished} /></span>
-        </button>
+          <span className="flex h-full w-full items-center justify-center">
+            <HeartIcon filled={wished} />
+          </span>
+        </motion.button>
 
         <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
           <Link
@@ -323,6 +312,6 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
