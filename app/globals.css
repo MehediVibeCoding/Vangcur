@@ -25,39 +25,160 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   🌌 প্রোফাইল কার্ডের বাস্তবসম্মত ফিজিক্স ও ওয়েদার অ্যানিমেশনসমূহ
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ১. রাতের আকাশের মিটমিটে তারা (Twinkling & Shimmering Stars) */
 @keyframes twinkling {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 1; }
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.95));
+  }
 }
 
+@keyframes starShimmer {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.85) rotate(0deg);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15) rotate(45deg);
+    filter: drop-shadow(0 0 6px rgba(254, 240, 138, 0.9));
+  }
+}
+
+/* ২. মৃদু বাতাসে মেঘের ভাসমান চলাচল (Organic Wave Cloud Drift) */
 @keyframes cloudDrift {
-  from { transform: translateX(-40px); }
-  to { transform: translateX(440px); }
+  0% {
+    transform: translateX(-70px) translateY(0);
+  }
+  25% {
+    transform: translateX(60px) translateY(-3px);
+  }
+  50% {
+    transform: translateX(190px) translateY(2px);
+  }
+  75% {
+    transform: translateX(320px) translateY(-2px);
+  }
+  100% {
+    transform: translateX(470px) translateY(0);
+  }
 }
 
+/* ৩. উপর থেকে নিচ পর্যন্ত অবিরাম কোণাকুণি বৃষ্টি (Full-Height Realistic Rain) */
 @keyframes rainDropFall {
-  0% { transform: translateY(-10px); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translateY(70px); opacity: 0; }
+  0% {
+    transform: translateY(-25px) translateX(0) scaleY(1);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(270px) translateX(-45px) scaleY(1.4);
+    opacity: 0;
+  }
 }
 
-@keyframes fireflyGlow {
-  0%, 100% { opacity: 0.2; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
-}
-
+/* ৪. আকাশে প্রাকৃতিক বিদ্যুৎ চমকানোর আলো (Multi-Burst Lightning) */
 @keyframes lightningFlash {
-  0%, 3%, 6%, 9%, 44%, 100% { opacity: 0; }
-  4%, 7% { opacity: 0.85; }
-  45%, 48% { opacity: 0.55; }
+  0%, 100% {
+    opacity: 0;
+  }
+  2% {
+    opacity: 0.92;
+  }
+  3% {
+    opacity: 0.2;
+  }
+  4.5% {
+    opacity: 0.98;
+  }
+  7% {
+    opacity: 0;
+  }
+  48% {
+    opacity: 0;
+  }
+  49% {
+    opacity: 0.65;
+  }
+  50.5% {
+    opacity: 0;
+  }
 }
 
+/* ৫. জোনাকি পোকার মায়াবী আলোর খেলা (Organic Hovering Fireflies) */
+@keyframes fireflyGlow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translate(0, 0) scale(0.7);
+    filter: drop-shadow(0 0 1px rgba(254, 240, 138, 0.4));
+  }
+  30% {
+    opacity: 0.95;
+    transform: translate(6px, -8px) scale(1.3);
+    filter: drop-shadow(0 0 8px rgba(254, 240, 138, 1));
+  }
+  70% {
+    opacity: 0.4;
+    transform: translate(-5px, -4px) scale(0.9);
+    filter: drop-shadow(0 0 3px rgba(254, 240, 138, 0.6));
+  }
+}
+
+/* ৬. ডানা মেলে আকাশে ওড়া পাখির গতিপথ (Flapping Wings Bird Flight) */
 @keyframes birdFly {
-  from { transform: translateX(-20px) translateY(0); }
-  50% { transform: translateX(210px) translateY(-8px); }
-  to { transform: translateX(440px) translateY(0); }
+  0% {
+    transform: translateX(-40px) translateY(4px);
+  }
+  25% {
+    transform: translateX(110px) translateY(-8px);
+  }
+  50% {
+    transform: translateX(230px) translateY(2px);
+  }
+  75% {
+    transform: translateX(350px) translateY(-6px);
+  }
+  100% {
+    transform: translateX(480px) translateY(3px);
+  }
 }
 
+/* ৭. সূর্য ও চাঁদের আলোর হ্যালো পালস (Celestial Aura Glow) */
+@keyframes sunCoronaPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px 6px rgba(253, 230, 138, 0.65), 0 0 45px 14px rgba(251, 191, 36, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 30px 10px rgba(253, 230, 138, 0.85), 0 0 60px 20px rgba(251, 191, 36, 0.5);
+  }
+}
+
+@keyframes moonGlowAura {
+  0%, 100% {
+    box-shadow: 0 0 16px 4px rgba(229, 231, 235, 0.5), 0 0 35px 10px rgba(186, 224, 253, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 24px 7px rgba(229, 231, 235, 0.75), 0 0 50px 16px rgba(186, 224, 253, 0.4);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ফর্ম ও ইনপুট বিহেভিয়ার
+   ══════════════════════════════════════════════════════════════════════ */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -110,43 +231,42 @@ input[type='search']::-webkit-search-results-decoration {
   animation: searchDropdownReveal .16s ease-out both;
 }
 
-.invoice-wrap{max-width:620px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.10);overflow:hidden;position:relative}
-.inv-body{padding:32px 30px 28px}
-.inv-body .hdr{text-align:center;border-bottom:2px solid #f0f0f0;padding-bottom:20px;margin-bottom:22px}
-.inv-body .brand-name{font-size:26px;font-weight:800;letter-spacing:-0.5px;color:#1a1a1a}
-.inv-body .brand-sub{font-size:10px;letter-spacing:3px;color:#aaa;text-transform:uppercase;margin-top:2px;margin-bottom:10px}
-.inv-body .badge{background:#E63946;color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block;letter-spacing:1px}
-.inv-body .order-meta{margin-top:12px;font-size:12.5px;color:#555}
-.inv-body .section-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#999;margin-bottom:10px}
-.inv-body .info-card{background:#f8f9fb;border:1px solid #eee;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;line-height:2}
-.inv-body .info-card strong{color:#333;min-width:70px;display:inline-block}
-.inv-body .prod-table{width:100%;border-collapse:collapse;margin-bottom:16px}
-.inv-body .prod-table th{background:#f8f9fb;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#888;padding:9px 10px;text-align:left;border-bottom:2px solid #eee}
-.inv-body .prod-table td{padding:10px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle}
-.inv-body .prod-table tr:last-child td{border-bottom:none}
-.inv-body .totals-box{background:#f8f9fb;border-radius:10px;border:1px solid #eee;padding:14px 16px;margin-bottom:16px}
-.inv-body .total-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#444;border-bottom:1px solid #eee}
-.inv-body .total-row:last-child{border-bottom:none}
-.inv-body .total-row.grand{font-weight:800;font-size:15px;color:#1a1a1a;padding-top:10px}
-.inv-body .total-row.paid{color:#10B981;font-weight:600}
-.inv-body .total-row.balance{color:#E63946;font-weight:700;font-size:14px}
-.inv-body .payment-badge{display:inline-flex;align-items:center;gap:6px;background:#e6f7ef;color:#065f46;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;margin-bottom:20px}
-.inv-body .footer-note{margin-top:0;font-size:11.5px;color:#888;text-align:center;line-height:2;border-top:1px solid #f0f0f0;padding-top:16px}
-@media print{.invoice-wrap{box-shadow:none;border-radius:0}}
-@media(max-width:600px){.invoice-wrap{border-radius:0;box-shadow:none;max-width:100%}}
+/* ══════════════════════════════════════════════════════════════════════
+   ইনভয়েস স্টাইল ও প্রিন্ট লেআউট
+   ══════════════════════════════════════════════════════════════════════ */
+.invoice-wrap { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,.10); overflow: hidden; position: relative; }
+.inv-body { padding: 32px 30px 28px; }
+.inv-body .hdr { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 22px; }
+.inv-body .brand-name { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: #1a1a1a; }
+.inv-body .brand-sub { font-size: 10px; letter-spacing: 3px; color: #aaa; text-transform: uppercase; margin-top: 2px; margin-bottom: 10px; }
+.inv-body .badge { background: #44A7FC; color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; letter-spacing: 1px; }
+.inv-body .order-meta { margin-top: 12px; font-size: 12.5px; color: #555; }
+.inv-body .section-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #999; margin-bottom: 10px; }
+.inv-body .info-card { background: #f8f9fb; border: 1px solid #eee; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; line-height: 2; }
+.inv-body .info-card strong { color: #333; min-width: 70px; display: inline-block; }
+.inv-body .prod-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+.inv-body .prod-table th { background: #f8f9fb; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: #888; padding: 9px 10px; text-align: left; border-bottom: 2px solid #eee; }
+.inv-body .prod-table td { padding: 10px 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: middle; }
+.inv-body .prod-table tr:last-child td { border-bottom: none; }
+.inv-body .totals-box { background: #f8f9fb; border-radius: 10px; border: 1px solid #eee; padding: 14px 16px; margin-bottom: 16px; }
+.inv-body .total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #444; border-bottom: 1px solid #eee; }
+.inv-body .total-row:last-child { border-bottom: none; }
+.inv-body .total-row.grand { font-weight: 800; font-size: 15px; color: #1a1a1a; padding-top: 10px; }
+.inv-body .total-row.paid { color: #10B981; font-weight: 600; }
+.inv-body .total-row.balance { color: #0F172A; font-weight: 700; font-size: 14px; }
+.inv-body .payment-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f7ff; color: #44A7FC; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
+.inv-body .footer-note { margin-top: 0; font-size: 11.5px; color: #888; text-align: center; line-height: 2; border-top: 1px solid #f0f0f0; padding-top: 16px; }
+@media print { .invoice-wrap { box-shadow: none; border-radius: 0; } }
+@media(max-width:600px) { .invoice-wrap { border-radius: 0; box-shadow: none; max-width: 100%; } }
 
 /* ══════════════════════════════════════════════════════════════════════
    🎨 Universal Premium Scrollbar Architecture (Vangcur)
-   গ্লোবাল বেস: ৪–৫পিক্সেল, স্বচ্ছ ট্র্যাক, সফট স্কাই-ব্লু রাউন্ডেড পিল থাম্ব
    ══════════════════════════════════════════════════════════════════════ */
-
-/* ফায়ারফক্স গ্লোবাল বেস */
 html {
   scrollbar-width: thin;
   scrollbar-color: rgba(68, 167, 252, 0.35) transparent;
 }
 
-/* Chromium/WebKit গ্লোবাল বেস (html, body ও সকল সাধারণ স্ক্রলযোগ্য এলিমেন্ট) */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -166,10 +286,6 @@ html {
   background: transparent;
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   .sleek-scrollbar — ড্রয়ার, বড় মোডাল ও দীর্ঘ ড্রপডাউনের জন্য অতি সূক্ষ্ম
-   ৪পিক্সেল প্রিমিয়াম স্কাই-ব্লু পিল স্ক্রলবার (WaitingOverlay-লেভেল সিলেকশন)
-   ────────────────────────────────────────────────────────────────────── */
 .sleek-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(68, 167, 252, 0.35) transparent;
@@ -193,10 +309,6 @@ html {
   background: transparent;
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   .no-scrollbar — ওয়েটিং ওভারলে, পোস্ট-রিসিভ মোডাল, ইনভয়েস প্রিভিউ ও ট্যাব
-   বারের জন্য সম্পূর্ণ অদৃশ্য কিন্তু ফুল্লি-ফাংশনাল স্ক্রল
-   ────────────────────────────────────────────────────────────────────── */
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
