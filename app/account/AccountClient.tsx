@@ -47,9 +47,9 @@ const STATE_BG: Record<string, string> = {
 function IconOrdersBox({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16.5 9.4 7.55 4.24a1.8 1.8 0 0 0-1.8 0L2.5 6.1a1.8 1.8 0 0 0-.9 1.56v8.68a1.8 1.8 0 0 0 .9 1.56l3.25 1.86a1.8 1.8 0 0 0 1.8 0l8.95-5.16a1.8 1.8 0 0 0 .9-1.56V9.4z" />
-      <polyline points="3.29 7 12 12 20.71 7" />
-      <line x1="12" y1="22" x2="12" y2="12" />
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
     </svg>
   );
 }
@@ -85,9 +85,10 @@ function IconLockAlt({ className = '' }: { className?: string }) {
 function IconEmptyBox({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" />
-      <path d="M3 8.5v7L12 20l9-4.5v-7" />
-      <path d="M12 13v7" />
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -132,9 +133,9 @@ function IconLogout() {
   );
 }
 
-function IconTrash() {
+function IconTrash({ className = 'h-3.5 w-3.5' }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6" />
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
@@ -514,7 +515,7 @@ export default function AccountClient() {
           </div>
         ) : (
           <>
-            {/* হেডার: Welcome To Your Profile & Smart Contextual Greeting */}
+            {/* হেডার */}
             <div className="mb-6 text-center">
               <h1 className="font-body text-xl sm:text-2xl font-extrabold text-brand-light">
                 Welcome To Your Profile
@@ -738,9 +739,9 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড */}
+                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (হেডারে ডিরেক্ট অল-ডিলিট বাটন সহ) */}
                 {drafts.length > 0 && (
-                  <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
+                  <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md animate-section-reveal">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
@@ -748,15 +749,18 @@ export default function AccountClient() {
                         </span>
                         <div className="font-body text-[13.5px] font-extrabold text-ink">{t('অর্ডার করতে চেয়েছিলেন')}</div>
                       </div>
-                      {drafts.length > 1 && (
-                        <button
-                          onClick={handleClearAllDrafts}
-                          className="font-body text-[11px] font-semibold text-muted hover:text-red-500"
-                        >
-                          {t('সব মুছুন')}
-                        </button>
-                      )}
+                      
+                      {/* পুরো সেকশন এক-ক্লিকে রিমুভ করার বাটন */}
+                      <button
+                        onClick={handleClearAllDrafts}
+                        title={t('সব মুছুন')}
+                        aria-label={t('সব মুছুন')}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-border-base bg-white text-muted shadow-2xs transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-500 active:scale-90"
+                      >
+                        <IconTrash className="h-3.5 w-3.5" />
+                      </button>
                     </div>
+
                     <div className="flex flex-col gap-2.5">
                       {drafts.map((draft) => {
                         const items = Array.isArray(draft.items) ? draft.items : [];
@@ -803,7 +807,7 @@ export default function AccountClient() {
                   </div>
                 )}
 
-                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট */}
+                {/* ৫. স্টক নোটিফিকেশন অ্যালার্ট (ইন্টেলিজেন্ট লাইভ কালার ও নো-ইমোজি ডট) */}
                 {stockNotifs.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md">
                     <div className="mb-3 flex items-center justify-between">
@@ -919,7 +923,7 @@ export default function AccountClient() {
                     </div>
                   ) : orders.length === 0 ? (
                     <div className="py-12 text-center">
-                      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/30 text-brand-light/70 shadow-xs">
+                      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/40 text-brand-light shadow-xs">
                         <IconEmptyBox />
                       </div>
                       <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
