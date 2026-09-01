@@ -89,13 +89,13 @@ export default function About() {
 
         <div className="relative z-10 mx-auto max-w-[860px] text-center">
           
-          {/* অফিসিয়াল ট্যাগলাইন ব্যাজ (মোবাইলে ১০০% এক লাইনে রেসপন্সিভ) */}
+          {/* অফিসিয়াল ট্যাগলাইন ব্যাজ */}
           <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/30 bg-white/85 px-3 py-1 min-[380px]:px-4 min-[380px]:py-1.5 font-body text-[9.5px] min-[360px]:text-[10.5px] sm:text-[12px] font-bold uppercase tracking-[0.8px] min-[380px]:tracking-[1.3px] text-brand-light shadow-xs backdrop-blur-md whitespace-nowrap">
             <SparklesIcon />
             <span>Vangcur — Your First Choice For Gadgets</span>
           </div>
 
-          {/* মূল শিরোনাম — মোবাইলে নিখুঁত ২-লাইন এবং ডেস্কে ১-লাইন */}
+          {/* মূল শিরোনাম */}
           <h2 className="mb-5 font-body font-extrabold text-ink leading-snug">
             {lang === 'en' ? (
               <>
@@ -122,11 +122,11 @@ export default function About() {
 
           {/* কাস্টম ডেসক্রিপশন বা বিস্তারিত প্রফেশনাল টেক্সট */}
           {customDesc ? (
-            <p className="font-body text-[14px] sm:text-[15px] leading-[1.9] text-ink/85 whitespace-pre-line">
+            <p className="font-body text-[14px] sm:text-[15px] leading-[1.85] text-ink/85 whitespace-pre-line text-left sm:text-center">
               {t(customDesc)}
             </p>
           ) : (
-            <div className="space-y-4 font-body text-[13.5px] sm:text-[15px] leading-[1.85] sm:leading-[1.9] text-ink/80 text-justify sm:text-center">
+            <div className="space-y-4 font-body text-[13.5px] sm:text-[15px] leading-[1.85] sm:leading-[1.9] text-ink/80 text-left sm:text-center">
               <p>
                 {lang === 'en' ? (
                   <>Vangcur is one of Bangladesh&apos;s leading innovative gadget and lifestyle e-commerce brands. Catering to modern lifestyle tech and everyday creative needs, we bring you the finest collection of trending RGB &amp; neon lights, ambient crystal lamps, premium TWS earbuds, smartwatches, portable cooling fans, and unique utility gadgets.</>
