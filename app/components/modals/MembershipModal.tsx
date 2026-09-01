@@ -99,7 +99,6 @@ export default function MembershipModal({
   const [eventCompletedCount, setEventCompletedCount] = useState<number | null>(null);
   const [selectedTierKey, setSelectedTierKey] = useState<string>('regular');
 
-  // স্পিন হুইল ও রিওয়ার্ড স্টেট
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinRotation, setSpinRotation] = useState(0);
   const [activeReward, setActiveReward] = useState<TierSpinReward | null>(null);
@@ -138,6 +137,7 @@ export default function MembershipModal({
   useEffect(() => {
     if (isModalOpen) {
       setSelectedTierKey(userCurrentTier.key);
+      setSpinRotation(0);
     }
   }, [isModalOpen, userCurrentTier.key]);
 
@@ -154,6 +154,7 @@ export default function MembershipModal({
     if (!selectedTierKey) return;
     const existing = getTierSpinReward(selectedTierKey);
     setActiveReward(existing);
+    setSpinRotation(0);
   }, [selectedTierKey]);
 
   useEffect(() => {
@@ -175,6 +176,12 @@ export default function MembershipModal({
     if (propsOnClose) propsOnClose();
     setEventCompletedCount(null);
     setIsSpinning(false);
+    setSpinRotation(0);
+  };
+
+  const handleSelectTier = (key: string) => {
+    if (isSpinning) return;
+    setSelectedTierKey(key);
   };
 
   const handleCopyCode = useCallback(async (codeToCopy: string, isDiamond = false) => {
@@ -202,14 +209,19 @@ export default function MembershipModal({
     const sliceAngle = 360 / slices.length;
     const targetDegree = 360 * 5 + (360 - (index * sliceAngle + sliceAngle / 2));
 
-    setSpinRotation(targetDegree);
+    setSpinRotation(0);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setSpinRotation(targetDegree);
+      });
+    });
 
     setTimeout(() => {
       setIsSpinning(false);
       const saved = saveTierSpinReward(selectedTier.key, slice);
       setActiveReward(saved);
       showToast(lang === 'en' ? `Congratulations! You won ${slice.labelEn}!` : `অভিনন্দন! আপনি ${slice.label} জিতেছেন!`);
-    }, 3800);
+    }, 3900);
   };
 
   if (!isModalOpen || !userCurrentTier) return null;
@@ -224,6 +236,7 @@ export default function MembershipModal({
       <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
         <div className="relative flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
+          {/* হেডার */}
           <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
             <HeaderDecor />
             <div className="relative z-10 flex items-center justify-between">
@@ -250,7 +263,8 @@ export default function MembershipModal({
             </div>
           </div>
 
-          <div className="no-scrollbar relative z-10 flex gap-1.5 overflow-x-auto border-b border-ink/10 bg-white/50 px-4 py-2.5">
+          {/* 🌟 পিক্সেল-পারফেক্ট টপ টায়ার চিপস বার (কোনো ওভারফ্লো বা ভাঙা লেআউট নেই) */}
+          <div className="no-scrollbar relative z-10 flex gap-2 overflow-x-auto border-b border-ink/10 bg-white/60 px-4 py-2.5">
             {MEMBERSHIP_TIERS.map((tier) => {
               const isSelected = tier.key === selectedTierKey;
               const isUnlocked = effectiveCount >= tier.min;
@@ -258,28 +272,30 @@ export default function MembershipModal({
               return (
                 <button
                   key={tier.key}
-                  onClick={() => setSelectedTierKey(tier.key)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 font-body text-[11.5px] font-bold transition-all ${
+                  onClick={() => handleSelectTier(tier.key)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 font-body text-[11.5px] font-bold transition-all shadow-2xs ${
                     isSelected
                       ? 'border border-brand-light bg-brand-light text-white shadow-xs'
                       : isUnlocked
-                      ? 'border border-border-base bg-white/85 text-ink hover:border-brand-light/50'
-                      : 'border border-border-base/70 bg-white/50 text-muted hover:text-ink'
+                      ? 'border border-border-base bg-white/90 text-ink hover:border-brand-light/40'
+                      : 'border border-border-base/60 bg-white/50 text-muted/70 hover:text-ink'
                   }`}
                 >
                   <span
-                    className="h-4 w-4 shrink-0"
+                    className="flex h-4 w-4 shrink-0 items-center justify-center [&_svg]:!h-4 [&_svg]:!w-4"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(crownSVG(tier.crown)) }}
                   />
                   <span>{lang === 'en' ? tier.en.replace(' Member', '') : tier.bn}</span>
-                  {isUnlocked && <span className="text-[10px] opacity-85">✓</span>}
+                  {isUnlocked && <span className="text-[10.5px] font-bold">✓</span>}
                 </button>
               );
             })}
           </div>
 
+          {/* কন্টেন্ট বডি */}
           <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4 space-y-4">
             
+            {/* নির্বাচিত টায়ারের ব্যানার কার্ড */}
             <div className="rounded-[20px] border border-white/90 bg-white/85 p-4 text-center shadow-xs backdrop-blur-md">
               <div
                 className="mx-auto mb-2 flex h-11 w-11 items-center justify-center drop-shadow-md"
@@ -315,6 +331,9 @@ export default function MembershipModal({
               )}
             </div>
 
+            {/* ========================================================================= */}
+            {/* ১. রেগুলার টায়ার (Regular — ০ অর্ডার)                                       */}
+            {/* ========================================================================= */}
             {selectedTier.key === 'regular' && (
               <div className="rounded-[22px] border border-dashed border-border-base bg-white/70 p-5 text-center shadow-xs backdrop-blur-md">
                 <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-brand-bg/50 text-xl text-brand-light shadow-xs">
@@ -331,6 +350,9 @@ export default function MembershipModal({
               </div>
             )}
 
+            {/* ========================================================================= */}
+            {/* ২. সিলভার টায়ার (Silver — ১-২ অর্ডার)                                      */}
+            {/* ========================================================================= */}
             {selectedTier.key === 'silver' && (
               <div className="rounded-[22px] border border-white/90 bg-white/85 p-4 text-center shadow-xs backdrop-blur-md">
                 <div className="mb-2.5 flex items-center justify-center gap-1.5 font-body text-[13px] font-extrabold text-brand-light">
@@ -437,6 +459,9 @@ export default function MembershipModal({
               </div>
             )}
 
+            {/* ========================================================================= */}
+            {/* ৩. গোল্ড টায়ার (Gold — ৩-৪ অর্ডার)                                        */}
+            {/* ========================================================================= */}
             {selectedTier.key === 'gold' && (
               <div className="rounded-[22px] border border-white/90 bg-white/85 p-4 text-center shadow-xs backdrop-blur-md">
                 <div className="mb-2.5 flex items-center justify-center gap-1.5 font-body text-[13px] font-extrabold text-amber-700">
@@ -543,6 +568,9 @@ export default function MembershipModal({
               </div>
             )}
 
+            {/* ========================================================================= */}
+            {/* ৪. ডায়মন্ড টায়ার (Diamond — ৫-৯ অর্ডার) — ব্লার কুপন টিজার সহ            */}
+            {/* ========================================================================= */}
             {selectedTier.key === 'diamond' && (
               <div className="rounded-[22px] border border-brand-light/35 bg-white/90 p-4 text-left shadow-xs backdrop-blur-md space-y-3 animate-section-reveal">
                 <div className="text-center pb-2 border-b border-ink/10">
@@ -552,33 +580,54 @@ export default function MembershipModal({
                 </div>
 
                 <div className="flex items-start gap-2.5 rounded-[14px] border border-brand-light/25 bg-brand-bg/25 p-3">
+                  <span className="mt-0.5 text-base">🎁</span>
                   <div className="min-w-0 flex-1">
                     <div className="font-body text-[12.5px] font-bold text-ink">
                       {lang === 'en' ? 'Flat ৳150 OFF Guaranteed Coupon' : 'ফ্ল্যাট ৳১৫০ ছাড়ের এক্সক্লুসিভ কুপন'}
                     </div>
-                    <div className="mt-2 flex items-center justify-between rounded-lg border border-dashed border-brand-light/50 bg-white px-3 py-1.5">
-                      <span className="font-body text-xs font-extrabold tracking-wider text-brand-light">
-                        DIAMOND150
-                      </span>
-                      <button
-                        onClick={() => handleCopyCode('DIAMOND150', true)}
-                        disabled={!isSelectedTierUnlocked}
-                        className="flex items-center gap-1 rounded-full bg-brand-light px-2.5 py-0.5 font-body text-[10.5px] font-bold text-white shadow-2xs hover:bg-brand-light-hover disabled:opacity-40"
-                      >
-                        {diamondCopyLabel === 'Copy' ? <IconCopy /> : <IconCheck />}
-                        <span>{diamondCopyLabel}</span>
-                      </button>
+
+                    <div className="mt-2 flex items-center justify-between rounded-xl border border-dashed border-brand-light/50 bg-white px-3.5 py-2">
+                      {isSelectedTierUnlocked ? (
+                        <span className="font-body text-sm font-extrabold tracking-wider text-brand-light">
+                          DIAMOND150
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-body text-sm font-extrabold tracking-wider text-brand-light/60 blur-[3px] select-none">
+                            DIAMOND150
+                          </span>
+                          <span className="rounded-md bg-amber-100 px-2 py-0.5 font-body text-[10px] font-bold text-amber-800">
+                            🔒 {lang === 'en' ? 'Locked' : 'লকড'}
+                          </span>
+                        </div>
+                      )}
+
+                      {isSelectedTierUnlocked ? (
+                        <button
+                          onClick={() => handleCopyCode('DIAMOND150', true)}
+                          className="flex items-center gap-1 rounded-full bg-brand-light px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs hover:bg-brand-light-hover active:scale-95"
+                        >
+                          {diamondCopyLabel === 'Copy' ? <IconCopy /> : <IconCheck />}
+                          <span>{diamondCopyLabel}</span>
+                        </button>
+                      ) : (
+                        <span className="font-body text-[11px] font-semibold text-muted">
+                          {lang === 'en' ? 'Unlock to view' : 'আনলক করে দেখুন'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5 rounded-[14px] border border-white/80 bg-white/80 p-3 shadow-2xs">
+                  <span className="text-base">⚡</span>
                   <div className="font-body text-[12px] font-bold text-ink">
                     {lang === 'en' ? 'Priority 1-Day Dispatch & Courier Handover' : 'সবার আগে ১ দিনে কুরিয়ারে অগ্রাধিকার হ্যান্ডওভার'}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5 rounded-[14px] border border-white/80 bg-white/80 p-3 shadow-2xs">
+                  <span className="text-base">✨</span>
                   <div className="font-body text-[12px] font-bold text-ink">
                     {lang === 'en' ? 'Free Mystery Tech Accessory with every parcel' : 'প্রতিটি অর্ডারের সাথে সারপ্রাইজ গ্যাজেট গিফট'}
                   </div>
@@ -586,6 +635,9 @@ export default function MembershipModal({
               </div>
             )}
 
+            {/* ========================================================================= */}
+            {/* ৫. লিজেন্ডারি টায়ার (Legendary — ১০+ অর্ডার)                                */}
+            {/* ========================================================================= */}
             {selectedTier.key === 'legendary' && (
               <div className="rounded-[22px] border border-amber-300/80 bg-gradient-to-br from-amber-50 via-white to-[#FFFBEB] p-5 text-center shadow-xs backdrop-blur-md animate-section-reveal">
                 <div
@@ -610,6 +662,7 @@ export default function MembershipModal({
 
           </div>
 
+          {/* ফুটার বাটন */}
           <div className="shrink-0 px-6 pb-6 pt-2">
             <button
               onClick={close}
