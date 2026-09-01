@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
 
@@ -27,7 +28,9 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
   const { lang, t } = useT();
 
   useEffect(() => {
-    if (open) lockBody(); else unlockBody();
+    if (open) lockBody();
+    else unlockBody();
+    return () => unlockBody();
   }, [open]);
 
   useEffect(() => {
@@ -35,150 +38,168 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
     const onKeydown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKeydown);
     return () => document.removeEventListener('keydown', onKeydown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
-  };
+  }, [open, onClose]);
 
   return (
-    <div
-      className={`sleek-scrollbar fixed inset-0 z-[9800] items-start justify-center overflow-y-auto bg-black/60 p-0 ${open ? 'flex' : 'hidden'}`}
-      onClick={handleBackdropClick}
-    >
-      <div className="flex min-h-full w-full max-w-[540px] flex-col bg-white">
-        <div className="sticky top-0 z-[2] flex items-center justify-between border-b-[1.5px] border-border-base bg-white px-4 py-3.5">
-          <h3 className="font-body text-base font-extrabold text-ink">{t('📋 নীতিমালা ও শর্তাবলী')}</h3>
-          <button
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[9800] flex items-center justify-center p-0 sm:p-4">
+          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-[2px]"
             onClick={onClose}
-            className="rounded-lg border-[1.5px] border-border-base bg-surface-muted px-3.5 py-1.5 font-body text-[12.5px] font-bold text-ink"
+          />
+
+          {/* পলিসি শিট উইন্ডো — ফ্লুইড স্লাইড ও ফেড মোশন */}
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.98 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="sleek-scrollbar relative z-10 flex h-full max-h-[100dvh] w-full max-w-[540px] flex-col overflow-y-auto bg-white shadow-sh3 sm:h-auto sm:max-h-[90vh] sm:rounded-[22px]"
           >
-            {t('✕ বন্ধ করুন')}
-          </button>
-        </div>
-
-        <div className="flex-1 px-4 pb-10 pt-5">
-          <Section title={t('📦 ১. অর্ডার সংক্রান্ত')}>
-            <ul className={ulClass}>
-              <li className={liClass}>{t('অর্ডার সম্পন্ন করার আগে অনুগ্রহ করে নিশ্চিত করুন যে আপনার দেওয়া নাম, মোবাইল নম্বর, ডেলিভারি ঠিকানা, bKash ট্রানজেকশন আইডি বা বিকাশের শেষ ৪ ডিজিট সহ সকল তথ্য সঠিক।')}</li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>If any information is incorrect, <strong>Vangcur reserves the full right to cancel your order.</strong></>
-                  : <>যেকোনো তথ্য ভুল দিলে <strong>Vangcur আপনার অর্ডারটি বাতিল করার সম্পূর্ণ অধিকার রাখে।</strong></>}
-              </li>
-              <li className={liClass}>{t('অর্ডার কনফার্ম হওয়ার ২৪ ঘণ্টার মধ্যে ডেলিভারি প্রক্রিয়া শুরু হবে।')}</li>
-              <li className={liClass}>{t('২৪–৪৮ ঘণ্টার মধ্যে কুরিয়ার সার্ভিস থেকে আপনার দেওয়া নম্বরে পার্সেলের ট্র্যাকিং লিংক পাঠানো হবে।')}</li>
-            </ul>
-          </Section>
-
-          <Section title={t('🚚 ২. ডেলিভারি সংক্রান্ত')}>
-            <p className={pClass}>
-              {lang === 'en'
-                ? <>Vangcur ships products using the <strong>closed-box delivery</strong> method. So —</>
-                : <>Vangcur <strong>ক্লোজড বক্স ডেলিভারি</strong> পদ্ধতিতে প্রোডাক্ট পাঠায়। তাই —</>}
-            </p>
-            <ul className={ulClass}>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>Please pay the delivery person the <strong>remaining amount</strong> first, then accept the parcel.</>
-                  : <>ডেলিভারিম্যানকে আগে <strong>অবশিষ্ট টাকা পরিশোধ করুন</strong>, তারপর পার্সেল বুঝে নিন।</>}
-              </li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>Once you have the product in hand, there is <strong>no option to return it</strong> if you simply don&apos;t like it. Please review the product details and photos carefully before ordering.</>
-                  : <>প্রোডাক্ট হাতে পাওয়ার পর পছন্দ না হলে ফেরত দেওয়ার <strong>কোনো সুযোগ নেই।</strong> অর্ডার করার আগেই প্রোডাক্টের বিবরণ ও ছবি ভালোভাবে দেখে নিন।</>}
-              </li>
-            </ul>
-          </Section>
-
-          <Section title={t('🎥 ৩. আনবক্সিং ভিডিও সংক্রান্ত (অবশ্যই করণীয়)')}>
-            <p className={pClass}>
-              {lang === 'en'
-                ? <>While opening the product after receiving it, please record a <strong>continuous unboxing video</strong> —</>
-                : <>প্রোডাক্ট পাওয়ার পর খোলার সময় <strong>একটানা আনবক্সিং ভিডিও</strong> ধারণ করুন —</>}
-            </p>
-            <ul className={ulClass}>
-              <li className={liClass}>{t('পার্সেলের বাইরে থেকে শুরু করে প্রোডাক্টের ভেতরের সব পার্টস পর্যন্ত একটানা রেকর্ড করতে হবে।')}</li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>The video must not have <strong>any cuts or pauses.</strong></>
-                  : <>ভিডিওতে <strong>কোনো কাট বা পজ</strong> দেওয়া যাবে না।</>}
-              </li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>For electronic products, the video must <strong>show the product being turned on.</strong></>
-                  : <>ইলেকট্রনিক প্রোডাক্টের ক্ষেত্রে ভিডিওতে প্রোডাক্টটি <strong>চালু করে দেখাতে হবে।</strong></>}
-              </li>
-            </ul>
-            <div className="my-2.5 rounded-lg border-[1.5px] border-[#f97316] bg-[#fff8f0] px-3.5 py-2.5 font-body text-[12.5px] leading-[1.65] text-[#b45309]">
-              {t('⚠️ আনবক্সিং ভিডিও ছাড়া কোনো ওয়ারেন্টি ক্লেইম করা সম্ভব নয়।')}
+            {/* স্টিকি হেডার */}
+            <div className="sticky top-0 z-[2] flex items-center justify-between border-b-[1.5px] border-border-base bg-white/95 px-4 py-3.5 backdrop-blur-md">
+              <h3 className="font-body text-base font-extrabold text-ink">{t('📋 নীতিমালা ও শর্তাবলী')}</h3>
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={onClose}
+                className="rounded-lg border-[1.5px] border-border-base bg-surface-muted px-3.5 py-1.5 font-body text-[12.5px] font-bold text-ink transition-colors hover:bg-border-base"
+              >
+                {t('✕ বন্ধ করুন')}
+              </motion.button>
             </div>
-            <ul className={ulClass}>
-              <li className={liClass}>{t('প্রোডাক্ট ভাঙা, ত্রুটিপূর্ণ, মিসিং বা ভুল পেলে এই আনবক্সিং ভিডিও দিয়ে ওয়ারেন্টি ক্লেইম করতে পারবেন।')}</li>
-              <li className={liClass}>{t('প্রোডাক্টে কোনো প্রকার সমস্যা হলে সম্পূর্ণ দায়ভার Vangcur কর্তৃপক্ষ বহন করবে এবং যত দ্রুত সম্ভব সমাধান দেওয়ার চেষ্টা করা হবে।')}</li>
-            </ul>
-          </Section>
 
-          <Section title={t('🛡️ ৪. ওয়ারেন্টি সংক্রান্ত')}>
-            <ul className={ulClass}>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>Regular products come with a <strong>1-week</strong> warranty. Selected products carry up to 6 months / 1 year / 2 years of warranty.</>
-                  : <>সাধারণ প্রোডাক্টে <strong>১ সপ্তাহের</strong> ওয়ারেন্টি থাকবে। নির্বাচিত প্রোডাক্টে ৬ মাস / ১ বছর / ২ বছর পর্যন্ত ওয়ারেন্টি থাকবে।</>}
-              </li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>The warranty period starts <strong>from the date the order is placed.</strong></>
-                  : <>ওয়ারেন্টির মেয়াদ শুরু হয় <strong>অর্ডার করার তারিখ থেকে।</strong></>}
-              </li>
-              <li className={liClass}>{t('ওয়ারেন্টি থাকাকালীন সময়ের মধ্যে প্রোডাক্টে সমস্যা হলে এবং ওয়ারেন্টি ক্লেইম করা হলে, Vangcur কর্তৃপক্ষ নিজ খরচে সেটি রিপ্লেস করে নতুন একটি প্রোডাক্ট আপনার ঠিকানায় পৌঁছে দেবে। 🤍')}</li>
-              <li className={liClass}>{t('ওয়ারেন্টি থাকাকালীন সময়ে অবশ্যই প্রোডাক্টের বক্স ও ইনভয়েস পেপার সযত্নে সংরক্ষণ করুন।')}</li>
-            </ul>
-            <p className={pClass}><strong>{t('ওয়ারেন্টি ক্লেইম করতে যা লাগবে —')}</strong></p>
-            <ul className={ulClass}>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>The original product box <em>(a torn or cracked box, or a box with tape on it, will not be accepted.)</em></>
-                  : <>মূল প্রোডাক্টের বক্স <em>(ছেঁড়া বা ফাটা বক্স বা বক্সের গায়ে টেপ লাগানো থাকলে গ্রহণযোগ্য হবে না।)</em></>}
-              </li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <>Invoice paper <em>(provided with the product)</em></>
-                  : <>ইনভয়েস পেপার <em>(প্রোডাক্টের সাথে দেওয়া)</em></>}
-              </li>
-              <li className={liClass}>{t('আনবক্সিং ভিডিও')}</li>
-            </ul>
-          </Section>
+            {/* পলিসি কনটেন্ট */}
+            <div className="flex-1 px-4 pb-10 pt-5">
+              <Section title={t('📦 ১. অর্ডার সংক্রান্ত')}>
+                <ul className={ulClass}>
+                  <li className={liClass}>{t('অর্ডার সম্পন্ন করার আগে অনুগ্রহ করে নিশ্চিত করুন যে আপনার দেওয়া নাম, মোবাইল নম্বর, ডেলিভারি ঠিকানা, bKash ট্রানজেকশন আইডি বা বিকাশের শেষ ৪ ডিজিট সহ সকল তথ্য সঠিক।')}</li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>If any information is incorrect, <strong>Vangcur reserves the full right to cancel your order.</strong></>
+                      : <>যেকোনো তথ্য ভুল দিলে <strong>Vangcur আপনার অর্ডারটি বাতিল করার সম্পূর্ণ অধিকার রাখে।</strong></>}
+                  </li>
+                  <li className={liClass}>{t('অর্ডার কনফার্ম হওয়ার ২৪ ঘণ্টার মধ্যে ডেলিভারি প্রক্রিয়া শুরু হবে।')}</li>
+                  <li className={liClass}>{t('২৪–৪৮ ঘণ্টার মধ্যে কুরিয়ার সার্ভিস থেকে আপনার দেওয়া নম্বরে পার্সেলের ট্র্যাকিং লিংক পাঠানো হবে।')}</li>
+                </ul>
+              </Section>
 
-          <Section title={t('🔄 ৫. রিটার্ন ও রিফান্ড সংক্রান্ত')}>
-            <ul className={ulClass}>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <><strong>No returns for personal preference or change of mind:</strong> After purchasing from Vangcur (ভাঙচুর), there is no option to return, exchange, or refund a product due to the customer&apos;s personal preference, change of mind, or any other unreasonable or intentional reason unrelated to a genuine product issue. Customers are requested to carefully review the product&apos;s description, photos, and functionality on the website before ordering.</>
-                  : <><strong>পছন্দ না হওয়া বা মন পরিবর্তনের কারণে কোনো রিটার্ন নেই:</strong> Vangcur (ভাঙচুর) থেকে কেনাকাটার পর গ্রাহকের ব্যক্তিগত পছন্দ-অপছন্দ, মন পরিবর্তন (Change of mind) কিংবা প্রোডাক্টে কোনো জেনুইন সমস্যা ব্যতীত অন্য কোনো ইচ্ছাকৃত বা অযৌক্তিক কারণে প্রোডাক্ট রিটার্ন, এক্সচেঞ্জ কিংবা রিফান্ড করার কোনো সুযোগ নেই। কাস্টমারদের অনুরোধ করা হচ্ছে অর্ডার করার পূর্বেই প্রোডাক্টের বিবরণ, ছবি এবং কার্যকারিতা ওয়েবসাইট থেকে ভালোভাবে দেখে নেওয়ার জন্য।</>}
-              </li>
-              <li className={liClass}>
-                {lang === 'en'
-                  ? <><strong>Replacement facility (only for genuine issues or defects):</strong> If, after delivery, the product has a genuine manufacturing defect, transit damage (a broken or damaged product), or you received the wrong product, we will replace it entirely at our own cost and send a new product to your address, completely free of charge.</>
-                  : <><strong>রিপ্লেসমেন্ট সুবিধা (শুধুমাত্র জেনুইন সমস্যা বা ত্রুটির ক্ষেত্রে):</strong> ডেলিভারি পাওয়ার পর যদি প্রোডাক্টে কোনো আসল কারিগরি বা ম্যানুফ্যাকচারিং ত্রুটি (Manufacturing Defect), ট্রানজিট ড্যামেজ (ভাঙা বা নষ্ট প্রোডাক্ট) অথবা ভুল প্রোডাক্ট ডেলিভারি পাওয়া যায়, তবেই কেবল আমরা সেটি সম্পূর্ণ আমাদের নিজ দায়িত্বে এবং সম্পূর্ণ ফ্রিতে পরিবর্তন (Replacement) করে নতুন প্রোডাক্ট আপনার ঠিকানায় পাঠিয়ে দেব।</>}
-              </li>
-              <li className={liClass}>{t('রিপ্লেসমেন্ট ক্লেইম করার জন্য ৩ নম্বর পয়েন্ট অনুযায়ী একটানা ও আন-এডিটেড আনবক্সিং ভিডিও প্রমাণ হিসেবে দেওয়া বাধ্যতামূলক।')}</li>
-            </ul>
-          </Section>
+              <Section title={t('🚚 ২. ডেলিভারি সংক্রান্ত')}>
+                <p className={pClass}>
+                  {lang === 'en'
+                    ? <>Vangcur ships products using the <strong>closed-box delivery</strong> method. So —</>
+                    : <>Vangcur <strong>ক্লোজড বক্স ডেলিভারি</strong> পদ্ধতিতে প্রোডাক্ট পাঠায়। তাই —</>}
+                </p>
+                <ul className={ulClass}>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>Please pay the delivery person the <strong>remaining amount</strong> first, then accept the parcel.</>
+                      : <>ডেলিভারিম্যানকে আগে <strong>অবশিষ্ট টাকা পরিশোধ করুন</strong>, তারপর পার্সেল বুঝে নিন।</>}
+                  </li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>Once you have the product in hand, there is <strong>no option to return it</strong> if you simply don&apos;t like it. Please review the product details and photos carefully before ordering.</>
+                      : <>প্রোডাক্ট হাতে পাওয়ার পর পছন্দ না হলে ফেরত দেওয়ার <strong>কোনো সুযোগ নেই।</strong> অর্ডার করার আগেই প্রোডাক্টের বিবরণ ও ছবি ভালোভাবে দেখে নিন।</>}
+                  </li>
+                </ul>
+              </Section>
 
-          <div className="border-t border-border-base pt-4 text-center font-body text-[11.5px] italic text-muted">
-            {t('⚠️ ভাঙচুর কর্তৃপক্ষ যেকোনো সময় এই নীতিমালা পরিবর্তন অথবা আপডেট করার অধিকার রাখে।')}
-          </div>
+              <Section title={t('🎥 ৩. আনবক্সিং ভিডিও সংক্রান্ত (অবশ্যই করণীয়)')}>
+                <p className={pClass}>
+                  {lang === 'en'
+                    ? <>While opening the product after receiving it, please record a <strong>continuous unboxing video</strong> —</>
+                    : <>প্রোডাক্ট পাওয়ার পর খোলার সময় <strong>একটানা আনবক্সিং ভিডিও</strong> ধারণ করুন —</>}
+                </p>
+                <ul className={ulClass}>
+                  <li className={liClass}>{t('পার্সেলের বাইরে থেকে শুরু করে প্রোডাক্টের ভেতরের সব পার্টস পর্যন্ত একটানা রেকর্ড করতে হবে।')}</li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>The video must not have <strong>any cuts or pauses.</strong></>
+                      : <>ভিডিওতে <strong>কোনো কাট বা পজ</strong> দেওয়া যাবে না।</>}
+                  </li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>For electronic products, the video must <strong>show the product being turned on.</strong></>
+                      : <>ইলেকট্রনিক প্রোডাক্টের ক্ষেত্রে ভিডিওতে প্রোডাক্টটি <strong>চালু করে দেখাতে হবে।</strong></>}
+                  </li>
+                </ul>
+                <div className="my-2.5 rounded-lg border-[1.5px] border-[#f97316] bg-[#fff8f0] px-3.5 py-2.5 font-body text-[12.5px] leading-[1.65] text-[#b45309]">
+                  {t('⚠️ আনবক্সিং ভিডিও ছাড়া কোনো ওয়ারেন্টি ক্লেইম করা সম্ভব নয়।')}
+                </div>
+                <ul className={ulClass}>
+                  <li className={liClass}>{t('প্রোডাক্ট ভাঙা, ত্রুটিপূর্ণ, মিসিং বা ভুল পেলে এই আনবক্সিং ভিডিও দিয়ে ওয়ারেন্টি ক্লেইম করতে পারবেন।')}</li>
+                  <li className={liClass}>{t('প্রোডাক্টে কোনো প্রকার সমস্যা হলে সম্পূর্ণ দায়ভার Vangcur কর্তৃপক্ষ বহন করবে এবং যত দ্রুত সম্ভব সমাধান দেওয়ার চেষ্টা করা হবে।')}</li>
+                </ul>
+              </Section>
 
-          <button
-            onClick={onAgreeAndConfirm}
-            className="mt-2 flex h-[50px] w-full items-center justify-center gap-2 rounded-brand bg-ink font-body text-[15px] font-bold text-white transition-brand duration-brand hover:bg-brand-primary"
-          >
-            {t('✅ ঠিক আছে, অর্ডার কনফার্ম করুন')}
-          </button>
+              <Section title={t('🛡️ ৪. ওয়ারেন্টি সংক্রান্ত')}>
+                <ul className={ulClass}>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>Regular products come with a <strong>1-week</strong> warranty. Selected products carry up to 6 months / 1 year / 2 years of warranty.</>
+                      : <>সাধারণ প্রোডাক্টে <strong>১ সপ্তাহের</strong> ওয়ারেন্টি থাকবে। নির্বাচিত প্রোডাক্টে ৬ মাস / ১ বছর / ২ বছর পর্যন্ত ওয়ারেন্টি থাকবে।</>}
+                  </li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>The warranty period starts <strong>from the date the order is placed.</strong></>
+                      : <>ওয়ারেন্টির মেয়াদ শুরু হয় <strong>অর্ডার করার তারিখ থেকে।</strong></>}
+                  </li>
+                  <li className={liClass}>{t('ওয়ারেন্টি থাকাকালীন সময়ের মধ্যে প্রোডাক্টে সমস্যা হলে এবং ওয়ারেন্টি ক্লেইম করা হলে, Vangcur কর্তৃপক্ষ নিজ খরচে সেটি রিপ্লেস করে নতুন একটি প্রোডাক্ট আপনার ঠিকানায় পৌঁছে দেবে। 🤍')}</li>
+                  <li className={liClass}>{t('ওয়ারেন্টি থাকাকালীন সময়ে অবশ্যই প্রোডাক্টের বক্স ও ইনভয়েস পেপার সযত্নে সংরক্ষণ করুন।')}</li>
+                </ul>
+                <p className={pClass}><strong>{t('ওয়ারেন্টি ক্লেইম করতে যা লাগবে —')}</strong></p>
+                <ul className={ulClass}>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>The original product box <em>(a torn or cracked box, or a box with tape on it, will not be accepted.)</em></>
+                      : <>মূল প্রোডাক্টের বক্স <em>(ছেঁড়া বা ফাটা বক্স বা বক্সের গায়ে টেপ লাগানো থাকলে গ্রহণযোগ্য হবে না।)</em></>}
+                  </li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <>Invoice paper <em>(provided with the product)</em></>
+                      : <>ইনভয়েস পেপার <em>(প্রোডাক্টের সাথে দেওয়া)</em></>}
+                  </li>
+                  <li className={liClass}>{t('আনবক্সিং ভিডিও')}</li>
+                </ul>
+              </Section>
+
+              <Section title={t('🔄 ৫. রিটার্ন ও রিফান্ড সংক্রান্ত')}>
+                <ul className={ulClass}>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <><strong>No returns for personal preference or change of mind:</strong> After purchasing from Vangcur (ভাঙচুর), there is no option to return, exchange, or refund a product due to the customer&apos;s personal preference, change of mind, or any other unreasonable or intentional reason unrelated to a genuine product issue. Customers are requested to carefully review the product&apos;s description, photos, and functionality on the website before ordering.</>
+                      : <><strong>পছন্দ না হওয়া বা মন পরিবর্তনের কারণে কোনো রিটার্ন নেই:</strong> Vangcur (ভাঙচুর) থেকে কেনাকাটার পর গ্রাহকের ব্যক্তিগত পছন্দ-অপছন্দ, মন পরিবর্তন (Change of mind) কিংবা প্রোডাক্টে কোনো জেনুইন সমস্যা ব্যতীত অন্য কোনো ইচ্ছাকৃত বা অযৌক্তিক কারণে প্রোডাক্ট রিটার্ন, এক্সচেঞ্জ কিংবা রিফান্ড করার কোনো সুযোগ নেই। কাস্টমারদের অনুরোধ করা হচ্ছে অর্ডার করার পূর্বেই প্রোডাক্টের বিবরণ, ছবি এবং কার্যকারিতা ওয়েবসাইট থেকে ভালোভাবে দেখে নেওয়ার জন্য।</>}
+                  </li>
+                  <li className={liClass}>
+                    {lang === 'en'
+                      ? <><strong>Replacement facility (only for genuine issues or defects):</strong> If, after delivery, the product has a genuine manufacturing defect, transit damage (a broken or damaged product), or you received the wrong product, we will replace it entirely at our own cost and send a new product to your address, completely free of charge.</>
+                      : <><strong>রিপ্লেসমেন্ট সুবিধা (শুধুমাত্র জেনুইন সমস্যা বা ত্রুটির ক্ষেত্রে):</strong> ডেলিভারি পাওয়ার পর যদি প্রোডাক্টে কোনো আসল কারিগরি বা ম্যানুফ্যাকচারিং ত্রুটি (Manufacturing Defect), ট্রানজিট ড্যামেজ (ভাঙা বা নষ্ট প্রোডাক্ট) অথবা ভুল প্রোডাক্ট ডেলিভারি পাওয়া যায়, তবেই কেবল আমরা সেটি সম্পূর্ণ আমাদের নিজ দায়িত্বে এবং সম্পূর্ণ ফ্রিতে পরিবর্তন (Replacement) করে নতুন প্রোডাক্ট আপনার ঠিকানায় পাঠিয়ে দেব।</>}
+                  </li>
+                  <li className={liClass}>{t('রিপ্লেসমেন্ট ক্লেইম করার জন্য ৩ নম্বর পয়েন্ট অনুযায়ী একটানা ও আন-এডিটেড আনবক্সিং ভিডিও প্রমাণ হিসেবে দেওয়া বাধ্যতামূলক।')}</li>
+                </ul>
+              </Section>
+
+              <div className="border-t border-border-base pt-4 text-center font-body text-[11.5px] italic text-muted">
+                {t('⚠️ ভাঙচুর কর্তৃপক্ষ যেকোনো সময় এই নীতিমালা পরিবর্তন অথবা আপডেট করার অধিকার রাখে।')}
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                onClick={onAgreeAndConfirm}
+                className="mt-4 flex h-[50px] w-full items-center justify-center gap-2 rounded-brand bg-ink font-body text-[15px] font-bold text-white transition-colors hover:bg-brand-primary"
+              >
+                {t('✅ ঠিক আছে, অর্ডার কনফার্ম করুন')}
+              </motion.button>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }
