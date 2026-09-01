@@ -1052,13 +1052,17 @@ export default function ProductDetailClient({
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
                       
-                      {isOpen && (
-                        <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
+                      <div
+                        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+                          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                        }`}
+                      >
+                        <div className="overflow-hidden border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
                           <div className="border-l-2 border-brand-light/60 pl-3">
                             {t(f.a)}
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })}
@@ -1089,9 +1093,9 @@ export default function ProductDetailClient({
             <div className="h-px flex-1 bg-border-base" />
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {related.map((p) => (
+            {related.map((p, i) => (
               <div key={p.id}>
-                <ProductCard prod={p} isFirst={false} />
+                <ProductCard prod={p} isFirst={false} index={i} />
               </div>
             ))}
           </div>
