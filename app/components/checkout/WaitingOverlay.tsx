@@ -1,10 +1,10 @@
-// [REPLACE] ফাইলের পাথ: app/components/checkout/WaitingOverlay.tsx
 'use client';
 
 import {
   useCallback, useEffect, useId, useRef, useState,
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
@@ -344,19 +344,21 @@ export default function WaitingOverlay() {
     setTimeout(() => setCopyLabel(lang === 'en' ? 'Copy' : 'কপি'), 2000);
   };
 
-  // 🌟 নতুন সিগনেচার ফ্রস্টেড গ্লাস ফ্লোটিং বাবল (মিনিমাইজড অবস্থা)
+  // 🌟 মিনিমাইজড অবস্থায় স্প্রিং বাবল বাটন
   if (minimized) {
     return (
-      <button
+      <motion.button
+        whileTap={{ scale: 0.94 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 25 }}
         onClick={() => setMinimized(false)}
-        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light active:scale-95 animate-section-reveal"
+        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
       >
         <span className="relative flex h-2.5 w-2.5 items-center justify-center">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
         </span>
         <span>{lang === 'en' ? `${order.orderNum} processing...` : `${order.orderNum} প্রসেস হচ্ছে...`}</span>
-      </button>
+      </motion.button>
     );
   }
 
@@ -397,8 +399,8 @@ export default function WaitingOverlay() {
                 )}
               </p>
 
-              {/* অর্ডার নম্বর বক্স — ফ্রস্টেড গ্লাস ও স্কাই-ব্লু টিন্ট ব্যাকগ্রাউন্ড */}
-              <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+              {/* অর্ডার নম্বর বক্স */}
+              <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[12px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
                 <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
                 <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
                 <button
@@ -410,9 +412,9 @@ export default function WaitingOverlay() {
                 </button>
               </div>
 
-              {/* আন-লগইন গেস্ট কার্ড */}
+              {/* আন-লগইন গেস্ট কার্ড — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[12px]) */}
               {isGuest && (
-                <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[16px] border border-amber-200/80 bg-amber-50/90 p-3 text-left shadow-xs">
+                <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[12px] border border-amber-200/80 bg-amber-50/90 p-3 text-left shadow-xs">
                   <IconWarningShield />
                   <div className="font-body text-[11.5px] leading-[1.65] text-amber-900">
                     {lang === 'en' ? (
@@ -424,8 +426,8 @@ export default function WaitingOverlay() {
                 </div>
               )}
 
-              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন */}
-              <div className="relative z-10 mb-4 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
+              {/* ৩-ধাপের স্ট্যাটাস টাইমলাইন — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[12px]) */}
+              <div className="relative z-10 mb-4 rounded-[12px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
                 {/* ধাপ ১: রিসিভড */}
                 <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-xs">
@@ -460,8 +462,8 @@ export default function WaitingOverlay() {
                 </div>
               </div>
 
-              {/* ফ্রেশ স্কাই-ব্লু টিপ বক্স */}
-              <div className="relative z-10 mb-4 rounded-[16px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
+              {/* ফ্রেশ স্কাই-ব্লু টিপ বক্স — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[10px]) */}
+              <div className="relative z-10 mb-4 rounded-[10px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
                 <div className="flex items-center justify-center gap-1.5">
                   <IconBulb />
                   <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।')}</span>
@@ -525,14 +527,16 @@ export default function WaitingOverlay() {
                 </div>
               </div>
 
-              {/* ওয়েবসাইটে ফিরে যাওয়ার প্রাইমারি বাটন */}
-              <button
+              {/* ওয়েবসাইটে ফিরে যাওয়ার প্রাইমারি বাটন — স্প্রিং ফিডব্যাক */}
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 onClick={() => setMinimized(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
               >
                 <IconHome />
                 <span>{t('ওয়েবসাইটে ফিরে যান')}</span>
-              </button>
+              </motion.button>
             </>
           )}
 
@@ -554,21 +558,25 @@ export default function WaitingOverlay() {
               </p>
 
               <div className="relative z-10 flex flex-col gap-2.5">
-                <a
+                <motion.a
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   href={DEFAULT_FOOTER.social.wa}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-105 active:scale-95 no-underline"
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-105 no-underline"
                 >
                   <IconWhatsApp />
                   <span>{t('WhatsApp এ যোগাযোগ করুন')}</span>
-                </a>
-                <button
+                </motion.a>
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   onClick={retryOrder}
-                  className="w-full rounded-full border border-border-base bg-white py-[12px] font-body text-[13.5px] font-bold text-ink transition-all duration-brand hover:bg-surface-muted active:scale-95"
+                  className="w-full rounded-full border border-border-base bg-white py-[12px] font-body text-[13.5px] font-bold text-ink transition-colors duration-brand hover:bg-surface-muted"
                 >
                   {t('আবার চেষ্টা করুন')}
-                </button>
+                </motion.button>
               </div>
             </>
           )}
