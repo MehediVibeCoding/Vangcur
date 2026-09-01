@@ -1037,7 +1037,7 @@ export default function ProductDetailClient({
                   return (
                     <div
                       key={i}
-                      className={`overflow-hidden rounded-[14px] border transition-all duration-brand ${
+                      className={`overflow-hidden rounded-[14px] border transition-colors duration-200 ${
                         isOpen
                           ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] to-white shadow-sh1 ring-1 ring-brand-light/20'
                           : 'border-border-base bg-white shadow-xs hover:border-brand-light/40 hover:bg-brand-bg/10'
@@ -1052,14 +1052,17 @@ export default function ProductDetailClient({
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
                       
+                      {/* জিরো-প্যাডিং নো-রিফ্লো গ্রিড কলাপ্স */}
                       <div
                         className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
                           isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                         }`}
                       >
-                        <div className="overflow-hidden border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
-                          <div className="border-l-2 border-brand-light/60 pl-3">
-                            {t(f.a)}
+                        <div className="min-h-0 overflow-hidden">
+                          <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
+                            <div className="border-l-2 border-brand-light/60 pl-3">
+                              {t(f.a)}
+                            </div>
                           </div>
                         </div>
                       </div>
