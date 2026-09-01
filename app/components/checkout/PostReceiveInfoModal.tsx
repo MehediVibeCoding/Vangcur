@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { SHOW_POST_RECEIVE_INFO_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
@@ -90,13 +91,12 @@ function IconCheckBadgeSolid() {
 
 export default function PostReceiveInfoModal() {
   const [open, setOpen] = useState(false);
-  const { t, lang } = useT();
+  const { lang } = useT();
 
   useEffect(() => {
     const onShow = () => setOpen(true);
     window.addEventListener(SHOW_POST_RECEIVE_INFO_EVENT, onShow);
 
-    // ইনভয়েস পেজ থেকে ব্যাক করে হোমে আসলে স্বয়ংক্রিয়ভাবে আনবক্সিং পপআপ ওপেন করা
     try {
       if (typeof window !== 'undefined' && sessionStorage.getItem('vc_show_post_receive_after_invoice') === '1') {
         sessionStorage.removeItem('vc_show_post_receive_after_invoice');
@@ -145,7 +145,8 @@ export default function PostReceiveInfoModal() {
               : 'ওয়ারেন্টি ক্লেইম নির্বিঘ্নে করতে নিচের নিয়মগুলো অবশ্যই মেনে চলুন।'}
           </p>
 
-          <div className="relative z-10 mb-4 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md">
+          {/* কনসেন্ট্রিক বর্ডার রেডিয়াস অপটিমাইজড চেকলিস্ট বক্স (rounded-[12px]) */}
+          <div className="relative z-10 mb-4 rounded-[12px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md">
             <div className="mb-3 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-light" />
               {lang === 'en' ? 'Record Unboxing Video' : 'আনবক্সিং ভিডিও করুন'}
@@ -162,7 +163,8 @@ export default function PostReceiveInfoModal() {
             </ul>
           </div>
 
-          <div className="relative z-10 mb-5 rounded-[16px] border border-amber-200/80 bg-amber-50/90 p-3.5 text-left shadow-xs">
+          {/* কনসেন্ট্রিক বর্ডার রেডিয়াস অপটিমাইজড ওয়ার্নিং বক্স (rounded-[10px]) */}
+          <div className="relative z-10 mb-5 rounded-[10px] border border-amber-200/80 bg-amber-50/90 p-3.5 text-left shadow-xs">
             <div className="mb-2 flex items-center gap-2">
               <IconWarningShield />
               <span className="font-body text-[12.5px] font-bold text-amber-900">
@@ -179,13 +181,16 @@ export default function PostReceiveInfoModal() {
             </ul>
           </div>
 
-          <button
+          {/* স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন বাটন */}
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             onClick={() => setOpen(false)}
-            className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
+            className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
           >
             <IconCheckBadgeSolid />
             <span>{lang === 'en' ? 'Understood' : 'বুঝেছি, মনে রাখব'}</span>
-          </button>
+          </motion.button>
         </div>
       </div>
     </>
