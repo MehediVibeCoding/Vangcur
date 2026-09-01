@@ -534,72 +534,165 @@ export default function AccountClient() {
               {/* বাম কলাম: সাইডবার উইজেটসমূহ */}
               <div className="flex flex-col gap-4">
                 
-                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড */}
+                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড (স্মুথ ও রিয়েলস্টিক অ্যানিমেশন) */}
                 <div
                   ref={cardRef}
-                  className={`relative overflow-hidden rounded-[24px] p-5 shadow-sh2 ${
+                  className={`relative overflow-hidden rounded-[24px] p-5 shadow-sh2 select-none ${
                     STATE_BG[celestial.state] || STATE_BG.noon
                   }`}
                   style={{ minHeight: 240 }}
                 >
-                  <svg className="pointer-events-none absolute inset-0 h-16 w-full opacity-80" viewBox="0 0 400 65" preserveAspectRatio="none">
-                    {['10%', '20%', '35%', '50%', '65%', '80%', '92%', '15%', '45%', '75%'].map((left, i) => (
-                      <circle
-                        key={i}
-                        cx={left}
-                        cy={`${10 + (i % 4) * 4}`}
-                        r={i % 2 === 0 ? 1 : 1.5}
-                        fill="#fff"
-                        style={{
-                          animation: `twinkling ${1.5 + (i % 3) * 0.5}s infinite ${(i % 5) * 0.2}s`,
-                          opacity: celestial.state === 'night' ? undefined : 0,
-                        }}
-                      />
-                    ))}
-                  </svg>
-
-                  {['0%', '35%', '68%'].map((left, i) => (
-                    <div
-                      key={i}
-                      className="absolute top-2 h-4 w-10 rounded-full bg-white/70"
-                      style={{
-                        left,
-                        animation: `cloudDrift ${12 + i * 6}s linear infinite ${-i * 4}s`,
-                        opacity: celestial.state === 'rain' || celestial.state === 'night' ? 0.15 : 0.6,
-                      }}
-                    />
-                  ))}
-
-                  {isRaining && (
+                  {/* তারার মেলা (রাতের আকাশে) */}
+                  {celestial.state === 'night' && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                      {['10%', '20%', '35%', '50%', '65%', '80%', '92%', '15%', '45%', '75%'].map((left, i) => (
+                      {[
+                        { left: '12%', top: '15%', size: 2, anim: 'twinkling 2.2s infinite 0.1s' },
+                        { left: '24%', top: '28%', size: 3, anim: 'starShimmer 3s infinite 0.4s' },
+                        { left: '38%', top: '12%', size: 1.5, anim: 'twinkling 1.8s infinite 0.2s' },
+                        { left: '52%', top: '22%', size: 2.5, anim: 'starShimmer 2.8s infinite 0.6s' },
+                        { left: '68%', top: '14%', size: 2, anim: 'twinkling 2.5s infinite 0.3s' },
+                        { left: '78%', top: '30%', size: 3, anim: 'starShimmer 3.2s infinite 0.8s' },
+                        { left: '88%', top: '16%', size: 2, anim: 'twinkling 2s infinite 0.5s' },
+                        { left: '18%', top: '42%', size: 1.5, anim: 'twinkling 2.4s infinite 0.7s' },
+                        { left: '46%', top: '38%', size: 2, anim: 'starShimmer 2.6s infinite 0.2s' },
+                        { left: '82%', top: '44%', size: 1.5, anim: 'twinkling 2.1s infinite 0.9s' },
+                      ].map((star, i) => (
                         <div
                           key={i}
-                          className="absolute top-0 h-3 w-px bg-white/50"
+                          className="absolute rounded-full bg-white"
                           style={{
-                            left,
-                            animation: `rainDropFall ${0.6 + (i % 3) * 0.1}s linear infinite ${(i % 6) * 0.1 + 0.1}s`,
+                            left: star.left,
+                            top: star.top,
+                            width: star.size,
+                            height: star.size,
+                            animation: star.anim,
                           }}
                         />
                       ))}
                     </div>
                   )}
 
-                  {celestial.celestial !== 'none' && (
-                    <div
-                      className={`absolute h-6 w-6 rounded-full ${
-                        celestial.celestial === 'sun'
-                          ? 'bg-[#FDE68A] shadow-[0_0_18px_6px_rgba(253,230,138,0.6)]'
-                          : 'bg-[#E5E7EB] shadow-[0_0_14px_4px_rgba(229,231,235,0.5)]'
-                      }`}
-                      style={{ left: celestial.posX, top: celestial.posY }}
-                    />
+                  {/* ভাসমান তুলতুলে মেঘ (দিনের ও ভোরের আকাশে) */}
+                  {celestial.state !== 'night' && (
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      <div
+                        className="absolute top-2 opacity-75"
+                        style={{ animation: 'cloudDrift 22s linear infinite 0s' }}
+                      >
+                        <svg width="64" height="24" viewBox="0 0 64 24" fill="rgba(255,255,255,0.7)">
+                          <path d="M12 20h40a8 8 0 0 0 1.5-15.8A12 12 0 0 0 30 2.2 9 9 0 0 0 12 11a7 7 0 0 0 0 9z" />
+                        </svg>
+                      </div>
+                      <div
+                        className="absolute top-7 opacity-60"
+                        style={{ animation: 'cloudDrift 30s linear infinite -10s' }}
+                      >
+                        <svg width="48" height="18" viewBox="0 0 64 24" fill="rgba(255,255,255,0.6)">
+                          <path d="M12 20h40a8 8 0 0 0 1.5-15.8A12 12 0 0 0 30 2.2 9 9 0 0 0 12 11a7 7 0 0 0 0 9z" />
+                        </svg>
+                      </div>
+                    </div>
                   )}
 
+                  {/* আকাশ পাড়ি দেওয়া ডানা ঝাপটানো পাখি */}
+                  {celestial.birdsVisible && (
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      <svg
+                        className="absolute left-0 top-3 h-3 w-5"
+                        viewBox="0 0 20 12"
+                        fill="none"
+                        style={{ animation: 'birdFly 14s linear infinite 0s' }}
+                      >
+                        <path d="M1 7 Q5 0 10 7 Q15 0 19 7" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" />
+                      </svg>
+                      <svg
+                        className="absolute left-0 top-8 h-2.5 w-4"
+                        viewBox="0 0 20 12"
+                        fill="none"
+                        style={{ animation: 'birdFly 18s linear infinite -6s' }}
+                      >
+                        <path d="M1 7 Q5 0 10 7 Q15 0 19 7" stroke="rgba(255,255,255,0.65)" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* অবিরাম প্রাকৃতিক বৃষ্টি ও বিদ্যুৎ */}
+                  {isRaining && (
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      <div
+                        className="absolute inset-0 bg-white"
+                        style={{ animation: 'lightningFlash 8s ease-in-out infinite' }}
+                      />
+                      <svg
+                        className="absolute right-[22%] top-0 h-16 w-6 text-sky-100"
+                        viewBox="0 0 30 90"
+                        preserveAspectRatio="none"
+                        style={{ animation: 'lightningFlash 8s ease-in-out infinite' }}
+                      >
+                        <path d="M16 0 L3 42 L16 39 L7 88 L27 34 L15 37 Z" fill="#E0F2FE" />
+                      </svg>
+                      {[8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 94].map((leftPct, i) => (
+                        <div
+                          key={i}
+                          className="absolute top-0 w-[1.5px] rounded-full bg-gradient-to-b from-transparent via-white/70 to-white/90"
+                          style={{
+                            left: `${leftPct}%`,
+                            height: `${14 + (i % 4) * 3}px`,
+                            animation: `rainDropFall ${0.65 + (i % 3) * 0.1}s linear infinite ${(i % 6) * 0.1}s`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* সূর্য / চাঁদ (রেডিয়েন্ট সোলার আভা ও লুনার হ্যালো সহ) */}
+                  {celestial.celestial !== 'none' && (
+                    <div
+                      className={`absolute h-7 w-7 rounded-full transition-all duration-700 ${
+                        celestial.celestial === 'sun'
+                          ? 'bg-gradient-to-tr from-[#F59E0B] via-[#FBBF24] to-[#FEF08A] shadow-[0_0_24px_8px_rgba(251,191,36,0.7)]'
+                          : 'bg-gradient-to-tr from-[#94A3B8] via-[#E2E8F0] to-[#FFFFFF] shadow-[0_0_20px_6px_rgba(226,232,240,0.65)]'
+                      }`}
+                      style={{
+                        left: celestial.posX,
+                        top: celestial.posY,
+                        animation: celestial.celestial === 'sun' ? 'sunCoronaPulse 4s ease-in-out infinite' : 'moonGlowAura 5s ease-in-out infinite',
+                      }}
+                    >
+                      {celestial.celestial === 'moon' && (
+                        <div className="absolute inset-0 rounded-full opacity-20 bg-[radial-gradient(circle_at_30%_30%,#475569_15%,transparent_40%)]" />
+                      )}
+                    </div>
+                  )}
+
+                  {/* মাল্টি-লেয়ার হাই-ডেফিনিশন ল্যান্ডস্কেপ সিলুয়েট */}
                   <div
-                    className="pointer-events-none absolute bottom-0 left-0 h-16 w-full opacity-90"
+                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 w-full opacity-95"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(celestial.sceneryHtml) }}
                   />
+
+                  {/* জোনাকি পোকা (রাতের শান্ত জমিনে) */}
+                  {celestial.state === 'night' && (
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      {[
+                        { left: '16%', bottom: '26px', dur: '3.2s', delay: '0.2s' },
+                        { left: '36%', bottom: '34px', dur: '4s', delay: '0.9s' },
+                        { left: '58%', bottom: '22px', dur: '3.6s', delay: '1.4s' },
+                        { left: '76%', bottom: '30px', dur: '4.4s', delay: '0.5s' },
+                        { left: '88%', bottom: '20px', dur: '3.8s', delay: '1.8s' },
+                      ].map((bug, i) => (
+                        <div
+                          key={i}
+                          className="absolute h-1.5 w-1.5 rounded-full bg-[#FEF08A]"
+                          style={{
+                            left: bug.left,
+                            bottom: bug.bottom,
+                            animation: `fireflyGlow ${bug.dur} ease-in-out infinite ${bug.delay}`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   {/* কার্ড কনটেন্ট ও ফ্রন্ট ক্রাউন পজিশন */}
                   <div className="relative z-10 flex h-full min-h-[200px] flex-col justify-between">
