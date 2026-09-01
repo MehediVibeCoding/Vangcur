@@ -73,7 +73,7 @@ export default function FAQ() {
         </p>
       </div>
 
-      {/* অ্যাকর্ডিয়ন লিস্ট */}
+      {/* অ্যাকর্ডিয়ন লিস্ট — নো-রিফ্লো GPU গ্রিড অ্যানিমেশন */}
       <div className="mx-auto max-w-[760px] space-y-3">
         {faqs.map((f, i) => {
           const open = openIndex === i;
@@ -100,12 +100,15 @@ export default function FAQ() {
               </button>
 
               <div
-                className="overflow-hidden px-4 transition-[max-height,padding] duration-300 ease-in-out sm:px-[18px]"
-                style={open ? { maxHeight: '350px', paddingBottom: '18px', paddingTop: '0px' } : { maxHeight: 0, paddingBottom: 0, paddingTop: 0 }}
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+                  open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                }`}
               >
-                <div className="border-t border-brand-light/15 pt-3 font-body text-[13.5px] leading-[1.8] text-ink/80">
-                  <div className="border-l-2 border-brand-light/60 pl-3.5">
-                    {t(f.a)}
+                <div className="overflow-hidden px-4 pb-4 sm:px-[18px] sm:pb-[18px]">
+                  <div className="border-t border-brand-light/15 pt-3 font-body text-[13.5px] leading-[1.8] text-ink/80">
+                    <div className="border-l-2 border-brand-light/60 pl-3.5">
+                      {t(f.a)}
+                    </div>
                   </div>
                 </div>
               </div>
