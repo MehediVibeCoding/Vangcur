@@ -63,9 +63,7 @@ export default function ClientHome({
       <ScrollReveal>
         <Categories initialCategories={initialCategories} />
       </ScrollReveal>
-      <ScrollReveal>
-        <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
-      </ScrollReveal>
+      <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
       <ScrollReveal>
         <CustomerGallery />
       </ScrollReveal>
