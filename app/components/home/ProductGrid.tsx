@@ -212,7 +212,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       ) : (
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {visibleItems.map((p, i) => (
-            <ProductCard key={p.id} prod={p} isFirst={i === 0} />
+            <ProductCard key={p.id} prod={p} isFirst={i === 0} index={i} />
           ))}
           {showCategoryEndBtn && (
             <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">
