@@ -181,15 +181,16 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     runFixedTimeNav('product', href);
   };
 
-  // স্ট্যাগার্ড ডিলে ক্যালকুলেশন (পরপর ক্যাসকেড ইফেক্ট)
-  const staggerDelay = Math.min(index % 20, 10) * 0.045;
+  // স্ক্রিনের একদম উপরে থাকা প্রথম ২টি কার্ড শুরুতেই প্রস্তুত থাকবে
+  const isAboveFold = index < 2;
+  const staggerDelay = !isAboveFold ? Math.min((index - 2) % 20, 8) * 0.045 : 0;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 22 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-30px' }}
-      transition={{ duration: 0.45, delay: staggerDelay, ease: [0.4, 0, 0.2, 1] }}
+      initial={isAboveFold ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
+      whileInView={!isAboveFold ? { opacity: 1, y: 0 } : undefined}
+      viewport={{ once: true, margin: '-20px' }}
+      transition={{ duration: 0.42, delay: staggerDelay, ease: [0.4, 0, 0.2, 1] }}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
@@ -205,7 +206,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
             transition: `transform ${NAV_ANIM_MS}ms ease, filter ${NAV_ANIM_MS}ms ease`,
           } : undefined}
         >
-          <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
+          <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst && !isAboveFold} />
         </Link>
 
         <div
