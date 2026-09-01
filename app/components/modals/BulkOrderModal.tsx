@@ -1,7 +1,7 @@
-// [REPLACE] ফাইলের পাথ: app/components/modals/BulkOrderModal.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from '@/lib/uiEvents';
@@ -178,8 +178,8 @@ export default function BulkOrderModal() {
             )}
           </p>
 
-          {/* সাপোর্ট কলআউট বক্স */}
-          <div className="relative z-10 my-4 rounded-[18px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
+          {/* সাপোর্ট কলআউট বক্স — কনসেন্ট্রিক বর্ডার রেডিয়াস ফিক্স (rounded-[12px]) */}
+          <div className="relative z-10 my-4 rounded-[12px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
             <div className="font-body text-[12px] leading-relaxed text-ink/85">
               {lang === 'en' ? (
                 <>✨ Our dedicated support manager will immediately assist you on WhatsApp to confirm your items, apply bulk deals, and arrange secure fast home delivery.</>
@@ -189,24 +189,28 @@ export default function BulkOrderModal() {
             </div>
           </div>
 
-          {/* অ্যাকশন বাটনসমূহ */}
+          {/* অ্যাকশন বাটনসমূহ — স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন */}
           <div className="relative z-10 flex flex-col gap-2.5 pt-1">
             {/* WhatsApp বাটন */}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               onClick={handleWhatsAppOrder}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-[13px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-105 active:scale-95"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-[13px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-105"
             >
               <WhatsAppIcon />
               <span>{lang === 'en' ? 'Order via WhatsApp' : 'WhatsApp-এ অর্ডার কনফার্ম করুন'}</span>
-            </button>
+            </motion.button>
 
-            {/* কার্ট পরিবর্তন করুন বাটন — ক্লিক করলেই কুইক শপিং কার্ট ড্রয়ার ওপেন হবে */}
-            <button
+            {/* কার্ট পরিবর্তন করুন বাটন */}
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               onClick={handleModifyCart}
-              className="w-full rounded-full border border-border-base bg-white/80 py-[11.5px] font-body text-[13.5px] font-bold text-ink transition-all duration-brand hover:bg-white active:scale-95"
+              className="w-full rounded-full border border-border-base bg-white/80 py-[11.5px] font-body text-[13.5px] font-bold text-ink transition-colors duration-brand hover:bg-white"
             >
               {lang === 'en' ? 'Modify Cart' : 'কার্ট পরিবর্তন করুন'}
-            </button>
+            </motion.button>
           </div>
 
         </div>
