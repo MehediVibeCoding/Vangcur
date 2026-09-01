@@ -73,14 +73,14 @@ export default function FAQ() {
         </p>
       </div>
 
-      {/* অ্যাকর্ডিয়ন লিস্ট — নো-রিফ্লো GPU গ্রিড অ্যানিমেশন */}
+      {/* অ্যাকর্ডিয়ন লিস্ট — স্লিম ও টাইট কম্প্যাক্ট ডিজাইন */}
       <div className="mx-auto max-w-[760px] space-y-3">
         {faqs.map((f, i) => {
           const open = openIndex === i;
           return (
             <div
               key={i}
-              className={`overflow-hidden rounded-[16px] border transition-all duration-300 ${
+              className={`overflow-hidden rounded-[16px] border transition-colors duration-200 ${
                 open
                   ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] via-white to-white shadow-sh1 ring-1 ring-brand-light/20'
                   : 'border-border-base bg-white/85 shadow-xs backdrop-blur-sm hover:border-brand-light/40 hover:bg-white'
@@ -89,7 +89,7 @@ export default function FAQ() {
               <button
                 type="button"
                 onClick={() => toggleFAQ(i)}
-                className="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-4 sm:p-[18px] text-left font-body text-[14px] font-bold text-ink transition-colors"
+                className="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-4 sm:p-[17px] text-left font-body text-[14px] font-bold text-ink transition-colors"
               >
                 <span className="leading-snug">{t(f.q)}</span>
                 <ChevronIcon
@@ -99,13 +99,14 @@ export default function FAQ() {
                 />
               </button>
 
+              {/* জিরো-প্যাডিং নো-রিফ্লো গ্রিড কলাপ্স */}
               <div
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
                   open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                 }`}
               >
-                <div className="overflow-hidden px-4 pb-4 sm:px-[18px] sm:pb-[18px]">
-                  <div className="border-t border-brand-light/15 pt-3 font-body text-[13.5px] leading-[1.8] text-ink/80">
+                <div className="min-h-0 overflow-hidden">
+                  <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 sm:px-[18px] sm:pb-[18px] font-body text-[13.5px] leading-[1.8] text-ink/80">
                     <div className="border-l-2 border-brand-light/60 pl-3.5">
                       {t(f.a)}
                     </div>
