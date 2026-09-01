@@ -1,9 +1,8 @@
-// [REPLACE] ফাইলের পাথ: app/components/cart/QuickOrderModal.tsx
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -174,7 +173,6 @@ export default function QuickOrderModal() {
     return recalculateDiscount(appliedCoupon, subtotal);
   }, [appliedCoupon, subtotal]);
 
-  // 🛡️ শুধুমাত্র মডাল ওপেন থাকলেই কুপন রিমুভ চেক চলবে (ব্যাকগ্রাউন্ড ডিলিট ফিক্স)
   useEffect(() => {
     if (!open) return;
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
@@ -185,7 +183,6 @@ export default function QuickOrderModal() {
     }
   }, [open, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
@@ -228,22 +225,19 @@ export default function QuickOrderModal() {
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
-  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ অর্ডার কনফার্ম হ্যান্ডলার
   const handleConfirmOrder = async () => {
     if (!cart.length || orderStatus !== 'idle') return;
 
     let currentDiscount = discountAmount;
 
-    // ১. যদি কুপন কোড বক্সে লেখা থাকে কিন্তু প্রয়োগে ক্লিক না করা হয়ে থাকে
     if (couponCode.trim() && !appliedCoupon) {
       setOrderStatus('verifying');
       const success = await handleApplyCoupon(undefined, couponCode);
       if (!success) {
         setOrderStatus('idle');
-        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
+        return;
       }
 
-      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ ব্যাজ ও ডিসকাউন্ট দেখার জন্য ঠিক ৯০০ms অপেক্ষা
       await new Promise((r) => setTimeout(r, 900));
 
       const freshlyApplied = getAppliedCoupon();
@@ -256,7 +250,6 @@ export default function QuickOrderModal() {
 
     const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
 
-    // ২. ২০,০০০ টাকার বেশি বিল হলে বাল্ক অর্ডার মডাল ওপেন
     if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
       setOrderStatus('idle');
       setOpen(false);
@@ -311,61 +304,84 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Content List */}
+        {/* Content List — ফ্লুইড AnimatePresence এক্সিট ও স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন */}
         <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
-          {cart.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
-            >
-              <CartItemThumb emoji={item.emoji} />
+          <AnimatePresence mode="popLayout" initial={false}>
+            {cart.map((item, idx) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                transition={{ delay: Math.min(idx, 6) * 0.03, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
+              >
+                <CartItemThumb emoji={item.emoji} />
 
-              <div className="min-w-0 flex-1">
-                <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
-                  {item.name}
-                </div>
-                <div className="mt-0.5 font-body text-[12px] text-muted">
-                  ৳{item.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'}
+                <div className="min-w-0 flex-1">
+                  <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
+                    {item.name}
+                  </div>
+                  <div className="mt-0.5 font-body text-[12px] text-muted">
+                    ৳{item.price.toLocaleString('en-US')} / {lang === 'en' ? 'Pcs' : 'পিছ'}
+                  </div>
+
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                      onClick={() => handleQty(item.id, -1)}
+                      className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink"
+                      aria-label="Decrease"
+                    >
+                      −
+                    </motion.button>
+                    <span className="inline-flex h-4 min-w-[18px] items-center justify-center overflow-hidden text-center font-body text-xs font-bold text-ink">
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        <motion.span
+                          key={item.qty}
+                          initial={{ y: -8, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: 8, opacity: 0 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          {item.qty}
+                        </motion.span>
+                      </AnimatePresence>
+                    </span>
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                      onClick={() => handleQty(item.id, 1)}
+                      className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink"
+                      aria-label="Increase"
+                    >
+                      +
+                    </motion.button>
+                  </div>
                 </div>
 
-                <div className="mt-2.5 flex items-center gap-2">
-                  <button
+                <div className="flex flex-col items-end justify-between self-stretch pl-1">
+                  <div className="font-body text-[14px] font-bold text-ink">
+                    ৳{(item.price * item.qty).toLocaleString('en-US')}
+                  </div>
+                  <motion.button
                     type="button"
-                    onClick={() => handleQty(item.id, -1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
-                    aria-label="Decrease"
+                    whileTap={{ scale: 0.85 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                    onClick={() => handleRemove(item.id)}
+                    title={t('সরান')}
+                    className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500"
                   >
-                    −
-                  </button>
-                  <span className="min-w-[18px] text-center font-body text-xs font-bold text-ink">
-                    {item.qty}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleQty(item.id, 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
-                    aria-label="Increase"
-                  >
-                    +
-                  </button>
+                    <TrashIcon />
+                  </motion.button>
                 </div>
-              </div>
-
-              <div className="flex flex-col items-end justify-between self-stretch pl-1">
-                <div className="font-body text-[14px] font-bold text-ink">
-                  ৳{(item.price * item.qty).toLocaleString('en-US')}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(item.id)}
-                  title={t('সরান')}
-                  className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
-                >
-                  <TrashIcon />
-                </button>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
           {/* কুপন সেকশন */}
           <div className="pt-0.5">
@@ -390,7 +406,7 @@ export default function QuickOrderModal() {
                       {appliedCoupon.freeShipping
                         ? (lang === 'en' ? 'Free Delivery Applied' : 'ফ্রি ডেলিভারি প্রযোজ্য')
                         : `${lang === 'en' ? 'Discount:' : 'ছাড়:'} -৳${discountAmount.toLocaleString('en-US')}`}
-                        </div>
+                    </div>
                   </div>
                 </div>
                 <button
