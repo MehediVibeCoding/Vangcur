@@ -18,7 +18,7 @@ import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
-  OPEN_MEMBERSHIP_EVENT, OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
+  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
@@ -189,6 +189,8 @@ export default function AccountClient() {
   const currentUser = useAuthStore((s) => s.currentUser);
 
   const [loginOpen, setLoginOpen] = useState(false);
+  const [membershipOpen, setMembershipOpen] = useState(false);
+
   const [now, setNow] = useState(() => new Date());
   const [isRaining, setIsRaining] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -409,11 +411,6 @@ export default function AccountClient() {
   };
 
   const currentTier = getTier(stats.completed);
-  const openMembership = () => {
-    window.dispatchEvent(
-      new CustomEvent(OPEN_MEMBERSHIP_EVENT, { detail: { completedCount: stats.completed } })
-    );
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
@@ -465,9 +462,9 @@ export default function AccountClient() {
                 <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartQty > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartQty}</span>
               </button>
 
-              {/* মেম্বারশিপ বাটন */}
+              {/* মেম্বারশিপ বাটন (০ms ল্যাগে ইনস্ট্যান্ট ডিরেক্ট স্টেট লিঙ্ক) */}
               <button
-                onClick={openMembership}
+                onClick={() => setMembershipOpen(true)}
                 title={t('মেম্বারশিপ')}
                 className="flex items-center justify-center gap-1.5 rounded-full border border-brand-light/35 bg-brand-bg/40 px-3 py-1.5 font-body text-xs font-bold text-brand-light shadow-2xs transition-all duration-brand hover:bg-brand-light hover:text-white active:scale-95"
               >
@@ -535,13 +532,13 @@ export default function AccountClient() {
               {/* বাম কলাম: সাইডবার উইজেটসমূহ */}
               <div className="flex flex-col gap-4">
                 
-                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড */}
+                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড (উঁচু সিনারি বেসলাইন ও নিখুঁত ভিজ্যুয়াল স্পেসিং) */}
                 <div
                   ref={cardRef}
-                  className={`relative overflow-hidden rounded-[24px] p-5 shadow-sh2 select-none ${
+                  className={`relative flex flex-col justify-between overflow-hidden rounded-[24px] p-5 shadow-sh2 select-none ${
                     STATE_BG[celestial.state] || STATE_BG.noon
                   }`}
-                  style={{ minHeight: 240 }}
+                  style={{ minHeight: 280 }}
                 >
                   {/* তারার মেলা (রাতের আকাশে) */}
                   {celestial.state === 'night' && (
@@ -666,21 +663,29 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* ল্যান্ডস্কেপ সিলুয়েট */}
+                  {/* 🌟 উঁচু বেসলাইনে স্পষ্ট দৃশ্যমান মাল্টি-লেয়ার ল্যান্ডস্কেপ সিলুয়েট (বাটনের উপরে মাঝ বরাবর) */}
                   <div
-                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 w-full opacity-95"
+                    className="pointer-events-none absolute bottom-[56px] left-0 right-0 h-28 w-full opacity-95 z-10"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(celestial.sceneryHtml) }}
+                  />
+
+                  {/* হালকা গ্রাউন্ড ব্লেন্ডিং শেড */}
+                  <div
+                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 w-full z-10"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 60%, transparent 100%)',
+                    }}
                   />
 
                   {/* জোনাকি পোকা */}
                   {celestial.state === 'night' && (
-                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden z-10">
                       {[
-                        { left: '16%', bottom: '26px', dur: '3.2s', delay: '0.2s' },
-                        { left: '36%', bottom: '34px', dur: '4s', delay: '0.9s' },
-                        { left: '58%', bottom: '22px', dur: '3.6s', delay: '1.4s' },
-                        { left: '76%', bottom: '30px', dur: '4.4s', delay: '0.5s' },
-                        { left: '88%', bottom: '20px', dur: '3.8s', delay: '1.8s' },
+                        { left: '16%', bottom: '70px', dur: '3.2s', delay: '0.2s' },
+                        { left: '36%', bottom: '80px', dur: '4s', delay: '0.9s' },
+                        { left: '58%', bottom: '66px', dur: '3.6s', delay: '1.4s' },
+                        { left: '76%', bottom: '74px', dur: '4.4s', delay: '0.5s' },
+                        { left: '88%', bottom: '64px', dur: '3.8s', delay: '1.8s' },
                       ].map((bug, i) => (
                         <div
                           key={i}
@@ -695,85 +700,84 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* কার্ড কনটেন্ট */}
-                  <div className="relative z-10 flex h-full min-h-[200px] flex-col justify-between">
-                    <div className="flex items-center gap-3.5">
-                      <div className="relative shrink-0">
-                        {currentTier.crown && (
-                          <span
-                            className="pointer-events-none absolute -top-4 left-1/2 z-20 h-9 w-9 -translate-x-1/2 drop-shadow-md"
-                            dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(crownSVG(currentTier.crown)) }}
-                          />
-                        )}
-                        <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/40 bg-white/20 text-sm font-bold text-white shadow-sm backdrop-blur-md">
-                          {initials}
-                        </div>
-                      </div>
-                      <div className="min-w-0 flex-1 text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.65)' }}>
-                        <div className="truncate font-body text-[15px] font-extrabold">{currentUser.name || '-'}</div>
-                        <div className="truncate font-body text-[12px] text-white/80">{currentUser.email || '-'}</div>
-                        {createdStr && (
-                          <div className="mt-0.5 font-body text-[10.5px] text-white/70">
-                            📅 {t('অ্যাকাউন্ট তৈরি:')} {createdStr}
-                          </div>
-                        )}
+                  {/* কার্ডের শীর্ষ অংশ: অবতার ও কাস্টমার ইনফো */}
+                  <div className="relative z-20 flex items-center gap-3.5">
+                    <div className="relative shrink-0">
+                      {currentTier.crown && (
+                        <span
+                          className="pointer-events-none absolute -top-4 left-1/2 z-30 h-9 w-9 -translate-x-1/2 drop-shadow-md"
+                          dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(crownSVG(currentTier.crown)) }}
+                        />
+                      )}
+                      <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/40 bg-white/20 text-sm font-bold text-white shadow-sm backdrop-blur-md">
+                        {initials}
                       </div>
                     </div>
-
-                    <div>
-                      <div className="flex gap-2 border-t border-white/[0.16] pt-3">
-                        <button
-                          onClick={openNameEdit}
-                          className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
-                        >
-                          <IconEdit />
-                          <span>{t('এডিট')}</span>
-                        </button>
-                        <button
-                          onClick={() => setShowLogoutConfirm(true)}
-                          className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
-                        >
-                          <IconLogout />
-                          <span>{t('লগআউট')}</span>
-                        </button>
-                      </div>
-
-                      {nameEditOpen && (
-                        <div className="mt-3 rounded-[16px] bg-black/40 p-3.5 backdrop-blur-md animate-section-reveal">
-                          <div className="mb-1.5 font-body text-[11.5px] font-bold text-white/80">
-                            {t('নতুন নাম লিখুন')}
-                          </div>
-                          <div className="flex gap-1.5">
-                            <input
-                              type="text"
-                              placeholder={t('আপনার নাম')}
-                              value={nameEditValue}
-                              maxLength={MAX_NAME_LEN}
-                              onChange={(e) => setNameEditValue(sanitizePlainName(e.target.value))}
-                              onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
-                              className="flex-1 rounded-[10px] border border-white/20 bg-white/15 px-3 py-1.5 font-body text-[13px] text-white outline-none placeholder:text-white/50 focus:border-brand-light"
-                            />
-                            <button
-                              onClick={saveNameEdit}
-                              className="rounded-[10px] bg-brand-light px-3.5 font-body text-xs font-bold text-white shadow-xs hover:bg-brand-light-hover"
-                            >
-                              {t('সেভ')}
-                            </button>
-                            <button
-                              onClick={closeNameEdit}
-                              className="rounded-[10px] bg-white/20 px-2.5 font-body text-xs text-white"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          {nameEditErr && <div className="mt-1.5 font-body text-[11px] text-red-300">{nameEditErr}</div>}
+                    <div className="min-w-0 flex-1 text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.65)' }}>
+                      <div className="truncate font-body text-[15px] font-extrabold">{currentUser.name || '-'}</div>
+                      <div className="truncate font-body text-[12px] text-white/80">{currentUser.email || '-'}</div>
+                      {createdStr && (
+                        <div className="mt-0.5 font-body text-[10.5px] text-white/70">
+                          📅 {t('অ্যাকাউন্ট তৈরি:')} {createdStr}
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {/* কার্ডের নিচের অংশ: এডিট ও লগআউট বাটন (ফ্রস্টেড গ্লাস কন্টেইনারে আলাদা স্ট্রিপ) */}
+                  <div className="relative z-20 mt-auto pt-3">
+                    <div className="flex gap-2 border-t border-white/[0.16] pt-3">
+                      <button
+                        onClick={openNameEdit}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
+                      >
+                        <IconEdit />
+                        <span>{t('এডিট')}</span>
+                      </button>
+                      <button
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
+                      >
+                        <IconLogout />
+                        <span>{t('লগআউট')}</span>
+                      </button>
+                    </div>
+
+                    {nameEditOpen && (
+                      <div className="mt-3 rounded-[16px] bg-black/45 p-3.5 backdrop-blur-md animate-section-reveal">
+                        <div className="mb-1.5 font-body text-[11.5px] font-bold text-white/80">
+                          {t('নতুন নাম লিখুন')}
+                        </div>
+                        <div className="flex gap-1.5">
+                          <input
+                            type="text"
+                            placeholder={t('আপনার নাম')}
+                            value={nameEditValue}
+                            maxLength={MAX_NAME_LEN}
+                            onChange={(e) => setNameEditValue(sanitizePlainName(e.target.value))}
+                            onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
+                            className="flex-1 rounded-[10px] border border-white/20 bg-white/15 px-3 py-1.5 font-body text-[13px] text-white outline-none placeholder:text-white/50 focus:border-brand-light"
+                          />
+                          <button
+                            onClick={saveNameEdit}
+                            className="rounded-[10px] bg-brand-light px-3.5 font-body text-xs font-bold text-white shadow-xs hover:bg-brand-light-hover"
+                          >
+                            {t('সেভ')}
+                          </button>
+                          <button
+                            onClick={closeNameEdit}
+                            className="rounded-[10px] bg-white/20 px-2.5 font-body text-xs text-white"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {nameEditErr && <div className="mt-1.5 font-body text-[11px] text-red-300">{nameEditErr}</div>}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* ২. ৩-কার্ডের নতুন রিডিজাইন */}
+                {/* ২. ৩-কার্ডের নতুন রিডিজাইন (মেম্বারশিপ ক্লিকে ডিরেক্ট স্টেট ওপেন) */}
                 <div className="grid grid-cols-3 gap-2.5">
                   <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
                     <div className="font-body text-base font-extrabold text-ink leading-tight">
@@ -794,7 +798,7 @@ export default function AccountClient() {
                   </div>
 
                   <div
-                    onClick={openMembership}
+                    onClick={() => setMembershipOpen(true)}
                     className="flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-[20px] border border-white/80 bg-white/85 py-3 px-2 text-center shadow-xs backdrop-blur-md transition-all hover:border-brand-light/40 active:scale-95"
                   >
                     <div className="h-6 w-6" dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(tierIconSVG(currentTier.key)) }} />
@@ -833,7 +837,7 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড */}
+                {/* ৪. অসম্পূর্ণ ড্রাফট কার্ড (হেডারে ডিরেক্ট অল-ডিলিট বাটন সহ) */}
                 {drafts.length > 0 && (
                   <div className="rounded-[22px] border border-white/80 bg-white/85 p-4 shadow-xs backdrop-blur-md animate-section-reveal">
                     <div className="mb-3 flex items-center justify-between">
@@ -1080,7 +1084,13 @@ export default function AccountClient() {
       )}
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      <MembershipModal />
+      
+      {/* ডিরেক্ট স্টেট কন্ট্রোল্ড মেম্বারশিপ মোডাল (০ms ল্যাগ ছাড়া তাৎক্ষণিক ওপেন) */}
+      <MembershipModal
+        isOpen={membershipOpen}
+        onClose={() => setMembershipOpen(false)}
+        completedCount={stats.completed}
+      />
     </div>
   );
 }
