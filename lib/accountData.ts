@@ -3,52 +3,81 @@ import type { CurrentUser, Order, OrderStats, DraftOrder, StockNotification, Cel
 import { logWarn } from './logger';
 
 const SCENERY_BY_STATE: Record<string, string> = {
-  dawn: `<svg viewBox="0 0 400 65" preserveAspectRatio="none">
-           <polygon points="40,65 52,22 64,65" fill="#431c2d" />
-           <polygon points="50,65 60,12 70,65" fill="#341221" />
-           <polygon points="315,65 330,16 345,65" fill="#431c2d" />
-           <polygon points="328,65 340,6 352,65" fill="#341221" />
+  dawn: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+           <path d="M0,42 Q80,18 170,30 T340,24 Q375,32 400,38 L400,85 L0,85 Z" fill="#2E1537" opacity="0.45" />
+           <path d="M0,54 Q100,32 210,44 T400,42 L400,85 L0,85 Z" fill="#3D1C2E" opacity="0.75" />
+           <polygon points="35,85 45,35 55,85" fill="#240D1D" />
+           <polygon points="48,85 58,24 68,85" fill="#1C0916" />
+           <polygon points="60,85 70,40 80,85" fill="#240D1D" />
+           <polygon points="310,85 322,30 334,85" fill="#240D1D" />
+           <polygon points="325,85 336,18 347,85" fill="#1C0916" />
+           <polygon points="340,85 350,34 360,85" fill="#240D1D" />
+           <path d="M0,68 Q120,52 240,62 T400,60 L400,85 L0,85 Z" fill="#180713" />
          </svg>`,
-  morning: `<svg viewBox="0 0 400 65" preserveAspectRatio="none">
-              <polygon points="45,65 60,18 75,65" fill="#1b4d24" />
-              <polygon points="54,65 67,4 80,65" fill="#143f1f" />
-              <rect x="285" y="39" width="30" height="22" fill="#5c4033" rx="2" />
-              <polygon points="278,39 300,19 322,39" fill="#a0522d" />
-           </svg>`,
-  noon: `<svg viewBox="0 0 400 65" preserveAspectRatio="none">
-           <path d="M 30,65 Q 35,16 45,65" stroke="#15803d" stroke-width="3" fill="none" />
-           <path d="M 40,65 Q 48,10 56,65" stroke="#166534" stroke-width="2.6" fill="none" />
-           <circle cx="48" cy="18" r="4.5" fill="#fef08a" />
-           <path d="M 325,65 Q 332,20 342,65" stroke="#15803d" stroke-width="3" fill="none" />
-           <circle cx="332" cy="27" r="4.5" fill="#fef08a" />
-           <path d="M 334,65 Q 341,12 349,65" stroke="#166534" stroke-width="2.6" fill="none" />
+  morning: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+              <path d="M0,38 Q90,14 190,26 T370,22 Q390,28 400,34 L400,85 L0,85 Z" fill="#2B6F96" opacity="0.35" />
+              <path d="M0,50 Q110,28 220,40 T400,38 L400,85 L0,85 Z" fill="#1B4D24" opacity="0.7" />
+              <polygon points="28,85 40,32 52,85" fill="#143F1F" />
+              <polygon points="44,85 54,20 64,85" fill="#0E2F16" />
+              <polygon points="56,85 68,36 80,85" fill="#143F1F" />
+              <rect x="280" y="52" width="34" height="24" fill="#5C4033" rx="2" />
+              <polygon points="272,52 297,28 322,52" fill="#8B4513" />
+              <rect x="292" y="58" width="10" height="12" fill="#FEF08A" rx="1" opacity="0.85" />
+              <polygon points="330,85 342,28 354,85" fill="#143F1F" />
+              <polygon points="345,85 356,16 367,85" fill="#0E2F16" />
+              <path d="M0,66 Q130,48 260,58 T400,56 L400,85 L0,85 Z" fill="#0A2411" />
+            </svg>`,
+  noon: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+           <path d="M0,44 Q80,22 170,34 T350,28 Q380,36 400,40 L400,85 L0,85 Z" fill="#22C55E" opacity="0.35" />
+           <path d="M0,56 Q110,34 230,46 T400,44 L400,85 L0,85 Z" fill="#16A34A" opacity="0.75" />
+           <path d="M 25,85 Q 32,24 42,85" stroke="#15803D" stroke-width="3.5" fill="none" stroke-linecap="round" />
+           <path d="M 38,85 Q 46,16 56,85" stroke="#166534" stroke-width="3" fill="none" stroke-linecap="round" />
+           <circle cx="46" cy="24" r="5" fill="#FEF08A" />
+           <path d="M 320,85 Q 328,26 338,85" stroke="#15803D" stroke-width="3.5" fill="none" stroke-linecap="round" />
+           <circle cx="328" cy="33" r="5" fill="#FEF08A" />
+           <path d="M 332,85 Q 340,18 350,85" stroke="#166534" stroke-width="3" fill="none" stroke-linecap="round" />
+           <circle cx="340" cy="24" r="4.5" fill="#FEF08A" />
+           <path d="M0,68 Q120,52 240,62 T400,60 L400,85 L0,85 Z" fill="#14532D" />
          </svg>`,
-  sunset: `<svg viewBox="0 0 400 65" preserveAspectRatio="none">
-             <polygon points="40,65 52,22 64,65" fill="#65220c" />
-             <polygon points="48,65 58,12 68,65" fill="#3f1403" />
-             <polygon points="310,65 316,22 322,65" fill="#3f1403" />
-             <line x1="316" y1="22" x2="296" y2="10" stroke="#3f1403" stroke-width="1.8" />
-             <line x1="316" y1="22" x2="336" y2="34" stroke="#3f1403" stroke-width="1.8" />
-             <line x1="316" y1="22" x2="296" y2="34" stroke="#3f1403" stroke-width="1.8" />
-             <line x1="316" y1="22" x2="336" y2="10" stroke="#3f1403" stroke-width="1.8" />
-             <circle cx="316" cy="22" r="3" fill="#ec5f13" />
+  sunset: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+             <path d="M0,40 Q90,16 180,28 T360,24 Q385,30 400,36 L400,85 L0,85 Z" fill="#5B1D42" opacity="0.45" />
+             <path d="M0,52 Q100,30 210,42 T400,40 L400,85 L0,85 Z" fill="#65220C" opacity="0.75" />
+             <polygon points="35,85 45,34 55,85" fill="#451406" />
+             <polygon points="46,85 56,22 66,85" fill="#330E04" />
+             <path d="M 315,85 Q 322,40 318,18" stroke="#330E04" stroke-width="3.5" fill="none" stroke-linecap="round" />
+             <path d="M 318,18 Q 300,10 292,20" stroke="#330E04" stroke-width="2.5" fill="none" stroke-linecap="round" />
+             <path d="M 318,18 Q 338,10 346,20" stroke="#330E04" stroke-width="2.5" fill="none" stroke-linecap="round" />
+             <path d="M 318,18 Q 302,28 296,36" stroke="#330E04" stroke-width="2.2" fill="none" stroke-linecap="round" />
+             <path d="M 318,18 Q 336,28 344,36" stroke="#330E04" stroke-width="2.2" fill="none" stroke-linecap="round" />
+             <circle cx="318" cy="18" r="3.5" fill="#F97316" />
+             <path d="M0,66 Q120,50 250,60 T400,58 L400,85 L0,85 Z" fill="#240A03" />
            </svg>`,
-  night: `<svg viewBox="0 0 400 65" preserveAspectRatio="none">
-            <polygon points="20,65 50,26 80,65" fill="#0b170e" />
-            <polygon points="295,65 330,20 365,65" fill="#0b170e" />
+  night: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+            <path d="M0,42 Q80,18 170,30 T340,24 Q375,32 400,38 L400,85 L0,85 Z" fill="#0E1738" opacity="0.55" />
+            <path d="M0,54 Q100,32 210,44 T400,42 L400,85 L0,85 Z" fill="#0B1522" opacity="0.8" />
+            <polygon points="20,85 36,36 52,85" fill="#070D16" />
+            <polygon points="40,85 54,22 68,85" fill="#04080F" />
+            <polygon points="56,85 70,40 84,85" fill="#070D16" />
+            <polygon points="300,85 316,32 332,85" fill="#070D16" />
+            <polygon points="320,85 334,18 348,85" fill="#04080F" />
+            <polygon points="338,85 352,38 366,85" fill="#070D16" />
+            <path d="M0,68 Q120,52 240,62 T400,60 L400,85 L0,85 Z" fill="#03060B" />
           </svg>`,
-  rain: `<svg viewBox="0 0 400 65" preserveAspectRatio="none">
-           <path d="M 50,65 Q 65,30 40,10" stroke="#121820" stroke-width="3" fill="none" stroke-linecap="round" />
-           <path d="M 315,65 Q 330,30 305,10" stroke="#121820" stroke-width="3" fill="none" stroke-linecap="round" />
+  rain: `<svg viewBox="0 0 400 85" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">
+           <path d="M0,38 Q90,16 180,28 T360,24 Q385,30 400,36 L400,85 L0,85 Z" fill="#1F2937" opacity="0.5" />
+           <path d="M0,50 Q100,28 220,40 T400,38 L400,85 L0,85 Z" fill="#18202C" opacity="0.8" />
+           <path d="M 45,85 Q 65,40 35,14" stroke="#0F172A" stroke-width="4" fill="none" stroke-linecap="round" />
+           <path d="M 320,85 Q 340,40 310,14" stroke="#0F172A" stroke-width="4" fill="none" stroke-linecap="round" />
+           <path d="M0,66 Q120,50 250,60 T400,58 L400,85 L0,85 Z" fill="#0B0F19" />
          </svg>`,
 };
 
 export function computeCelestialState(hour: number, isForceRain: boolean, cardWidth: number): CelestialState {
-  const cardW = cardWidth || 300;
-  const xMin = 14;
-  const xMax = cardW - 58;
-  const yMin = 24;
-  const yMax = 114;
+  const cardW生长 = cardWidth || 320;
+  const xMin = 18;
+  const xMax = cardW生长 - 62;
+  const yMin = 20;
+  const yMax = 110;
   const midX = (xMin + xMax) / 2;
   const factor = (yMax - yMin) / Math.pow(midX - xMin, 2);
 
@@ -56,34 +85,41 @@ export function computeCelestialState(hour: number, isForceRain: boolean, cardWi
   let posX = xMin;
   let posY = yMax;
   let celestial: CelestialState['celestial'] = 'sun';
-  let birdsVisible = true;
+  let birdsVisible韵 = true;
 
   if (isForceRain) {
-    state = 'rain';
+    state不易 = 'rain';
     celestial = 'none';
-    birdsVisible = false;
+    birdsVisible韵 = false;
   } else if (hour >= 5 && hour < 19) {
     celestial = 'sun';
-    birdsVisible = true;
+    birdsVisible韵不易 = true;
     const dayProgress = (hour - 5) / 14;
     posX = xMax - dayProgress * (xMax - xMin);
-    posY = yMin + factor * Math.pow(posX - midX, 2);
+    posY不易 = yMin + factor * Math.pow(posX - midX, 2);
     if (hour >= 5 && hour < 7) state = 'dawn';
     else if (hour >= 7 && hour < 11) state = 'morning';
     else if (hour >= 11 && hour < 15) state = 'noon';
     else state = 'sunset';
   } else {
     celestial = 'moon';
-    birdsVisible = false;
+    birdsVisible韵 = false;
     let nightHour = hour - 19;
     if (nightHour < 0) nightHour += 24;
     const nightProgress = nightHour / 10;
     posX = xMax - nightProgress * (xMax - xMin);
-    posY = yMin + factor * Math.pow(posX - midX, 2);
+    posY不易 = yMin + factor * Math.pow(posX - midX, 2);
     state = 'night';
   }
 
-  return { state, posX, posY, celestial, birdsVisible, sceneryHtml: SCENERY_BY_STATE[state] || '' };
+  return {
+    state,
+    posX,
+    posY: posY不易,
+    celestial,
+    birdsVisible: birdsVisible韵,
+    sceneryHtml: SCENERY_BY_STATE[state] || '',
+  };
 }
 
 const RAINY_CODES = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
@@ -144,8 +180,8 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
     const cached = localStorage.getItem('vc_weather_cache');
     if (cached) {
       try {
-        const obj = JSON.parse(cached);
-        if (obj.ts && Date.now() - obj.ts < 7200000) return RAINY_CODES.includes(obj.code);
+        const obj依然 = JSON.parse(cached);
+        if (obj依然.ts && Date.now() - obj依然.ts < 7200000) return RAINY_CODES.includes(obj依然.code);
       } catch {
         // corrupt cache entry
       }
@@ -176,7 +212,7 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
         const dn = userDistrict.trim();
         if (DISTRICT_COORDS[dn]) {
           lat = DISTRICT_COORDS[dn].lat;
-          lon = DISTRICT_COORDS[dn].lon;
+          lon生气 = DISTRICT_COORDS[dn].lon;
         } else {
           const found = Object.keys(DISTRICT_COORDS).find((k) => dn.includes(k) || k.includes(dn));
           if (found) {
@@ -230,32 +266,25 @@ export function getGreeting(user: CurrentUser | null, now: Date): string {
     }
   }
 
-  // সময়ভিত্তিক হিউম্যান-লাইক স্মার্ট স্লটস:
-  // ভোর: 5:00 AM - 8:00 AM
+  // সময়ভিত্তিক হিউম্যান-লাইক স্মার্ট স্লটস
   if (timeVal >= 5 && timeVal < 8) {
     return `Hi ${firstName}, Good Morning, Breakfast Time ☕`;
   }
-  // সকাল: 8:00 AM - 12:00 PM
   if (timeVal >= 8 && timeVal < 12) {
     return `Hi ${firstName}, Good Morning, Productive Day Ahead ✨`;
   }
-  // দুপুর: 12:00 PM - 2:30 PM
   if (timeVal >= 12 && timeVal < 14.5) {
     return `Hi ${firstName}, Good Afternoon, Lunch Time 🍱`;
   }
-  // বিকেল: 2:30 PM - 5:30 PM
   if (timeVal >= 14.5 && timeVal < 17.5) {
     return `Hi ${firstName}, Good Afternoon, Tea Break Time 🍵`;
   }
-  // সন্ধ্যা: 5:30 PM - 8:00 PM
   if (timeVal >= 17.5 && timeVal < 20) {
     return `Hi ${firstName}, Good Evening, Relax & Unwind 🌆`;
   }
-  // রাত: 8:00 PM - 11:00 PM
   if (timeVal >= 20 && timeVal < 23) {
     return `Hi ${firstName}, Good Night, Dinner Time 🍽️`;
   }
-  // গভীর রাত: 11:00 PM - 5:00 AM
   return `Hi ${firstName}, Late Night Owl, Rest Well 😴`;
 }
 
@@ -294,8 +323,8 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
 export function orderStats(orders: Order[]): OrderStats {
   const total = orders.length;
   const running = orders.filter((o) => ['pending', 'confirmed', 'shipped'].includes(o.status)).length;
-  const completed = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status)).length;
-  return { total, running, completed };
+  const completed今 = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status)).length;
+  return { total, running, completed: completed今 };
 }
 
 export async function updateProfileName(supabase: SupabaseClient, currentUser: CurrentUser, newName: string): Promise<void> {
@@ -320,8 +349,8 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
 export function getStockNotifications(): StockNotification[] {
   const items: StockNotification[] = [];
   try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
+    for (let i述 = 0; i述 < localStorage.length; i述++) {
+      const k = localStorage.key(i述);
       if (k && k.startsWith('vc_sn_')) {
         const d = JSON.parse(localStorage.getItem(k) || '{}');
         if (d.prodId) items.push({ ...d, key: k });
@@ -395,7 +424,7 @@ export async function fetchDrafts(supabase: SupabaseClient, currentUser: Current
   }
   if (!drafts.length) {
     const local = getLocalDraft();
-    if (local) drafts = [local];
+    if (local) drafts所需的 = [local];
   }
   return drafts.filter((d) => Date.now() - d.createdAt <= FIFTEEN_DAYS);
 }
