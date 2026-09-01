@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { fetchFullOrder, readLatestGuestOrder, clearPendingOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
@@ -130,7 +131,6 @@ export default function BgConfirmPopup() {
   useEffect(() => { phoneRef.current = phone; }, [phone]);
 
   const showPopup = useCallback((o: Order, p?: string, playAudio = true) => {
-    // 🛡️ পার্মানেন্ট লুপ গার্ড: এই নির্দিষ্ট অর্ডার কনফার্মেশন ইতিমধ্যে দেখা হয়ে থাকলে দ্বিতীয়বার পপআপ খুলবে না
     if (typeof window !== 'undefined') {
       const alreadySeen = localStorage.getItem(`vc_confirm_seen_${o.id}`);
       if (alreadySeen) return;
@@ -220,7 +220,6 @@ export default function BgConfirmPopup() {
       || o.customer?.phone 
       || (typeof window !== 'undefined' ? localStorage.getItem('vc_pending_phone_ls') || readLatestGuestOrder()?.phone || undefined : undefined);
 
-    // 🔒 স্থায়ীভাবে রেকর্ড করা যে এই অর্ডারের কনফার্মেশন কাস্টমার দেখে নিয়েছেন
     try {
       localStorage.setItem(`vc_confirm_seen_${o.id}`, '1');
       localStorage.removeItem(PENDING_CONFIRM_KEY);
@@ -233,74 +232,88 @@ export default function BgConfirmPopup() {
     setOpen(false);
     setOrder(null);
     
-    // সরাসরি আমাদের নতুন সুরক্ষিত ডেডিকেটেড ইনভয়েস রুটে নেভিগেশন
     const phoneParam = finalInvoicePhone ? `&phone=${encodeURIComponent(finalInvoicePhone)}` : '';
     router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}`);
   };
 
-  if (!open || !order) return null;
-
   return (
-    <>
-      {/* ব্যাকড্রপ ব্লার */}
-      <div className="fixed inset-0 z-[1000] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand" />
+    <AnimatePresence>
+      {open && order && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 bg-ink/55 backdrop-blur-[3px]"
+          />
 
-      {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
-      <div className="fixed inset-0 z-[1005] flex items-center justify-center p-4">
-        <div className="relative w-full max-w-[430px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80 animate-section-reveal">
-          <HeaderDecor />
-
-          {/* সাকসেস ব্যাজ আইকন */}
-          <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.22)]">
-            <IconCheckBadge />
-          </div>
-
-          {/* টাইটেল */}
-          <h2 className="relative z-10 mb-1.5 font-body text-xl font-extrabold text-ink">
-            {t('অর্ডার কনফার্ম হয়েছে!')}
-          </h2>
-
-          {/* সাবটাইটেল */}
-          <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
-            {lang === 'en' ? (
-              <>Your payment has been verified and the order has been successfully confirmed.</>
-            ) : (
-              <>আপনার পেমেন্ট যাচাই হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।</>
-            )}
-          </p>
-
-          {/* অর্ডার নম্বর বক্স — ফ্রস্টেড গ্লাস ও স্কাই-ব্লু টিন্ট ব্যাকগ্রাউন্ড */}
-          <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
-            <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
-            <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
-            <button
-              onClick={copyOrderNum}
-              className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
-            >
-              {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
-              <span>{copyLabel}</span>
-            </button>
-          </div>
-
-          {/* মাঝ বরাবর সেন্টারে থাকা ট্র্যাক অর্ডার তথ্য */}
-          <p className="relative z-10 mb-5 text-center font-body text-[11.5px] text-muted">
-            {lang === 'en' ? (
-              <>To track your order, use the website&apos;s &quot;Track Order&quot; option.</>
-            ) : (
-              <>অর্ডার ট্র্যাক করতে ওয়েবসাইটের &quot;অর্ডার ট্র্যাক&quot; অপশন ব্যবহার করুন।</>
-            )}
-          </p>
-
-          {/* ইনভয়েস ডাউনলোড সিগনেচার বাটন — লেখার শেষে সলিড ফিল করা প্রিমিয়াম ডাউনলোড আইকন */}
-          <button
-            onClick={downloadInvoice}
-            className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
+          {/* সেন্ট্রালাইজড কনফার্মেশন উইন্ডো — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 w-full max-w-[430px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80"
           >
-            <span>{t('ইনভয়েস ডাউনলোড করুন (বাধ্যতামূলক)')}</span>
-            <SolidDownloadIcon />
-          </button>
+            <HeaderDecor />
+
+            {/* সাকসেস ব্যাজ আইকন */}
+            <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.22)]">
+              <IconCheckBadge />
+            </div>
+
+            {/* টাইটেল */}
+            <h2 className="relative z-10 mb-1.5 font-body text-xl font-extrabold text-ink">
+              {t('অর্ডার কনফার্ম হয়েছে!')}
+            </h2>
+
+            {/* সাবটাইটেল */}
+            <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
+              {lang === 'en' ? (
+                <>Your payment has been verified and the order has been successfully confirmed.</>
+              ) : (
+                <>আপনার পেমেন্ট যাচাই হয়েছে এবং অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে।</>
+              )}
+            </p>
+
+            {/* অর্ডার নম্বর বক্স */}
+            <div className="relative z-10 mb-4 flex items-center justify-center gap-2 rounded-[12px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+              <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
+              <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={copyOrderNum}
+                className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white"
+              >
+                {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
+                <span>{copyLabel}</span>
+              </motion.button>
+            </div>
+
+            {/* ট্র্যাক অর্ডার তথ্য */}
+            <p className="relative z-10 mb-5 text-center font-body text-[11.5px] text-muted">
+              {lang === 'en' ? (
+                <>To track your order, use the website&apos;s &quot;Track Order&quot; option.</>
+              ) : (
+                <>অর্ডার ট্র্যাক করতে ওয়েবসাইটের &quot;অর্ডার ট্র্যাক&quot; অপশন ব্যবহার করুন।</>
+              )}
+            </p>
+
+            {/* ইনভয়েস ডাউনলোড সিগনেচার বাটন — স্প্রিং ট্যাপ ফিডব্যাক */}
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+              onClick={downloadInvoice}
+              className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
+            >
+              <span>{t('ইনভয়েস ডাউনলোড করুন (বাধ্যতামূলক)')}</span>
+              <SolidDownloadIcon />
+            </motion.button>
+          </motion.div>
         </div>
-      </div>
-    </>
+      )}
+    </AnimatePresence>
   );
 }
