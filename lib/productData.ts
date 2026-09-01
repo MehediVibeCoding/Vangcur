@@ -291,7 +291,16 @@ export function recordLocalOrderTimestamp(): void {
   }
 }
 
-export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): void {
+export function startQuickOrder(
+  router: MinimalRouter,
+  prod: Product,
+  qty = 1,
+  // 🌟 ঐচ্ছিক নেভিগেশন ওভাররাইড — শুধুমাত্র "কার্ট খালি + ২০k নিচে" ব্র্যাঞ্চে
+  // (যেখানে সরাসরি /checkout-এ পুশ করা হয়) ব্যবহৃত হয়। ডিফল্ট আচরণ (router.push
+  // সাথে সাথে কল হওয়া) অপরিবর্তিত থাকে — যারা এই প্যারামিটার পাস করে না
+  // (যেমন ProductDetailClient.tsx) তাদের জন্য কোনো পরিবর্তন নেই।
+  navigate: (href: string) => void = (href) => router.push(href),
+): void {
   if (!prod || prod.stock <= 0) return;
 
   // ১. আর্লি রেট লিমিট গার্ড
@@ -331,7 +340,7 @@ export function startQuickOrder(router: MinimalRouter, prod: Product, qty = 1): 
     } catch {
       // storage unavailable, ignore
     }
-    router.push('/checkout');
+    navigate('/checkout');
     return;
   }
 

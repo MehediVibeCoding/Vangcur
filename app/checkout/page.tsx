@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { createOrder } from '@/app/actions/checkout';
 import { getFingerprintId } from '@/lib/fingerprint';
@@ -70,6 +71,14 @@ interface CheckoutErrors {
 
 const MAX_EMAIL_LEN = 254;
 
+// ➡️⬅️ চেকআউট স্টেপ ট্রানজিশন — সামনে গেলে ডান থেকে ফেড-স্লাইড ইন, পেছনে
+// গেলে বাম থেকে; পুরনো স্টেপ বিপরীত দিকে হালকা সরে ফেড-আউট হয়
+const checkoutStepVariants = {
+  enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 24 : -24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir >= 0 ? -24 : 24 }),
+};
+
 const fieldLabelClass = 'mb-1.5 block font-body text-[12.5px] font-bold text-ink';
 const optionalTagClass = 'font-body text-[11px] font-normal text-muted';
 const fieldInputClass = (hasError?: boolean) =>
@@ -81,7 +90,7 @@ const fieldInputClass = (hasError?: boolean) =>
 const fieldIconClass = 'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light';
 const fieldErrClass = 'mt-1.5 flex items-center gap-1 font-body text-[11.5px] font-semibold text-red-600';
 const btnNextClass =
-  'w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-60';
+  'shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] disabled:opacity-60';
 
 function IconLock() {
   return (
@@ -235,6 +244,8 @@ export default function CheckoutPage() {
   const supabase = useRef(createClient()).current;
 
   const [step, setStep] = useState(1);
+  // ➡️⬅️ চেকআউট স্টেপ ট্রানজিশনের দিক — সামনে গেলে ডান থেকে, পেছনে গেলে বাম থেকে
+  const [stepDirection, setStepDirection] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDirectQuickOrder, setIsDirectQuickOrder] = useState(false);
 
@@ -293,6 +304,7 @@ export default function CheckoutPage() {
   }, []);
 
   const updateStep = (n: number) => {
+    setStepDirection(n >= step ? 1 : -1);
     setStep(n);
     try {
       sessionStorage.setItem('vc_checkout_step', String(n));
@@ -1055,8 +1067,18 @@ export default function CheckoutPage() {
             </div>
           </div>
 
+          <AnimatePresence mode="wait" custom={stepDirection}>
           {step === 1 && (
-            <div className="px-6 py-4">
+            <motion.div
+              key="checkout-step-1"
+              custom={stepDirection}
+              variants={checkoutStepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+              className="px-6 py-4"
+            >
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('পূর্ণ নাম')}</label>
                 <div className="relative">
@@ -1187,10 +1209,12 @@ export default function CheckoutPage() {
               )}
 
               <div className="pt-2">
-                <button
+                <motion.button
                   className={`${btnNextClass} flex items-center justify-center gap-2`}
                   onClick={goToStep2}
                   disabled={step1BtnStatus !== 'idle'}
+                  whileTap={step1BtnStatus === 'idle' ? { scale: 0.97 } : undefined}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
                   {step1BtnStatus === 'verifying' ? (
                     <>
@@ -1208,13 +1232,22 @@ export default function CheckoutPage() {
                       <IconArrowRight />
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {step === 2 && (
-            <div className="px-6 py-4">
+            <motion.div
+              key="checkout-step-2"
+              custom={stepDirection}
+              variants={checkoutStepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+              className="px-6 py-4"
+            >
               <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
                 <div className="mb-2 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
                   <span className="text-brand-light"><IconCard /></span>
@@ -1382,19 +1415,30 @@ export default function CheckoutPage() {
               </div>
 
               <div className="pt-2">
-                <button
+                <motion.button
                   className={`${btnNextClass} flex items-center justify-center gap-2`}
                   onClick={goToStep3}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
                   <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
                   <IconArrowRight />
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {step === 3 && (
-            <div className="px-6 py-4">
+            <motion.div
+              key="checkout-step-3"
+              custom={stepDirection}
+              variants={checkoutStepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+              className="px-6 py-4"
+            >
               <div className="relative mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
                 <span className="mb-3 block font-body text-[11.5px] font-bold uppercase tracking-wide text-brand-light">
                   {lang === 'en' ? 'Order Invoice' : 'অর্ডার মেমো'}
@@ -1521,16 +1565,19 @@ export default function CheckoutPage() {
               )}
 
               <div className="pt-3">
-                <button
+                <motion.button
                   className={`${btnNextClass} flex items-center justify-center gap-2`}
                   onClick={handleConfirmClick}
                   disabled={submitting}
+                  whileTap={!submitting ? { scale: 0.97 } : undefined}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
                   {submitting ? (<><IconSpinner /> {t('প্রক্রিয়া হচ্ছে...')}</>) : t('অর্ডার কনফার্ম করুন')}
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </div>
 

@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -456,10 +457,14 @@ export default function QuickOrderModal() {
             </span>
           </div>
 
-          <button
+          <motion.button
             onClick={handleConfirmOrder}
             disabled={orderStatus !== 'idle'}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-90"
+            whileTap={orderStatus === 'idle' ? { scale: 0.96 } : undefined}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+            className={`flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] disabled:opacity-90 ${
+              orderStatus === 'idle' ? 'shimmer-sheen' : ''
+            }`}
           >
             {orderStatus === 'verifying' ? (
               <>
@@ -474,7 +479,7 @@ export default function QuickOrderModal() {
             ) : (
               <span>{lang === 'en' ? 'Confirm Order' : 'অর্ডার নিশ্চিত করুন'}</span>
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
     </>

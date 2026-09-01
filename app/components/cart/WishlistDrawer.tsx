@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import {
   productHref,
   QUICK_ORDER_EVENT, QUICK_CART_EVENT,
@@ -185,8 +186,11 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
             ) : (
               <div className="space-y-4">
                 {items.map((item, idx) => (
-                  <div
+                  <motion.div
                     key={item.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(idx, 8) * 0.04, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
                     className={`pb-4 ${
                       idx !== items.length - 1 ? 'border-b border-ink/10' : ''
                     }`}
@@ -215,35 +219,41 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                       </div>
 
                       {/* Subtle & Discreet Trash Button (No Visual Competition with Close Button) */}
-                      <button
+                      <motion.button
                         type="button"
+                        whileTap={{ scale: 0.85 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                         onClick={() => removeItem(item.id)}
                         title={t('Wishlist থেকে সরান')}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-transparent text-muted/35 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-transparent text-muted/35 transition-colors hover:bg-red-50 hover:text-red-500"
                       >
                         <TrashIcon />
-                      </button>
+                      </motion.button>
                     </div>
 
                     {/* Bottom Row: Spacious & Ergonomic Action Buttons */}
                     <div className="mt-3 flex items-center gap-2.5">
-                      <button
+                      <motion.button
                         type="button"
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                         onClick={() => addToCart(item.id)}
-                        className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-all hover:bg-brand-light hover:text-white hover:border-brand-light active:scale-95"
+                        className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-all hover:bg-brand-light hover:text-white hover:border-brand-light"
                       >
                         <CartPlusIcon />
                         <span>{lang === 'en' ? 'Add to Cart' : 'কার্টে যোগ'}</span>
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         type="button"
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                         onClick={() => orderNow(item.id)}
-                        className="flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03] active:scale-95"
+                        className="shimmer-sheen flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
                       >
                         <span>{lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}</span>
-                      </button>
+                      </motion.button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}

@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
@@ -377,12 +378,16 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               </button>
             </div>
           ) : (
-            <div className="space-y-3.5">
-              {cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
-                >
+            <AnimatePresence mode="wait">
+              <motion.div key={isOpen ? 'cart-items-open' : 'cart-items-closed'} className="space-y-3.5">
+                {cart.map((item, i) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(i, 8) * 0.04, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                    className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
+                  >
                   <CartItemThumb emoji={item.emoji} />
 
                   <div className="min-w-0 flex-1">
@@ -394,25 +399,39 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </div>
 
                     <div className="mt-2.5 flex items-center gap-2">
-                      <button
+                      <motion.button
                         type="button"
+                        whileTap={{ scale: 0.85 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                         onClick={() => handleQty(item.id, -1)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
+                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink"
                         aria-label="Decrease"
                       >
                         −
-                      </button>
-                      <span className="min-w-[18px] text-center font-body text-xs font-bold text-ink">
-                        {item.qty}
+                      </motion.button>
+                      <span className="inline-flex h-4 min-w-[18px] items-center justify-center overflow-hidden text-center font-body text-xs font-bold text-ink">
+                        <AnimatePresence mode="popLayout" initial={false}>
+                          <motion.span
+                            key={item.qty}
+                            initial={{ y: -8, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 8, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                          >
+                            {item.qty}
+                          </motion.span>
+                        </AnimatePresence>
                       </span>
-                      <button
+                      <motion.button
                         type="button"
+                        whileTap={{ scale: 0.85 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                         onClick={() => handleQty(item.id, 1)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink active:scale-90"
+                        className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/25 bg-transparent font-body text-xs font-bold text-ink transition-brand hover:border-ink"
                         aria-label="Increase"
                       >
                         +
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
 
@@ -420,17 +439,19 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     <div className="font-body text-[14px] font-bold text-ink">
                       ৳{(item.price * item.qty).toLocaleString('en-US')}
                     </div>
-                    <button
+                    <motion.button
                       type="button"
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                       onClick={() => handleRemove(item.id)}
                       title={t('সরান')}
-                      className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500 active:scale-90"
+                      className="mt-2 flex h-7 w-7 items-center justify-center rounded-lg bg-transparent text-muted/40 transition-colors hover:bg-red-50 hover:text-red-500"
                     >
                       <TrashIcon />
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
-              ))}
+                  </motion.div>
+                ))}
 
               {/* কুপন সেকশন */}
               <div className="pt-0.5">
@@ -509,7 +530,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                   </div>
                 )}
               </div>
-            </div>
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
 
@@ -525,10 +547,14 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               </span>
             </div>
 
-            <button
+            <motion.button
               onClick={handleCheckout}
               disabled={checkoutStatus !== 'idle'}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-90"
+              whileTap={checkoutStatus === 'idle' ? { scale: 0.96 } : undefined}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+              className={`card-hover-glow flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] disabled:opacity-90 ${
+                checkoutStatus === 'idle' ? 'shimmer-sheen' : ''
+              }`}
             >
               {checkoutStatus === 'verifying' ? (
                 <>
@@ -543,7 +569,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               ) : (
                 <span>{lang === 'en' ? 'Checkout' : 'চেকআউট করুন'}</span>
               )}
-            </button>
+            </motion.button>
 
             <div className="mt-2.5 flex items-center justify-center gap-1.5 font-body text-[11px] font-medium text-muted">
               <LockSecurityIcon />

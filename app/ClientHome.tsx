@@ -11,6 +11,7 @@ import CustomerGallery from './components/home/CustomerGallery';
 import FAQ from './components/home/FAQ';
 import About from './components/home/About';
 import Footer from './components/layout/Footer';
+import ScrollReveal from './components/ui/ScrollReveal';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -59,11 +60,21 @@ export default function ClientHome({
       />
       <HeroSlider initialCards={initialHeroCards} />
       <TrustStrip />
-      <Categories initialCategories={initialCategories} />
-      <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
-      <CustomerGallery />
-      <FAQ />
-      <About />
+      <ScrollReveal>
+        <Categories initialCategories={initialCategories} />
+      </ScrollReveal>
+      <ScrollReveal>
+        <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
+      </ScrollReveal>
+      <ScrollReveal>
+        <CustomerGallery />
+      </ScrollReveal>
+      <ScrollReveal>
+        <FAQ />
+      </ScrollReveal>
+      <ScrollReveal>
+        <About />
+      </ScrollReveal>
       <Footer />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </>

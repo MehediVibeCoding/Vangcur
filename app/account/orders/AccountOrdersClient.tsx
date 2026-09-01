@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/app/components/layout/Navbar';
 import Footer from '@/app/components/layout/Footer';
 import OrderCard from '@/app/components/orders/OrderCard';
+import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
+import { OrderListSkeleton } from '@/app/components/ui/Skeletons';
 import { fetchMyOrders, orderStats } from '@/lib/accountData';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
@@ -125,35 +127,32 @@ export default function AccountOrdersClient() {
             )}
 
             <div className="rounded-[24px] border border-white/80 bg-white/80 p-5 shadow-xs backdrop-blur-md">
-              {loading ? (
-                <div className="py-12 text-center font-body text-sm text-muted">
-                  <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
-                  {t('লোড হচ্ছে...')}
-                </div>
-              ) : orders.length === 0 ? (
-                <div className="py-12 text-center">
-                  <div className="mx-auto mb-3 text-[42px]">📦</div>
-                  <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
-                  <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
-                  <Link
-                    href="/"
-                    className="inline-block rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh1 transition-all hover:brightness-105 active:scale-95"
-                  >
-                    {t('কেনাকাটা শুরু করুন')} →
-                  </Link>
-                </div>
-              ) : filteredOrders.length === 0 ? (
-                <div className="py-10 text-center">
-                  <div className="mb-2 text-3xl">🔍</div>
-                  <div className="font-body text-sm font-bold text-ink">{t('এই নম্বরে কোনো অর্ডার পাওয়া যায়নি')}</div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {filteredOrders.map((o) => (
-                    <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
-                  ))}
-                </div>
-              )}
+              <SkeletonTransition isReady={!loading} skeleton={<OrderListSkeleton />}>
+                {orders.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-3 text-[42px]">📦</div>
+                    <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
+                    <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
+                    <Link
+                      href="/"
+                      className="inline-block rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-[13px] font-bold text-white shadow-sh1 transition-all hover:brightness-105 active:scale-95"
+                    >
+                      {t('কেনাকাটা শুরু করুন')} →
+                    </Link>
+                  </div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <div className="mb-2 text-3xl">🔍</div>
+                    <div className="font-body text-sm font-bold text-ink">{t('এই নম্বরে কোনো অর্ডার পাওয়া যায়নি')}</div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {filteredOrders.map((o) => (
+                      <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                    ))}
+                  </div>
+                )}
+              </SkeletonTransition>
             </div>
           </>
         )}

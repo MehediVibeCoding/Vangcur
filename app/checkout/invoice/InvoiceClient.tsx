@@ -11,6 +11,8 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import { SHOW_POST_RECEIVE_INFO_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
+import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
+import { InvoiceLoadingSkeleton } from '@/app/components/ui/Skeletons';
 import type { Order } from '@/types';
 
 interface InvoiceContact {
@@ -386,12 +388,9 @@ export default function InvoiceClient() {
 
   if (loading || !order) {
     return (
-      <div className="flex min-h-dvh sm:min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white">
-        <div className="flex items-center gap-2 font-body text-sm font-semibold text-brand-light">
-          <IconSpinner />
-          <span>{t('লোড হচ্ছে...')}</span>
-        </div>
-      </div>
+      <SkeletonTransition isReady={false} skeleton={<InvoiceLoadingSkeleton />}>
+        {null}
+      </SkeletonTransition>
     );
   }
 
@@ -409,6 +408,7 @@ export default function InvoiceClient() {
   const isLimitReached = downloadCount >= MAX_DOWNLOAD_LIMIT;
 
   return (
+    <SkeletonTransition isReady skeleton={<InvoiceLoadingSkeleton />}>
     <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
       <DesktopSideDecor />
 
@@ -1030,5 +1030,6 @@ export default function InvoiceClient() {
         </div>
       </div>
     </div>
+    </SkeletonTransition>
   );
 }

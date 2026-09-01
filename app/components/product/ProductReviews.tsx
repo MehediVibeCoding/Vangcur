@@ -9,6 +9,8 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { uploadReviewImageToCloudinary } from '@/lib/cloudinaryUpload';
 import UserAvatar from './UserAvatar';
+import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
+import { ReviewGallerySkeleton } from '@/app/components/ui/Skeletons';
 import {
   fetchProductReviews,
   submitProductReview,
@@ -466,16 +468,8 @@ export default function ProductReviews({
         </p>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="py-8 text-center font-body text-[13px] text-muted">
-          <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
-          {t('রিভিউ লোড হচ্ছে...')}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && galleryItems.length === 0 && (
+      <SkeletonTransition isReady={!loading} skeleton={<ReviewGallerySkeleton />}>
+      {galleryItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-border-base bg-surface-muted/50 p-6 text-center">
           <div className="mb-2 flex gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -499,10 +493,7 @@ export default function ProductReviews({
             </button>
           )}
         </div>
-      )}
-
-      {/* 3D Coverflow Review Gallery — ফিজিক্যাল সেন্টার পজিশনিং ও সাইড কার্ডে ক্লিকে স্লাইড */}
-      {!loading && galleryItems.length > 0 && (
+      ) : (
         <div className="mb-1">
           <div
             className="relative mx-auto w-full max-w-[850px] overflow-hidden py-1"
@@ -738,6 +729,7 @@ export default function ProductReviews({
           )}
         </div>
       )}
+      </SkeletonTransition>
 
       {/* Write Review Modal */}
       {writeModalOpen && (

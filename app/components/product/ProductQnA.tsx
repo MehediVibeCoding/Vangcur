@@ -7,6 +7,8 @@ import { useT } from '@/lib/i18n/useT';
 import { showToast } from '@/lib/toast';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import UserAvatar from './UserAvatar';
+import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
+import { QnAListSkeleton } from '@/app/components/ui/Skeletons';
 import {
   submitProductQuestion,
   submitProductAnswer,
@@ -286,16 +288,8 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
         </p>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="py-8 text-center font-body text-[13px] text-muted">
-          <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
-          {t('প্রশ্নোত্তর লোড হচ্ছে...')}
-        </div>
-      )}
-
-      {/* Empty State — প্রশ্ন না থাকলে বাটন মাঝখানে থাকবে */}
-      {!loading && !hasQuestions && (
+      <SkeletonTransition isReady={!loading} skeleton={<QnAListSkeleton />}>
+      {!hasQuestions ? (
         <div className="flex flex-col items-center justify-center rounded-[18px] border border-dashed border-border-base bg-surface-muted/50 p-6 text-center">
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-light text-white">
             <SolidChatQuestionIcon className="h-5 w-5 fill-current text-white" />
@@ -311,10 +305,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
             <PlusIcon /> {t('প্রথম প্রশ্নটি করুন')}
           </button>
         </div>
-      )}
-
-      {/* Questions List */}
-      {!loading && hasQuestions && (
+      ) : (
         <div className="flex flex-col gap-4">
           {questions.map((q) => {
             const dateStr = q.created_at
@@ -456,6 +447,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           })}
         </div>
       )}
+      </SkeletonTransition>
 
       {/* Ask Question Modal */}
       {askModalOpen && (

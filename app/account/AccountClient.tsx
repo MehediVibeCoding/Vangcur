@@ -31,6 +31,8 @@ import {
 } from '@/lib/membershipData';
 import Footer from '@/app/components/layout/Footer';
 import OrderCard from '@/app/components/orders/OrderCard';
+import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
+import { CompactOrderListSkeleton } from '@/app/components/ui/Skeletons';
 import type { Order, DraftOrder, StockNotification } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
@@ -1018,32 +1020,29 @@ export default function AccountClient() {
                 </div>
 
                 <div className="rounded-[24px] border border-white/80 bg-white/85 p-5 shadow-xs backdrop-blur-md">
-                  {loadingOrders ? (
-                    <div className="py-12 text-center font-body text-sm text-muted">
-                      <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-light/30 border-t-brand-light" />
-                      {t('লোড হচ্ছে...')}
-                    </div>
-                  ) : orders.length === 0 ? (
-                    <div className="py-12 text-center">
-                      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/40 text-brand-light shadow-xs">
-                        <IconEmptyBox />
+                  <SkeletonTransition isReady={!loadingOrders} skeleton={<CompactOrderListSkeleton />}>
+                    {orders.length === 0 ? (
+                      <div className="py-12 text-center">
+                        <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/40 text-brand-light shadow-xs">
+                          <IconEmptyBox />
+                        </div>
+                        <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
+                        <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
+                        <Link
+                          href="/"
+                          className="inline-block rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-all hover:brightness-105 active:scale-95"
+                        >
+                          {t('কেনাকাটা শুরু করুন')} →
+                        </Link>
                       </div>
-                      <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
-                      <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
-                      <Link
-                        href="/"
-                        className="inline-block rounded-full bg-gradient-to-r from-info to-brand-light px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-all hover:brightness-105 active:scale-95"
-                      >
-                        {t('কেনাকাটা শুরু করুন')} →
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      {orders.slice(0, 5).map((o) => (
-                        <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
-                      ))}
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        {orders.slice(0, 5).map((o) => (
+                          <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                        ))}
+                      </div>
+                    )}
+                  </SkeletonTransition>
                 </div>
               </div>
 

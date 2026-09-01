@@ -135,10 +135,10 @@ export default function Categories({ initialCategories }: CategoriesProps) {
               return (
                 <div
                   key={cat.id}
-                  className="flex min-h-[58px] cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs transition-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:min-h-[66px] md:gap-3 md:p-3 active:scale-98"
+                  className="group flex min-h-[58px] cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs transition-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:min-h-[66px] md:gap-3 md:p-3 active:scale-98"
                   onClick={() => handleSelect(cat.id)}
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-base bg-brand-bg text-[20px] text-brand-light md:h-12 md:w-12 md:text-2xl">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-base bg-brand-bg text-[20px] text-brand-light transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 md:h-12 md:w-12 md:text-2xl">
                     <CatIcon icon={cat.icon} />
                   </div>
                   {/* 🌟 ২ লাইনে সুন্দরভাবে পুরো নাম রেন্ডারিং */}

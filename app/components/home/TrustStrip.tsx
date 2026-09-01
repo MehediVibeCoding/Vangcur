@@ -92,7 +92,7 @@ export default function TrustStrip() {
             key={item.label}
             className={`flex items-center gap-2 ${i >= 3 ? 'hidden md:flex' : ''}`}
           >
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}>
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform duration-brand ease-brand hover:scale-125 md:h-10 md:w-10 ${item.tint} [&_svg]:h-[17px] [&_svg]:w-[17px] md:[&_svg]:h-[19px] md:[&_svg]:w-[19px]`}>
               {item.icon}
             </div>
             <div className="min-w-0">

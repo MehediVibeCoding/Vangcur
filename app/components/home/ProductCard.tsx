@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'motion/react';
 import {
   productHref,
   startQuickOrder, QUICK_CART_EVENT,
@@ -87,6 +88,18 @@ interface ProductCardProps {
   isFirst?: boolean;
 }
 
+// 🌟 ফিক্সড-টাইম বাটন-অ্যানিমেশন বনাম prefetch race
+// ─────────────────────────────────────────────────────────────────────
+// ক্লিক করামাত্র এই সময়টা (নেট স্পিড/ডিভাইস যাই হোক না কেন) কখনো বদলায় না।
+// এই সময়ের মধ্যে টার্গেট পেজ prefetch হয়ে গেলে Next.js নিজেই router.push()-কে
+// ইনস্ট্যান্ট রেন্ডার করে দেবে (কোনো স্কেলেটন ছাড়াই — কারণ prefetch cache-এ
+// ডেটা রেডি থাকে)। prefetch শেষ না হলে, ফিক্সড সময় শেষ হওয়ার সাথে সাথেই
+// navigate হয়ে যাবে আর বাকিটা টার্গেট রুটের নিজস্ব `loading.tsx` (Suspense
+// fallback) দেখাবে — এখানে "prefetch শেষ হয়েছে কিনা" আলাদা করে ডিটেক্ট করার
+// কোনো দরকার নেই, Next.js App Router-এর prefetch cache + streaming এমনিতেই
+// এই race-টা হ্যান্ডেল করে।
+const NAV_ANIM_MS = 300;
+
 export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const { t, lang } = useT();
   const router = useRouter();
@@ -95,9 +108,31 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const [heartBeat, setHeartBeat] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
 
+  // 'product' = ছবি/নাম লিংকে ক্লিক করে প্রোডাক্ট পেজে যাওয়া হচ্ছে
+  // 'checkout' = "Order Now"-এ ক্লিকে সরাসরি চেকআউটে যাওয়া হচ্ছে (শুধু
+  // startQuickOrder-এর "কার্ট খালি + ২০k নিচে" ব্র্যাঞ্চেই সেট হয়)
+  const [pendingNav, setPendingNav] = useState<'product' | 'checkout' | null>(null);
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
+
+  useEffect(() => () => {
+    if (navTimerRef.current) clearTimeout(navTimerRef.current);
+  }, []);
+
+  const runFixedTimeNav = (kind: 'product' | 'checkout', navHref: string) => {
+    if (pendingNav) return; // ডাবল-ক্লিক গার্ড
+    if (prefersReducedMotion()) {
+      router.push(navHref);
+      return;
+    }
+    setPendingNav(kind);
+    navTimerRef.current = setTimeout(() => {
+      router.push(navHref);
+    }, NAV_ANIM_MS);
+  };
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -141,14 +176,51 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
   const handleOrderNowDirect = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (sold) return;
-    startQuickOrder(router, p, 1);
+    if (sold || pendingNav) return;
+    // navigate override শুধু তখনই কল হয় যখন startQuickOrder ভেতরে সিদ্ধান্ত নেয়
+    // যে কার্ট খালি এবং মোট ২০k-এর নিচে — অর্থাৎ সরাসরি /checkout-এ যাওয়া হবে।
+    // বাকি দুই ব্র্যাঞ্চে (bulk-order গার্ড, বা কার্টে যোগ করে quick-cart মডাল
+    // ওপেন) এই ফাংশন একদমই কল হয় না, তাই সেগুলো আগের মতোই instant থাকে।
+    startQuickOrder(router, p, 1, (navHref) => {
+      if (prefersReducedMotion()) {
+        router.push(navHref);
+        return;
+      }
+      setPendingNav('checkout');
+      navTimerRef.current = setTimeout(() => {
+        router.push(navHref);
+      }, NAV_ANIM_MS);
+    });
+  };
+
+  const handleCardLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // মডিফায়েড ক্লিক (নতুন ট্যাব/উইন্ডো, মিডল-ক্লিক ইত্যাদি) — ব্রাউজারের
+    // ডিফল্ট Link আচরণ অক্ষুণ্ন রাখা হচ্ছে, ফিক্সড-টাইম নেভিগেশন প্রযোজ্য না
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (pendingNav) {
+      e.preventDefault();
+      return;
+    }
+    if (prefersReducedMotion()) return; // ডিফল্ট Link নেভিগেশন সরাসরি চলুক
+    e.preventDefault();
+    runFixedTimeNav('product', href);
   };
 
   return (
-    <div className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand md:hover:-translate-y-1 md:hover:shadow-sh3 active:scale-[.98] [transform:translateZ(0)]">
+    <div className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]">
       <div className="relative aspect-[0.57] overflow-hidden rounded-[15px] bg-surface-muted">
-        <Link href={href} prefetch={true} className="absolute inset-0 block cursor-pointer">
+        <Link
+          href={href}
+          prefetch={true}
+          onClick={handleCardLinkClick}
+          aria-busy={pendingNav === 'product'}
+          className="absolute inset-0 block cursor-pointer transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.06]"
+          style={pendingNav === 'product' ? {
+            transform: 'scale(0.97)',
+            filter: 'brightness(0.92)',
+            transition: `transform ${NAV_ANIM_MS}ms ease, filter ${NAV_ANIM_MS}ms ease`,
+          } : undefined}
+        >
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst} />
         </Link>
 
@@ -183,6 +255,8 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
             href={href}
             prefetch={true}
             title={p.name}
+            onClick={handleCardLinkClick}
+            aria-busy={pendingNav === 'product'}
             className="block w-full cursor-pointer truncate overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
           >
             {p.name}
@@ -214,25 +288,36 @@ export default function ProductCard({ prod: p, isFirst }: ProductCardProps) {
               </button>
             ) : (
               <>
-                <button
+                <motion.button
                   type="button"
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10 active:scale-90"
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
                   aria-label={t('কার্টে যোগ করুন')}
                   onClick={handleAddToCartDirect}
                 >
                   <CartIcon />
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="button"
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 active:scale-95 sm:h-9 sm:text-[13px] lg:h-10"
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                  disabled={pendingNav === 'checkout'}
+                  aria-busy={pendingNav === 'checkout'}
+                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10 disabled:cursor-not-allowed"
                   style={{
                     background: 'linear-gradient(115deg, rgba(255,255,255,.94) 0%, rgba(195,222,252,.9) 38%, rgba(255,255,255,.92) 64%, rgba(68,167,252,.35) 100%)',
+                    ...(pendingNav === 'checkout' ? {
+                      transform: 'scale(0.96)',
+                      filter: 'brightness(0.94)',
+                      transition: `transform ${NAV_ANIM_MS}ms ease, filter ${NAV_ANIM_MS}ms ease`,
+                    } : null),
                   }}
                   onClick={handleOrderNowDirect}
                 >
                   {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
-                </button>
+                </motion.button>
               </>
             )}
           </div>

@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 const config: Config = {
   content: [
@@ -97,7 +98,19 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // ══════════════════════════════════════════════════════════════════
+    // 🖱️ Touch-safe `hover:` — মোবাইলে হোভার আটকে থাকার (sticky hover)
+    // সমস্যা এড়াতে পুরো কোডবেসের সব hover: ক্লাসকে একবারে
+    // "শুধু আসল মাউস/ট্র্যাকপ্যাড থাকলে" চালু করা হলো। কোনো কম্পোনেন্ট
+    // আলাদা করে বদলাতে হচ্ছে না — এই একটা প্লাগিনেই পুরো সাইট কভার।
+    // ══════════════════════════════════════════════════════════════════
+    plugin(({ addVariant }) => {
+      addVariant('hover', '@media (hover: hover) and (pointer: fine) { &:hover }');
+      addVariant('group-hover', '@media (hover: hover) and (pointer: fine) { :merge(.group):hover & }');
+      addVariant('peer-hover', '@media (hover: hover) and (pointer: fine) { :merge(.peer):hover ~ & }');
+    }),
+  ],
 };
 
 export default config;
