@@ -48,17 +48,33 @@ interface HeroSliderProps {
 // গ্রেডিয়েন্ট placeholder হিসেবে দেখা যায়), আর লোড শেষ হওয়ামাত্র নিজের
 // ৪২০ms transition দিয়ে সেই গ্রেডিয়েন্টের ওপর মসৃণভাবে fade করে বসে — কোনো
 // আকস্মিক পপ থাকে না।
+// ⚠️ ছবির fade-in নিজের onLoad-এর ওপর নির্ভরশীল হওয়ায় (ওপরের ফিক্স অনুযায়ী)
+// একটা নতুন সমস্যা তৈরি হয়েছিল: ১ম আর ২য় কার্ডের badge/background
+// stagger অনুযায়ী (delay 0s, 0.08s) সাজানো থাকলেও, ছবি দুটো একই priority
+// (eager + high) দিয়ে fetch হয় বলে কোনটা আগে ডাউনলোড শেষ হবে সেটা
+// নেটওয়ার্কের ওপর নির্ভর করে — ২য় ছবিটার সাইজ ছোট হলে বা রেসে জিতলে
+// সেটাই আগে ভেসে উঠতে পারে, অথচ ডিজাইন অনুযায়ী ১ম কার্ডের ছবিই আগে
+// দেখানোর কথা। ফলে badge অর্ডার ঠিক থাকলেও ছবির ভিজ্যুয়াল অর্ডার
+// random/network-dependent হয়ে যাচ্ছিল।
+//
+// ফিক্স: কন্টেইনারের staggerDelay-এর সাথে মিলিয়ে একটা mount-ভিত্তিক
+// ন্যূনতম বিলম্ব (minRevealDelayMs) যোগ করা হলো। ছবি যতই আগে ডাউনলোড
+// শেষ হোক না কেন, নিজের নির্ধারিত সময়ের আগে দেখাবে না — ফলে অর্ডার
+// সবসময় ১ম → ২য়ই থাকে, badge আর ছবি একসাথেই ভেসে ওঠে।
 function HeroCardImage({
   src,
   alt,
   eager,
+  minRevealDelayMs = 0,
 }: {
   src: string;
   alt: string;
   eager: boolean;
+  minRevealDelayMs?: number;
 }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
+  const [minDelayPassed, setMinDelayPassed] = useState(minRevealDelayMs <= 0);
 
   // ব্রাউজার ক্যাশ থেকে ইনস্ট্যান্ট লোড হওয়া ছবির জন্য — এক্ষেত্রে onLoad
   // ইভেন্ট React attach করার আগেই ফায়ার হয়ে যেতে পারে, তাই mount-এর পরে
@@ -67,12 +83,22 @@ function HeroCardImage({
     if (imgRef.current?.complete) setLoaded(true);
   }, []);
 
+  // staggerDelay-এর সাথে সিঙ্ক করা ন্যূনতম বিলম্ব — ক্যাশ থেকে ইনস্ট্যান্ট
+  // লোড হওয়া ছবিও এই সময়ের আগে "revealed" হবে না, তাই অর্ডার ভাঙে না।
+  useEffect(() => {
+    if (minRevealDelayMs <= 0) return;
+    const timer = setTimeout(() => setMinDelayPassed(true), minRevealDelayMs);
+    return () => clearTimeout(timer);
+  }, [minRevealDelayMs]);
+
+  const revealed = loaded && minDelayPassed;
+
   return (
     <img
       ref={imgRef}
       // eslint-disable-next-line @next/next/no-img-element
       className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-[opacity,transform] duration-[420ms] ease-brand group-hover:scale-[1.05] ${
-        loaded ? 'opacity-100' : 'opacity-0'
+        revealed ? 'opacity-100' : 'opacity-0'
       }`}
       src={src}
       alt={alt}
@@ -455,6 +481,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                       src={optimizeCloudinaryUrl(card.img, 360)}
                       alt={label}
                       eager={isEager}
+                      minRevealDelayMs={isInitialVisible ? staggerDelay * 1000 : 0}
                     />
                   ) : isSvgEmoji ? (
                     <div
