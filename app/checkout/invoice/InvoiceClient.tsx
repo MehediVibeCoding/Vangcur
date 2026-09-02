@@ -396,7 +396,7 @@ export default function InvoiceClient() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(SHOW_POST_RECEIVE_INFO_EVENT));
     }
-    router.push('/');
+    router.replace('/');
   };
 
   if (loading || !order) {
