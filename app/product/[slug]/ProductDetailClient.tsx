@@ -1,3 +1,5 @@
+// [REPLACE] ফাইলের পাথ: app/product/[slug]/ProductDetailClient.tsx
+
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -696,10 +698,10 @@ export default function ProductDetailClient({
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
       <Navbar {...navbarProps} />
 
-      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-5 md:grid-cols-2 md:px-8 md:pb-10">
+      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-1.5 sm:pt-3 md:grid-cols-2 md:px-8 md:pb-10">
         <div>
           <div
-            className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-brand border border-border-base bg-white shadow-sh1 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-[22px] border border-border-base/60 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04)] ring-1 ring-border-base/40 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
             onClick={toggleZoom}
             onTouchStart={handleGalleryTouchStart}
             onTouchEnd={handleGalleryTouchEnd}
@@ -932,7 +934,7 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      <div className={`mx-auto max-w-[1100px] px-4 md:px-8 ${related.length > 0 ? 'pb-10' : 'pb-36'}`}>
+      <div className={`mx-auto max-w-[1100px] px-4 md:px-8 ${related.length > 0 ? 'pb-10' : 'pb-20 sm:pb-24'}`}>
         <div className="border-b border-border-base py-8" id="ppSecDesc" ref={(el) => { sectionRefs.current.ppSecDesc = el; }}>
           <SectionHeading icon={<SolidDocIcon />}>
             {t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span>
@@ -1087,7 +1089,7 @@ export default function ProductDetailClient({
       </div>
 
       {related.length > 0 && (
-        <div className="mx-auto max-w-[1100px] px-4 pb-36 pt-2 md:px-8">
+        <div className="mx-auto max-w-[1100px] px-4 pb-20 sm:pb-24 pt-2 md:px-8">
           <div className="mb-4 flex items-center gap-3">
             <div className="h-px flex-1 bg-border-base" />
             <div className="whitespace-nowrap font-body text-lg font-bold text-ink">
