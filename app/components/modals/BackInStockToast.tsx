@@ -9,6 +9,7 @@ import { useCartStore } from '@/lib/store/cartStore';
 import { OPEN_CART_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { showToast } from '@/lib/toast';
+import { hasExceededLocalOrderLimit } from '@/lib/productData';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
@@ -16,8 +17,8 @@ interface InStockItem extends Product {
   key: string;
 }
 
-const HOMEPAGE_INITIAL_DELAY_MS = 5000; // ড্রাফট না থাকলে হোমপেজে আসার ঠিক ৫ সেকেন্ড পর আসবে
-const DISMISS_GAP_DELAY_MS = 10000; // ড্রাফট টোস্ট কেটে দেওয়ার বরাবর ঠিক ১০ সেকেন্ড পর আসবে
+const HOMEPAGE_INITIAL_DELAY_MS = 5000;
+const DISMISS_GAP_DELAY_MS = 10000;
 const RECOVERY_DISMISS_KEY = 'vc_recovery_dismissed';
 const RECOVERY_DISMISS_TIME_KEY = 'vc_toast_dismiss_time';
 const MAX_DRAFT_AGE_MS = 3 * 24 * 60 * 60 * 1000;
@@ -90,8 +91,12 @@ export default function BackInStockToast() {
   const [inStockItems, setInStockItems] = useState<InStockItem[]>([]);
 
   useEffect(() => {
-    // 🛡️ শুধুমাত্র হোমপেজে (pathname === '/') আসবে
     if (pathname !== '/') {
+      setInStockItems([]);
+      return;
+    }
+
+    if (hasExceededLocalOrderLimit()) {
       setInStockItems([]);
       return;
     }
@@ -102,7 +107,7 @@ export default function BackInStockToast() {
     const scheduleStockToast = (delayMs: number) => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(async () => {
-        if (cancelled) return;
+        if (cancelled || hasExceededLocalOrderLimit()) return;
         const notifs = getStockNotifications();
         if (notifs.length === 0) return;
 
@@ -150,7 +155,7 @@ export default function BackInStockToast() {
             }
           });
 
-          if (available.length > 0 && !cancelled) {
+          if (available.length > 0 && !cancelled && !hasExceededLocalOrderLimit()) {
             setInStockItems(available);
           }
         } catch {
@@ -159,9 +164,7 @@ export default function BackInStockToast() {
       }, delayMs);
     };
 
-    // 🌟 স্মার্ট টাইমিং কোঅর্ডিনেশন (৫ সেকেন্ড ও ১০ সেকেন্ডের গ্যাপ লজিক)
     if (hasActiveRecoveryDraft()) {
-      // যদি রিকভারি ড্রাফট টোস্ট সক্রিয় থাকে, এটি কেটে দেওয়ার ১০ সেকেন্ড পর আসবে
       const onRecoveryDismissed = (e: Event) => {
         const d = (e as CustomEvent<{ type?: string }>).detail;
         if (d?.type === 'recovery') {
@@ -175,7 +178,6 @@ export default function BackInStockToast() {
         window.removeEventListener('vc:toastDismissed', onRecoveryDismissed);
       };
     } else {
-      // কোনো ড্রাফট না থাকলে বা ড্রাফট আগেই কেটে দেওয়া থাকলে
       let calculatedDelay = HOMEPAGE_INITIAL_DELAY_MS;
       try {
         const dismissTime = Number(sessionStorage.getItem(RECOVERY_DISMISS_TIME_KEY)) || 0;
@@ -236,20 +238,23 @@ export default function BackInStockToast() {
 
   return (
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[390px] animate-section-reveal">
-      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-md">
+      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-[#C3DEFC]/65 via-[#DCEBFD]/55 to-white/80 p-5 shadow-[0_8px_32px_rgba(0,88,199,0.12)] ring-1 ring-white/80 backdrop-blur-xl">
         
         <HeaderDecor />
 
         <button
+          type="button"
           onClick={handleDismissAll}
-          className="absolute right-3.5 top-3.5 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
+          className="absolute right-3.5 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/80 text-ink/70 shadow-xs backdrop-blur-md transition-all duration-brand hover:bg-white hover:text-ink active:scale-90 focus-visible:outline-none"
           aria-label={t('বন্ধ করুন')}
           title={t('বন্ধ করুন')}
         >
-          ✕
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
         </button>
 
-        <div className="relative z-10 pr-6">
+        <div className="relative z-10 pr-7">
           <h3 className="font-body text-[15px] font-extrabold text-ink leading-tight">
             {isMultiple
               ? (lang === 'en' ? 'Products Back in Stock!' : 'পণ্যগুলো আবার স্টকে এসেছে!')
