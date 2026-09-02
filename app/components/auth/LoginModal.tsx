@@ -20,6 +20,7 @@ import {
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { checkPasswordResetLimit } from '@/lib/rateLimit';
 import { useT } from '@/lib/i18n/useT';
+import useHistoryModal from '@/lib/useHistoryModal';
 import TurnstileWidget, { type TurnstileHandle } from './TurnstileWidget';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
@@ -198,6 +199,8 @@ export default function LoginModal({
   const turnstileRef = useRef<TurnstileHandle>(null);
   const turnstileEnabled = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
+  useHistoryModal(isOpen, onClose, 'login-modal');
+
   const [mode, setMode] = useState<Mode>('login');
   const [lEmail, setLEmail] = useState('');
   const [lPass, setLPass] = useState('');
@@ -336,7 +339,6 @@ export default function LoginModal({
     return ok;
   };
 
-  // 🛡️ নিরাপদ লগইন হ্যান্ডলার
   const doLogin = async () => {
     const em = sanitizeEmailInput(lEmail.trim());
     const pw = lPass;
@@ -384,7 +386,6 @@ export default function LoginModal({
     await finishAuthSuccess(safeUser, t('লগইন সফল হয়েছে'));
   };
 
-  // 🛡️ নিরাপদ রেজিস্ট্রেশন হ্যান্ডলার
   const doRegister = async () => {
     if (rHoneypot) return;
 
