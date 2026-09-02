@@ -1,5 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/product/[slug]/ProductDetailClient.tsx
-
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -698,10 +696,10 @@ export default function ProductDetailClient({
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
       <Navbar {...navbarProps} />
 
-      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-1.5 sm:pt-3 md:grid-cols-2 md:px-8 md:pb-10">
+      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-3.5 md:grid-cols-2 md:px-8 md:pb-10">
         <div>
           <div
-            className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-[22px] border border-border-base/60 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04)] ring-1 ring-border-base/40 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-[14px] border border-border-base bg-white shadow-sh1 ${zoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
             onClick={toggleZoom}
             onTouchStart={handleGalleryTouchStart}
             onTouchEnd={handleGalleryTouchEnd}
@@ -1054,7 +1052,6 @@ export default function ProductDetailClient({
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
                       
-                      {/* জিরো-প্যাডিং নো-রিফ্লো গ্রিড কলাপ্স */}
                       <div
                         className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
                           isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
