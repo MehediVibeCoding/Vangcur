@@ -33,6 +33,22 @@ interface NavbarProps {
   showHomeButton?: boolean;
 }
 
+function formatNavbarName(name?: string | null): string {
+  if (!name) return '';
+  const clean = name.trim();
+  if (!clean) return '';
+  const firstName = clean.split(/\s+/)[0] || '';
+  return firstName.slice(0, 7);
+}
+
+function getNavbarInitials(name?: string | null): string {
+  if (!name) return '?';
+  const clean = name.trim();
+  if (!clean) return '?';
+  const words = clean.split(/\s+/);
+  return words.map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
 function SearchIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
@@ -698,22 +714,22 @@ export default function Navbar({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   onClick={onWishClick}
                   title="Wishlist"
                 >
                   <NavWishlistIcon wrapRef={wishIconWrapRef} liquidPhase={wishLiquidPhase} />
-                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
+                  <span className={`absolute right-[2px] top-[2px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishCount}</span>
                 </motion.button>
 
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="relative flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title={t('কার্ট')}
@@ -722,7 +738,7 @@ export default function Navbar({
                     <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
-                  <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
+                  <span className={`absolute right-[2px] top-[2px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
                 </motion.button>
 
                 {currentUser ? (
@@ -730,31 +746,31 @@ export default function Navbar({
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-light text-[10.5px] font-bold text-white shadow-sh1 transition-transform hover:scale-105"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-light text-[11px] font-bold text-white shadow-sh1 transition-transform hover:scale-105"
                       onClick={handleAccountClick}
                       title={currentUser.name || t('আমার অ্যাকাউন্ট')}
                     >
-                      {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
+                      {getNavbarInitials(currentUser.name)}
                     </motion.button>
                   ) : (
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                      className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-muted p-1 pr-3 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base"
+                      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface-muted p-1 pr-3 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base"
                       onClick={handleAccountClick}
                       title={currentUser.name || t('আমার অ্যাকাউন্ট')}
                     >
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-light text-[10.5px] font-bold text-white shadow-sh1">
-                        {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
+                        {getNavbarInitials(currentUser.name)}
                       </div>
-                      <span className="max-w-[120px] truncate">{currentUser.name || t('আমার অ্যাকাউন্ট')}</span>
+                      <span className="font-bold">{formatNavbarName(currentUser.name) || t('অ্যাকাউন্ট')}</span>
                     </motion.button>
                   )
                 ) : (
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                    className="shrink-0 rounded-full bg-brand-light px-3.5 py-2 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]"
+                    className="flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-3.5 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]"
                     onClick={onLoginClick}
                   >
                     {t('লগইন করুন')}
@@ -764,7 +780,7 @@ export default function Navbar({
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   onClick={onTrackClick}
                   title={t('অর্ডার ট্র্যাক করুন')}
                 >
@@ -776,7 +792,7 @@ export default function Navbar({
 
                 <button
                   ref={mobileSearchToggleRef}
-                  className="flex items-center justify-center rounded-[9px] p-2 max-[400px]:p-1.5 text-ink transition-colors hover:bg-surface-muted hover:text-brand-light md:hidden"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light md:hidden"
                   onClick={(e) => {
                     e.stopPropagation();
                     const next = !mobileSearchOpen;
