@@ -15,7 +15,7 @@ import {
 } from '@/lib/authData';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import {
-  sanitizeInput, validateEmail, validatePhone, validateName, sanitizePlainName, sanitizeEmailInput,
+  validateEmail, validatePhone, validateName, sanitizePlainName, sanitizeEmailInput,
 } from '@/lib/security';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { checkPasswordResetLimit } from '@/lib/rateLimit';
@@ -291,7 +291,7 @@ export default function LoginModal({
   const switchToForgot = () => { setMode('forgot'); setForgotSubmitted(false); setForgotEmailErr(''); setForgotEmail(lEmail); };
 
   const handleForgotSubmit = async () => {
-    const em = sanitizeInput(forgotEmail.trim());
+    const em = sanitizeEmailInput(forgotEmail.trim());
     if (!em || !validateEmail(em)) { setForgotEmailErr(t('সঠিক ইমেইল ঠিকানা দিন')); return; }
     setForgotEmailErr('');
     setForgotLoading(true);
@@ -336,8 +336,9 @@ export default function LoginModal({
     return ok;
   };
 
+  // 🛡️ নিরাপদ লগইন হ্যান্ডলার
   const doLogin = async () => {
-    const em = sanitizeInput(lEmail.trim());
+    const em = sanitizeEmailInput(lEmail.trim());
     const pw = lPass;
     setLEmailErr('');
     setLPassErr('');
@@ -383,12 +384,13 @@ export default function LoginModal({
     await finishAuthSuccess(safeUser, t('লগইন সফল হয়েছে'));
   };
 
+  // 🛡️ নিরাপদ রেজিস্ট্রেশন হ্যান্ডলার
   const doRegister = async () => {
     if (rHoneypot) return;
 
-    const nm = sanitizeInput(rName.trim());
-    const ph = rPhone.trim();
-    const em = sanitizeInput(rEmail.trim());
+    const nm = sanitizePlainName(rName.trim());
+    const ph = filterPhoneInput(rPhone.trim());
+    const em = sanitizeEmailInput(rEmail.trim());
     const pw = rPass;
     setRErr('');
     setREmailErr('');
@@ -471,7 +473,6 @@ export default function LoginModal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4">
-          {/* ফ্লুইড ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -481,7 +482,6 @@ export default function LoginModal({
             onClick={onClose}
           />
 
-          {/* মোডাল উইন্ডো — iOS/Apple স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
