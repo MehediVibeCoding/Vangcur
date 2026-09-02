@@ -1,23 +1,22 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { fetchCustomProducts } from '@/lib/productData';
-import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
+import { fetchCategories, makeCatSlug, DEFAULT_CATEGORIES } from '@/lib/categoryData';
+import { fetchHeroCards, DEFAULT_HERO_CARDS } from '@/lib/heroSliderData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
-import CategoryClient from './CategoryClient';
+import ClientHome from '@/app/ClientHome';
 
 const SITE_URL = 'https://vangcur.com';
 
-// ৫ মিনিট পর পর ব্যাকগ্রাউন্ডে ফ্রেশ ক্যাটাগরি ক্যাশ আপডেট হবে
 export const revalidate = 300;
 
 const getCategories = cache(async () => {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return DEFAULT_CATEGORIES;
+  const supabase = createClient(supabaseUrl, supabaseKey);
   return fetchCategories(supabase);
 });
 
@@ -56,15 +55,31 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const cat = cats.find((c) => c.id !== 'all' && makeCatSlug(c.id) === slug) || null;
   if (!cat) notFound();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-  const initialProducts = await fetchCustomProducts(supabase);
+  let supabase: ReturnType<typeof createClient> | null = null;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (supabaseUrl && supabaseKey) {
+    try {
+      supabase = createClient(supabaseUrl, supabaseKey);
+    } catch {
+      supabase = null;
+    }
+  }
+
+  const [initialProducts, initialCategories, initialHeroCards] = supabase
+    ? await Promise.all([
+      fetchCustomProducts(supabase),
+      fetchCategories(supabase),
+      fetchHeroCards(supabase),
+    ])
+    : [[], DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
 
   return (
-    <Suspense fallback={null}>
-      <CategoryClient initialProducts={initialProducts} category={cat} siblingCategories={cats} />
-    </Suspense>
+    <ClientHome
+      initialProducts={initialProducts}
+      initialCategories={initialCategories}
+      initialHeroCards={initialHeroCards}
+      initialCategory={cat.id}
+    />
   );
 }
