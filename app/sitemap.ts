@@ -5,7 +5,7 @@ import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
 
 const SITE_URL = 'https://vangcur.com';
 
-export const revalidate = 3600; // প্রতি ১ ঘণ্টা পর পর ব্যাকগ্রাউন্ডে সাইটম্যাপ আপডেট হবে
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       products = prods;
       categories = cats.filter((c) => c.id !== 'all');
     } catch {
-      // ডাটাবেজ এক্সেপশনে ডিফল্ট পেজগুলো যাবে
+      // Database fallback
     }
   }
 
@@ -36,10 +36,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${SITE_URL}/guide`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/shipping`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
       url: `${SITE_URL}/refund-policy`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.5,
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
     {
       url: `${SITE_URL}/privacy-policy`,
@@ -48,10 +66,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
     {
-      url: `${SITE_URL}/terms`,
+      url: `${SITE_URL}/track-order`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.5,
+      priority: 0.6,
     },
   ];
 
@@ -70,4 +88,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   return [...staticRoutes, ...categoryRoutes, ...productRoutes];
-      }
+}
