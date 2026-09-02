@@ -10,6 +10,7 @@ import {
   DUO_TOTAL,
   DEFAULT_HERO_CARDS,
   fetchHeroCards,
+  padCards,
 } from '@/lib/heroSliderData';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -34,67 +35,31 @@ function HeroCardImage({
   src,
   alt,
   eager,
-  shouldAnimate = false,
-  minRevealDelayMs = 0,
 }: {
   src: string;
   alt: string;
   eager: boolean;
-  shouldAnimate?: boolean;
-  minRevealDelayMs?: number;
 }) {
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [minDelayPassed, setMinDelayPassed] = useState(minRevealDelayMs <= 0);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!shouldAnimate || minRevealDelayMs <= 0) return;
-    const timer = setTimeout(() => setMinDelayPassed(true), minRevealDelayMs);
-    return () => clearTimeout(timer);
-  }, [shouldAnimate, minRevealDelayMs]);
-
-  // সোয়াইপ/স্ক্রল করা কার্ডের ক্ষেত্রে কোনো ফেড-ইন ট্রানজিশন থাকবে না (ইনস্ট্যান্ট দৃশ্যমান)
-  if (!shouldAnimate) {
-    return (
-      <img
-        ref={imgRef}
-        className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-300 ease-brand group-hover:scale-[1.05]"
-        src={src}
-        alt={alt}
-        loading={eager ? 'eager' : 'lazy'}
-        fetchPriority={eager ? 'high' : undefined}
-        decoding="async"
-      />
-    );
-  }
-
-  const revealed = loaded && minDelayPassed;
-
   return (
     <img
-      ref={imgRef}
-      className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-[opacity,transform] duration-[420ms] ease-brand group-hover:scale-[1.05] ${
-        revealed ? 'opacity-100' : 'opacity-0'
-      }`}
+      className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-300 ease-brand group-hover:scale-[1.05]"
       src={src}
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       fetchPriority={eager ? 'high' : undefined}
       decoding="async"
-      onLoad={() => setLoaded(true)}
     />
   );
 }
 
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
-  const [cards, setCards] = useState<HeroCard[]>(
-    initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS
+  
+  // 🌟 কার্ডের সংখ্যা সবসময় ১২-এর গুণিতকে লক করা হলো যাতে ইনফিনিট লুপের হিসাব ১০০% নির্ভুল থাকে
+  const [cards, setCards] = useState<HeroCard[]>(() =>
+    padCards(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS)
   );
+
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const duoIdxRef = useRef(globalSavedIndex);
@@ -128,7 +93,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     track.style.transition = animate ? 'transform .48s cubic-bezier(.4,0,.2,1)' : 'none';
     track.style.transform = `translateX(-${offset}px)`;
 
-    // transition: none প্রয়োগকালে ব্রাউজারের রিফ্লো নিশ্চিত করা (ইনস্ট্যান্ট সিমলেস ট্রানজিশন)
+    // transition: none প্রয়োগকালে ব্রাউজার রিফ্লো নিশ্চিত করা (ইনস্ট্যান্ট সিমলেস লুপ)
     if (!animate) {
       void track.offsetHeight;
     }
@@ -240,7 +205,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       }
     };
 
-    // 🌟 নিরবচ্ছিন্ন ইনফিনিট লুপ ট্রানজিশন হ্যান্ডলার
+    // 🌟 নিখুঁত গাণিতিক ইনফিনিট লুপ বাউন্ডারি চেক (১২-এর গুণিতক ভিত্তিক)
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.target !== trackRef.current) return;
       if (infiniteJumpRef.current) return;
@@ -314,7 +279,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const loadCards = async () => {
       try {
         const fetched = await fetchHeroCards(supabase);
-        setCards(fetched);
+        setCards(padCards(fetched));
       } catch (e) {
         logWarn('Hero card fetch failed:', e);
       }
@@ -322,9 +287,9 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     loadCards();
   }, [supabase, initialCards]);
 
-  // প্রাথমিক কার্ডগুলোর ছবি আগে থেকেই ব্রাউজার ক্যাশে প্রি-লোড করা
+  // প্রাথমিক ৬টি কার্ডের ছবি ব্রাউজার ক্যাশে অগ্রাধিকার ভিত্তিতে প্রি-ফেচ
   useEffect(() => {
-    if (typeof window !== 'undefined' || !cards.length) return;
+    if (typeof window === 'undefined' || !cards.length) return;
     const count = Math.min(6, cards.length);
     const existing = Array.from(
       document.head.querySelectorAll('link[rel="preload"][as="image"]')
@@ -373,15 +338,15 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const relativePos = ((i % cards.length) + cards.length) % cards.length;
             const isVisibleCopy = i >= cards.length && i < cards.length * 2;
 
-            // 🌟 রেসপন্সিভ হাইব্রিড আর্কিটেকচার:
-            // মোবাইলে ১ম ২টি কার্ড (`isMobileInitial`) অ্যানিমেট হবে।
-            // ডেস্কে (md: 768px+) ১ম ৬টি কার্ড (`isDesktopInitial`) অ্যানিমেট হবে।
+            // 🌟 একীভূত ও নিরবচ্ছিন্ন স্ট্যাগার এনিমেশন:
+            // মোবাইলে কার্ড ০-১ অ্যানিমেট হবে (`animate-hero-card-in`)।
+            // ডেস্কে কার্ড ০, ১, ২, ৩, ৪, ৫ — ৬টি কার্ডই একটানা সুষম তরঙ্গে অ্যানিমেট হবে।
             const isMobileInitial = isVisibleCopy && relativePos < 2;
             const isDesktopOnlyInitial = isVisibleCopy && relativePos >= 2 && relativePos < 6;
             const animClass = isMobileInitial
               ? 'animate-hero-card-in'
               : isDesktopOnlyInitial
-              ? 'md:animate-hero-card-in'
+              ? 'max-md:opacity-100 max-md:transform-none md:animate-hero-card-in'
               : '';
 
             const isInitialVisible = isMobileInitial || isDesktopOnlyInitial;
@@ -406,8 +371,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                       src={optimizeCloudinaryUrl(card.img, 360)}
                       alt={label}
                       eager={isEager}
-                      shouldAnimate={isInitialVisible}
-                      minRevealDelayMs={isInitialVisible ? staggerDelay * 1000 : 0}
                     />
                   ) : isSvgEmoji ? (
                     <div
