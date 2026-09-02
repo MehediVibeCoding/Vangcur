@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getDraft } from '@/lib/draftRecovery';
 import type { CheckoutDraft } from '@/lib/draftRecovery';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { hasExceededLocalOrderLimit } from '@/lib/productData';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 const DISMISS_KEY = 'vc_recovery_dismissed';
@@ -69,6 +70,21 @@ export default function RecoveryToast() {
   const router = useRouter();
   const [draft, setDraft] = useState<CheckoutDraft | null>(null);
 
+  const dismiss = useCallback(() => {
+    try {
+      sessionStorage.setItem(DISMISS_KEY, '1');
+      sessionStorage.setItem(DISMISS_TIME_KEY, String(Date.now()));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('vc:toastDismissed', { detail: { type: 'recovery' } }));
+      }
+    } catch {
+      // ignore
+    }
+    setDraft(null);
+  }, []);
+
+  useHistoryModal(Boolean(draft), dismiss, 'recovery-toast');
+
   useEffect(() => {
     if (pathname !== '/') {
       setDraft(null);
@@ -99,19 +115,6 @@ export default function RecoveryToast() {
   }, [pathname]);
 
   if (!draft || !draft.items || draft.items.length === 0) return null;
-
-  const dismiss = () => {
-    try {
-      sessionStorage.setItem(DISMISS_KEY, '1');
-      sessionStorage.setItem(DISMISS_TIME_KEY, String(Date.now()));
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('vc:toastDismissed', { detail: { type: 'recovery' } }));
-      }
-    } catch {
-      // ignore
-    }
-    setDraft(null);
-  };
 
   const resume = () => {
     if (!draft || !draft.items || draft.items.length === 0) return;
@@ -144,7 +147,7 @@ export default function RecoveryToast() {
 
   return (
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[380px] animate-section-reveal">
-      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-[#C3DEFC]/65 via-[#DCEBFD]/55 to-white/80 p-5 shadow-[0_8px_32px_rgba(0,88,199,0.12)] ring-1 ring-white/80 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-white/85 p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-[10px]">
         
         <HeaderDecor />
 
