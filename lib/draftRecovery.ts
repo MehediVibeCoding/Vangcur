@@ -1,6 +1,10 @@
 import type { CartItem } from '@/types';
 
 const DRAFT_KEY = 'vc_abandoned_draft';
+export const MAX_DRAFT_AGE_MS = 24 * 60 * 60 * 1000;
+const DISMISSED_PREFIX = 'vc_draft_dismissed_';
+const IMPRESSION_PREFIX = 'vc_draft_impression_';
+const SESSION_CREATION_KEY = 'vc_session_draft_created';
 
 export interface CheckoutDraft {
   id: string;
@@ -14,10 +18,64 @@ export interface CheckoutDraft {
   createdAt: number;
 }
 
+export function isDraftDismissed(draftId: string): boolean {
+  if (typeof window === 'undefined' || !draftId) return false;
+  try {
+    return localStorage.getItem(`${DISMISSED_PREFIX}${draftId}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markDraftDismissed(draftId: string): void {
+  if (typeof window === 'undefined' || !draftId) return;
+  try {
+    localStorage.setItem(`${DISMISSED_PREFIX}${draftId}`, '1');
+  } catch {
+    // ignore
+  }
+}
+
+export function isDraftImpressionRecorded(draftId: string): boolean {
+  if (typeof window === 'undefined' || !draftId) return false;
+  try {
+    return localStorage.getItem(`${IMPRESSION_PREFIX}${draftId}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function recordDraftImpression(draftId: string): void {
+  if (typeof window === 'undefined' || !draftId) return;
+  try {
+    localStorage.setItem(`${IMPRESSION_PREFIX}${draftId}`, '1');
+  } catch {
+    // ignore
+  }
+}
+
+export function isCurrentSessionDraft(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return sessionStorage.getItem(SESSION_CREATION_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function getDraft(): CheckoutDraft | null {
   if (typeof window === 'undefined') return null;
   try {
-    return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const draft: CheckoutDraft = JSON.parse(raw);
+
+    if (Date.now() - draft.createdAt > MAX_DRAFT_AGE_MS) {
+      clearDraft();
+      return null;
+    }
+
+    return draft;
   } catch {
     return null;
   }
@@ -44,6 +102,7 @@ export function saveDraft({ name, phone, dist, addr, email, items, ship }: SaveD
       DRAFT_KEY,
       JSON.stringify({ id, name, phone, dist, addr, email, items, ship, createdAt }),
     );
+    sessionStorage.setItem(SESSION_CREATION_KEY, '1');
   } catch {
     // best effort
   }
@@ -62,30 +121,30 @@ export function eligibleDraft(): CheckoutDraft | null {
   const draft = getDraft();
   if (!draft) return null;
 
-  const FIFTEEN_DAYS = 15 * 24 * 60 * 60 * 1000;
-  if (Date.now() - draft.createdAt > FIFTEEN_DAYS) {
+  if (Date.now() - draft.createdAt > MAX_DRAFT_AGE_MS) {
     clearDraft();
     return null;
   }
 
-  const createdHour = new Date(draft.createdAt).getHours();
-  const nextDay = new Date(draft.createdAt);
-  nextDay.setDate(nextDay.getDate() + 1);
-  nextDay.setSeconds(0);
-  nextDay.setMinutes(0);
-  nextDay.setHours(createdHour < 18 ? 1 : 13);
-  if (Date.now() < nextDay.getTime()) return null;
+  if (isDraftDismissed(draft.id)) {
+    return null;
+  }
 
-  try {
-    if (localStorage.getItem(`vc_popup_dismissed_${draft.id}`)) return null;
-  } catch {
-    // ignore
+  if (isDraftImpressionRecorded(draft.id)) {
+    return null;
+  }
+
+  if (isCurrentSessionDraft()) {
+    return null;
   }
 
   return draft;
 }
 
-export function dismissDraft(draftId: string, isUserDismiss: boolean): void {
-  if (typeof window === 'undefined' || !isUserDismiss) return;
+export function dismissDraft(draftId: string, isUserDismiss = true): void {
+  if (typeof window === 'undefined') return;
+  if (draftId && isUserDismiss) {
+    markDraftDismissed(draftId);
+  }
   clearDraft();
 }
