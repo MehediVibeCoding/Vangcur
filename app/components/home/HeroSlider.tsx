@@ -19,7 +19,8 @@ const AUTOPLAY_MS = 5500;
 const HOVER_AUTOPLAY_MS = 8000;
 const GAP = 12;
 
-let globalSavedIndex = DUO_TOTAL;
+// ৫টি সেটের মিডল সেট (Set 3) শুরু হবে ইনডেক্স ২৪-এ
+let globalSavedIndex = DUO_TOTAL * 2;
 
 function getDuoPerPage(): number {
   if (typeof window === 'undefined') return 2;
@@ -55,7 +56,7 @@ function HeroCardImage({
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
   
-  // 🌟 কার্ডের সংখ্যা সবসময় ১২-এর গুণিতকে লক করা হলো যাতে ইনফিনিট লুপের হিসাব ১০০% নির্ভুল থাকে
+  // কার্ডের তালিকা সবসময় ১২-এর গুণিতকে নরমালাইজড রাখা
   const [cards, setCards] = useState<HeroCard[]>(() =>
     padCards(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS)
   );
@@ -69,6 +70,19 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const dragRef = useRef({ active: false, startX: 0 });
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
+
+  // 🌟 প্রথম ৬টি কার্ডের ছবি ব্রাউজার মেমোরিতে তাৎক্ষণিক প্রি-ক্যাশ করা
+  useEffect(() => {
+    if (typeof window === 'undefined' || !cards.length) return;
+    const count = Math.min(6, cards.length);
+    for (let idx = 0; idx < count; idx++) {
+      const src = cards[idx]?.img;
+      if (!src) continue;
+      const href = optimizeCloudinaryUrl(src, 360);
+      const preloadImg = new window.Image();
+      preloadImg.src = href;
+    }
+  }, [cards]);
 
   const setPosition = useCallback((animate: boolean) => {
     const track = trackRef.current;
@@ -93,7 +107,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     track.style.transition = animate ? 'transform .48s cubic-bezier(.4,0,.2,1)' : 'none';
     track.style.transform = `translateX(-${offset}px)`;
 
-    // transition: none প্রয়োগকালে ব্রাউজার রিফ্লো নিশ্চিত করা (ইনস্ট্যান্ট সিমলেস লুপ)
+    // transition: none হলে তাৎক্ষণিক ব্রাউজার রিফ্লো রেজিস্টার করা
     if (!animate) {
       void track.offsetHeight;
     }
@@ -205,21 +219,24 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       }
     };
 
-    // 🌟 নিখুঁত গাণিতিক ইনফিনিট লুপ বাউন্ডারি চেক (১২-এর গুণিতক ভিত্তিক)
+    // 🌟 ৫-সেট বাফার ভিত্তিক নিখুঁত ইনফিনিট লুপ বাউন্ডারি সুইচ
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.target !== trackRef.current) return;
       if (infiniteJumpRef.current) return;
 
-      const totalCards = cards.length;
-      if (duoIdxRef.current >= totalCards * 2) {
+      const N = cards.length;
+      const minSafeIndex = N * 2; // ২৪ (Set 3 শুরু)
+      const maxSafeIndex = N * 3; // ৩৬ (Set 4 শুরু)
+
+      if (duoIdxRef.current >= maxSafeIndex) {
         infiniteJumpRef.current = true;
-        duoIdxRef.current -= totalCards;
+        duoIdxRef.current -= N; // ৩৬ ➔ ২৪ (সিমলেস ইনস্ট্যান্ট রিসেট)
         globalSavedIndex = duoIdxRef.current;
         setPosition(false);
         infiniteJumpRef.current = false;
-      } else if (duoIdxRef.current < totalCards) {
+      } else if (duoIdxRef.current < minSafeIndex) {
         infiniteJumpRef.current = true;
-        duoIdxRef.current += totalCards;
+        duoIdxRef.current += N; // ১৮ ➔ ৩০ (সিমলেস ইনস্ট্যান্ট রিসেট)
         globalSavedIndex = duoIdxRef.current;
         setPosition(false);
         infiniteJumpRef.current = false;
@@ -287,31 +304,25 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     loadCards();
   }, [supabase, initialCards]);
 
-  // প্রাথমিক ৬টি কার্ডের ছবি ব্রাউজার ক্যাশে অগ্রাধিকার ভিত্তিতে প্রি-ফেচ
-  useEffect(() => {
-    if (typeof window === 'undefined' || !cards.length) return;
-    const count = Math.min(6, cards.length);
-    const existing = Array.from(
-      document.head.querySelectorAll('link[rel="preload"][as="image"]')
-    ).map((l) => l.getAttribute('href'));
-    const created: HTMLLinkElement[] = [];
+  const handleManualPrev = () => {
+    isInteractingRef.current = true;
+    if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    duoStep(-1);
+    setTimeout(() => {
+      isInteractingRef.current = false;
+      startAuto(AUTOPLAY_MS);
+    }, 2000);
+  };
 
-    for (let idx = 0; idx < count; idx++) {
-      const src = cards[idx]?.img;
-      if (!src) continue;
-      const href = optimizeCloudinaryUrl(src, 360);
-      if (existing.includes(href)) continue;
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = href;
-      link.setAttribute('fetchpriority', 'high');
-      document.head.appendChild(link);
-      created.push(link);
-    }
-
-    return () => created.forEach((l) => l.remove());
-  }, [cards]);
+  const handleManualNext = () => {
+    isInteractingRef.current = true;
+    if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    duoStep(1);
+    setTimeout(() => {
+      isInteractingRef.current = false;
+      startAuto(AUTOPLAY_MS);
+    }, 2000);
+  };
 
   const goCategory = (catId: string) => {
     if (typeof onCategoryClick === 'function') {
@@ -322,35 +333,35 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const tripled = [...cards, ...cards, ...cards];
+  // ৫টি সম্পূর্ণ সেট বাফার (৬০টি কার্ড)
+  const quintupled = [...cards, ...cards, ...cards, ...cards, ...cards];
 
   return (
     <div className="relative mx-auto max-w-[1300px] bg-transparent px-3.5 pt-3.5 sm:px-5 2xl:max-w-[1560px]">
       <div className="relative w-full touch-pan-y overflow-hidden bg-transparent" ref={wrapRef}>
         <div className="flex gap-3 bg-transparent" style={{ willChange: 'transform' }} ref={trackRef}>
-          {tripled.map((card, i) => {
+          {quintupled.map((card, i) => {
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
-            const isEager = i >= cards.length && i < cards.length + 6;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
             const relativePos = ((i % cards.length) + cards.length) % cards.length;
-            const isVisibleCopy = i >= cards.length && i < cards.length * 2;
+            // শুধুমাত্র মিডল সেটে (Set 3: ইনডেক্স ২৪-৩৫) ইনিশিয়াল এন্ট্রি অ্যানিমেশন থাকবে
+            const isMiddleCopy = i >= cards.length * 2 && i < cards.length * 3;
 
-            // 🌟 একীভূত ও নিরবচ্ছিন্ন স্ট্যাগার এনিমেশন:
-            // মোবাইলে কার্ড ০-১ অ্যানিমেট হবে (`animate-hero-card-in`)।
-            // ডেস্কে কার্ড ০, ১, ২, ৩, ৪, ৫ — ৬টি কার্ডই একটানা সুষম তরঙ্গে অ্যানিমেট হবে।
-            const isMobileInitial = isVisibleCopy && relativePos < 2;
-            const isDesktopOnlyInitial = isVisibleCopy && relativePos >= 2 && relativePos < 6;
+            const isMobileInitial = isMiddleCopy && relativePos < 2;
+            const isDesktopOnlyInitial = isMiddleCopy && relativePos >= 2 && relativePos < 6;
+
             const animClass = isMobileInitial
-              ? 'animate-hero-card-in'
+              ? 'hero-card-anim-all'
               : isDesktopOnlyInitial
-              ? 'max-md:opacity-100 max-md:transform-none md:animate-hero-card-in'
+              ? 'hero-card-anim-desktop'
               : '';
 
             const isInitialVisible = isMobileInitial || isDesktopOnlyInitial;
-            const staggerDelay = isInitialVisible ? relativePos * 0.08 : 0;
+            const staggerDelay = isInitialVisible ? relativePos * 0.07 : 0;
+            const isEager = isMiddleCopy && relativePos < 6;
 
             return (
               <div
@@ -405,16 +416,16 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
       <style>{`
         @keyframes heroCardIn {
-          from { opacity: 0; transform: translateY(24px); }
+          from { opacity: 0; transform: translateY(22px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .animate-hero-card-in {
-          animation: heroCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        .hero-card-anim-all {
+          animation: heroCardIn 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
           will-change: opacity, transform;
         }
         @media (min-width: 768px) {
-          .md\\:animate-hero-card-in {
-            animation: heroCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          .hero-card-anim-desktop {
+            animation: heroCardIn 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
             will-change: opacity, transform;
           }
         }
@@ -422,14 +433,14 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
       <button
         className="absolute left-1 top-[calc(50%-7px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
-        onClick={() => duoStep(-1)}
+        onClick={handleManualPrev}
         aria-label="Previous"
       >
         &#8249;
       </button>
       <button
         className="absolute right-1 top-[calc(50%-7px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
-        onClick={() => duoStep(1)}
+        onClick={handleManualNext}
         aria-label="Next"
       >
         &#8250;
