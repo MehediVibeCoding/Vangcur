@@ -41,14 +41,6 @@ function SearchIcon({ className = '' }: { className?: string }) {
   );
 }
 
-function HomeSolidSvgIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-      <path d="M12 2.7 2.35 10.55a1 1 0 0 0 .63 1.78h1.27v8.17a1 1 0 0 0 1 1H9.5a.5.5 0 0 0 .5-.5V15h4v6a.5.5 0 0 0 .5.5h4.25a1 1 0 0 0 1-1v-8.17h1.27a1 1 0 0 0 .63-1.78L12 2.7Z" />
-    </svg>
-  );
-}
-
 function NavWishlistIcon({
   wrapRef, liquidPhase,
 }: {
@@ -328,7 +320,7 @@ export default function Navbar({
   cartCount = 0, wishCount = 0, onCartClick, onWishClick, onLoginClick, onTrackClick, currentUser, onAccountClick,
   sticky = true, showHomeButton = false,
 }: NavbarProps) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
@@ -503,7 +495,6 @@ export default function Navbar({
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
   }, []);
 
-  // 🛡️ সার্চ ইনপুট স্যানিটাইজার ও ৬০ ক্যারেক্টার ক্যাপ
   const handleSearchInput = useCallback((value: string) => {
     const clean = value.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
     setSearchQuery(clean);
@@ -606,19 +597,23 @@ export default function Navbar({
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
+            
+            {/* 🌟 হোম বাটন: অ্যাকাউন্ট পেজের ন্যায় চমৎকার "ব্যাক টু হোম" পিল স্টাইল */}
             {showHomeButton ? (
               <Link
                 href="/"
                 prefetch={true}
-                aria-label={t('হোম')}
-                title={t('হোম')}
-                className="group flex shrink-0 items-center gap-1.5 rounded-full border border-border-base/70 bg-white/80 py-1 pl-1.5 pr-3 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2.5"
+                aria-label={lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
+                title={lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
+                className="group flex shrink-0 items-center gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2.5 max-[400px]:pl-1.5"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
-                  <HomeSolidSvgIcon />
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
                 </div>
                 <span className="font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
-                  {t('হোম')}
+                  {lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
                 </span>
               </Link>
             ) : (
@@ -730,17 +725,19 @@ export default function Navbar({
                   <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartCount > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartCount}</span>
                 </motion.button>
 
+                {/* 🌟 কাস্টমার অবতার: মোবাইলে শুধুমাত্র স্লিম সার্কেল আইকন এবং ডেস্কে ফুল নাম */}
                 {currentUser ? (
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                    className="flex max-w-[130px] shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1.5 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base md:max-w-none md:gap-2 md:px-3.5"
+                    className="flex shrink-0 items-center gap-1.5 rounded-full bg-surface-muted p-1 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base md:px-3 md:py-1.5"
                     onClick={handleAccountClick}
+                    title={currentUser.name || t('আমার অ্যাকাউন্ট')}
                   >
-                    <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10px] font-bold text-white shadow-sh1">
+                    <div className="flex h-7 w-7 md:h-[26px] md:w-[26px] shrink-0 items-center justify-center rounded-full bg-brand-light text-[10.5px] font-bold text-white shadow-sh1">
                       {(currentUser.name || '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
-                    <span className="truncate">{currentUser.name || t('আমার অ্যাকাউন্ট')}</span>
+                    <span className="hidden md:inline max-w-[140px] truncate">{currentUser.name || t('আমার অ্যাকাউন্ট')}</span>
                   </motion.button>
                 ) : (
                   <motion.button
