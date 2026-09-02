@@ -5,12 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { getDraft } from '@/lib/draftRecovery';
 import type { CheckoutDraft } from '@/lib/draftRecovery';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { hasExceededLocalOrderLimit } from '@/lib/productData';
 import { useT } from '@/lib/i18n/useT';
 
 const DISMISS_KEY = 'vc_recovery_dismissed';
 const DISMISS_TIME_KEY = 'vc_toast_dismiss_time';
 const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
-const HOMEPAGE_INITIAL_DELAY_MS = 5000; // হোমপেজে আসার ঠিক ৫ সেকেন্ড পর আসবে
+const HOMEPAGE_INITIAL_DELAY_MS = 5000;
 
 function HeaderDecor() {
   return (
@@ -69,8 +70,12 @@ export default function RecoveryToast() {
   const [draft, setDraft] = useState<CheckoutDraft | null>(null);
 
   useEffect(() => {
-    // 🛡️ শুধুমাত্র হোমপেজে (pathname === '/') আসবে
     if (pathname !== '/') {
+      setDraft(null);
+      return;
+    }
+
+    if (hasExceededLocalOrderLimit()) {
       setDraft(null);
       return;
     }
@@ -83,9 +88,10 @@ export default function RecoveryToast() {
 
     const d = getDraft();
     if (d && d.items && d.items.length > 0 && Date.now() - d.createdAt < MAX_AGE_MS) {
-      // হোমপেজে ঢোকার ঠিক ৫ সেকেন্ড পর আলতো করে ভেসে উঠবে
       const timer = setTimeout(() => {
-        setDraft(d);
+        if (!hasExceededLocalOrderLimit()) {
+          setDraft(d);
+        }
       }, HOMEPAGE_INITIAL_DELAY_MS);
 
       return () => clearTimeout(timer);
@@ -138,19 +144,23 @@ export default function RecoveryToast() {
 
   return (
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[380px] animate-section-reveal">
-      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-md">
+      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-[#C3DEFC]/65 via-[#DCEBFD]/55 to-white/80 p-5 shadow-[0_8px_32px_rgba(0,88,199,0.12)] ring-1 ring-white/80 backdrop-blur-xl">
         
         <HeaderDecor />
 
         <button
+          type="button"
           onClick={dismiss}
-          className="absolute right-3.5 top-3.5 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
+          className="absolute right-3.5 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/80 text-ink/70 shadow-xs backdrop-blur-md transition-all duration-brand hover:bg-white hover:text-ink active:scale-90 focus-visible:outline-none"
           aria-label={t('বন্ধ করুন')}
+          title={t('বন্ধ করুন')}
         >
-          ✕
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
         </button>
 
-        <div className="relative z-10 pr-6">
+        <div className="relative z-10 pr-7">
           <h3 className="font-body text-[15px] font-extrabold text-ink leading-tight">
             {lang === 'en' ? 'Complete Your Order' : 'পেন্ডিং অর্ডারটি সম্পন্ন করুন'}
           </h3>
