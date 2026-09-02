@@ -20,6 +20,22 @@ const lineIcon = {
   strokeLinejoin: 'round' as const,
 };
 
+function HeaderDecor() {
+  const deco = { ...lineIcon, strokeWidth: 1.4 };
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]" aria-hidden="true">
+      <svg {...deco} width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+      <svg {...deco} width="26" height="26" className="absolute right-14 top-3 rotate-6" viewBox="0 0 24 24">
+        <rect x="7" y="2.5" width="10" height="15" rx="3" />
+        <path d="M10 5.5h4" />
+        <circle cx="12" cy="20" r="1.6" />
+      </svg>
+    </div>
+  );
+}
+
 function IconDocList() {
   return (
     <svg {...lineIcon} width="16" height="16" strokeWidth={2} className="text-brand-light">
@@ -101,8 +117,8 @@ function IconCheck() {
 
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-5 rounded-[16px] border border-border-base/70 bg-[#F8FAFC]/80 p-4 shadow-2xs">
-      <h3 className="mb-2.5 flex items-center gap-2 font-body text-[14px] font-bold text-ink">
+    <div className="mb-4 rounded-[18px] border border-white/90 bg-white/85 p-4 shadow-xs backdrop-blur-md">
+      <h3 className="mb-2.5 flex items-center gap-2 font-body text-[14px] font-extrabold text-ink">
         {icon}
         <span>{title}</span>
       </h3>
@@ -111,9 +127,9 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
   );
 }
 
-const pClass = 'mb-2 font-body text-[13px] leading-[1.8] text-ink/85';
-const ulClass = 'mb-2 list-disc space-y-1.5 pl-4 text-ink/85';
-const liClass = 'font-body text-[12.5px] leading-[1.75] text-ink/85';
+const pClass = 'mb-2 font-body text-[12.5px] sm:text-[13px] leading-[1.75] text-ink/85';
+const ulClass = 'mb-2 list-none space-y-2 pl-0.5';
+const liClass = 'flex items-start gap-2.5 font-body text-[12.5px] leading-[1.7] text-ink/85';
 
 export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: PolicyModalProps) {
   const { lang, t } = useT();
@@ -136,7 +152,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[9800] flex items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[9800] flex items-center justify-center p-3 sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -147,17 +163,19 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
           />
 
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            className="sleek-scrollbar relative z-10 flex h-full max-h-[100dvh] w-full max-w-[540px] flex-col overflow-y-auto bg-white shadow-sh3 sm:h-auto sm:max-h-[90vh] sm:rounded-[24px] sm:border sm:border-border-base"
+            className="sleek-scrollbar relative z-10 flex h-full max-h-[92vh] w-full max-w-[520px] flex-col overflow-y-auto rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
           >
-            <div className="sticky top-0 z-[2] flex items-center justify-between border-b border-border-base bg-white/95 px-5 py-3.5 backdrop-blur-md">
+            <div className="sticky top-0 z-[20] flex items-center justify-between border-b border-ink/10 bg-white/90 px-6 py-3.5 backdrop-blur-md">
               <div className="flex items-center gap-2">
-                <IconDocList />
-                <h3 className="font-body text-[15.5px] font-extrabold text-ink">
-                  {lang === 'en' ? 'Terms & Conditions' : 'নীতিমালা ও শর্তাবলী'}
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                  <IconDocList />
+                </span>
+                <h3 className="font-body text-[16px] font-extrabold text-ink">
+                  {lang === 'en' ? 'Terms & Policy Agreement' : 'নীতিমালা ও বিক্রয় শর্তাবলী'}
                 </h3>
               </div>
               <motion.button
@@ -170,177 +188,183 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
               </motion.button>
             </div>
 
-            <div className="flex-1 px-5 pb-8 pt-4">
+            <div className="relative flex-1 px-6 pb-6 pt-4">
+              <HeaderDecor />
+
               <Section
                 icon={<IconBox />}
-                title={lang === 'en' ? '1. Order Terms' : '১. অর্ডার সংক্রান্ত'}
+                title={lang === 'en' ? '1. Order Terms & Verification' : '১. অর্ডার প্রদান ও ভেরিফিকেশন'}
               >
                 <ul className={ulClass}>
                   <li className={liClass}>
-                    {t('অর্ডার সম্পন্ন করার আগে অনুগ্রহ করে নিশ্চিত করুন যে আপনার দেওয়া নাম, মোবাইল নম্বর, ডেলিভারি ঠিকানা, bKash ট্রানজেকশন আইডি বা বিকাশের শেষ ৪ ডিজিট সহ সকল তথ্য সঠিক।')}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Ensure that your Full Name, 11-digit mobile number, district, detailed delivery address, and bKash transaction details are 100% accurate before confirming.'
+                        : 'অর্ডার সম্পন্ন করার পূর্বে আপনার পূর্ণ নাম, ১১ ডিজিটের সচল মোবাইল নম্বর, জেলা, বিস্তারিত ঠিকানা এবং বিকাশ ট্রানজেকশন তথ্য সঠিকভাবে প্রদান করুন।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>If any information is incorrect, <strong>Vangcur reserves the full right to cancel your order.</strong></>
-                      : <>যেকোনো তথ্য ভুল দিলে <strong>Vangcur আপনার অর্ডারটি বাতিল করার সম্পূর্ণ অধিকার রাখে।</strong></>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Providing false or incomplete information gives Vangcur the complete right to cancel or hold the order to prevent fake bookings.'
+                        : 'ভুল বা মিথ্যা তথ্য প্রদান করলে প্রতারণামূলক অর্ডার রোধে Vangcur কর্তৃপক্ষ উক্ত অর্ডার বাতিল করার পূর্ণ অধিকার রাখে।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {t('অর্ডার কনফার্ম হওয়ার ২৪ ঘণ্টার মধ্যে ডেলিভারি প্রক্রিয়া শুরু হবে।')}
-                  </li>
-                  <li className={liClass}>
-                    {t('২৪–৪৮ ঘণ্টার মধ্যে কুরিয়ার সার্ভিস থেকে আপনার দেওয়া নম্বরে পার্সেলের ট্র্যাকিং লিংক পাঠানো হবে।')}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Orders are verified and handed over to courier logistics within 24 business hours.'
+                        : 'অর্ডার কনফার্মেশনের ২৪ কার্যঘণ্টার মধ্যে পার্সেল কুরিয়ারে হস্তান্তর করা হয়।'}
+                    </span>
                   </li>
                 </ul>
               </Section>
 
               <Section
                 icon={<IconTruck />}
-                title={lang === 'en' ? '2. Delivery Terms' : '২. ডেলিভারি সংক্রান্ত'}
+                title={lang === 'en' ? '2. Closed-Box Home Delivery Protocol' : '২. ক্লোজড-বক্স ডেলিভারি নিয়মাবলী'}
               >
                 <p className={pClass}>
                   {lang === 'en'
-                    ? <>Vangcur ships products using the <strong>closed-box delivery</strong> method. So —</>
-                    : <>Vangcur <strong>ক্লোজড বক্স ডেলিভারি</strong> পদ্ধতিতে প্রোডাক্ট পাঠায়। তাই —</>}
+                    ? 'Vangcur operates closed-box home delivery across all 64 districts in Bangladesh via Pathao Courier:'
+                    : 'Vangcur পাঠাও কুরিয়ারের মাধ্যমে সমগ্র বাংলাদেশে ক্লোজড-বক্স হোম ডেলিভারি পদ্ধতিতে পার্সেল সরবরাহ করে:'}
                 </p>
                 <ul className={ulClass}>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>Please pay the delivery person the <strong>remaining amount</strong> first, then accept the parcel.</>
-                      : <>ডেলিভারিম্যানকে আগে <strong>অবশিষ্ট টাকা পরিশোধ করুন</strong>, তারপর পার্সেল বুঝে নিন।</>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Please pay the delivery agent the remaining Cash on Delivery (COD) balance first, then receive your parcel.'
+                        : 'কুরিয়ার নিয়মানুযায়ী ডেলিভারিম্যানকে আগে অবশিষ্ট ক্যাশ অন ডেলিভারি টাকা পরিশোধ করে পার্সেল বুঝে নিন।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>Once you have the product in hand, there is <strong>no option to return it</strong> if you simply don&apos;t like it. Please review the product details and photos carefully before ordering.</>
-                      : <>প্রোডাক্ট হাতে পাওয়ার পর পছন্দ না হলে ফেরত দেওয়ার <strong>কোনো সুযোগ নেই।</strong> অর্ডার করার আগেই প্রোডাক্টের বিবরণ ও ছবি ভালোভাবে দেখে নিন।</>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Courier agents cannot approve returns on the spot for subjective dislike. Any genuine issue is handled through our free replacement policy.'
+                        : 'ব্যক্তিগত অপছন্দের কারণে স্পটে ডেলিভারিম্যানের কাছে রিটার্ন দেওয়ার সুযোগ নেই; কোনো কারিগরি সমস্যা থাকলে তা ফ্রি রিপ্লেসমেন্টে সমাধান করা হয়।'}
+                    </span>
                   </li>
                 </ul>
               </Section>
 
               <Section
                 icon={<IconVideoCamera />}
-                title={lang === 'en' ? '3. Unboxing Video Terms (Mandatory)' : '৩. আনবক্সিং ভিডিও সংক্রান্ত (অবশ্যই করণীয়)'}
+                title={lang === 'en' ? '3. Mandatory Unboxing Video Protocol' : '৩. আনবক্সিং ভিডিও নীতিমালা (বাধ্যতামূলক)'}
               >
                 <p className={pClass}>
                   {lang === 'en'
-                    ? <>While opening the product after receiving it, please record a <strong>continuous unboxing video</strong> —</>
-                    : <>প্রোডাক্ট পাওয়ার পর খোলার সময় <strong>একটানা আনবক্সিং ভিডিও</strong> ধারণ করুন —</>}
+                    ? 'To process any replacement claim securely, recording an uncut, continuous unboxing video is mandatory:'
+                    : 'যেকোনো রিপ্লেসমেন্ট ক্লেইম দ্রুত সমাধান করতে পার্সেল খোলার সময় একটানা আনবক্সিং ভিডিও করা বাধ্যতামূলক:'}
                 </p>
                 <ul className={ulClass}>
                   <li className={liClass}>
-                    {t('পার্সেলের বাইরে থেকে শুরু করে প্রোডাক্টের ভেতরের সব পার্টস পর্যন্ত একটানা রেকর্ড করতে হবে।')}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'The video must start from the sealed courier package and continue in one continuous take without cuts, edits, or pauses.'
+                        : 'ভিডিওটি সিলযুক্ত প্যাকেটের বাইরে থেকে শুরু করে ভেতরের সব পার্টস পর্যন্ত কোনো প্রকার কাট বা পজ ছাড়া একটানা রেকর্ড করতে হবে।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>The video must not have <strong>any cuts or pauses.</strong></>
-                      : <>ভিডিওতে <strong>কোনো কাট বা পজ</strong> দেওয়া যাবে না।</>}
-                  </li>
-                  <li className={liClass}>
-                    {lang === 'en'
-                      ? <>For electronic products, the video must <strong>show the product being turned on.</strong></>
-                      : <>ইলেকট্রনিক প্রোডাক্টের ক্ষেত্রে ভিডিওতে প্রোডাক্টটি <strong>চালু করে দেখাতে হবে।</strong></>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'For electronic devices, the video must demonstrate turning on the power or testing the device.'
+                        : 'ইলেকট্রনিক পণ্যের ক্ষেত্রে ভিডিওতেই ডিভাইসটি পাওয়ার অন বা চার্জে দিয়ে টেস্ট করে দেখাতে হবে।'}
+                    </span>
                   </li>
                 </ul>
 
                 <div className="my-3 flex items-start gap-2.5 rounded-[12px] border border-amber-300/80 bg-amber-50/90 p-3 text-left">
                   <IconAlertShield />
-                  <span className="font-body text-[12px] font-bold leading-relaxed text-amber-900">
+                  <span className="font-body text-[12px] font-bold leading-relaxed text-amber-950">
                     {lang === 'en'
-                      ? 'No warranty or replacement claim can be processed without unboxing video proof.'
-                      : 'আনবক্সিং ভিডিও ছাড়া কোনো ওয়ারেন্টি ক্লেইম করা সম্ভব নয়।'}
+                      ? 'Notice: As per e-commerce guidelines, no warranty, transit damage, or missing item claim can be processed without an uncut unboxing video.'
+                      : 'সতর্কতা: একটানা আনবক্সিং ভিডিও প্রমাণ ছাড়া কোনো প্রকার ভাঙা বা ত্রুটিযুক্ত পণ্যের ওয়ারেন্টি বা রিপ্লেসমেন্ট ক্লেইম গ্রহণযোগ্য হবে না।'}
                   </span>
                 </div>
-
-                <ul className={ulClass}>
-                  <li className={liClass}>
-                    {t('প্রোডাক্ট ভাঙা, ত্রুটিপূর্ণ, মিসিং বা ভুল পেলে এই আনবক্সিং ভিডিও দিয়ে ওয়ারেন্টি ক্লেইম করতে পারবেন।')}
-                  </li>
-                  <li className={liClass}>
-                    {t('প্রোডাক্টে কোনো প্রকার সমস্যা হলে সম্পূর্ণ দায়ভার Vangcur কর্তৃপক্ষ বহন করবে এবং যত দ্রুত সম্ভব সমাধান দেওয়ার চেষ্টা করা হবে।')}
-                  </li>
-                </ul>
               </Section>
 
               <Section
                 icon={<IconShield />}
-                title={lang === 'en' ? '4. Warranty Terms' : '৪. ওয়ারেন্টি সংক্রান্ত'}
+                title={lang === 'en' ? '4. Warranty & Replacement Policy' : '৪. ওয়ারেন্টি ও রিপ্লেসমেন্ট নীতিমালা'}
               >
                 <ul className={ulClass}>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>Regular products come with a <strong>1-week</strong> warranty. Selected products carry up to 6 months / 1 year / 2 years of warranty.</>
-                      : <>সাধারণ প্রোডাক্টে <strong>১ সপ্তাহের</strong> ওয়ারেন্টি থাকবে। নির্বাচিত প্রোডাক্টে ৬ মাস / ১ বছর / ২ বছর পর্যন্ত ওয়ারেন্টি থাকবে।</>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Standard products carry a 1-week (7 days) replacement warranty. Selected items carry official coverage up to 6 months, 1 year, or 2 years.'
+                        : 'সাধারণ পণ্যে ৭ দিনের ফ্রি রিপ্লেসমেন্ট ওয়ারেন্টি এবং নির্বাচিত প্রিমিয়াম পণ্যে ৬ মাস / ১ বছর / ২ বছর পর্যন্ত ওয়ারেন্টি সুবিধা রয়েছে।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>The warranty period starts <strong>from the date the order is placed.</strong></>
-                      : <>ওয়ারেন্টির মেয়াদ শুরু হয় <strong>অর্ডার করার তারিখ থেকে।</strong></>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Genuine manufacturing defects and verified transit damages are replaced 100% free of charge with zero additional shipping fees.'
+                        : 'ম্যানুফ্যাকচারিং ত্রুটি বা কুরিয়ারে পরিবহনকালীন ক্ষতির ক্ষেত্রে সম্পূর্ণ নিজ খরচে নতুন প্রোডাক্ট দিয়ে রিপ্লেস করে দেওয়া হবে।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {t('ওয়ারেন্টি থাকাকালীন সময়ের মধ্যে প্রোডাক্টে সমস্যা হলে এবং ওয়ারেন্টি ক্লেইম করা হলে, Vangcur কর্তৃপক্ষ নিজ খরচে সেটি রিপ্লেস করে নতুন একটি প্রোডাক্ট আপনার ঠিকানায় পৌঁছে দেবে।')}
-                  </li>
-                  <li className={liClass}>
-                    {t('ওয়ারেন্টি থাকাকালীন সময়ে অবশ্যই প্রোডাক্টের বক্স ও ইনভয়েস পেপার সযত্নে সংরক্ষণ করুন।')}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Exclusions: Physical breakage, accidental drops, burn marks, liquid/water damage, or unauthorized modifications are excluded.'
+                        : 'হাত থেকে পড়ে ভাঙা, পোড়া দাগ, ওয়াটার ড্যামেজ কিংবা অনুমতি ছাড়া সার্ভিসিং করা পণ্যে কোনো ওয়ারেন্টি প্রযোজ্য নয়।'}
+                    </span>
                   </li>
                 </ul>
 
                 <p className={`${pClass} font-bold text-ink mt-3`}>
-                  {t('ওয়ারেন্টি ক্লেইম করতে যা লাগবে —')}
+                  {lang === 'en' ? 'Prerequisites for Claiming:' : 'ওয়ারেন্টি ক্লেইম করতে যা আবশ্যক:'}
                 </p>
                 <ul className={ulClass}>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>The original product box <em>(a torn or cracked box, or a box with tape on it, will not be accepted.)</em></>
-                      : <>মূল প্রোডাক্টের বক্স <em>(ছেঁড়া বা ফাটা বক্স বা বক্সের গায়ে টেপ লাগানো থাকলে গ্রহণযোগ্য হবে না।)</em></>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Original intact product box (damaged, taped, or torn boxes will void warranty).'
+                        : 'মূল প্রোডাক্টের অক্ষত বক্স (ছেঁড়া বা অতিরিক্ত টেপ লাগানো বক্স গ্রহণযোগ্য নয়)।'}
+                    </span>
                   </li>
                   <li className={liClass}>
-                    {lang === 'en'
-                      ? <>Invoice paper <em>(provided with the product)</em></>
-                      : <>ইনভয়েস পেপার <em>(প্রোডাক্টের সাথে দেওয়া)</em></>}
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Original official invoice paper provided inside the parcel box.'
+                        : 'পার্সেলের ভেতরে থাকা মূল অফিসিয়াল ইনভয়েস পেপার (সংরক্ষিত আসল কপি প্রদর্শন করতে হবে)।'}
+                    </span>
                   </li>
-                  <li className={liClass}>{t('আনবক্সিং ভিডিও')}</li>
+                  <li className={liClass}>
+                    <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
+                    <span>{lang === 'en' ? 'Continuous uncut unboxing video.' : 'একটানা ধারণকৃত আনবক্সিং ভিডিও প্রমাণ।'}</span>
+                  </li>
                 </ul>
               </Section>
 
               <Section
                 icon={<IconRefresh />}
-                title={lang === 'en' ? '5. Returns & Refunds' : '৫. রিটার্ন ও রিফান্ড সংক্রান্ত'}
+                title={lang === 'en' ? '5. Return & Refund Boundaries' : '৫. রিটার্ন ও রিফান্ড সংক্রান্ত নিয়ম'}
               >
-                <ul className={ulClass}>
-                  <li className={liClass}>
-                    {lang === 'en'
-                      ? <><strong>No returns for personal preference or change of mind:</strong> After purchasing from Vangcur (ভাঙচুর), there is no option to return, exchange, or refund a product due to the customer&apos;s personal preference, change of mind, or any other unreasonable or intentional reason unrelated to a genuine product issue. Customers are requested to carefully review the product&apos;s description, photos, and functionality on the website before ordering.</>
-                      : <><strong>পছন্দ না হওয়া বা মন পরিবর্তনের কারণে কোনো রিটার্ন নেই:</strong> Vangcur (ভাঙচুর) থেকে কেনাকাটার পর গ্রাহকের ব্যক্তিগত পছন্দ-অপছন্দ, মন পরিবর্তন (Change of mind) কিংবা প্রোডাক্টে কোনো জেনুইন সমস্যা ব্যতীত অন্য কোনো ইচ্ছাকৃত বা অযৌক্তিক কারণে প্রোডাক্ট রিটার্ন, এক্সচেঞ্জ কিংবা রিফান্ড করার কোনো সুযোগ নেই। কাস্টমারদের অনুরোধ করা হচ্ছে অর্ডার করার পূর্বেই প্রোডাক্টের বিবরণ, ছবি এবং কার্যকারিতা ওয়েবসাইট থেকে ভালোভাবে দেখে নেওয়ার জন্য।</>}
-                  </li>
-                  <li className={liClass}>
-                    {lang === 'en'
-                      ? <><strong>Replacement facility (only for genuine issues or defects):</strong> If, after delivery, the product has a genuine manufacturing defect, transit damage (a broken or damaged product), or you received the wrong product, we will replace it entirely at our own cost and send a new product to your address, completely free of charge.</>
-                      : <><strong>রিপ্লেসমেন্ট সুবিধা (শুধুমাত্র জেনুইন সমস্যা বা ত্রুটির ক্ষেত্রে):</strong> ডেলিভারি পাওয়ার পর যদি প্রোডাক্টে কোনো আসল কারিগরি বা ম্যানুফ্যাকচারিং ত্রুটি (Manufacturing Defect), ট্রানজিট ড্যামেজ (ভাঙা বা নষ্ট প্রোডাক্ট) অথবা ভুল প্রোডাক্ট ডেলিভারি পাওয়া যায়, তবেই কেবল আমরা সেটি সম্পূর্ণ আমাদের নিজ দায়িত্বে এবং সম্পূর্ণ ফ্রিতে পরিবর্তন (Replacement) করে নতুন প্রোডাক্ট আপনার ঠিকানায় পাঠিয়ে দেব।</>}
-                  </li>
-                  <li className={liClass}>
-                    {lang === 'en'
-                      ? 'Continuous unboxing video proof as specified in point 3 is mandatory for any replacement claim.'
-                      : 'রিপ্লেসমেন্ট ক্লেইম করার জন্য ৩ নম্বর point অনুযায়ী একটানা ও আন-এডিটেড আনবক্সিং ভিডিও প্রমাণ হিসেবে দেওয়া বাধ্যতামূলক।'}
-                  </li>
-                </ul>
+                <p className={pClass}>
+                  {lang === 'en'
+                    ? 'No returns for subjective dislike / change of mind: Products cannot be returned, exchanged, or refunded simply due to personal preference where the item matches specifications and is free of defects.'
+                    : 'পছন্দ না হওয়া বা মন পরিবর্তনের কারণে কোনো রিটার্ন নেই: Vangcur থেকে কেনাকাটার পর ব্যক্তিগত পছন্দ-অপছন্দ বা মন পরিবর্তনের (Change of Mind) কারণে পণ্য রিটার্ন বা রিফান্ডের কোনো সুযোগ নেই। যেকোনো জেনুইন সমস্যার ক্ষেত্রে আমরা সম্পূর্ণ ফ্রিতে নতুন প্রোডাক্ট রিপ্লেস করে দিই।'}
+                </p>
               </Section>
 
-              <div className="flex items-center justify-center gap-2 border-t border-border-base/70 pt-3 text-center font-body text-[11.5px] font-medium text-muted leading-[1.65]">
-                <IconAlertShield />
-                <span>
-                  {lang === 'en' ? (
-                    <>Vangcur reserves the full right to update or<br />modify these policies and terms at any time.</>
-                  ) : (
-                    <>ভাঙচুর কর্তৃপক্ষ যেকোনো সময় এই নীতিমালা<br />পরিবর্তন অথবা আপডেট করার অধিকার রাখে।</>
-                  )}
-                </span>
-              </div>
-
-              <div className="pt-4">
+              <div className="pt-2">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   onClick={onAgreeAndConfirm}
-                  className="shimmer-sheen flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] active:scale-95"
+                  className="shimmer-sheen flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
                 >
                   <IconCheck />
                   <span>
