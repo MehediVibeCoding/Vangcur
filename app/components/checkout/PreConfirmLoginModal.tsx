@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 interface PreConfirmLoginModalProps {
@@ -20,11 +21,12 @@ export default function PreConfirmLoginModal({
 }: PreConfirmLoginModalProps) {
   const { t } = useT();
 
+  useHistoryModal(isOpen, onClose, 'pre-confirm-login-modal');
+
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -34,7 +36,6 @@ export default function PreConfirmLoginModal({
             onClick={onClose}
           />
 
-          {/* সেন্ট্রালাইজড ডায়ালগ — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
