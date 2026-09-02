@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -12,6 +12,7 @@ import {
   fetchContactSettings,
   subscribeContactSettings,
 } from '@/lib/floatButtonsData';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 const lineIcon = {
@@ -73,6 +74,13 @@ export default function BulkOrderModal() {
     }
   }, []);
 
+  const close = useCallback(() => {
+    setOpen(false);
+    setCustomTotal(null);
+  }, []);
+
+  useHistoryModal(open, close, 'bulk-order-modal');
+
   useEffect(() => {
     const onTrigger = (e: Event) => {
       const detail = (e as CustomEvent<{ total?: number }>).detail;
@@ -109,11 +117,6 @@ export default function BulkOrderModal() {
     };
   }, [supabase]);
 
-  const close = () => {
-    setOpen(false);
-    setCustomTotal(null);
-  };
-
   const handleModifyCart = () => {
     close();
     if (typeof window !== 'undefined') {
@@ -139,17 +142,14 @@ export default function BulkOrderModal() {
 
   return (
     <>
-      {/* ব্যাকড্রপ ব্লার */}
       <div
         className="fixed inset-0 z-[1300] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
         onClick={close}
       />
 
-      {/* সেন্ট্রালাইজড ইউনিভার্সাল ভাসমান উইন্ডো */}
       <div className="fixed inset-0 z-[1305] flex items-center justify-center p-4">
         <div className="relative flex max-h-[90vh] w-full max-w-[430px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 text-center shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
-          {/* হেডার ডেকোর ও ক্লোজ বাটন */}
           <HeaderDecor />
           <button
             onClick={close}
@@ -159,17 +159,14 @@ export default function BulkOrderModal() {
             ✕
           </button>
 
-          {/* ব্যাজ আইকন */}
           <div className="relative z-10 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-sm">
             <BulkShieldIcon />
           </div>
 
-          {/* টাইটেল */}
           <h3 className="relative z-10 font-body text-[17.5px] font-extrabold text-ink">
             {lang === 'en' ? 'Bulk & Large Order Notice' : 'বাল্ক ও লার্জ অর্ডার নোটিশ'}
           </h3>
 
-          {/* বিস্তারিত বিবরণ */}
           <p className="relative z-10 mt-2 font-body text-[13px] leading-relaxed text-ink/80">
             {lang === 'en' ? (
               <>Your order total is <strong className="font-bold text-brand-light">৳{totalBill.toLocaleString('en-US')}</strong> (exceeds the ৳20,000 online checkout limit). For security, customized delivery packaging, and bulk discount verification, large orders are processed directly via WhatsApp.</>
@@ -178,7 +175,6 @@ export default function BulkOrderModal() {
             )}
           </p>
 
-          {/* সাপোর্ট কলআউট বক্স — কনসেন্ট্রিক বর্ডার রেডিয়াস ফিক্স (rounded-[12px]) */}
           <div className="relative z-10 my-4 rounded-[12px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
             <div className="font-body text-[12px] leading-relaxed text-ink/85">
               {lang === 'en' ? (
@@ -189,9 +185,7 @@ export default function BulkOrderModal() {
             </div>
           </div>
 
-          {/* অ্যাকশন বাটনসমূহ — স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন */}
           <div className="relative z-10 flex flex-col gap-2.5 pt-1">
-            {/* WhatsApp বাটন */}
             <motion.button
               whileTap={{ scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
@@ -202,7 +196,6 @@ export default function BulkOrderModal() {
               <span>{lang === 'en' ? 'Order via WhatsApp' : 'WhatsApp-এ অর্ডার কনফার্ম করুন'}</span>
             </motion.button>
 
-            {/* কার্ট পরিবর্তন করুন বাটন */}
             <motion.button
               whileTap={{ scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
