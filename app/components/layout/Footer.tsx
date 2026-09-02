@@ -174,7 +174,6 @@ export default function Footer() {
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToCategories = () => document.getElementById('catCardsGrid')?.scrollIntoView({ behavior: 'smooth' });
-  const scrollToFaq = () => document.getElementById('faqSec')?.scrollIntoView({ behavior: 'smooth' });
 
   const fbGroupLink = 'https://facebook.com/groups/vangcurgadgets';
 
@@ -288,18 +287,42 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* কলাম ২: গ্রাহক সেবা (Customer Care) */}
+          {/* কলাম ২: গ্রাহক সেবা (Customer Care) — নতুন ইউজার গাইড ও সঠিক রাউটস */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Customer Care' : 'গ্রাহক সেবা'}
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
-              <li><button className={colLinkClass} onClick={scrollToFaq}>FAQ</button></li>
-              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Shipping Info' : 'শিপিং তথ্য'}</Link></li>
-              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Warranty Info' : 'ওয়ারেন্টি তথ্য'}</Link></li>
-              <li><Link href="/refund-policy" className={colLinkClass}>{lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}</Link></li>
-              <li><Link href="/privacy-policy" className={colLinkClass}>{lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}</Link></li>
-              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}</Link></li>
+              <li>
+                <Link href="/guide" className={colLinkClass}>
+                  {lang === 'en' ? 'User Guide & Help' : 'ইউজার গাইড ও সহায়িকা'}
+                </Link>
+              </li>
+              <li>
+                <Link href="/shipping" className={colLinkClass}>
+                  {lang === 'en' ? 'Order & Shipping Info' : 'অর্ডার ও শিপিং তথ্য'}
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className={colLinkClass}>
+                  {lang === 'en' ? 'Warranty Terms' : 'ওয়ারেন্টি নীতিমালা'}
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund-policy" className={colLinkClass}>
+                  {lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy-policy" className={colLinkClass}>
+                  {lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className={colLinkClass}>
+                  {lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -318,7 +341,7 @@ export default function Footer() {
                   className={`${colLinkClass} font-bold text-amber-700 hover:text-amber-800`}
                   onClick={openOfferPage}
                 >
-                  {t('📢 চলতি অফারসমূহ')}
+                  {lang === 'en' ? 'Current Offers' : 'চলতি অফারসমূহ'}
                 </button>
               </li>
             </ul>
