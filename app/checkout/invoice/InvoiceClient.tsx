@@ -371,6 +371,19 @@ export default function InvoiceClient() {
 
   const handleGoBack = () => {
     if (!canClose) return;
+
+    const from = searchParams.get('from');
+
+    if (from === 'account') {
+      router.push('/account/orders');
+      return;
+    }
+
+    if (from === 'track') {
+      router.push('/track-order');
+      return;
+    }
+
     try {
       if (order?.id) {
         sessionStorage.setItem(`vc_confirm_dismissed_${order.id}`, '1');
@@ -412,9 +425,7 @@ export default function InvoiceClient() {
     <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
       <DesktopSideDecor />
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ১. ফিক্সড ৬০০px অফ-স্ক্রিন HD প্রিন্ট টেমপ্লেট                     */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ১. ফিক্সড ৫৮০px অফ-স্ক্রিন HD প্রিন্ট টেমপ্লেট */}
       <div
         ref={captureRef}
         style={{
@@ -702,9 +713,7 @@ export default function InvoiceClient() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ২. কন্ট্রোল টুলবার                                              */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ২. কন্ট্রোল টুলবার */}
       <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
         <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
           <button
@@ -749,9 +758,7 @@ export default function InvoiceClient() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস (মোবাইলে ফুল সিমলেস এজ-টু-এজ হোয়াইট) */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস */}
       <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex flex-col items-center justify-start bg-white sm:bg-transparent">
         <div
           className="w-full sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
