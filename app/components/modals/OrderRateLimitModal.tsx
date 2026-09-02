@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
@@ -12,6 +12,7 @@ import {
   fetchContactSettings,
   subscribeContactSettings,
 } from '@/lib/floatButtonsData';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 const lineIcon = {
@@ -70,6 +71,13 @@ export default function OrderRateLimitModal() {
     }
   }, []);
 
+  const closeAndGoHome = useCallback(() => {
+    setOpen(false);
+    router.push('/');
+  }, [router]);
+
+  useHistoryModal(open, closeAndGoHome, 'order-rate-limit-modal');
+
   useEffect(() => {
     const onTrigger = () => setOpen(true);
     window.addEventListener(OPEN_ORDER_LIMIT_EVENT, onTrigger);
@@ -98,11 +106,6 @@ export default function OrderRateLimitModal() {
     };
   }, [supabase]);
 
-  const closeAndGoHome = () => {
-    setOpen(false);
-    router.push('/');
-  };
-
   const handleWhatsAppClick = () => {
     setOpen(false);
     const msg = lang === 'en'
@@ -115,30 +118,24 @@ export default function OrderRateLimitModal() {
 
   return (
     <>
-      {/* ব্যাকড্রপ ব্লার */}
       <div
         className="fixed inset-0 z-[1300] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
         onClick={closeAndGoHome}
       />
 
-      {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
       <div className="fixed inset-0 z-[1305] flex items-center justify-center p-4">
         <div className="relative flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 text-center shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
-          {/* হেডার ডেকোর */}
           <HeaderDecor />
 
-          {/* ওয়ার্নিং শিল্ড ব্যাজ */}
           <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-amber-200/80 bg-amber-50 text-amber-600 shadow-xs">
             <ShieldLimitIcon className="h-8 w-8" />
           </div>
 
-          {/* টাইটেল */}
           <h3 className="relative z-10 font-body text-[17px] font-extrabold text-ink">
             {lang === 'en' ? 'Daily Order Limit Reached' : 'দৈনিক অর্ডার সীমা পূর্ণ হয়েছে'}
           </h3>
 
-          {/* মূল বক্তব্য */}
           <p className="relative z-10 mt-2 font-body text-[12.5px] leading-relaxed text-ink/80">
             {lang === 'en' ? (
               <>You have completed the maximum of <strong className="font-bold text-brand-light">3 orders within the last 24 hours</strong>. To prevent spam and fake bookings, a maximum of 3 orders are permitted per device or number per day.</>
@@ -147,7 +144,6 @@ export default function OrderRateLimitModal() {
             )}
           </p>
 
-          {/* সাপোর্ট কলআউট বক্স — কনসেন্ট্রিক বর্ডার রেডিয়াস ফিক্স (rounded-[12px]) */}
           <div className="relative z-10 my-4 rounded-[12px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
             <p className="font-body text-[12px] leading-relaxed text-ink/85">
               {lang === 'en' ? (
@@ -158,9 +154,7 @@ export default function OrderRateLimitModal() {
             </p>
           </div>
 
-          {/* অ্যাকশন বাটনসমূহ — স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন */}
           <div className="relative z-10 flex flex-col gap-2.5 pt-1">
-            {/* WhatsApp সাপোর্ট বাটন */}
             <motion.button
               whileTap={{ scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
@@ -171,7 +165,6 @@ export default function OrderRateLimitModal() {
               <span>{lang === 'en' ? 'Contact via WhatsApp' : 'WhatsApp এ যোগাযোগ করুন'}</span>
             </motion.button>
 
-            {/* বুঝেছি বাটন */}
             <motion.button
               whileTap={{ scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
