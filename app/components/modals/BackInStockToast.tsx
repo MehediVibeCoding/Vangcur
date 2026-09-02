@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getStockNotifications, removeStockNotification } from '@/lib/accountData';
@@ -10,6 +10,7 @@ import { OPEN_CART_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { showToast } from '@/lib/toast';
 import { hasExceededLocalOrderLimit } from '@/lib/productData';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
@@ -89,6 +90,13 @@ export default function BackInStockToast() {
   const { t, lang } = useT();
   const pathname = usePathname();
   const [inStockItems, setInStockItems] = useState<InStockItem[]>([]);
+
+  const handleDismissAll = useCallback(() => {
+    inStockItems.forEach((item) => removeStockNotification(item.key));
+    setInStockItems([]);
+  }, [inStockItems]);
+
+  useHistoryModal(inStockItems.length > 0, handleDismissAll, 'back-in-stock-toast');
 
   useEffect(() => {
     if (pathname !== '/') {
@@ -201,11 +209,6 @@ export default function BackInStockToast() {
 
   if (inStockItems.length === 0) return null;
 
-  const handleDismissAll = () => {
-    inStockItems.forEach((item) => removeStockNotification(item.key));
-    setInStockItems([]);
-  };
-
   const handleAddSingleToCart = (item: InStockItem) => {
     useCartStore.getState().addToCart([item], item.id, 1);
     removeStockNotification(item.key);
@@ -238,7 +241,7 @@ export default function BackInStockToast() {
 
   return (
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[390px] animate-section-reveal">
-      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-[#C3DEFC]/65 via-[#DCEBFD]/55 to-white/80 p-5 shadow-[0_8px_32px_rgba(0,88,199,0.12)] ring-1 ring-white/80 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-white/85 p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-[10px]">
         
         <HeaderDecor />
 
