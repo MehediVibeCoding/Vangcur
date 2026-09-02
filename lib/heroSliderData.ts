@@ -10,7 +10,19 @@ export interface HeroCard {
   bg: string;
 }
 
-export const DUO_TOTAL = 13;
+// ⚠️ আগে এটা ১৩ ছিল — বেজোড় সংখ্যা, যেটা মোবাইলের per-page (২) বা
+// ডেস্কটপের per-page (৬) কোনোটা দিয়েই বিভাজ্য না। duoStep() প্রতিবার
+// getDuoPerPage() (২ বা ৬) যোগ/বিয়োগ করে duoIdxRef আপডেট করে, তাই
+// duoIdxRef কখনো ঠিক DUO_TOTAL বা DUO_TOTAL*2 বাউন্ডারিতে ল্যান্ড করত
+// না — ফলে onTransitionEnd-এর wrap-back শর্ত মিস/ভুল সময়ে ট্রিগার হয়ে
+// "শেষ কার্ডে বাড়ি খাওয়া" বা "পুরো উল্টো দিকে জাম্প" দেখাত, smooth
+// infinite loop না দিয়ে। এছাড়াও DEFAULT_HERO_CARDS-এ প্রকৃত ইউনিক কার্ড
+// ছিল ১২টা — padCards() ১৩তম স্লট পূরণ করতে গিয়ে DEFAULT_HERO_CARDS[0]
+// (Neon Lights) ডুপ্লিকেট করে ফেলছিল।
+//
+// ফিক্স: ১২ (= lcm(2, 6)) — এখন duoIdxRef সবসময় ঠিক বাউন্ডারিতে ল্যান্ড
+// করে, আর আসল ১২টা কার্ডের সাথে কোনো ডুপ্লিকেট ফলব্যাক লাগে না।
+export const DUO_TOTAL = 12;
 
 export const DEFAULT_HERO_CARDS: HeroCard[] = [
   { label: 'Neon Lights', catId: 'rgb', emoji: '💡', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779333775/quality_restoration_20260521091638399_e24mi5.jpg', bg: 'linear-gradient(155deg,#0d1b0d,#1a3a1a,#0d2d1a)' },
