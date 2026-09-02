@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 interface PolicyModalProps {
@@ -27,6 +28,8 @@ const liClass = 'mb-1 font-body text-[13px] leading-[1.75] text-[#444]';
 export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: PolicyModalProps) {
   const { lang, t } = useT();
 
+  useHistoryModal(open, onClose, 'policy-modal');
+
   useEffect(() => {
     if (open) lockBody();
     else unlockBody();
@@ -44,7 +47,6 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-[9800] flex items-center justify-center p-0 sm:p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,7 +56,6 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
             onClick={onClose}
           />
 
-          {/* পলিসি শিট উইন্ডো — ফ্লুইড স্লাইড ও ফেড মোশন */}
           <motion.div
             initial={{ opacity: 0, y: 30, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -62,7 +63,6 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="sleek-scrollbar relative z-10 flex h-full max-h-[100dvh] w-full max-w-[540px] flex-col overflow-y-auto bg-white shadow-sh3 sm:h-auto sm:max-h-[90vh] sm:rounded-[22px]"
           >
-            {/* স্টিকি হেডার */}
             <div className="sticky top-0 z-[2] flex items-center justify-between border-b-[1.5px] border-border-base bg-white/95 px-4 py-3.5 backdrop-blur-md">
               <h3 className="font-body text-base font-extrabold text-ink">{t('📋 নীতিমালা ও শর্তাবলী')}</h3>
               <motion.button
@@ -74,7 +74,6 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
               </motion.button>
             </div>
 
-            {/* পলিসি কনটেন্ট */}
             <div className="flex-1 px-4 pb-10 pt-5">
               <Section title={t('📦 ১. অর্ডার সংক্রান্ত')}>
                 <ul className={ulClass}>
