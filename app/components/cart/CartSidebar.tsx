@@ -1,4 +1,3 @@
-// [REPLACE] ফাইলের পাথ: app/components/cart/CartSidebar.tsx
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -24,6 +23,8 @@ import {
   type AppliedCoupon,
 } from '@/lib/couponData';
 import type { Product } from '@/types';
+
+const MAX_COUPON_LEN = 25;
 
 function CartItemThumb({ emoji }: { emoji?: string }) {
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
@@ -207,7 +208,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     return recalculateDiscount(appliedCoupon, subtotal);
   }, [appliedCoupon, subtotal]);
 
-  // 🛡️ শুধুমাত্র ড্রয়ার ওপেন থাকলেই কুপন রিমুভ চেক চলবে (ব্যাকগ্রাউন্ড ডিলিট ফিক্স)
+  // 🛡️ শুধুমাত্র ড্রয়ার ওপেন থাকলেই কুপন রিমুভ চেক চলবে
   useEffect(() => {
     if (!isOpen) return;
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
@@ -218,11 +219,18 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     }
   }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // কুপন অ্যাপ্লাই হ্যান্ডলার
+  // 🛡️ সুরক্ষিত ও ফিল্টার্ড কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
-    const clean = (customCode !== undefined ? customCode : couponCode).trim().toUpperCase();
+    
+    // শুধুমাত্র ২৫ অক্ষরের আলফা-নিউমেরিক টেক্সট গ্রহণ করা
+    const clean = (customCode !== undefined ? customCode : couponCode)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9_-]/g, '')
+      .slice(0, MAX_COUPON_LEN);
+
     if (!clean) {
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
@@ -277,10 +285,9 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       const success = await handleApplyCoupon(undefined, couponCode);
       if (!success) {
         setCheckoutStatus('idle');
-        return; // ভুল কুপন হলে বাটন স্বাভাবিক হয়ে সেখানেই থামবে
+        return;
       }
 
-      // কুপন সফলভাবে অ্যাপ্লাই হয়েছে — সবুজ ব্যাজ ও ডিসকাউন্ট দেখার জন্য ঠিক ৯০০ms অপেক্ষা
       await new Promise((r) => setTimeout(r, 900));
 
       const freshlyApplied = getAppliedCoupon();
@@ -500,10 +507,13 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         <input
                           type="text"
                           value={couponCode}
+                          maxLength={MAX_COUPON_LEN}
                           onFocus={() => setIsInputFocused(true)}
                           onBlur={() => setIsInputFocused(false)}
                           onChange={(e) => {
-                            setCouponCode(e.target.value.toUpperCase());
+                            // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং (শুধুমাত্র A-Z, 0-9, -, _)
+                            const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, MAX_COUPON_LEN);
+                            setCouponCode(clean);
                             if (couponError) setCouponError('');
                           }}
                           placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
