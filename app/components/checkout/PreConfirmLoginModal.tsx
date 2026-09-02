@@ -37,15 +37,16 @@ function HeaderDecor() {
   );
 }
 
-function VipCrownIcon() {
+function SecurityShieldIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
-      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-light">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
     </svg>
   );
 }
 
-function CheckFeatureIcon() {
+function CheckPerkIcon() {
   return (
     <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-brand-light text-white shadow-2xs">
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -56,7 +57,7 @@ function CheckFeatureIcon() {
 }
 
 export default function PreConfirmLoginModal({
-  isOpen, onClose, onLogin, onRegister, onGoogle, onSkip,
+  isOpen, onClose, onLogin, onRegister, onSkip,
 }: PreConfirmLoginModalProps) {
   const { lang } = useT();
 
@@ -83,89 +84,81 @@ export default function PreConfirmLoginModal({
           >
             <HeaderDecor />
 
-            <div className="relative z-10 mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-sm">
-              <VipCrownIcon />
+            <div className="relative z-10 mx-auto mb-2.5 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-sm">
+              <SecurityShieldIcon />
             </div>
 
-            <h3 className="relative z-10 font-body text-[18px] font-extrabold text-ink leading-snug">
-              {lang === 'en' ? 'Unlock Exclusive VIP Privileges' : 'লগইন করে বিশেষ সুবিধা আনলক করুন'}
+            <div className="relative z-10 mx-auto mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/90 px-3 py-1 font-body text-[11px] font-bold text-amber-900 shadow-2xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <span>{lang === 'en' ? 'Currently Not Logged In' : 'আপনি এই মুহূর্তে আনলগইন অবস্থায় আছেন'}</span>
+            </div>
+
+            <h3 className="relative z-10 font-body text-[17.5px] font-extrabold text-ink leading-snug">
+              {lang === 'en' ? 'Log in to secure your order and information' : 'আপনার তথ্য ও অর্ডার সুরক্ষার জন্য লগইন করুন'}
             </h3>
 
-            <p className="relative z-10 mt-1 font-body text-[12.5px] leading-relaxed text-muted">
+            <p className="relative z-10 mt-1 font-body text-[12px] leading-relaxed text-muted">
               {lang === 'en'
-                ? 'Create an account or login in 5 seconds to enjoy these exclusive features:'
-                : 'মাত্র ৫ সেকেন্ডে সাইন-আপ বা লগইন করলেই পাচ্ছেন আকর্ষণীয় সব সুবিধা:'}
+                ? 'Logging in or creating an account unlocks these convenient benefits:'
+                : 'লগইন বা সাইন-আপ করলে কেনাকাটায় আপনার জন্য যা যা সহজ হবে:'}
             </p>
 
-            <div className="relative z-10 my-4 rounded-[14px] border border-white/90 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
+            <div className="relative z-10 my-3.5 rounded-[14px] border border-white/90 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
               <div className="flex items-start gap-2.5">
-                <CheckFeatureIcon />
+                <CheckPerkIcon />
                 <div className="min-w-0 flex-1 font-body text-[12px] leading-snug text-ink/85">
-                  <strong>{lang === 'en' ? 'Track & Invoices:' : 'অর্ডার ট্র্যাকিং ও ইনভয়েস:'}</strong>{' '}
-                  {lang === 'en' ? 'Live status tracking & permanent invoice archive from any device.' : 'যেকোনো ডিভাইস থেকে লাইভ অর্ডার ট্র্যাক ও ইনভয়েস সংরক্ষণ।'}
+                  <strong>{lang === 'en' ? 'Live Order Tracking & Invoices:' : 'লাইভ অর্ডার ট্র্যাকিং ও মেমো:'}</strong>{' '}
+                  {lang === 'en' ? 'Track order status live from any device & save invoice history.' : 'যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও আজীবন মেমো সংরক্ষণ।'}
                 </div>
               </div>
 
               <div className="flex items-start gap-2.5">
-                <CheckFeatureIcon />
+                <CheckPerkIcon />
                 <div className="min-w-0 flex-1 font-body text-[12px] leading-snug text-ink/85">
-                  <strong>{lang === 'en' ? 'VIP Rewards & Spin Wheel:' : 'ভিআইপি রিওয়ার্ড ও ক্যাশ স্পিন:'}</strong>{' '}
-                  {lang === 'en' ? 'Earn membership tier points & spin the lucky wheel for discounts.' : 'প্রতি অর্ডারে মেম্বারশিপ পয়েন্ট ও লাকি ক্যাশ স্পিন ডিসকাউন্ট।'}
+                  <strong>{lang === 'en' ? 'Coupons & Free Delivery Deals:' : 'কুপন ডিসকাউন্ট ও ফ্রি ডেলিভারি:'}</strong>{' '}
+                  {lang === 'en' ? 'Get special coupon discounts and free delivery deals on future orders.' : 'ভবিষ্যতে কেনাকাটায় বিশেষ কুপন ছাড় ও ফ্রি ডেলিভারি সুবিধা।'}
                 </div>
               </div>
 
               <div className="flex items-start gap-2.5">
-                <CheckFeatureIcon />
+                <CheckPerkIcon />
                 <div className="min-w-0 flex-1 font-body text-[12px] leading-snug text-ink/85">
-                  <strong>{lang === 'en' ? 'Priority & Bilingual:' : 'অগ্রাধিকার ও দ্বিভাষিক মোড:'}</strong>{' '}
-                  {lang === 'en' ? '1-day priority dispatch & seamless Bangla/English switching.' : 'সবার আগে কুরিয়ার হ্যান্ডওভার ও বাংলা/English সুইচিং সুবিধা।'}
+                  <strong>{lang === 'en' ? 'Language Toggle & Priority Support:' : 'ভাষা পরিবর্তন ও দ্রুত সাপোর্ট:'}</strong>{' '}
+                  {lang === 'en' ? 'Switch between Bangla & English easily with priority customer care.' : 'বাংলা/English মোড পরিবর্তন ও দ্রুত কাস্টমার কেয়ার সহায়তা।'}
                 </div>
               </div>
             </div>
 
             <div className="relative z-10 flex flex-col gap-2.5 pt-1">
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                onClick={onRegister}
-                className="shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12.5px] font-body text-[14px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
-              >
-                {lang === 'en' ? 'Create a New Account (Sign Up)' : 'নতুন অ্যাকাউন্ট তৈরি করুন (Sign Up)'}
-              </motion.button>
-
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                onClick={onLogin}
-                className="w-full rounded-full border border-brand-light/40 bg-white/90 py-[11px] font-body text-[13px] font-bold text-brand-light shadow-2xs transition-colors duration-brand hover:bg-white hover:border-brand-light"
-              >
-                {lang === 'en' ? 'Already have an account? Login' : 'পূর্বে অ্যাকাউন্ট থাকলে লগইন করুন (Login)'}
-              </motion.button>
-
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                onClick={onGoogle}
-                className="flex w-full items-center justify-center gap-2 rounded-full border border-border-base bg-white/80 py-[10.5px] font-body text-[12.5px] font-bold text-ink shadow-2xs transition-colors hover:bg-white"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                <span>{lang === 'en' ? 'Continue with Google' : 'Google দিয়ে সরাসরি সাইন-ইন'}</span>
-              </motion.button>
-
-              <div className="pt-1">
+              {/* ১ম সারি: পাশাপাশি সাইন-আপ ও লগইন বাটন */}
+              <div className="grid grid-cols-2 gap-2.5">
                 <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onSkip}
-                  className="w-full rounded-full border border-border-base bg-white/70 py-[10px] font-body text-[12.5px] font-bold text-ink/75 transition-colors hover:bg-white hover:text-ink"
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  onClick={onRegister}
+                  className="shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12px] font-body text-[13.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
                 >
-                  {lang === 'en' ? 'Skip & Place Order Directly →' : 'পরে করব, সরাসরি অর্ডার সম্পন্ন করুন →'}
+                  {lang === 'en' ? 'Sign Up' : 'সাইন-আপ (Sign Up)'}
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  onClick={onLogin}
+                  className="w-full rounded-full border border-brand-light/40 bg-white/90 py-[12px] font-body text-[13.5px] font-bold text-brand-light shadow-2xs transition-colors duration-brand hover:bg-white hover:border-brand-light"
+                >
+                  {lang === 'en' ? 'Login' : 'লগইন (Login)'}
                 </motion.button>
               </div>
+
+              {/* ২য় সারি: পুরোটা মিলিয়ে ১টি স্কিপ বাটন */}
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={onSkip}
+                className="w-full rounded-full border border-border-base bg-white/80 py-[11.5px] font-body text-[13px] font-bold text-ink/80 shadow-2xs transition-colors hover:bg-white hover:text-ink"
+              >
+                {lang === 'en' ? 'Skip & Place Order Directly →' : 'পরে করব, সরাসরি অর্ডার সম্পন্ন করুন →'}
+              </motion.button>
             </div>
           </motion.div>
         </div>
