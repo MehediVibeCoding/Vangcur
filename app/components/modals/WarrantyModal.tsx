@@ -194,10 +194,10 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                     2
                   </span>
                   <div className="font-body text-[12.5px] leading-[1.65] text-ink/85">
-                    <strong>{lang === 'en' ? 'Packaging & Invoice: ' : 'বক্স ও ইনভয়েস পেপার: '}</strong>
+                    <strong>{lang === 'en' ? 'Packaging & Physical Invoice: ' : 'বক্স ও ইনভয়েস পেপার: '}</strong>
                     {lang === 'en'
-                      ? 'The original product box, accessories, and invoice paper must be kept intact and returned during the claim process.'
-                      : 'ক্লেইম করার সময় প্রোডাক্টের অরিজিনাল বক্স, ইনভয়েস পেপার এবং সাথে থাকা সকল এক্সেসরিজ অক্ষত অবস্থায় ফেরত দিতে হবে।'}
+                      ? 'The original product box, accessories, and the official clean paper invoice provided inside the parcel must be preserved and submitted during the claim.'
+                      : 'ক্লেইম করার সময় প্রোডাক্টের অরিজিনাল বক্স, এক্সেসরিজ এবং পার্সেলের ভেতরে থাকা মূল অফিসিয়াল ইনভয়েস পেপার অক্ষত অবস্থায় জমা দিতে হবে।'}
                   </div>
                 </div>
 
