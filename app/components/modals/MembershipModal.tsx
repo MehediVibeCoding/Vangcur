@@ -19,6 +19,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_MEMBERSHIP_EVENT } from '@/lib/uiEvents';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
+import useHistoryModal from '@/lib/useHistoryModal';
 
 interface MembershipModalProps {
   isOpen?: boolean;
@@ -143,7 +144,7 @@ export default function MembershipModal({
   }, [isModalOpen, userCurrentTier.key]);
 
   const selectedTier = useMemo(
-    () => MEMBERSHIP_TIERS.find((t) => t.key === selectedTierKey) || MEMBERSHIP_TIERS[0],
+    () => MEMBERSHIP_TIERS.find((tier) => tier.key === selectedTierKey) || MEMBERSHIP_TIERS[0],
     [selectedTierKey]
   );
 
@@ -173,12 +174,14 @@ export default function MembershipModal({
     return () => clearInterval(timer);
   }, [activeReward]);
 
-  const close = () => {
+  const close = useCallback(() => {
     if (propsOnClose) propsOnClose();
     setEventCompletedCount(null);
     setIsSpinning(false);
     setSpinRotation(0);
-  };
+  }, [propsOnClose]);
+
+  useHistoryModal(Boolean(isModalOpen), close, 'membership-modal');
 
   const handleSelectTier = (key: string) => {
     if (isSpinning) return;
@@ -229,7 +232,6 @@ export default function MembershipModal({
     <AnimatePresence>
       {isModalOpen && userCurrentTier && (
         <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -239,7 +241,6 @@ export default function MembershipModal({
             onClick={close}
           />
 
-          {/* সেন্ট্রালাইজড ডায়ালগ উইন্ডো — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -247,7 +248,6 @@ export default function MembershipModal({
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex max-h-[92vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
           >
-            {/* হেডার */}
             <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
               <HeaderDecor />
               <div className="relative z-10 flex items-center justify-between">
@@ -275,7 +275,6 @@ export default function MembershipModal({
               </div>
             </div>
 
-            {/* টপ টায়ার চিপস বার */}
             <div className="no-scrollbar relative z-10 flex gap-2 overflow-x-auto border-b border-ink/10 bg-white/60 px-4 py-2.5">
               {MEMBERSHIP_TIERS.map((tier) => {
                 const isSelected = tier.key === selectedTierKey;
@@ -305,10 +304,7 @@ export default function MembershipModal({
               })}
             </div>
 
-            {/* কন্টেন্ট বডি */}
             <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              
-              {/* নির্বাচিত টায়ারের ব্যানার কার্ড */}
               <div className="rounded-[18px] border border-white/90 bg-white/85 p-4 text-center shadow-xs backdrop-blur-md">
                 <div
                   className="mx-auto mb-2 flex h-11 w-11 items-center justify-center drop-shadow-md"
@@ -344,7 +340,6 @@ export default function MembershipModal({
                 )}
               </div>
 
-              {/* ১. রেগুলার টায়ার */}
               {selectedTier.key === 'regular' && (
                 <div className="rounded-[18px] border border-dashed border-border-base bg-white/70 p-5 text-center shadow-xs backdrop-blur-md">
                   <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-brand-bg/50 text-xl text-brand-light shadow-xs">
@@ -361,7 +356,6 @@ export default function MembershipModal({
                 </div>
               )}
 
-              {/* ২. সিলভার টায়ার */}
               {selectedTier.key === 'silver' && (
                 <div className="rounded-[18px] border border-white/90 bg-white/85 p-4 text-center shadow-xs backdrop-blur-md">
                   <div className="mb-2.5 flex items-center justify-center gap-1.5 font-body text-[13px] font-extrabold text-brand-light">
@@ -471,7 +465,6 @@ export default function MembershipModal({
                 </div>
               )}
 
-              {/* ৩. গোল্ড টায়ার */}
               {selectedTier.key === 'gold' && (
                 <div className="rounded-[18px] border border-white/90 bg-white/85 p-4 text-center shadow-xs backdrop-blur-md">
                   <div className="mb-2.5 flex items-center justify-center gap-1.5 font-body text-[13px] font-extrabold text-amber-700">
@@ -581,7 +574,6 @@ export default function MembershipModal({
                 </div>
               )}
 
-              {/* ৪. ডায়মন্ড টায়ার */}
               {selectedTier.key === 'diamond' && (
                 <div className="rounded-[18px] border border-brand-light/35 bg-white/90 p-4 text-left shadow-xs backdrop-blur-md space-y-3 animate-section-reveal">
                   <div className="text-center pb-2 border-b border-ink/10">
@@ -647,7 +639,6 @@ export default function MembershipModal({
                 </div>
               )}
 
-              {/* ৫. লিজেন্ডারি টায়ার */}
               {selectedTier.key === 'legendary' && (
                 <div className="rounded-[18px] border border-amber-300/80 bg-gradient-to-br from-amber-50 via-white to-[#FFFBEB] p-5 text-center shadow-xs backdrop-blur-md animate-section-reveal">
                   <div
@@ -672,7 +663,6 @@ export default function MembershipModal({
 
             </div>
 
-            {/* ফুটার বাটন */}
             <div className="shrink-0 px-6 pb-6 pt-2">
               <motion.button
                 whileTap={{ scale: 0.96 }}
