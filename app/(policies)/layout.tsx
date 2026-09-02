@@ -57,7 +57,6 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
 
       <div className="relative z-10">
         <Navbar
-          showHomeButton
           sticky={false}
           cartCount={cartQty}
           wishCount={wishQty}
@@ -68,7 +67,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
           onLoginClick={() => setLoginOpen(true)}
         />
 
-        <main className="mx-auto w-full max-w-[820px] px-4 sm:px-6 pb-16 pt-4 sm:pt-6">
+        <main className="mx-auto w-full max-w-[840px] px-4 sm:px-6 pb-16 pt-3.5 sm:pt-5">
           {children}
         </main>
       </div>
