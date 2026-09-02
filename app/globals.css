@@ -23,6 +23,25 @@
     user-select: none;
     -webkit-touch-callout: none;
   }
+
+  /* 🌟 ইনপুট, টেক্সটএরিয়া ও ড্রপডাউনের শার্প চারকোনা আউটলাইন স্থায়ীভাবে বন্ধ */
+  input, textarea, select {
+    outline: none !important;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus, select:focus,
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none !important;
+  }
+
+  /* শুধুমাত্র বাটন ও লিংকের জন্য সেফ কীবোর্ড অ্যাক্সেসিবিলিটি রিং */
+  button:focus-visible,
+  a:focus-visible,
+  [role='button']:focus-visible {
+    outline: 2px solid #44A7FC;
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -180,10 +199,7 @@
    ✨ প্রিমিয়াম ইন্টারঅ্যাকশন ফাউন্ডেশন (Global Animation Setup)
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ১. Reduced-motion — যারা OS-এ "কম মোশন" সেটিং অন রেখেছে তাদের জন্য
-      সব CSS অ্যানিমেশন/ট্রানজিশন কার্যত বন্ধ হয়ে যাবে। Motion লাইব্রেরির
-      নিজস্ব useReducedMotion() দিয়ে JS-ভিত্তিক অ্যানিমেশনগুলো আলাদাভাবে
-      হ্যান্ডেল হবে কম্পোনেন্ট লেভেলে। */
+/* ১. Reduced-motion সাপোর্ট */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -193,30 +209,7 @@
   }
 }
 
-/* ২. কীবোর্ড-অনলি ফোকাস রিং — মাউস ক্লিক বা টাচে কোনো রিং দেখাবে না,
-      শুধু কীবোর্ড দিয়ে Tab করলে দেখাবে। ডিফল্ট ব্রাউজার আউটলাইন সরিয়ে
-      ব্র্যান্ড-কালারের রিং বসানো হলো। */
-@layer base {
-  button, a, input, select, textarea, [role='button'], [tabindex] {
-    outline: none;
-  }
-  button:focus-visible,
-  a:focus-visible,
-  input:focus-visible,
-  select:focus-visible,
-  textarea:focus-visible,
-  [role='button']:focus-visible,
-  [tabindex]:focus-visible {
-    outline: 2px solid #44A7FC;
-    outline-offset: 2px;
-    border-radius: inherit;
-  }
-}
-
-/* ৩. Ambient Shimmer Sheen — CTA বাটনের ওপর দিয়ে প্রতি ৬ সেকেন্ড পর পর
-      একটা কাচের আলোর বিম বয়ে যাবে। এই ক্লাসটা বাটনে বসালেই কাজ করবে,
-      কোনো JS লাগবে না। বাটনে position:relative + overflow:hidden থাকা
-      দরকার (নিচের ক্লাসেই দেওয়া আছে)। */
+/* ২. Ambient Shimmer Sheen */
 .shimmer-sheen {
   position: relative;
   overflow: hidden;
@@ -242,9 +235,7 @@
   .shimmer-sheen::after { animation: none; display: none; }
 }
 
-/* ৪. Card Hover Glow — ডেস্কটপে (আসল মাউস থাকলেই) প্রোডাক্ট কার্ড বা
-      যেকোনো প্যানেলে হালকা স্কাই-ব্লু গ্লো + সামান্য লিফট। মোবাইলে টাচে
-      এটা কখনোই ট্রিগার হবে না, কারণ hover+pointer:fine দুটোই চেক হচ্ছে। */
+/* ৩. Card Hover Glow (ডেস্কটপ অনলি) */
 @media (hover: hover) and (pointer: fine) {
   .card-hover-glow {
     transition: box-shadow 250ms cubic-bezier(.4,0,.2,1), transform 250ms cubic-bezier(.4,0,.2,1);
@@ -255,10 +246,7 @@
   }
 }
 
-/* ৫. Skeleton ↔ Content ক্রসফেড — CSS-only ছোট ব্যবহারের জন্য (যেখানে
-      JS/Motion দরকার নেই)। বড় কম্পোনেন্টে এর বদলে
-      app/components/ui/SkeletonTransition.tsx ব্যবহার করা ভালো, কারণ
-      সেটা isReady অনুযায়ী স্বয়ংক্রিয়ভাবে overlap crossfade করে। */
+/* ৪. Skeleton ↔ Content ক্রসফেড */
 .skeleton-fade-out {
   animation: fadeOutSoft 220ms ease forwards;
 }
