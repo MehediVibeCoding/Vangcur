@@ -2,19 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { fetchFullOrder, readPendingOrder, readLatestGuestOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
-import { OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import useHistoryModal from '@/lib/useHistoryModal';
 import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { OrderListSkeleton } from '@/app/components/ui/Skeletons';
 import type { Order } from '@/types';
+
+const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 
 export interface TrackOrderModalProps {
   isOpen: boolean;
@@ -72,6 +74,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useHistoryModal(isOpen, onClose, 'track-order-modal');
 
@@ -140,113 +143,119 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
 
   const handleOpenLogin = () => {
     onClose();
-    window.dispatchEvent(new CustomEvent(OPEN_ACCOUNT_EVENT));
+    setTimeout(() => {
+      setLoginOpen(true);
+    }, 150);
   };
 
   if (currentUser) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 bg-ink/55 backdrop-blur-[3px]"
-            onClick={onClose}
-          />
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              className="fixed inset-0 bg-ink/55 backdrop-blur-[3px]"
+              onClick={onClose}
+            />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 8 }}
-            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 flex max-h-[88vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
-          >
-            <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
-              <HeaderDecor />
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
-                    <ClearTrackSvgIcon />
-                  </span>
-                  <h3 className="font-body text-[17px] font-extrabold text-ink">
-                    {lang === 'en' ? 'Track Order' : 'অর্ডার ট্র্যাক করুন'}
-                  </h3>
-                </div>
-                <motion.button
-                  whileTap={{ scale: 0.88 }}
-                  onClick={onClose}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
-                  aria-label="Close"
-                >
-                  ✕
-                </motion.button>
-              </div>
-            </div>
-
-            <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
-              <SkeletonTransition isReady={!loading} skeleton={<OrderListSkeleton count={2} />}>
-                {notFound ? (
-                  <div className="py-8 text-center">
-                    <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white text-brand-light shadow-sm">
-                      <ReceiptEmptySvgIcon className="h-8 w-8 text-brand-light" />
-                    </div>
-                    <div className="mb-1.5 font-body text-[16px] font-bold text-ink">
-                      {lang === 'en' ? 'No orders placed yet' : 'এখনো কোনো অর্ডার করেননি'}
-                    </div>
-                    <p className="mx-auto mb-5 max-w-xs font-body text-[12.5px] leading-relaxed text-muted">
-                      {lang === 'en'
-                        ? 'Orders will appear here automatically once placed. Log in to track from any device.'
-                        : 'অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে। ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে লগইন করে রাখুন।'}
-                    </p>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleOpenLogin}
-                      className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-7 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
-                    >
-                      {t('লগইন করুন')}
-                    </motion.button>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 8 }}
+              transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10 flex max-h-[88vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
+            >
+              <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
+                <HeaderDecor />
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                      <ClearTrackSvgIcon />
+                    </span>
+                    <h3 className="font-body text-[17px] font-extrabold text-ink">
+                      {lang === 'en' ? 'Track Order' : 'অর্ডার ট্র্যাক করুন'}
+                    </h3>
                   </div>
-                ) : orders.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="space-y-3.5">
-                      {orders.map((o) => (
-                        <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
-                      ))}
-                    </div>
+                  <motion.button
+                    whileTap={{ scale: 0.88 }}
+                    onClick={onClose}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
+                    aria-label="Close"
+                  >
+                    ✕
+                  </motion.button>
+                </div>
+              </div>
 
-                    <div className="rounded-[18px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
-                      <div className="flex items-start gap-3">
-                        <SparklesCrownSvgIcon />
-                        <div className="flex-1">
-                          <div className="mb-1 font-body text-[13.5px] font-extrabold text-ink">
-                            {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
+              <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
+                <SkeletonTransition isReady={!loading} skeleton={<OrderListSkeleton count={2} />}>
+                  {notFound ? (
+                    <div className="py-8 text-center">
+                      <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white text-brand-light shadow-sm">
+                        <ReceiptEmptySvgIcon className="h-8 w-8 text-brand-light" />
+                      </div>
+                      <div className="mb-1.5 font-body text-[16px] font-bold text-ink">
+                        {lang === 'en' ? 'No orders placed yet' : 'এখনো কোনো অর্ডার করেননি'}
+                      </div>
+                      <p className="mx-auto mb-5 max-w-xs font-body text-[12.5px] leading-relaxed text-muted">
+                        {lang === 'en'
+                          ? 'Orders will appear here automatically once placed. Log in to track from any device.'
+                          : 'অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে। ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে লগইন করে রাখুন।'}
+                      </p>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleOpenLogin}
+                        className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-7 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
+                      >
+                        {t('লগইন করুন')}
+                      </motion.button>
+                    </div>
+                  ) : orders.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="space-y-3.5">
+                        {orders.map((o) => (
+                          <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
+                        ))}
+                      </div>
+
+                      <div className="rounded-[18px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
+                        <div className="flex items-start gap-3">
+                          <SparklesCrownSvgIcon />
+                          <div className="flex-1">
+                            <div className="mb-1 font-body text-[13.5px] font-extrabold text-ink">
+                              {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
+                            </div>
+                            <p className="font-body text-[12px] leading-[1.7] text-ink/75">
+                              {lang === 'en'
+                                ? 'This order information is temporarily stored in this browser. Log in now to track & manage orders across all devices, switch languages (Bangla/English), save invoice history, and unlock VIP membership rewards & exclusive coupon discounts.'
+                                : 'এই অর্ডারের তথ্য শুধুমাত্র সাময়িক সময়ের জন্য এই ব্রাউজারে সংরক্ষিত রয়েছে। যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও হিস্টোরি সংরক্ষণ, ভাষা পরিবর্তন (বাংলা/English), মেম্বারশিপ রিওয়ার্ড ও স্পেশাল কুপন ডিসকাউন্ট সুবিধা পেতে এখনই অ্যাকাউন্টে লগইন করে নিন।'}
+                            </p>
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              onClick={handleOpenLogin}
+                              className="mt-2.5 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover"
+                            >
+                              <span>{lang === 'en' ? 'Login to Account →' : 'অ্যাকাউন্টে লগইন করুন →'}</span>
+                            </motion.button>
                           </div>
-                          <p className="font-body text-[12px] leading-[1.7] text-ink/75">
-                            {lang === 'en'
-                              ? 'This order information is temporarily stored in this browser. Log in now to track & manage orders across all devices, switch languages (Bangla/English), save invoice history, and unlock VIP membership rewards & exclusive coupon discounts.'
-                              : 'এই অর্ডারের তথ্য শুধুমাত্র সাময়িক সময়ের জন্য এই ব্রাউজারে সংরক্ষিত রয়েছে। যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও হিস্টোরি সংরক্ষণ, ভাষা পরিবর্তন (বাংলা/English), মেম্বারশিপ রিওয়ার্ড ও স্পেশাল কুপন ডিসকাউন্ট সুবিধা পেতে এখনই অ্যাকাউন্টে লগইন করে নিন।'}
-                          </p>
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleOpenLogin}
-                            className="mt-2.5 inline-flex items-center gap-1 font-body text-[12.5px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover"
-                          >
-                            <span>{lang === 'en' ? 'Login to Account →' : 'অ্যাকাউন্টে লগইন করুন →'}</span>
-                          </motion.button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ) : null}
-              </SkeletonTransition>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+                  ) : null}
+                </SkeletonTransition>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+    </>
   );
 }
