@@ -71,7 +71,6 @@ interface CheckoutErrors {
   eL4?: string;
 }
 
-// ➡️⬅️ চেকআউট স্টেপ ট্রানজিশন
 const checkoutStepVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 24 : -24 }),
   center: { opacity: 1, x: 0 },
@@ -315,7 +314,6 @@ export default function CheckoutPage() {
     let hasItems = false;
     let loadedItems: CartItem[] = [];
 
-    // ১. কুইক অর্ডার আইটেম চেক
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
@@ -328,7 +326,6 @@ export default function CheckoutPage() {
       // ignore
     }
 
-    // ২. মেইন শপিং কার্ট চেক
     if (!hasItems) {
       try {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
@@ -344,7 +341,6 @@ export default function CheckoutPage() {
       }
     }
 
-    // ৩. ড্রাফট রিকভারি
     if (!hasItems) {
       try {
         const draft = getDraft();
@@ -609,12 +605,10 @@ export default function CheckoutPage() {
 
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
-  // 🛡️ সুরক্ষিত ও ফিল্টার্ড কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
     
-    // শুধুমাত্র ২৫ অক্ষরের আলফা-নিউমেরিক টেক্সট গ্রহণ করা
     const clean = (customCode !== undefined ? customCode : couponInput)
       .trim()
       .toUpperCase()
@@ -733,7 +727,9 @@ export default function CheckoutPage() {
     setTermsChecked(true);
     setPolicyModalOpen(false);
     if (!useAuthStore.getState().currentUser) {
-      setShowPreConfirm(true);
+      setTimeout(() => {
+        setShowPreConfirm(true);
+      }, 150);
       return;
     }
     submitOrderNow();
@@ -875,16 +871,23 @@ export default function CheckoutPage() {
     setShowPreConfirm(false);
     submitOrderNow();
   };
+
   const preConfirmGoLogin = () => {
     setShowPreConfirm(false);
-    setLoginInitialMode('login');
-    setShowLoginModal(true);
+    setTimeout(() => {
+      setLoginInitialMode('login');
+      setShowLoginModal(true);
+    }, 150);
   };
+
   const preConfirmGoRegister = () => {
     setShowPreConfirm(false);
-    setLoginInitialMode('register');
-    setShowLoginModal(true);
+    setTimeout(() => {
+      setLoginInitialMode('register');
+      setShowLoginModal(true);
+    }, 150);
   };
+
   const preConfirmGoGoogle = async () => {
     const pendingData = {
       items: cartItems, ship: selectedShip, name, phone, dist, addr, email, txn, l4: last4, savedAt: Date.now(),
@@ -987,7 +990,6 @@ export default function CheckoutPage() {
                         value={couponInput}
                         maxLength={MAX_COUPON_LEN}
                         onChange={(e) => {
-                          // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং (শুধুমাত্র A-Z, 0-9, -, _)
                           const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, MAX_COUPON_LEN);
                           setCouponInput(clean);
                           if (couponError) setCouponError('');
@@ -1603,8 +1605,14 @@ export default function CheckoutPage() {
         onClose={() => setShowLoginModal(false)}
         orderMode
         initialMode={loginInitialMode}
-        onAuthSuccess={() => submitOrderNow()}
-        onBackFromOrder={() => setShowPreConfirm(true)}
+        onAuthSuccess={() => {
+          setShowLoginModal(false);
+          submitOrderNow();
+        }}
+        onBackFromOrder={() => {
+          setShowLoginModal(false);
+          setTimeout(() => setShowPreConfirm(true), 150);
+        }}
       />
       <PolicyModal
         open={policyModalOpen}
