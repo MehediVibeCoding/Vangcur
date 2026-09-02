@@ -12,9 +12,6 @@ import {
   fetchHeroCards,
 } from '@/lib/heroSliderData';
 
-// সার্ভারে useLayoutEffect ওয়ার্নিং এড়াতে — ব্রাউজারে সবসময় useLayoutEffect,
-// প্রথম পেইন্টের আগেই ট্র্যাকের পজিশন বসিয়ে দেয়, তাই "ভুল স্লাইড" এক মুহূর্তের
-// জন্যও দেখা যায় না → hero card entrance আর ভেঙে ভেঙে আসবে না
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const AUTOPLAY_MS = 5500;
@@ -25,7 +22,7 @@ let globalSavedIndex = DUO_TOTAL;
 
 function getDuoPerPage(): number {
   if (typeof window === 'undefined') return 2;
-  return window.innerWidth >= 769 ? 6 : 2;
+  return window.innerWidth >= 768 ? 6 : 2;
 }
 
 interface HeroSliderProps {
@@ -33,70 +30,53 @@ interface HeroSliderProps {
   onCategoryClick?: (catId: string) => void;
 }
 
-// ⚠️ আগে <img> ট্যাগের নিজস্ব কোনো opacity/fade ছিল না — ছবিটা যখনই নেটওয়ার্ক
-// থেকে লোড শেষ হতো, ব্রাউজার সরাসরি পেইন্ট করে দিত। কিন্তু কার্ডের entrance
-// animation (motion.div, opacity 0→1) সম্পূর্ণ সময়-ভিত্তিক (mount + 500ms) —
-// ছবি রেডি কিনা তার সাথে এর কোনো সম্পর্ক ছিল না। ফলে ছবি লোড হতে দেরি হলে
-// (স্লো নেটওয়ার্ক/কোল্ড ক্যাশ), কার্ড ততক্ষণে opacity:1 হয়ে "flat color
-// placeholder" (card.bg) দেখাচ্ছিল, আর ছবি রেডি হওয়ামাত্র সেই পুরোপুরি-visible
-// কার্ডের ওপর সরাসরি "পপ" করে বসে যেত — কোনো fade ছাড়াই। এটাই "ভেঙে ভেঙে/
-// আটকে আটকে" এন্ট্রি অ্যানিমেশন দেখানোর আসল কারণ ছিল।
-//
-// ফিক্স: ছবিকে নিজের load-state অনুযায়ী আলাদাভাবে fade করানো হচ্ছে (parent-
-// container timer থেকে সম্পূর্ণ স্বাধীন)। CSS-এ nested opacity গুণ হয় বলে,
-// container fade হয়ে গেলেও ছবি লোড না-হওয়া পর্যন্ত অদৃশ্য থাকে (card.bg
-// গ্রেডিয়েন্ট placeholder হিসেবে দেখা যায়), আর লোড শেষ হওয়ামাত্র নিজের
-// ৪২০ms transition দিয়ে সেই গ্রেডিয়েন্টের ওপর মসৃণভাবে fade করে বসে — কোনো
-// আকস্মিক পপ থাকে না।
-// ⚠️ ছবির fade-in নিজের onLoad-এর ওপর নির্ভরশীল হওয়ায় (ওপরের ফিক্স অনুযায়ী)
-// একটা নতুন সমস্যা তৈরি হয়েছিল: ১ম আর ২য় কার্ডের badge/background
-// stagger অনুযায়ী (delay 0s, 0.08s) সাজানো থাকলেও, ছবি দুটো একই priority
-// (eager + high) দিয়ে fetch হয় বলে কোনটা আগে ডাউনলোড শেষ হবে সেটা
-// নেটওয়ার্কের ওপর নির্ভর করে — ২য় ছবিটার সাইজ ছোট হলে বা রেসে জিতলে
-// সেটাই আগে ভেসে উঠতে পারে, অথচ ডিজাইন অনুযায়ী ১ম কার্ডের ছবিই আগে
-// দেখানোর কথা। ফলে badge অর্ডার ঠিক থাকলেও ছবির ভিজ্যুয়াল অর্ডার
-// random/network-dependent হয়ে যাচ্ছিল।
-//
-// ফিক্স: কন্টেইনারের staggerDelay-এর সাথে মিলিয়ে একটা mount-ভিত্তিক
-// ন্যূনতম বিলম্ব (minRevealDelayMs) যোগ করা হলো। ছবি যতই আগে ডাউনলোড
-// শেষ হোক না কেন, নিজের নির্ধারিত সময়ের আগে দেখাবে না — ফলে অর্ডার
-// সবসময় ১ম → ২য়ই থাকে, badge আর ছবি একসাথেই ভেসে ওঠে।
 function HeroCardImage({
   src,
   alt,
   eager,
+  shouldAnimate = false,
   minRevealDelayMs = 0,
 }: {
   src: string;
   alt: string;
   eager: boolean;
+  shouldAnimate?: boolean;
   minRevealDelayMs?: number;
 }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [loaded, setLoaded] = useState(false);
   const [minDelayPassed, setMinDelayPassed] = useState(minRevealDelayMs <= 0);
 
-  // ব্রাউজার ক্যাশ থেকে ইনস্ট্যান্ট লোড হওয়া ছবির জন্য — এক্ষেত্রে onLoad
-  // ইভেন্ট React attach করার আগেই ফায়ার হয়ে যেতে পারে, তাই mount-এর পরে
-  // .complete চেক করে নেওয়া হচ্ছে যাতে কার্ড অকারণে অদৃশ্য আটকে না থাকে।
   useEffect(() => {
     if (imgRef.current?.complete) setLoaded(true);
   }, []);
 
-  // staggerDelay-এর সাথে সিঙ্ক করা ন্যূনতম বিলম্ব — ক্যাশ থেকে ইনস্ট্যান্ট
-  // লোড হওয়া ছবিও এই সময়ের আগে "revealed" হবে না, তাই অর্ডার ভাঙে না।
   useEffect(() => {
-    if (minRevealDelayMs <= 0) return;
+    if (!shouldAnimate || minRevealDelayMs <= 0) return;
     const timer = setTimeout(() => setMinDelayPassed(true), minRevealDelayMs);
     return () => clearTimeout(timer);
-  }, [minRevealDelayMs]);
+  }, [shouldAnimate, minRevealDelayMs]);
+
+  // সোয়াইপ/স্ক্রল করা কার্ডের ক্ষেত্রে কোনো ফেড-ইন ট্রানজিশন থাকবে না (ইনস্ট্যান্ট দৃশ্যমান)
+  if (!shouldAnimate) {
+    return (
+      <img
+        ref={imgRef}
+        className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-300 ease-brand group-hover:scale-[1.05]"
+        src={src}
+        alt={alt}
+        loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : undefined}
+        decoding="async"
+      />
+    );
+  }
 
   const revealed = loaded && minDelayPassed;
 
   return (
     <img
       ref={imgRef}
-      // eslint-disable-next-line @next/next/no-img-element
       className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-[opacity,transform] duration-[420ms] ease-brand group-hover:scale-[1.05] ${
         revealed ? 'opacity-100' : 'opacity-0'
       }`}
@@ -125,22 +105,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
 
-  // ⚠️ আগে setPosition()-এর শুরুতেই normalizeIdx() কল হতো — মানে
-  // duoIdxRef.current যখনই [span, span*2) রেঞ্জের বাইরে যেত (যেমন লাস্ট
-  // কার্ডে থাকা অবস্থায় আবার "পরে" চাপলে), সেটা transform-animate করার
-  // *আগেই* mod করে আবার শুরুর রেঞ্জে স্ন্যাপ করে ফেলত। ফলে ব্রাউজার
-  // "পরের কার্ডে এগিয়ে তারপর লুপ" না দেখিয়ে সরাসরি "পিছিয়ে শুরুতে
-  // ব্যাক" করে animate করত — কারণ যে ইনডেক্সে animate হচ্ছিল সেটা
-  // ততক্ষণে already normalize হয়ে গেছে। onTransitionEnd-এর ভেতরের
-  // normalize/wrap-back লজিকটা (transition শেষ হওয়ার পরে, নিঃশব্দে রিসেট
-  // করার জন্য বানানো) তাই কখনো আসল কাজে লাগত না।
-  //
-  // ফিক্স: এখান থেকে normalizeIdx() বাদ — animate সবসময় আসল
-  // (un-normalized) duoIdxRef.current মেনে চলবে, তাই ৩ নম্বর (শেষ) কপিতে
-  // স্মুথভাবে এগিয়ে যাবে। রেঞ্জ-বাইরে যাওয়ার পর wrap-back করাটা এখন
-  // পুরোপুরি onTransitionEnd-এর দায়িত্বে, যেটা transition শেষ হওয়ার
-  // পরে animate=false দিয়ে নিঃশব্দে (কোনো visible jump ছাড়া) মাঝের
-  // কপিতে ফিরিয়ে আনে।
   const setPosition = useCallback((animate: boolean) => {
     const track = trackRef.current;
     const wrap = wrapRef.current;
@@ -163,6 +127,11 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const offset = duoIdxRef.current * (cardWidth + GAP);
     track.style.transition = animate ? 'transform .48s cubic-bezier(.4,0,.2,1)' : 'none';
     track.style.transform = `translateX(-${offset}px)`;
+
+    // transition: none প্রয়োগকালে ব্রাউজারের রিফ্লো নিশ্চিত করা (ইনস্ট্যান্ট সিমলেস ট্রানজিশন)
+    if (!animate) {
+      void track.offsetHeight;
+    }
   }, []);
 
   const duoStep = useCallback((dir: number) => {
@@ -185,11 +154,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const wrap = wrapRef.current;
     const track = trackRef.current;
     if (!wrap || !track) return;
-
-    // আগে এটা requestAnimationFrame-এ ছিল, ফলে প্রথম পেইন্টে ব্রাউজার
-    // ভুল (untransformed) স্লাইড এক ফ্রেমের জন্য দেখিয়ে দিত, তারপর হঠাৎ
-    // মাঝের সেটে "জাম্প" করত — এটাই কার্ড এনিমেশন ভেঙে ভেঙে আসার কারণ।
-    // useLayoutEffect পেইন্টের আগেই সিঙ্ক্রোনাসলি চলে, তাই jump/flash হয় না।
     setPosition(false);
   }, [setPosition]);
 
@@ -238,19 +202,19 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     };
 
     const onMouseEnter = () => {
-      if (window.innerWidth >= 769) {
+      if (window.innerWidth >= 768) {
         startAuto(HOVER_AUTOPLAY_MS);
       }
     };
 
     const onMouseLeaveAuto = () => {
-      if (window.innerWidth >= 769) {
+      if (window.innerWidth >= 768) {
         startAuto(AUTOPLAY_MS);
       }
     };
 
     const onMouseDown = (e: MouseEvent) => {
-      if (window.innerWidth < 769) return;
+      if (window.innerWidth < 768) return;
       dragRef.current.startX = e.clientX;
       dragRef.current.active = true;
       isInteractingRef.current = true;
@@ -276,29 +240,21 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       }
     };
 
-    const onTransitionEnd = () => {
-      // ⚠️ আগে DUO_TOTAL ছিল ১৩ (বেজোড়) — duoStep() প্রতিবার
-      // getDuoPerPage() (মোবাইলে ২, ডেস্কটপে ৬) যোগ/বিয়োগ করত বলে
-      // duoIdxRef.current কখনো ঠিক DUO_TOTAL বা DUO_TOTAL*2 বাউন্ডারিতে
-      // ল্যান্ড করত না (যেমন ১৩+২+২+২... কখনো ঠিক ২৬-এ পড়ে না)। ফলে এই
-      // শর্তগুলো মিস অথবা ভুল সময়ে ট্রু হতো — মোবাইলে শেষ কার্ডে "বাড়ি
-      // খেয়ে" প্রথম কার্ডে হঠাৎ দেখানো, আর ডেস্কটপে উল্টো দিকে পুরো
-      // পিছিয়ে গিয়ে আবার শুরু থেকে animate করা।
-      //
-      // ফিক্স: DUO_TOTAL এখন ১২ — যেটা ২ ও ৬ দুটোরই গুণিতক, তাই
-      // duoIdxRef.current সবসময় ঠিক বাউন্ডারিতে ল্যান্ড করে এবং এই
-      // wrap-back নিঃশব্দে, নির্ভুল সময়ে ট্রিগার হয় — মোবাইল ও ডেস্কটপ
-      // উভয় ক্ষেত্রেই সিমলেস ইনফিনিট লুপ।
+    // 🌟 নিরবচ্ছিন্ন ইনফিনিট লুপ ট্রানজিশন হ্যান্ডলার
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.target !== trackRef.current) return;
       if (infiniteJumpRef.current) return;
-      if (duoIdxRef.current >= DUO_TOTAL * 2) {
+
+      const totalCards = cards.length;
+      if (duoIdxRef.current >= totalCards * 2) {
         infiniteJumpRef.current = true;
-        duoIdxRef.current -= DUO_TOTAL;
+        duoIdxRef.current -= totalCards;
         globalSavedIndex = duoIdxRef.current;
         setPosition(false);
         infiniteJumpRef.current = false;
-      } else if (duoIdxRef.current < DUO_TOTAL) {
+      } else if (duoIdxRef.current < totalCards) {
         infiniteJumpRef.current = true;
-        duoIdxRef.current += DUO_TOTAL;
+        duoIdxRef.current += totalCards;
         globalSavedIndex = duoIdxRef.current;
         setPosition(false);
         infiniteJumpRef.current = false;
@@ -351,7 +307,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       window.removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onDocVisibility);
     };
-  }, [duoStep, setPosition, startAuto]);
+  }, [cards.length, duoStep, setPosition, startAuto]);
 
   useEffect(() => {
     if (initialCards && initialCards.length) return;
@@ -366,12 +322,10 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     loadCards();
   }, [supabase, initialCards]);
 
-  // প্রথমেই দেখা যাওয়া কার্ডগুলোর (মোবাইলে ২টা, ল্যাপটপে ৬টা) ছবি আগে থেকে
-  // preload করা হচ্ছে — নাহলে lazy-load-এর কারণে placeholder gradient থেকে
-  // আসল ছবিতে হঠাৎ পপ করে বদলে যায় (এন্ট্রি অ্যানিমেশনের মাঝেই)।
+  // প্রাথমিক কার্ডগুলোর ছবি আগে থেকেই ব্রাউজার ক্যাশে প্রি-লোড করা
   useEffect(() => {
-    if (typeof window === 'undefined' || !cards.length) return;
-    const count = Math.min(getDuoPerPage(), cards.length);
+    if (typeof window !== 'undefined' || !cards.length) return;
+    const count = Math.min(6, cards.length);
     const existing = Array.from(
       document.head.querySelectorAll('link[rel="preload"][as="image"]')
     ).map((l) => l.getAttribute('href'));
@@ -413,60 +367,24 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
-            // ⚠️ এটা আগে একবার ৬-এ বাড়ানো হয়েছিল (ডেস্কটপের ৬-কার্ড পেজ কভার
-            // করতে), কিন্তু তাতে মোবাইলে (যেখানে একসাথে মাত্র ২টা কার্ড দেখা
-            // যায়) ৬টা ছবি একসাথে high-priority fetch+decode হতে গিয়ে মেইন
-            // থ্রেডে বাড়তি চাপ তৈরি করছিল — ঠিক entrance animation চলার সময়েই,
-            // যেটা সেই "মাঝখানে থেমে যাওয়া" freeze-এ অবদান রাখছিল। নিচের
-            // preload useEffect (getDuoPerPage()-ভিত্তিক) already ডেস্কটপের
-            // ৬টা ছবি আগেভাগে <link rel=preload> দিয়ে ক্যাশে নিয়ে আসে, তাই
-            // এখানে <img> ট্যাগের eager/fetchPriority প্রথম ২টাতেই যথেষ্ট।
-            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
+            const isEager = i >= cards.length && i < cards.length + 6;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
-            // ⚠️ আগে এখানে শুধু মাঝের কপিকে (i >= DUO_TOTAL) "initial visible"
-            // (opacity:0 দিয়ে শুরু) ধরা হতো, প্রথম কপিকে (i < DUO_TOTAL) সবসময়
-            // "already visible" (opacity:1) ধরা হতো — এটাই আসল ফ্লিকারের কারণ:
-            // হাইড্রেশনের আগে ব্রাউজার track-এ কোনো transform ছাড়াই প্রথম paint
-            // করে (transform বসে useIsomorphicLayoutEffect-এ, যেটা JS লোড হওয়ার
-            // পরেই চলে), ফলে আসলে ভিউপোর্টে প্রথম কপিটাই (opacity:1, পুরোপুরি
-            // দৃশ্যমান) দেখা যায়। তারপর সেই layout effect চলে ও ট্র্যাককে
-            // মাঝের কপিতে স্ন্যাপ করে দেয় — আর মাঝের কপির কার্ডগুলো তখন থেকেই
-            // opacity:0 (SSR-এ বেকড) অবস্থায় ছিল। ফলাফল: ইউজার প্রথমে প্রথম
-            // কপির দৃশ্যমান কার্ড দেখতো → স্ন্যাপের সাথে সাথে হঠাৎ invisible
-            // মাঝের কপিতে বদলে যেত → তারপর সেগুলো আবার fade-in-up হতো —
-            // ঠিক যে "flash → hide → fade in" গ্লিচটা রিপোর্ট করা হয়েছে।
-            //
-            // ফিক্স: DUO_TOTAL-ভিত্তিক absolute ইনডেক্সের বদলে cards.length
-            // দিয়ে mod করা আপেক্ষিক পজিশন ব্যবহার করা হচ্ছে, তাই তিনটা কপিরই
-            // (0..5) নম্বর কার্ডগুলো সবসময় একই initial/opacity state শেয়ার
-            // করে — হাইড্রেশনের আগে বা পরে যে কপিটাই আঁকা হোক না কেন, state
-            // সবসময় সামঞ্জস্যপূর্ণ থাকে, তাই কোনো visible→invisible ঝাটকা আর
-            // হয় না, শুধু একটামাত্র মসৃণ fade-in-up.
             const relativePos = ((i % cards.length) + cards.length) % cards.length;
-            // শুধু মাঝের (আসলে-দৃশ্যমান) কপিতেই entrance animation — আগে-পরের
-            // দুইটা ডুপ্লিকেট কপিতে animation বন্ধ, কারণ ওগুলো পর্দার বাইরে
-            // থাকে বলে অ্যানিমেট করার দরকারই নেই। আগে শুধু relativePos-ভিত্তিক
-            // চেকে তিনটা কপিরই প্রথম ৬টা কার্ড (মোট ১৮টা motion.div) একসাথে
-            // অ্যানিমেট হতো, যেটা mount-এর সময় main thread ব্লক করে দিত এবং
-            // এন্ট্রি অ্যানিমেশনটাকে "আটকে আটকে" দেখাত।
             const isVisibleCopy = i >= cards.length && i < cards.length * 2;
-            // ⚠️ আগে এখানে হার্ডকোড "6" ছিল — মানে ডেস্কটপ পেজের সাইজ ধরে
-            // প্রথম ৬টা কার্ডকেই "initial visible" (entrance animation
-            // প্রাপ্য) ধরা হতো, ডিভাইস যাই হোক না কেন। মোবাইলে per-page
-            // মাত্র ২, তাই ৩য়-৬ষ্ঠ কার্ড প্রাথমিক ভিউপোর্টে না দেখা গেলেও
-            // isInitialVisible=true পেয়ে যেত, ফলে entrance animation-এর
-            // জন্য তাদের background/badge শুরুতে opacity:0-এ বেকড থাকত।
-            // স্ক্রল করে ওগুলো ভিউপোর্টে আনার সাথে সাথে সেই বিলম্বিত/আটকে
-            // থাকা animation হঠাৎ চোখে পড়ত (কালো ওভারলে/badge "চলে যায়,
-            // আবার আসে" গ্লিচ) — normal static card না দেখিয়ে।
-            //
-            // ফিক্স: getDuoPerPage() ব্যবহার — মোবাইলে ঠিক প্রথম ২টা,
-            // ডেস্কটপে ঠিক প্রথম ৬টা কার্ডই entrance animation পায়;
-            // বাকিগুলো সবসময় স্ট্যাটিক (opacity:1) থাকে, স্ক্রল করলে
-            // normal ভাবেই দেখা যায়, কোনো animation পপ করে না।
-            const perPageForAnim = getDuoPerPage();
-            const isInitialVisible = isVisibleCopy && relativePos < Math.min(perPageForAnim, cards.length);
+
+            // 🌟 রেসপন্সিভ হাইব্রিড আর্কিটেকচার:
+            // মোবাইলে ১ম ২টি কার্ড (`isMobileInitial`) অ্যানিমেট হবে।
+            // ডেস্কে (md: 768px+) ১ম ৬টি কার্ড (`isDesktopInitial`) অ্যানিমেট হবে।
+            const isMobileInitial = isVisibleCopy && relativePos < 2;
+            const isDesktopOnlyInitial = isVisibleCopy && relativePos >= 2 && relativePos < 6;
+            const animClass = isMobileInitial
+              ? 'animate-hero-card-in'
+              : isDesktopOnlyInitial
+              ? 'md:animate-hero-card-in'
+              : '';
+
+            const isInitialVisible = isMobileInitial || isDesktopOnlyInitial;
             const staggerDelay = isInitialVisible ? relativePos * 0.08 : 0;
 
             return (
@@ -475,28 +393,8 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                 key={`${catId}-${i}`}
                 className="aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
               >
-                {/*
-                  ⚠️ আগে এখানে Framer Motion (`motion.div`, JS/requestAnimationFrame
-                  দিয়ে প্রতি ফ্রেমে opacity+translateY ক্যালকুলেট করত) ব্যবহার হতো।
-                  সমস্যা: ঠিক mount-এর সময়েই আরও কয়েকটা জিনিস মেইন থ্রেড দখল
-                  করছিল — navbar-এর কাস্টম ফন্ট সোয়াপ, একসাথে একাধিক হিরো ইমেজ
-                  ডিকোড হওয়া, আর প্রতিটা ছবি লোড হলে HeroCardImage-এর নিজের
-                  React state আপডেট (রি-রেন্ডার)। মেইন থ্রেড ব্যস্ত থাকা অবস্থায়
-                  JS-চালিত অ্যানিমেশনের ফ্রেম আপডেট হওয়ার সময় পেত না, ফলে কার্ড
-                  (আর তার ভেতরের লেবেল টেক্সট, যেটা একই এলিমেন্টের সন্তান) মাঝ
-                  পথে "জমে/থেমে" যেত, থ্রেড ফ্রি হলে আবার নড়া শুরু করত।
-
-                  ফিক্স: প্লেইন CSS `@keyframes` animation (নিচে <style> ট্যাগে
-                  সংজ্ঞায়িত, দেখো heroCardIn) — transform আর opacity-র CSS
-                  animation ব্রাউজারের compositor থ্রেডে চলে, মেইন থ্রেড যতই
-                  ব্যস্ত থাকুক না কেন থামে/জমে না। স্ট্যাগার ডিলে এখন
-                  animation-delay ইনলাইন স্টাইল দিয়ে করা হচ্ছে (আগে framer-motion-
-                  এর delay prop দিয়ে হতো)।
-                */}
                 <div
-                  className={`group relative flex h-full w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98] ${
-                    isInitialVisible ? 'animate-hero-card-in' : ''
-                  }`}
+                  className={`group relative flex h-full w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98] ${animClass}`}
                   style={{
                     background: bg,
                     animationDelay: isInitialVisible ? `${staggerDelay}s` : undefined,
@@ -508,6 +406,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                       src={optimizeCloudinaryUrl(card.img, 360)}
                       alt={label}
                       eager={isEager}
+                      shouldAnimate={isInitialVisible}
                       minRevealDelayMs={isInitialVisible ? staggerDelay * 1000 : 0}
                     />
                   ) : isSvgEmoji ? (
@@ -541,12 +440,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
         </div>
       </div>
 
-      {/*
-        heroCardIn কীফ্রেমটা এখানে একবারই রেন্ডার হচ্ছে (প্রতিটা কার্ডে না)।
-        `both` fill-mode ব্যবহার করা হয়েছে যাতে animation-delay চলাকালীন
-        কার্ড শুরুর (opacity:0) অবস্থায় থাকে, আর শেষ হওয়ার পরেও চূড়ান্ত
-        (opacity:1) অবস্থাতেই আটকে থাকে — কোনো ফ্ল্যাশ ছাড়াই।
-      */}
       <style>{`
         @keyframes heroCardIn {
           from { opacity: 0; transform: translateY(24px); }
@@ -555,6 +448,12 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
         .animate-hero-card-in {
           animation: heroCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
           will-change: opacity, transform;
+        }
+        @media (min-width: 768px) {
+          .md\\:animate-hero-card-in {
+            animation: heroCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+            will-change: opacity, transform;
+          }
         }
       `}</style>
 
