@@ -15,11 +15,8 @@ import type { Category, Product } from '@/types';
 
 const PRODS_PER_PAGE = 20;
 const PRODS_AUTO_THRESHOLD = 2;
+const MAX_SEARCH_LEN = 60;
 
-// ---------- সরলীকৃত সার্চ-হেডার: শুধু হোম বাটন + সার্চ বক্স ----------
-// (হোমপেজের পুরো Navbar-এর একই sticky/glass/rounded-pill চেহারা ধরে রাখা
-// হয়েছে — শুধু ভিতরের আইটেম কমিয়ে হোম বাটন আর সার্চ বক্সে নামিয়ে আনা হয়েছে,
-// আগের ওয়েবসাইটের মতো।)
 function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: (v: string) => void }) {
   const { t } = useT();
   const [value, setValue] = useState(query);
@@ -47,9 +44,15 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
             </svg>
             <input
               type="search"
+              maxLength={MAX_SEARCH_LEN}
               value={value}
               placeholder={t('পুনরায় সার্চ করুন...')}
-              onChange={(e) => { setValue(e.target.value); onQueryChange(e.target.value); }}
+              onChange={(e) => {
+                // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং ও ৬০ লেন্থ লক
+                const clean = e.target.value.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
+                setValue(clean);
+                onQueryChange(clean);
+              }}
               autoComplete="off"
               className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none transition-brand duration-brand focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
             />
@@ -70,10 +73,6 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
   );
 }
 
-// ---------- ইমোজির বদলে ব্র্যান্ডিং অনুযায়ী প্রফেশনাল আইকন ব্যাজ — CartSidebar-এর
-// খালি-কার্ট আইকনের ঠিক same gradient circle প্যাটার্ন (from-brand-bg/50 to-surface-muted
-// ব্যাকগ্রাউন্ড + brand-light/60 রঙের স্ট্রোক আইকন), যাতে সাইটের সব খালি-স্টেট
-// দেখতে এক রকম লাগে। ----------
 function SearchGlyph() {
   return (
     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
@@ -92,9 +91,6 @@ function ArrowRightIcon() {
   );
 }
 
-// ---------- কার্ট সাইডবার/চেকআউট বাটনের ঠিক same ব্র্যান্ডেড pill বাটন —
-// rounded-full + gradient (info -> brand-light) + shadow-sh2, আগে যেটা
-// সাধারণ কালো (bg-ink) বর্গাকৃতির বাটন ছিল। ----------
 const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
 
 function CategoryIcon({ icon }: { icon?: string }) {
@@ -128,10 +124,6 @@ function NoQueryState() {
   );
 }
 
-// ---------- আগে এখানে সাদা কার্ড ব্যাকগ্রাউন্ড/প্যাডিং ছিল — এখন সরাসরি পেইজের
-// মূল ব্যাকগ্রাউন্ডের উপরেই বসে, NoQueryState-এর মতো। কোনো ক্যাটাগরিও না মিললে
-// (query prop খালি না হলেও hasCategoryMatch false হলে) নিচের সাজেশন-লাইন ও
-// বাটন-টেক্সট "হোম পেইজে ফিরে যান"-এ নেমে আসে (আগে "সব প্রোডাক্ট দেখুন" ছিল)। ----------
 function ZeroResultsState({ query }: { query: string }) {
   const { t, lang } = useT();
   return (
@@ -148,10 +140,6 @@ function ZeroResultsState({ query }: { query: string }) {
   );
 }
 
-// ---------- আগের ওয়েবসাইটের লজিক: রেজাল্ট লিস্টের একদম শেষে (আর কোনো প্রোডাক্ট
-// লোড করার বাকি নেই) একটা ছোট্ট "আর কোনো প্রোডাক্ট নেই" লাইন + হোমপেইজে ফেরার
-// বাটন দেখানো হয় — হোমপেজের ProductGrid-এর ক্যাটাগরি-শেষ বাটনের ঠিক same প্যাটার্ন,
-// শুধু সার্চ পেইজে "সব প্রোডাক্ট দেখুন" এর বদলে সরাসরি হোমপেইজে ফেরত পাঠানো হয়। ----------
 function EndOfResults() {
   const { t } = useT();
   return (
@@ -175,9 +163,6 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
   const query = (searchParams.get('q') || '').trim();
 
   const supabase = useRef(createClient()).current;
-  // app/search/page.tsx (Server Component) সরাসরি সার্ভারেই পুরো প্রোডাক্ট
-  // লিস্ট fetch করে initialProducts prop হিসেবে পাঠায়, তাই শেয়ার করা/বুকমার্ক
-  // করা সার্চ লিংকে সরাসরি ঢুকলেও প্রথম পেইন্টেই আসল রেজাল্ট দেখা যায়।
   const [prods, setProds] = useState<Product[]>(initialProducts);
   const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
 
@@ -203,30 +188,21 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
     return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
-  // হেডারের সার্চ বক্সে টাইপ করার সাথে সাথে (debounce দিয়ে) URL-এর ?q= আপডেট
-  // হয় — router.replace + scroll:false, তাই প্রতিটা অক্ষরে পেজ লাফিয়ে উপরে
-  // উঠে যায় না, আর history-তেও প্রতিটা কি-স্ট্রোক জমা হয় না।
+  // 🛡️ ডেবাউন্সড ও স্যানিটাইজড সার্চ কুয়েরি হ্যান্ডলার
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleQueryChange = useCallback((value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      const url = value.trim() ? `/search?q=${encodeURIComponent(value.trim())}` : '/search';
+      const clean = value.replace(/[<>`]/g, '').trim().slice(0, MAX_SEARCH_LEN);
+      const url = clean ? `/search?q=${encodeURIComponent(clean)}` : '/search';
       router.replace(url, { scroll: false });
     }, 300);
   }, [router]);
 
-  // ক্যাটাগরি বাটনে ক্লিক করলে আর এখানে (সার্চ পেইজে) লোকালি ফিল্টার হবে না —
-  // আগের ওয়েবসাইটের লজিক অনুযায়ী সরাসরি হোমপেইজের ক্যাটাগরি ট্রিগার করে সেই
-  // ক্যাটাগরির সব প্রোডাক্ট হোমপেইজে গিয়ে দেখানো হয় (দেখুন ProductGrid.tsx-এর
-  // ?cat= রিড করার লজিক)।
   const goToHomeCategory = useCallback((catId: string) => {
     router.push(`/?cat=${encodeURIComponent(catId)}`);
   }, [router]);
 
-  // এই কোয়েরির সাথে সত্যিকারের কোনো ক্যাটাগরি না মিললে (matched.length === 0)
-  // আর কোনো ফলব্যাক/জনপ্রিয় ক্যাটাগরি দেখানো হয় না — আগে এখানে না-মেলা কোয়েরিতেও
-  // ৮টা র‍্যান্ডম ক্যাটাগরি দেখানো হতো, যেটা ইউজারের কাছে বিভ্রান্তিকর লাগছিল
-  // ("এই নামে তো কোনো ক্যাটাগরিই নেই, তাহলে ক্যাটাগরি সাজেস্ট করছে কেন")।
   const matchedCats = useMemo(() => matchCategories(cats, query, 8), [cats, query]);
   const hasCategoryMatch = matchedCats.length > 0;
 
@@ -302,9 +278,6 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
   const hasQuery = query.length > 0;
   const isDone = renderedCount >= results.length;
 
-  // দুটোই (পণ্য এবং ক্যাটাগরি) না মিললে ক্যাটাগরি-চিপ সেকশন আর "X টি পণ্য
-  // পাওয়া গেছে" — কোনোটাই দেখানো হয় না, শুধু ZeroResultsState-টুকুই থাকে।
-  // ক্যাটাগরি মিললে (পণ্য শূন্য হোক বা না হোক) দুটোই থাকে।
   const showCategorySection = hasCategoryMatch;
   const showCountLine = hasCategoryMatch || results.length > 0;
 
