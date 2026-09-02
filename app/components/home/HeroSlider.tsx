@@ -34,6 +34,57 @@ interface HeroSliderProps {
   onCategoryClick?: (catId: string) => void;
 }
 
+// ⚠️ আগে <img> ট্যাগের নিজস্ব কোনো opacity/fade ছিল না — ছবিটা যখনই নেটওয়ার্ক
+// থেকে লোড শেষ হতো, ব্রাউজার সরাসরি পেইন্ট করে দিত। কিন্তু কার্ডের entrance
+// animation (motion.div, opacity 0→1) সম্পূর্ণ সময়-ভিত্তিক (mount + 500ms) —
+// ছবি রেডি কিনা তার সাথে এর কোনো সম্পর্ক ছিল না। ফলে ছবি লোড হতে দেরি হলে
+// (স্লো নেটওয়ার্ক/কোল্ড ক্যাশ), কার্ড ততক্ষণে opacity:1 হয়ে "flat color
+// placeholder" (card.bg) দেখাচ্ছিল, আর ছবি রেডি হওয়ামাত্র সেই পুরোপুরি-visible
+// কার্ডের ওপর সরাসরি "পপ" করে বসে যেত — কোনো fade ছাড়াই। এটাই "ভেঙে ভেঙে/
+// আটকে আটকে" এন্ট্রি অ্যানিমেশন দেখানোর আসল কারণ ছিল।
+//
+// ফিক্স: ছবিকে নিজের load-state অনুযায়ী আলাদাভাবে fade করানো হচ্ছে (parent-
+// container timer থেকে সম্পূর্ণ স্বাধীন)। CSS-এ nested opacity গুণ হয় বলে,
+// container fade হয়ে গেলেও ছবি লোড না-হওয়া পর্যন্ত অদৃশ্য থাকে (card.bg
+// গ্রেডিয়েন্ট placeholder হিসেবে দেখা যায়), আর লোড শেষ হওয়ামাত্র নিজের
+// ৪২০ms transition দিয়ে সেই গ্রেডিয়েন্টের ওপর মসৃণভাবে fade করে বসে — কোনো
+// আকস্মিক পপ থাকে না।
+function HeroCardImage({
+  src,
+  alt,
+  eager,
+}: {
+  src: string;
+  alt: string;
+  eager: boolean;
+}) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // ব্রাউজার ক্যাশ থেকে ইনস্ট্যান্ট লোড হওয়া ছবির জন্য — এক্ষেত্রে onLoad
+  // ইভেন্ট React attach করার আগেই ফায়ার হয়ে যেতে পারে, তাই mount-এর পরে
+  // .complete চেক করে নেওয়া হচ্ছে যাতে কার্ড অকারণে অদৃশ্য আটকে না থাকে।
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, []);
+
+  return (
+    <img
+      ref={imgRef}
+      // eslint-disable-next-line @next/next/no-img-element
+      className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-[opacity,transform] duration-[420ms] ease-brand group-hover:scale-[1.05] ${
+        loaded ? 'opacity-100' : 'opacity-0'
+      }`}
+      src={src}
+      alt={alt}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchPriority={eager ? 'high' : undefined}
+      decoding="async"
+      onLoad={() => setLoaded(true)}
+    />
+  );
+}
+
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
   const [cards, setCards] = useState<HeroCard[]>(
@@ -325,7 +376,12 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
-            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
+            // আগে শুধু প্রথম ২টা কার্ড eager ছিল — মোবাইলে (২টা কার্ড/পেজ) ঠিক
+            // ছিল, কিন্তু ডেস্কটপে (৬টা কার্ড/পেজ, getDuoPerPage()) ৩-৬ নম্বর
+            // কার্ড lazy-load থেকে যেত, ফলে সেগুলো দেরিতে পপ করত। এখন প্রথম
+            // ৬টাই (দুই ডিভাইসেই যথেষ্ট) eager — ছবিগুলো আগে থেকেই ছোট সাইজে
+            // (360px) optimize করা বলে বাড়তি খরচ নগণ্য।
+            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 6;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
             // ⚠️ আগে এখানে শুধু মাঝের কপিকে (i >= DUO_TOTAL) "initial visible"
@@ -373,14 +429,10 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                   onClick={() => goCategory(catId)}
                 >
                   {card.img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-transform duration-[550ms] ease-brand group-hover:scale-[1.05]"
+                    <HeroCardImage
                       src={optimizeCloudinaryUrl(card.img, 360)}
                       alt={label}
-                      loading={isEager ? 'eager' : 'lazy'}
-                      fetchPriority={isEager ? 'high' : undefined}
-                      decoding="async"
+                      eager={isEager}
                     />
                   ) : isSvgEmoji ? (
                     <div
