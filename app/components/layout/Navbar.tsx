@@ -18,6 +18,8 @@ import { WISHLIST_NAV_HIT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, Category, CurrentUser } from '@/types';
 
+const MAX_SEARCH_LEN = 60;
+
 interface NavbarProps {
   cartCount?: number;
   wishCount?: number;
@@ -501,16 +503,18 @@ export default function Navbar({
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
   }, []);
 
+  // 🛡️ সার্চ ইনপুট স্যানিটাইজার ও ৬০ ক্যারেক্টার ক্যাপ
   const handleSearchInput = useCallback((value: string) => {
-    setSearchQuery(value);
+    const clean = value.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
+    setSearchQuery(clean);
     setShowDropdown(true);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    if (!value.trim()) {
+    if (!clean.trim()) {
       setSearchResults([]);
       setCatResults([]);
       return;
     }
-    debounceTimerRef.current = setTimeout(() => runSearch(value), 280);
+    debounceTimerRef.current = setTimeout(() => runSearch(clean), 280);
   }, [runSearch]);
 
   const goToCat = (catId: string) => {
@@ -524,7 +528,7 @@ export default function Navbar({
   };
 
   const goToSearch = () => {
-    const q = searchQuery.trim();
+    const q = searchQuery.replace(/[<>`]/g, '').trim().slice(0, MAX_SEARCH_LEN);
     if (!q) return;
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setRecentSearches(addRecentSearch(q));
@@ -542,9 +546,10 @@ export default function Navbar({
 
   const pickRecentSearch = (term: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    setSearchQuery(term);
+    const cleanTerm = term.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
+    setSearchQuery(cleanTerm);
     setShowDropdown(true);
-    runSearch(term);
+    runSearch(cleanTerm);
   };
 
   const removeRecentSearchTerm = (term: string) => {
@@ -592,7 +597,7 @@ export default function Navbar({
         />
       )}
 
-      {/* 🌟 প্রিমিয়াম সফট ড্রপ-ডাউন এন্ট্রি মোশন */}
+      {/* 🌟 প্রিমিয়াম ড্রপ-ডাউন ন্যাভবার */}
       <motion.nav
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -618,8 +623,6 @@ export default function Navbar({
               </Link>
             ) : (
               <Link className="flex shrink-0 items-center no-underline" href="/" prefetch={true}>
-                {/* লোগোর নিজস্ব এন্ট্রি এনিমেশন — পুরনো ওয়েবসাইটের মতো হালকা
-                    fade + উপর থেকে নিচে নেমে আসা, navbar-এর সাথেই একসাথে চলে */}
                 <motion.span
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -658,6 +661,7 @@ export default function Navbar({
                   </svg>
                   <input
                     type="search"
+                    maxLength={MAX_SEARCH_LEN}
                     placeholder={t('প্রোডাক্ট খুঁজুন...')}
                     value={searchQuery}
                     onChange={(e) => handleSearchInput(e.target.value)}
@@ -796,6 +800,7 @@ export default function Navbar({
                 </svg>
                 <input
                   type="search"
+                  maxLength={MAX_SEARCH_LEN}
                   placeholder={t('প্রোডাক্ট খুঁজুন...')}
                   value={searchQuery}
                   onChange={(e) => handleSearchInput(e.target.value)}
