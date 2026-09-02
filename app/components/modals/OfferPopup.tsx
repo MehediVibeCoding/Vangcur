@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import { fetchCustomProducts, fetchProductById, productHref } from '@/lib/productData';
+import { fetchCustomProducts, fetchProductById, productHref, hasExceededLocalOrderLimit } from '@/lib/productData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
+import { OPEN_OFFER_PAGE_EVENT, OPEN_ORDER_LIMIT_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { sanitizeHref } from '@/lib/sanitize';
 import { useT } from '@/lib/i18n/useT';
@@ -132,7 +132,15 @@ export default function OfferPopup() {
   const [model3Product, setModel3Product] = useState<Product | null>(null);
 
   useEffect(() => {
-    const onOpen = () => setIsOpen(true);
+    const onOpen = () => {
+      if (hasExceededLocalOrderLimit()) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
+        }
+        return;
+      }
+      setIsOpen(true);
+    };
     window.addEventListener(OPEN_OFFER_PAGE_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_OFFER_PAGE_EVENT, onOpen);
   }, []);
@@ -145,6 +153,11 @@ export default function OfferPopup() {
 
   useEffect(() => {
     if (!isOpen) return;
+    if (hasExceededLocalOrderLimit()) {
+      setIsOpen(false);
+      return;
+    }
+
     setLoading(true);
     const supabase = createClient();
     (async () => {
@@ -199,7 +212,6 @@ export default function OfferPopup() {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -209,7 +221,6 @@ export default function OfferPopup() {
             onClick={close}
           />
 
-          {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -217,7 +228,6 @@ export default function OfferPopup() {
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex max-h-[88vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
           >
-            {/* হেডার — লাইন-আর্ট ওয়াটারমার্ক ও ফ্রস্টেড ক্লোজ বাটন */}
             <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
               <HeaderDecor />
               <div className="relative z-10 flex items-center justify-between">
@@ -240,7 +250,6 @@ export default function OfferPopup() {
               </div>
             </div>
 
-            {/* কন্টেন্ট বডি */}
             <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
               {loading && (
                 <div className="py-12 text-center font-body text-[13px] text-muted">
@@ -249,7 +258,6 @@ export default function OfferPopup() {
                 </div>
               )}
 
-              {/* মডেল ১: টেক্সট নোটিস ও অ্যাকশন বাটন */}
               {!loading && config?.active_model === 'model1' && (
                 <div className="flex flex-col gap-3 py-1">
                   {config.model1.body && (
@@ -276,7 +284,6 @@ export default function OfferPopup() {
                 </div>
               )}
 
-              {/* মডেল ২: ফুল ব্যানার ইমেজ */}
               {!loading && config?.active_model === 'model2' && (
                 <motion.button
                   whileTap={{ scale: 0.98 }}
@@ -295,7 +302,6 @@ export default function OfferPopup() {
                 </motion.button>
               )}
 
-              {/* মডেল ৩: সিঙ্গেল স্পেশাল অফার প্রোডাক্ট কার্ড */}
               {!loading && config?.active_model === 'model3' && model3Product && (
                 <div className="rounded-[22px] border border-white/90 bg-white/85 p-3.5 shadow-sh1 backdrop-blur-md">
                   <div
@@ -347,7 +353,6 @@ export default function OfferPopup() {
                 </div>
               )}
 
-              {/* ফলব্যাক: কোনো স্পেশাল ক্যাম্পেইন না থাকলে ডিসকাউন্টেড প্রোডাক্টের সুন্দর লিস্ট */}
               {!loading && !config && (
                 <>
                   {items.length === 0 ? (
