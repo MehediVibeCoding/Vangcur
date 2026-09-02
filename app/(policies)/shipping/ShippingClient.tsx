@@ -9,7 +9,6 @@ import {
   PolicyBulletPoint,
   policyPClass,
   policyUlClass,
-  policySubheadingClass,
 } from '../PolicyContent';
 
 function TruckShippingIcon() {
@@ -173,7 +172,7 @@ export default function ShippingClient() {
         <p className={policyPClass}>
           {lang === 'en'
             ? 'All fragile tech gadgets and lifestyle products are packed in tamper-proof secure boxes and handled through closed-box logistics:'
-            : 'সকল গ্যাজেট ও লাইফস্টাইল পণ্য সুরক্ষিতভাবে বাবোল র‍্যাপ ও সিলযুক্ত বক্সে ক্লোজড-বক্স পদ্ধতিতে সরবরাহ করা হয়:'}
+            : 'সকল গ্যাজেট ও লাইফস্টাইল পণ্য সুরক্ষিতভাবে বাবল র‍্যাপ ও সিলযুক্ত বক্সে ক্লোজড-বক্স পদ্ধতিতে সরবরাহ করা হয়:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
@@ -214,6 +213,11 @@ export default function ShippingClient() {
             {lang === 'en'
               ? 'Check the outer security packaging to ensure the courier flyer is undamaged and properly sealed.'
               : 'প্যাকেটের বাইরের সিল অক্ষত রয়েছে কি না তা একবার চোখ বুলিয়ে নিন।'}
+          </PolicyBulletPoint>
+          <PolicyBulletPoint>
+            {lang === 'en'
+              ? 'Preserve the official physical invoice paper provided inside the parcel box along with all packaging accessories.'
+              : 'ভবিষ্যতের জন্য পার্সেলের ভেতরে থাকা মূল অফিসিয়াল ফিজিক্যাল ইনভয়েস পেপার ও প্রোডাক্টের বক্স সযত্নে সংরক্ষণ করুন।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
