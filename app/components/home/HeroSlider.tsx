@@ -278,6 +278,34 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     loadCards();
   }, [supabase, initialCards]);
 
+  // প্রথমেই দেখা যাওয়া কার্ডগুলোর (মোবাইলে ২টা, ল্যাপটপে ৬টা) ছবি আগে থেকে
+  // preload করা হচ্ছে — নাহলে lazy-load-এর কারণে placeholder gradient থেকে
+  // আসল ছবিতে হঠাৎ পপ করে বদলে যায় (এন্ট্রি অ্যানিমেশনের মাঝেই)।
+  useEffect(() => {
+    if (typeof window === 'undefined' || !cards.length) return;
+    const count = Math.min(getDuoPerPage(), cards.length);
+    const existing = Array.from(
+      document.head.querySelectorAll('link[rel="preload"][as="image"]')
+    ).map((l) => l.getAttribute('href'));
+    const created: HTMLLinkElement[] = [];
+
+    for (let idx = 0; idx < count; idx++) {
+      const src = cards[idx]?.img;
+      if (!src) continue;
+      const href = optimizeCloudinaryUrl(src, 360);
+      if (existing.includes(href)) continue;
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = href;
+      link.setAttribute('fetchpriority', 'high');
+      document.head.appendChild(link);
+      created.push(link);
+    }
+
+    return () => created.forEach((l) => l.remove());
+  }, [cards]);
+
   const goCategory = (catId: string) => {
     if (typeof onCategoryClick === 'function') {
       onCategoryClick(catId);
@@ -320,7 +348,14 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             // সবসময় সামঞ্জস্যপূর্ণ থাকে, তাই কোনো visible→invisible ঝাটকা আর
             // হয় না, শুধু একটামাত্র মসৃণ fade-in-up.
             const relativePos = ((i % cards.length) + cards.length) % cards.length;
-            const isInitialVisible = relativePos < Math.min(6, cards.length);
+            // শুধু মাঝের (আসলে-দৃশ্যমান) কপিতেই entrance animation — আগে-পরের
+            // দুইটা ডুপ্লিকেট কপিতে animation বন্ধ, কারণ ওগুলো পর্দার বাইরে
+            // থাকে বলে অ্যানিমেট করার দরকারই নেই। আগে শুধু relativePos-ভিত্তিক
+            // চেকে তিনটা কপিরই প্রথম ৬টা কার্ড (মোট ১৮টা motion.div) একসাথে
+            // অ্যানিমেট হতো, যেটা mount-এর সময় main thread ব্লক করে দিত এবং
+            // এন্ট্রি অ্যানিমেশনটাকে "আটকে আটকে" দেখাত।
+            const isVisibleCopy = i >= cards.length && i < cards.length * 2;
+            const isInitialVisible = isVisibleCopy && relativePos < Math.min(6, cards.length);
             const staggerDelay = isInitialVisible ? relativePos * 0.08 : 0;
 
             return (
@@ -330,7 +365,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                 className="aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
               >
                 <motion.div
-                  initial={isInitialVisible ? { opacity: 0, y: 24 } : { opacity: 1, y: 0 }}
+                  initial={isInitialVisible ? { opacity: 0, y: 24 } : false}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
                   className="group relative flex h-full w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98]"
