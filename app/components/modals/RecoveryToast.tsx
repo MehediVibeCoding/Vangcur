@@ -2,8 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getDraft } from '@/lib/draftRecovery';
-import type { CheckoutDraft } from '@/lib/draftRecovery';
+import {
+  eligibleDraft,
+  markDraftDismissed,
+  recordDraftImpression,
+  type CheckoutDraft,
+} from '@/lib/draftRecovery';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { hasExceededLocalOrderLimit } from '@/lib/productData';
 import useHistoryModal from '@/lib/useHistoryModal';
@@ -11,7 +15,6 @@ import { useT } from '@/lib/i18n/useT';
 
 const DISMISS_KEY = 'vc_recovery_dismissed';
 const DISMISS_TIME_KEY = 'vc_toast_dismiss_time';
-const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 const HOMEPAGE_INITIAL_DELAY_MS = 5000;
 
 function HeaderDecor() {
@@ -71,6 +74,9 @@ export default function RecoveryToast() {
   const [draft, setDraft] = useState<CheckoutDraft | null>(null);
 
   const dismiss = useCallback(() => {
+    if (draft?.id) {
+      markDraftDismissed(draft.id);
+    }
     try {
       sessionStorage.setItem(DISMISS_KEY, '1');
       sessionStorage.setItem(DISMISS_TIME_KEY, String(Date.now()));
@@ -81,7 +87,7 @@ export default function RecoveryToast() {
       // ignore
     }
     setDraft(null);
-  }, []);
+  }, [draft?.id]);
 
   useHistoryModal(Boolean(draft), dismiss, 'recovery-toast');
 
@@ -102,11 +108,12 @@ export default function RecoveryToast() {
       // ignore
     }
 
-    const d = getDraft();
-    if (d && d.items && d.items.length > 0 && Date.now() - d.createdAt < MAX_AGE_MS) {
+    const d = eligibleDraft();
+    if (d && d.items && d.items.length > 0) {
       const timer = setTimeout(() => {
-        if (!hasExceededLocalOrderLimit()) {
+        if (!hasExceededLocalOrderLimit() && eligibleDraft()) {
           setDraft(d);
+          recordDraftImpression(d.id);
         }
       }, HOMEPAGE_INITIAL_DELAY_MS);
 
@@ -118,6 +125,9 @@ export default function RecoveryToast() {
 
   const resume = () => {
     if (!draft || !draft.items || draft.items.length === 0) return;
+    if (draft.id) {
+      markDraftDismissed(draft.id);
+    }
     try {
       sessionStorage.setItem('vc_quick_order_items', JSON.stringify(draft.items));
       sessionStorage.setItem('vc_form_draft', JSON.stringify({
