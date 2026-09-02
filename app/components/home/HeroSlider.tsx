@@ -40,25 +40,6 @@ function HeroCardImage({
   eager: boolean;
   instant: boolean;
 }) {
-  // 🌟 বাগ-১ আসল রুট কজ ফিক্স (Image Pop / Secondary Drop):
-  // আগের ভার্সনে সব কার্ডেই `loaded` স্টেট দিয়ে ছবির নিজস্ব আলাদা
-  // opacity fade (300ms) চালানো হতো — এটাই আসল "দ্বিতীয় অ্যানিমেশন"।
-  // কন্টেইনারের keyframe (0-.15s স্ট্যাগার সহ) ঠিকই সময়মতো/একসাথে চলতো,
-  // কিন্তু কার্ড ১-২ এর ছবি দ্রুত ডিকোড হয়ে সাথে সাথেই দেখা যেত, আর
-  // কার্ড ৩-৬ এর (ভারী/নতুন নেটওয়ার্ক ফেচ) ছবি দেরিতে ডিকোড হয়ে
-  // কন্টেইনার-অ্যানিমেশন শেষ হওয়ার অনেক পরে নিজে থেকে আলাদাভাবে "পপ"
-  // করে ভেসে উঠতো — এটাই ইউজার যেটাকে "ঝাঁকুনি/দেরি" হিসেবে দেখছিলেন,
-  // ডেটা ফাইলের সমস্যা না, এই কম্পোনেন্টেরই একটা লুকানো race condition।
-  //
-  // ফিক্স: প্রাথমিকভাবে দৃশ্যমান কার্ডগুলোর (i < 6, instant=true) ছবিতে
-  // কোনো নিজস্ব opacity fade রাখা হচ্ছে না — সবসময় opacity-100। ছবি
-  // ডাউনলোড শেষ হওয়ার আগ পর্যন্ত কার্ডের সলিড ব্যাকগ্রাউন্ড (bg gradient)
-  // দেখা যায়, আর ছবি রেডি হওয়ামাত্র কোনো পৃথক ফেড-ট্রানজিশন ছাড়াই
-  // ব্রাউজারের নিজস্ব পেইন্টে যোগ হয়ে যায় — ফলে প্রতিটি কার্ডে একটাই
-  // মোশন-ইভেন্ট থাকে (কন্টেইনারের মাইক্রো-স্ট্যাগার), কোনো দ্বিতীয়
-  // "লেট পপ" থাকে না। পরে সোয়াইপ/স্ক্রলে দেখা যাওয়া lazy কার্ডগুলোর
-  // জন্য (instant=false) আগের নরম fade বজায় রাখা হয়েছে, কারণ সেটা
-  // এন্ট্রি-অ্যানিমেশনের সাথে কোনো সংঘর্ষ করে না।
   const [loaded, setLoaded] = useState(false);
   const opacityClass = instant ? 'opacity-100' : loaded ? 'opacity-100' : 'opacity-0';
   const transitionClass = instant ? 'transition-transform' : 'transition-[opacity,transform]';
@@ -80,7 +61,6 @@ function HeroCardImage({
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
 
-  // কার্ডের সংখ্যা সবসময় ১২-এর গুণিতকে নরমালাইজড
   const [cards, setCards] = useState<HeroCard[]>(() =>
     padCards(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS)
   );
@@ -88,7 +68,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  // 🌟 স্লাইডার অরিজিন স্বাভাবিক Index 0 থেকে শুরু (জিরো লেআউট শিফট ও জিরো ফ্ল্যাশ)
   const duoIdxRef = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isInteractingRef = useRef(false);
@@ -97,7 +76,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
 
-  // 🌟 প্রথম ৬টি ছবির জন্য ব্রাউজার মেমোরিতে সরাসরি আর্লি প্রি-ক্যাশ
   useEffect(() => {
     if (typeof window === 'undefined' || !cards.length) return;
     const count = Math.min(6, cards.length);
@@ -137,34 +115,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       return;
     }
 
-    // 🌟 বাগ-২ ফিক্স (Yo-Yo Rewind Glitch) — কেন ডাবল requestAnimationFrame
-    // ব্যবহার করা হয়নি সেটা গুরুত্বপূর্ণ: `duoStep`-এর ব্যাকওয়ার্ড-বাউন্ডারি
-    // কেসে ঠিক এই instant reset-টার পরপরই সিঙ্ক্রোনাসভাবে আরেকটা animate
-    // ধাপ (setPosition(true)) চেইন করা হয় (নিচে দেখুন)। rAF দিয়ে transform
-    // সেটিং-টা ডিফার করলে সেই পরের animate-কলটা আগে চলে এসে transition
-    // সেট করে ফেলবে, আর তারপর ২ ফ্রেম পরে এই ডিফার-করা instant-jump এসে
-    // সেই এনিমেশনটাকেই ওভাররাইট করে আবার ভুল পজিশনে স্ন্যাপ করবে — অর্থাৎ
-    // rAF-ভিত্তিক সমাধান এখানে উল্টো নতুন একটা রেস-কন্ডিশন তৈরি করত।
-    // তাই বরং সিঙ্ক্রোনাস reflow-প্যাটার্নটাই রাখা হলো (এটা স্পেক-অনুযায়ী
-    // সঠিক — `offsetHeight`/`getBoundingClientRect` পড়া মানেই ব্রাউজারকে
-    // বাধ্য করা style+layout সিঙ্ক্রোনাসভাবে ফ্লাশ করতে), শুধু দুইটা
-    // *ভিন্ন* লেআউট-API দিয়ে রিফ্লো ফোর্স করে রিডানডেন্সি বাড়ানো হলো
-    // (offsetHeight রিড ব্রাউজারের Layout সাব-সিস্টেম টাচ করে, আর
-    // getBoundingClientRect() অতিরিক্তভাবে Paint/Style সাব-সিস্টেমও টাচ
-    // করে) — যাতে ইঞ্জিন-ভেদে (Chrome/Safari/Firefox) কোনো এজ-কেসেই
-    // "none" স্টেটটা transform-লেখার আগে কমিট না হয়ে যাওয়ার সুযোগ না থাকে।
-    //
-    // এই বাউন্ডারি-রিসেট গণিত (২৪ ➔ ১২ সুইচ, DUO_TOTAL=12 হওয়ায়
-    // perPage=6-এর ক্লিন গুণিতক) নিজেই সঠিক ছিল — heroSliderData.ts
-    // ফাইলটাও এখানে দোষী না (DUO_TOTAL=12 আর padCards() সবসময় ঠিক ১২টা
-    // কার্ড গ্যারান্টি করে, অ্যাডমিন যত কার্ডই সেভ করুক)। বাস্তবে
-    // রিওয়াইন্ডটা দেখা যাওয়ার আসল কারণ ছিল Bug-1: প্রতিটা ছবি লোড হওয়ার
-    // সাথে সাথে HeroCardImage-এর নিজস্ব `loaded` স্টেট আপডেট হয়ে ৬টা
-    // আলাদা React রি-রেন্ডার ট্রিগার করত — ঠিক অটোপ্লে-র বাউন্ডারি-রিসেট
-    // মুহূর্তেই এই বার্স্ট প্রায়ই ঘটতো, মেইন থ্রেডে ভিড় লাগিয়ে সিঙ্ক্রোনাস
-    // reflow-এর টাইমিংকে অবিশ্বস্ত করে তুলতো। উপরে Bug-1 ফিক্স করায়
-    // (initial কার্ডে আর কোনো `loaded`-চালিত রি-রেন্ডার/ফেড হয় না) এই
-    // মেইন-থ্রেড কনজেশনটাই দূর হয়ে গেছে — তাই দুটো বাগ আসলে সম্পর্কিত ছিল।
     track.style.transition = 'none';
     void track.offsetHeight;
     track.style.transform = `translateX(-${offset}px)`;
@@ -175,8 +125,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const perPage = getDuoPerPage();
     const totalCards = cards.length;
 
-    // 🌟 যদি Index 0-তে থাকা অবস্থায় ইউজার বামে ক্লিক করেন:
-    // নিঃশব্দে ট্র্যাককে Set 2 (12)-তে জাম্প করিয়ে রিফ্লো করা হবে, তারপর 6-এ অ্যানিমেট হবে
     if (dir < 0 && duoIdxRef.current <= 0) {
       infiniteJumpRef.current = true;
       duoIdxRef.current = totalCards;
@@ -287,13 +235,11 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       }
     };
 
-    // 🌟 নিখুঁত একমুখী ইনফিনিট লুপ বাউন্ডারি সুইচ (২৪ ➔ ১২ সিমলেস রিসেট)
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.target !== trackRef.current) return;
       if (infiniteJumpRef.current) return;
 
-      const totalCards = cards.length; // ১২
-      // ডানে স্ক্রল করতে করতে ২৪ (Set 3) পার হলে নিঃশব্দে ১২ (Set 2)-তে ফিরে আসবে
+      const totalCards = cards.length;
       if (duoIdxRef.current >= totalCards * 2) {
         infiniteJumpRef.current = true;
         duoIdxRef.current -= totalCards;
@@ -389,17 +335,18 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     } else if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('vc:cathCategoryClick', { detail: { catId } }));
     }
-    document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const prodSec = document.getElementById('prodSec');
+    if (prodSec) {
+      const navbarOffset = 85;
+      const targetY = prodSec.getBoundingClientRect().top + window.scrollY - navbarOffset;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }
   };
 
-  // ৩টি পূর্ণাঙ্গ সেট (৩৬টি কার্ড: 0..11, 12..23, 24..35)
   const tripled = [...cards, ...cards, ...cards];
 
   return (
     <div className="relative mx-auto max-w-[1300px] bg-transparent px-3.5 pt-3.5 sm:px-5 2xl:max-w-[1560px]">
-      {/* 🌟 বাগ-১ ফিক্স: <style> ট্যাগটি কার্ড-মার্কআপের আগেই বসানো হলো, যাতে
-          ব্রাউজার প্রথমে @keyframes/ক্লাস রেজিস্টার করে, তারপর কার্ড পার্স করে।
-          এতে দুই গ্রুপ কার্ডের এন্ট্রি-অ্যানিমেশন টাইমিং কখনোই ডিসিঙ্ক হয় না। */}
       <style>{`
         @keyframes heroCardIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -409,10 +356,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
           animation: heroCardIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
           will-change: opacity, transform;
         }
-        /* মোবাইলে (< 768px) ৩য়-৬ষ্ঠ কার্ড (data-hero-desktop-extra) এর
-           এন্ট্রি-অ্যানিমেশন সম্পূর্ণ নিষ্ক্রিয় — ওগুলো শুধু ডেস্কটপেই
-           প্রাথমিক ভিউতে থাকে, মোবাইলে সোয়াইপ করে দেখা যায় বলে সেখানে
-           নতুন করে ফেড-ইন/পপ করার দরকার নেই। */
         @media (max-width: 767.98px) {
           .hero-card-anim-in[data-hero-desktop-extra='true'] {
             animation: none;
@@ -430,15 +373,10 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const label = card.label || '';
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
-            // 🌟 বাগ-১ ফিক্স: একটিমাত্র অভিন্ন ক্লাস (hero-card-anim-in) ও
-            // একটিমাত্র ফর্মুলা (i * 0.03s) — কোনো দ্বৈত-ক্লাস শাখা (branch)
-            // নেই বলে টাইমিং ডিসিঙ্কের কোনো সুযোগই নেই।
-            //   i = 0, 1        → মোবাইল + ডেস্কটপ উভয়েই সবসময় অ্যানিমেট
-            //   i = 2, 3, 4, 5  → শুধু ডেস্কটপে (>=768px) অ্যানিমেট
             const isFirstDuo = i < 2;
             const isDesktopExtra = i >= 2 && i < 6;
             const isInitialCard = isFirstDuo || isDesktopExtra;
-            const staggerDelay = i * 0.03; // 0, .03, .06, .09, .12, .15
+            const staggerDelay = i * 0.03;
             const isEager = i < 6;
 
             return (
