@@ -10,6 +10,30 @@ const LIKED_REVIEWS_KEY = 'vc_liked_reviews';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
+/**
+ * 🛡️ ক্লাউডিনারি ইমেজ হোয়াইটলিস্টিং ও সিকিউরিটি স্যানিটাইজার
+ * শুধুমাত্র আমাদের অনুমোদিত https://res.cloudinary.com/ ডোমেইনের ইমেজ ইউআরএল গ্রহণ করা হবে।
+ */
+export function validateAndCleanCloudinaryUrls(rawUrls?: string | null): string | null {
+  if (!rawUrls || typeof rawUrls !== 'string') return null;
+  const urls = rawUrls.split(',').map((u) => u.trim()).filter(Boolean);
+  
+  const safeUrls = urls.filter((url) => {
+    try {
+      const parsed = new URL(url);
+      return (
+        parsed.protocol === 'https:' &&
+        parsed.hostname === 'res.cloudinary.com' &&
+        !/[<>"'`]/.test(url)
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  return safeUrls.length > 0 ? safeUrls.slice(0, 3).join(',') : null;
+}
+
 export async function checkIsReviewAdminOrMod(
   supabase: SupabaseClient,
   userId?: string | null,
@@ -35,8 +59,8 @@ export async function checkIsReviewAdminOrMod(
     }
   }
 
-  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই
-  if (userEmail && userEmail.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) {
+  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (লগইন করা মডারেটর ১০০% প্রিভিলেজ পাবে)
+  if (userEmail && userEmail.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
     return true;
   }
 
@@ -168,6 +192,7 @@ export async function submitProductReview(
   const name = sanitizePlainName(payload.userName || '').trim();
   const text = sanitizeInput(payload.reviewText || '').trim();
   const rating = Math.max(1, Math.min(5, Math.round(Number(payload.rating) || 5)));
+  const sanitizedImageUrl = validateAndCleanCloudinaryUrls(payload.imageUrl);
 
   if (!name || name.length < 2 || name.length > MAX_NAME_LEN) {
     return { ok: false, error: 'অনুগ্রহ করে সঠিক নাম দিন (২-৩০ অক্ষর)' };
@@ -203,10 +228,10 @@ export async function submitProductReview(
         user_name: name,
         rating,
         review_text: text,
-        image_url: payload.imageUrl || null,
+        image_url: sanitizedImageUrl,
         like_count: 0,
         is_verified_buyer: isPrivileged,
-        is_approved: isPrivileged, // এডমিন বা মডারেটর রিভিউ দিলে সাথে সাথে লাইভ হবে
+        is_approved: isPrivileged, // মডারেটর রিভিউ দিলে সাথে সাথে লাইভ হবে
         is_rejected: false,
       })
       .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
