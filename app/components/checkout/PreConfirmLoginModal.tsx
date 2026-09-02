@@ -9,7 +9,7 @@ interface PreConfirmLoginModalProps {
   onClose: () => void;
   onLogin: () => void;
   onRegister: () => void;
-  onGoogle: () => void;
+  onGoogle?: () => void;
   onSkip: () => void;
 }
 
@@ -130,7 +130,6 @@ export default function PreConfirmLoginModal({
             </div>
 
             <div className="relative z-10 flex flex-col gap-2.5 pt-1">
-              {/* ১ম সারি: পাশাপাশি সাইন-আপ ও লগইন বাটন */}
               <div className="grid grid-cols-2 gap-2.5">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
@@ -138,7 +137,7 @@ export default function PreConfirmLoginModal({
                   onClick={onRegister}
                   className="shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12px] font-body text-[13.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
                 >
-                  {lang === 'en' ? 'Sign Up' : 'সাইন-আপ (Sign Up)'}
+                  {lang === 'en' ? 'Sign Up' : 'সাইন-আপ করুন'}
                 </motion.button>
 
                 <motion.button
@@ -147,11 +146,10 @@ export default function PreConfirmLoginModal({
                   onClick={onLogin}
                   className="w-full rounded-full border border-brand-light/40 bg-white/90 py-[12px] font-body text-[13.5px] font-bold text-brand-light shadow-2xs transition-colors duration-brand hover:bg-white hover:border-brand-light"
                 >
-                  {lang === 'en' ? 'Login' : 'লগইন (Login)'}
+                  {lang === 'en' ? 'Login' : 'লগইন করুন'}
                 </motion.button>
               </div>
 
-              {/* ২য় সারি: পুরোটা মিলিয়ে ১টি স্কিপ বাটন */}
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={onSkip}
