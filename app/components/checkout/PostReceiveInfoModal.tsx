@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { SHOW_POST_RECEIVE_INFO_EVENT } from '@/lib/uiEvents';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 const CHECKLIST_BN = [
@@ -93,6 +94,9 @@ export default function PostReceiveInfoModal() {
   const [open, setOpen] = useState(false);
   const { lang } = useT();
 
+  const close = useCallback(() => setOpen(false), []);
+  useHistoryModal(open, close, 'post-receive-info-modal');
+
   useEffect(() => {
     const onShow = () => setOpen(true);
     window.addEventListener(SHOW_POST_RECEIVE_INFO_EVENT, onShow);
@@ -124,7 +128,7 @@ export default function PostReceiveInfoModal() {
     <>
       <div
         className="fixed inset-0 z-[1210] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={() => setOpen(false)}
+        onClick={close}
       />
 
       <div className="fixed inset-0 z-[1215] flex items-center justify-center p-4">
@@ -145,7 +149,6 @@ export default function PostReceiveInfoModal() {
               : 'ওয়ারেন্টি ক্লেইম নির্বিঘ্নে করতে নিচের নিয়মগুলো অবশ্যই মেনে চলুন।'}
           </p>
 
-          {/* কনসেন্ট্রিক বর্ডার রেডিয়াস অপটিমাইজড চেকলিস্ট বক্স (rounded-[12px]) */}
           <div className="relative z-10 mb-4 rounded-[12px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md">
             <div className="mb-3 flex items-center gap-1.5 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-light" />
@@ -163,7 +166,6 @@ export default function PostReceiveInfoModal() {
             </ul>
           </div>
 
-          {/* কনসেন্ট্রিক বর্ডার রেডিয়াস অপটিমাইজড ওয়ার্নিং বক্স (rounded-[10px]) */}
           <div className="relative z-10 mb-5 rounded-[10px] border border-amber-200/80 bg-amber-50/90 p-3.5 text-left shadow-xs">
             <div className="mb-2 flex items-center gap-2">
               <IconWarningShield />
@@ -181,11 +183,10 @@ export default function PostReceiveInfoModal() {
             </ul>
           </div>
 
-          {/* স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন বাটন */}
           <motion.button
             whileTap={{ scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-            onClick={() => setOpen(false)}
+            onClick={close}
             className="relative z-10 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
           >
             <IconCheckBadgeSolid />
