@@ -16,11 +16,6 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
-function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && !!window.matchMedia
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 function StarRating({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, rating || 4.5));
   const full = Math.floor(r);
@@ -88,8 +83,6 @@ interface ProductCardProps {
   index?: number;
 }
 
-const NAV_ANIM_MS = 300;
-
 export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCardProps) {
   const { t, lang } = useT();
   const router = useRouter();
@@ -97,28 +90,9 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const [wished, setWished] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
 
-  const [pendingNav, setPendingNav] = useState<'product' | 'checkout' | null>(null);
-  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
-
-  useEffect(() => () => {
-    if (navTimerRef.current) clearTimeout(navTimerRef.current);
-  }, []);
-
-  const runFixedTimeNav = (kind: 'product' | 'checkout', navHref: string) => {
-    if (pendingNav) return;
-    if (prefersReducedMotion()) {
-      router.push(navHref);
-      return;
-    }
-    setPendingNav(kind);
-    navTimerRef.current = setTimeout(() => {
-      router.push(navHref);
-    }, NAV_ANIM_MS);
-  };
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -157,56 +131,25 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const handleOrderNowDirect = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (sold || pendingNav) return;
-    startQuickOrder(router, p, 1, (navHref) => {
-      if (prefersReducedMotion()) {
-        router.push(navHref);
-        return;
-      }
-      setPendingNav('checkout');
-      navTimerRef.current = setTimeout(() => {
-        router.push(navHref);
-      }, NAV_ANIM_MS);
-    });
+    if (sold) return;
+    startQuickOrder(router, p, 1);
   };
-
-  const handleCardLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (pendingNav) {
-      e.preventDefault();
-      return;
-    }
-    if (prefersReducedMotion()) return;
-    e.preventDefault();
-    runFixedTimeNav('product', href);
-  };
-
-  // স্ক্রিনের একদম উপরে থাকা প্রথম ২টি কার্ড শুরুতেই প্রস্তুত থাকবে
-  const isAboveFold = index < 2;
-  const staggerDelay = !isAboveFold ? Math.min((index - 2) % 20, 8) * 0.045 : 0;
 
   return (
     <motion.div
-      initial={isAboveFold ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
-      whileInView={!isAboveFold ? { opacity: 1, y: 0 } : undefined}
-      viewport={{ once: true, margin: '-20px' }}
-      transition={{ duration: 0.42, delay: staggerDelay, ease: [0.4, 0, 0.2, 1] }}
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
         <Link
           href={href}
           prefetch={true}
-          onClick={handleCardLinkClick}
-          aria-busy={pendingNav === 'product'}
           className="absolute inset-0 block cursor-pointer transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.06]"
-          style={pendingNav === 'product' ? {
-            transform: 'scale(0.97)',
-            filter: 'brightness(0.92)',
-            transition: `transform ${NAV_ANIM_MS}ms ease, filter ${NAV_ANIM_MS}ms ease`,
-          } : undefined}
         >
-          <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst && !isAboveFold} />
+          <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst && index >= 2} />
         </Link>
 
         <div
@@ -245,8 +188,6 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
             href={href}
             prefetch={true}
             title={p.name}
-            onClick={handleCardLinkClick}
-            aria-busy={pendingNav === 'product'}
             className="block w-full cursor-pointer truncate overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
           >
             {p.name}
@@ -293,16 +234,9 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   type="button"
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  disabled={pendingNav === 'checkout'}
-                  aria-busy={pendingNav === 'checkout'}
-                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10 disabled:cursor-not-allowed"
+                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10"
                   style={{
                     background: 'linear-gradient(115deg, rgba(255,255,255,.94) 0%, rgba(195,222,252,.9) 38%, rgba(255,255,255,.92) 64%, rgba(68,167,252,.35) 100%)',
-                    ...(pendingNav === 'checkout' ? {
-                      transform: 'scale(0.96)',
-                      filter: 'brightness(0.94)',
-                      transition: `transform ${NAV_ANIM_MS}ms ease, filter ${NAV_ANIM_MS}ms ease`,
-                    } : null),
                   }}
                   onClick={handleOrderNowDirect}
                 >
