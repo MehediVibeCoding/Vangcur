@@ -1,6 +1,8 @@
+// [REPLACE] ফাইলের পাথ: app/components/orders/OrderCard.tsx
+
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
@@ -88,11 +90,13 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
 interface OrderCardProps {
   order: Order;
   onInvoice?: (orderId: string | number) => void;
+  from?: 'account' | 'track';
 }
 
-export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
+export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps) {
   const { t, lang } = useT();
   const router = useRouter();
+  const pathname = usePathname();
 
   const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
     year: 'numeric',
@@ -111,7 +115,9 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
       onInvoice(o.id);
     }
     const phoneParam = o.customer?.phone ? `&phone=${encodeURIComponent(o.customer.phone)}` : '';
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}`);
+    const detectedFrom = from || (pathname?.includes('/account') ? 'account' : pathname?.includes('/track') ? 'track' : undefined);
+    const fromParam = detectedFrom ? `&from=${encodeURIComponent(detectedFrom)}` : '';
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}${fromParam}`);
   };
 
   return (
@@ -180,7 +186,6 @@ export default function OrderCard({ order: o, onInvoice }: OrderCardProps) {
           <span className="ml-1 text-[10.5px] font-normal text-muted">({t('শিপিং সহ')})</span>
         </div>
 
-        {/* 100% Sky-Blue Gradient Invoice Button — সরাসরি নতুন ইনভয়েস রুটে নেভিগেশন */}
         <button
           onClick={handleInvoiceNavigation}
           className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
