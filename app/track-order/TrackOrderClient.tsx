@@ -109,7 +109,7 @@ export default function TrackOrderClient() {
   }, [currentUser, router, supabase]);
 
   const openInvoice = (orderId: string | number) => {
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}&from=track`);
   };
 
   const handleOpenLogin = () => {
@@ -172,7 +172,7 @@ export default function TrackOrderClient() {
               <div className="space-y-4">
                 <div className="space-y-3.5">
                   {orders.map((o) => (
-                    <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                    <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
                   ))}
                 </div>
 
