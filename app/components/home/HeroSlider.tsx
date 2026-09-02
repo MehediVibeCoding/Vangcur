@@ -19,9 +19,6 @@ const AUTOPLAY_MS = 5500;
 const HOVER_AUTOPLAY_MS = 8000;
 const GAP = 12;
 
-// ৫টি সেটের মিডল সেট (Set 3) শুরু হবে ইনডেক্স ২৪-এ
-let globalSavedIndex = DUO_TOTAL * 2;
-
 function getDuoPerPage(): number {
   if (typeof window === 'undefined') return 2;
   return window.innerWidth >= 768 ? 6 : 2;
@@ -56,14 +53,16 @@ function HeroCardImage({
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
   
-  // কার্ডের তালিকা সবসময় ১২-এর গুণিতকে নরমালাইজড রাখা
+  // কার্ডের সংখ্যা সবসময় ১২-এর গুণিতকে নরমালাইজড
   const [cards, setCards] = useState<HeroCard[]>(() =>
     padCards(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS)
   );
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const duoIdxRef = useRef(globalSavedIndex);
+  
+  // 🌟 স্লাইডার অরিজিন স্বাভাবিক Index 0 থেকে শুরু (জিরো লেআউট শিফট ও জিরো ফ্ল্যাশ)
+  const duoIdxRef = useRef(0);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isInteractingRef = useRef(false);
   const infiniteJumpRef = useRef(false);
@@ -71,7 +70,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
 
-  // 🌟 প্রথম ৬টি কার্ডের ছবি ব্রাউজার মেমোরিতে তাৎক্ষণিক প্রি-ক্যাশ করা
+  // 🌟 প্রথম ৬টি ছবির জন্য ব্রাউজার মেমোরিতে সরাসরি আর্লি প্রি-ক্যাশ
   useEffect(() => {
     if (typeof window === 'undefined' || !cards.length) return;
     const count = Math.min(6, cards.length);
@@ -107,7 +106,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     track.style.transition = animate ? 'transform .48s cubic-bezier(.4,0,.2,1)' : 'none';
     track.style.transform = `translateX(-${offset}px)`;
 
-    // transition: none হলে তাৎক্ষণিক ব্রাউজার রিফ্লো রেজিস্টার করা
+    // transition: none প্রয়োগকালে তাৎক্ষণিক রিফ্লো নিশ্চিত করা
     if (!animate) {
       void track.offsetHeight;
     }
@@ -115,10 +114,20 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
   const duoStep = useCallback((dir: number) => {
     const perPage = getDuoPerPage();
+    const totalCards = cards.length;
+
+    // 🌟 যদি Index 0-তে থাকা অবস্থায় ইউজার বামে ক্লিক করেন:
+    // নিঃশব্দে ট্র্যাককে Set 2 (12)-তে জাম্প করিয়ে রিফ্লো করা হবে, তারপর 6-এ অ্যানিমেট হবে
+    if (dir < 0 && duoIdxRef.current <= 0) {
+      infiniteJumpRef.current = true;
+      duoIdxRef.current = totalCards;
+      setPosition(false);
+      infiniteJumpRef.current = false;
+    }
+
     duoIdxRef.current += dir * perPage;
-    globalSavedIndex = duoIdxRef.current;
     setPosition(true);
-  }, [setPosition]);
+  }, [cards.length, setPosition]);
 
   const startAuto = useCallback((intervalMs = AUTOPLAY_MS) => {
     if (autoTimerRef.current) clearInterval(autoTimerRef.current);
@@ -219,25 +228,16 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       }
     };
 
-    // 🌟 ৫-সেট বাফার ভিত্তিক নিখুঁত ইনফিনিট লুপ বাউন্ডারি সুইচ
+    // 🌟 নিখুঁত একমুখী ইনফিনিট লুপ বাউন্ডারি সুইচ (২৪ ➔ ১২ সিমলেস রিসেট)
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.target !== trackRef.current) return;
       if (infiniteJumpRef.current) return;
 
-      const N = cards.length;
-      const minSafeIndex = N * 2; // ২৪ (Set 3 শুরু)
-      const maxSafeIndex = N * 3; // ৩৬ (Set 4 শুরু)
-
-      if (duoIdxRef.current >= maxSafeIndex) {
+      const totalCards = cards.length; // ১২
+      // ডানে স্ক্রল করতে করতে ২৪ (Set 3) পার হলে নিঃশব্দে ১২ (Set 2)-তে ফিরে আসবে
+      if (duoIdxRef.current >= totalCards * 2) {
         infiniteJumpRef.current = true;
-        duoIdxRef.current -= N; // ৩৬ ➔ ২৪ (সিমলেস ইনস্ট্যান্ট রিসেট)
-        globalSavedIndex = duoIdxRef.current;
-        setPosition(false);
-        infiniteJumpRef.current = false;
-      } else if (duoIdxRef.current < minSafeIndex) {
-        infiniteJumpRef.current = true;
-        duoIdxRef.current += N; // ১৮ ➔ ৩০ (সিমলেস ইনস্ট্যান্ট রিসেট)
-        globalSavedIndex = duoIdxRef.current;
+        duoIdxRef.current -= totalCards;
         setPosition(false);
         infiniteJumpRef.current = false;
       }
@@ -311,7 +311,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     setTimeout(() => {
       isInteractingRef.current = false;
       startAuto(AUTOPLAY_MS);
-    }, 2000);
+    }, 2500);
   };
 
   const handleManualNext = () => {
@@ -321,7 +321,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     setTimeout(() => {
       isInteractingRef.current = false;
       startAuto(AUTOPLAY_MS);
-    }, 2000);
+    }, 2500);
   };
 
   const goCategory = (catId: string) => {
@@ -333,25 +333,22 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // ৫টি সম্পূর্ণ সেট বাফার (৬০টি কার্ড)
-  const quintupled = [...cards, ...cards, ...cards, ...cards, ...cards];
+  // ৩টি পূর্ণাঙ্গ সেট (৩৬টি কার্ড: 0..11, 12..23, 24..35)
+  const tripled = [...cards, ...cards, ...cards];
 
   return (
     <div className="relative mx-auto max-w-[1300px] bg-transparent px-3.5 pt-3.5 sm:px-5 2xl:max-w-[1560px]">
       <div className="relative w-full touch-pan-y overflow-hidden bg-transparent" ref={wrapRef}>
         <div className="flex gap-3 bg-transparent" style={{ willChange: 'transform' }} ref={trackRef}>
-          {quintupled.map((card, i) => {
+          {tripled.map((card, i) => {
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
-            const relativePos = ((i % cards.length) + cards.length) % cards.length;
-            // শুধুমাত্র মিডল সেটে (Set 3: ইনডেক্স ২৪-৩৫) ইনিশিয়াল এন্ট্রি অ্যানিমেশন থাকবে
-            const isMiddleCopy = i >= cards.length * 2 && i < cards.length * 3;
-
-            const isMobileInitial = isMiddleCopy && relativePos < 2;
-            const isDesktopOnlyInitial = isMiddleCopy && relativePos >= 2 && relativePos < 6;
+            // 🌟 প্রথম সেট (Set 1: i = 0..5) সরাসরি ভিউপোর্টে থাকবে এবং একটানা মসৃণ স্ট্যাগারে অ্যানিমেট হবে
+            const isMobileInitial = i < 2;
+            const isDesktopOnlyInitial = i >= 2 && i < 6;
 
             const animClass = isMobileInitial
               ? 'hero-card-anim-all'
@@ -360,8 +357,8 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
               : '';
 
             const isInitialVisible = isMobileInitial || isDesktopOnlyInitial;
-            const staggerDelay = isInitialVisible ? relativePos * 0.07 : 0;
-            const isEager = isMiddleCopy && relativePos < 6;
+            const staggerDelay = isInitialVisible ? i * 0.07 : 0;
+            const isEager = i < 6;
 
             return (
               <div
@@ -416,7 +413,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
       <style>{`
         @keyframes heroCardIn {
-          from { opacity: 0; transform: translateY(22px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .hero-card-anim-all {
