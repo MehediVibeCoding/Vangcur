@@ -57,6 +57,8 @@ import { useT } from '@/lib/i18n/useT';
 import type { CartItem } from '@/types';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
+const MAX_COUPON_LEN = 25;
+const MAX_EMAIL_LEN = 254;
 
 interface CheckoutErrors {
   eN?: string;
@@ -69,10 +71,7 @@ interface CheckoutErrors {
   eL4?: string;
 }
 
-const MAX_EMAIL_LEN = 254;
-
-// ➡️⬅️ চেকআউট স্টেপ ট্রানজিশন — সামনে গেলে ডান থেকে ফেড-স্লাইড ইন, পেছনে
-// গেলে বাম থেকে; পুরনো স্টেপ বিপরীত দিকে হালকা সরে ফেড-আউট হয়
+// ➡️⬅️ চেকআউট স্টেপ ট্রানজিশন
 const checkoutStepVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 24 : -24 }),
   center: { opacity: 1, x: 0 },
@@ -244,7 +243,6 @@ export default function CheckoutPage() {
   const supabase = useRef(createClient()).current;
 
   const [step, setStep] = useState(1);
-  // ➡️⬅️ চেকআউট স্টেপ ট্রানজিশনের দিক — সামনে গেলে ডান থেকে, পেছনে গেলে বাম থেকে
   const [stepDirection, setStepDirection] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDirectQuickOrder, setIsDirectQuickOrder] = useState(false);
@@ -346,7 +344,7 @@ export default function CheckoutPage() {
       }
     }
 
-    // ৩. 🛡️ স্মার্ট রেজিলিয়েন্ট ড্রাফট রিকভারি (টাইপ-সেফ ন্যারোয়িং সহ)
+    // ৩. ড্রাফট রিকভারি
     if (!hasItems) {
       try {
         const draft = getDraft();
@@ -611,10 +609,18 @@ export default function CheckoutPage() {
 
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
+  // 🛡️ সুরক্ষিত ও ফিল্টার্ড কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
-    const clean = (customCode !== undefined ? customCode : couponInput).trim().toUpperCase();
+    
+    // শুধুমাত্র ২৫ অক্ষরের আলফা-নিউমেরিক টেক্সট গ্রহণ করা
+    const clean = (customCode !== undefined ? customCode : couponInput)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9_-]/g, '')
+      .slice(0, MAX_COUPON_LEN);
+
     if (!clean) {
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
@@ -979,8 +985,11 @@ export default function CheckoutPage() {
                       <input
                         type="text"
                         value={couponInput}
+                        maxLength={MAX_COUPON_LEN}
                         onChange={(e) => {
-                          setCouponInput(e.target.value.toUpperCase());
+                          // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং (শুধুমাত্র A-Z, 0-9, -, _)
+                          const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, MAX_COUPON_LEN);
+                          setCouponInput(clean);
                           if (couponError) setCouponError('');
                         }}
                         placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
@@ -1340,7 +1349,7 @@ export default function CheckoutPage() {
                       title={copyLabel === 'Copy' ? t('কপি করুন') : t('কপি হয়েছে!')}
                     >
                       {copyLabel === 'Copy' ? (
-                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                       ) : (
                         <IconCheck />
                       )}
