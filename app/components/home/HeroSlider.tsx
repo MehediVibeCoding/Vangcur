@@ -49,19 +49,26 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
 
-  const normalizeIdx = () => {
-    const span = DUO_TOTAL;
-    const idx = duoIdxRef.current;
-    if (idx >= span && idx < span * 2) return;
-    duoIdxRef.current = (((idx - span) % span) + span) % span + span;
-    globalSavedIndex = duoIdxRef.current;
-  };
-
+  // ⚠️ আগে setPosition()-এর শুরুতেই normalizeIdx() কল হতো — মানে
+  // duoIdxRef.current যখনই [span, span*2) রেঞ্জের বাইরে যেত (যেমন লাস্ট
+  // কার্ডে থাকা অবস্থায় আবার "পরে" চাপলে), সেটা transform-animate করার
+  // *আগেই* mod করে আবার শুরুর রেঞ্জে স্ন্যাপ করে ফেলত। ফলে ব্রাউজার
+  // "পরের কার্ডে এগিয়ে তারপর লুপ" না দেখিয়ে সরাসরি "পিছিয়ে শুরুতে
+  // ব্যাক" করে animate করত — কারণ যে ইনডেক্সে animate হচ্ছিল সেটা
+  // ততক্ষণে already normalize হয়ে গেছে। onTransitionEnd-এর ভেতরের
+  // normalize/wrap-back লজিকটা (transition শেষ হওয়ার পরে, নিঃশব্দে রিসেট
+  // করার জন্য বানানো) তাই কখনো আসল কাজে লাগত না।
+  //
+  // ফিক্স: এখান থেকে normalizeIdx() বাদ — animate সবসময় আসল
+  // (un-normalized) duoIdxRef.current মেনে চলবে, তাই ৩ নম্বর (শেষ) কপিতে
+  // স্মুথভাবে এগিয়ে যাবে। রেঞ্জ-বাইরে যাওয়ার পর wrap-back করাটা এখন
+  // পুরোপুরি onTransitionEnd-এর দায়িত্বে, যেটা transition শেষ হওয়ার
+  // পরে animate=false দিয়ে নিঃশব্দে (কোনো visible jump ছাড়া) মাঝের
+  // কপিতে ফিরিয়ে আনে।
   const setPosition = useCallback((animate: boolean) => {
     const track = trackRef.current;
     const wrap = wrapRef.current;
     if (!track || !wrap) return;
-    normalizeIdx();
     const allCards = track.querySelectorAll<HTMLElement>('[data-cath-card]');
     const perPage = getDuoPerPage();
     const wrapWidth = wrap.clientWidth || wrap.getBoundingClientRect().width;
@@ -293,9 +300,28 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
-            // দৃশ্যমান ব্যাচের জন্য কোনো রিফ্লো ক্লাশিং ছাড়া মসৃণ ক্যাসকেড ডিলে
-            const isInitialVisible = i >= DUO_TOTAL && i < DUO_TOTAL + 6;
-            const staggerDelay = isInitialVisible ? (i - DUO_TOTAL) * 0.08 : 0;
+            // ⚠️ আগে এখানে শুধু মাঝের কপিকে (i >= DUO_TOTAL) "initial visible"
+            // (opacity:0 দিয়ে শুরু) ধরা হতো, প্রথম কপিকে (i < DUO_TOTAL) সবসময়
+            // "already visible" (opacity:1) ধরা হতো — এটাই আসল ফ্লিকারের কারণ:
+            // হাইড্রেশনের আগে ব্রাউজার track-এ কোনো transform ছাড়াই প্রথম paint
+            // করে (transform বসে useIsomorphicLayoutEffect-এ, যেটা JS লোড হওয়ার
+            // পরেই চলে), ফলে আসলে ভিউপোর্টে প্রথম কপিটাই (opacity:1, পুরোপুরি
+            // দৃশ্যমান) দেখা যায়। তারপর সেই layout effect চলে ও ট্র্যাককে
+            // মাঝের কপিতে স্ন্যাপ করে দেয় — আর মাঝের কপির কার্ডগুলো তখন থেকেই
+            // opacity:0 (SSR-এ বেকড) অবস্থায় ছিল। ফলাফল: ইউজার প্রথমে প্রথম
+            // কপির দৃশ্যমান কার্ড দেখতো → স্ন্যাপের সাথে সাথে হঠাৎ invisible
+            // মাঝের কপিতে বদলে যেত → তারপর সেগুলো আবার fade-in-up হতো —
+            // ঠিক যে "flash → hide → fade in" গ্লিচটা রিপোর্ট করা হয়েছে।
+            //
+            // ফিক্স: DUO_TOTAL-ভিত্তিক absolute ইনডেক্সের বদলে cards.length
+            // দিয়ে mod করা আপেক্ষিক পজিশন ব্যবহার করা হচ্ছে, তাই তিনটা কপিরই
+            // (0..5) নম্বর কার্ডগুলো সবসময় একই initial/opacity state শেয়ার
+            // করে — হাইড্রেশনের আগে বা পরে যে কপিটাই আঁকা হোক না কেন, state
+            // সবসময় সামঞ্জস্যপূর্ণ থাকে, তাই কোনো visible→invisible ঝাটকা আর
+            // হয় না, শুধু একটামাত্র মসৃণ fade-in-up.
+            const relativePos = ((i % cards.length) + cards.length) % cards.length;
+            const isInitialVisible = relativePos < Math.min(6, cards.length);
+            const staggerDelay = isInitialVisible ? relativePos * 0.08 : 0;
 
             return (
               <div
