@@ -10,18 +10,7 @@ export interface HeroCard {
   bg: string;
 }
 
-// ⚠️ আগে এটা ১৩ ছিল — বেজোড় সংখ্যা, যেটা মোবাইলের per-page (২) বা
-// ডেস্কটপের per-page (৬) কোনোটা দিয়েই বিভাজ্য না। duoStep() প্রতিবার
-// getDuoPerPage() (২ বা ৬) যোগ/বিয়োগ করে duoIdxRef আপডেট করে, তাই
-// duoIdxRef কখনো ঠিক DUO_TOTAL বা DUO_TOTAL*2 বাউন্ডারিতে ল্যান্ড করত
-// না — ফলে onTransitionEnd-এর wrap-back শর্ত মিস/ভুল সময়ে ট্রিগার হয়ে
-// "শেষ কার্ডে বাড়ি খাওয়া" বা "পুরো উল্টো দিকে জাম্প" দেখাত, smooth
-// infinite loop না দিয়ে। এছাড়াও DEFAULT_HERO_CARDS-এ প্রকৃত ইউনিক কার্ড
-// ছিল ১২টা — padCards() ১৩তম স্লট পূরণ করতে গিয়ে DEFAULT_HERO_CARDS[0]
-// (Neon Lights) ডুপ্লিকেট করে ফেলছিল।
-//
-// ফিক্স: ১২ (= lcm(2, 6)) — এখন duoIdxRef সবসময় ঠিক বাউন্ডারিতে ল্যান্ড
-// করে, আর আসল ১২টা কার্ডের সাথে কোনো ডুপ্লিকেট ফলব্যাক লাগে না।
+// মোবাইল (২) ও ডেস্কটপ (৬) উভয়ের জন্য আদর্শ গুণিতক ১২
 export const DUO_TOTAL = 12;
 
 export const DEFAULT_HERO_CARDS: HeroCard[] = [
@@ -37,7 +26,6 @@ export const DEFAULT_HERO_CARDS: HeroCard[] = [
   { label: 'Crystal Ball', catId: 'crystalball', emoji: '🔮', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535320/Enhancer-Ultra_HD-Zone_20260521_192104_0000_bwnsxc.png', bg: 'linear-gradient(155deg,#0a0a2a,#1a1a5c,#0a0a3d)' },
   { label: 'TWS', catId: 'tws', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535323/quality_restoration_20260522065341115_eh8yle.png', bg: 'linear-gradient(155deg,#1a0020,#3d0050,#2d0070)' },
   { label: 'Power Bank', catId: 'powerbank', emoji: '🔋', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535311/Enhancer-AI_UHD-Power_20260523_104015_0000_aa9euv.png', bg: 'linear-gradient(155deg,#1a0a00,#3d1f00,#5c2d00)' },
-  { label: 'Headphone', catId: 'headphone', emoji: '🎧', img: 'https://res.cloudinary.com/dkjzleczw/image/upload/w_360,q_auto,f_auto/v1779535317/Enhancer-Ultra_HD-Untitled_design_20260523_080608_0000_offzxw.png', bg: 'linear-gradient(155deg,#00101a,#001f3d,#003366)' },
 ];
 
 export function padCards(arr: unknown): HeroCard[] {
@@ -49,27 +37,30 @@ export function padCards(arr: unknown): HeroCard[] {
   return padded.slice(0, DUO_TOTAL);
 }
 
-// #419 ফিক্স — homepage-এর Promise.all-এ fetchCustomProducts()-এর সাথে
-// সমান্তরালে চলে, তাই এখানেও একই bounded টাইমআউট দরকার (lib/productData.ts
-// দ্রষ্টব্য), নাহলে এটাও পুরো render-কে অনির্দিষ্টকালের জন্য আটকে রাখতে পারত।
 const QUERY_TIMEOUT_MS = 3500;
 
 export async function fetchHeroCards(supabase: SupabaseClient): Promise<HeroCard[]> {
   try {
+    let abortSignal: AbortSignal | undefined;
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+      abortSignal = AbortSignal.timeout(QUERY_TIMEOUT_MS);
+    }
+
     const { data, error } = await supabase
       .from('store_settings')
       .select('setting_value')
       .eq('setting_key', 'vc_cath_cards')
-      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
+      .abortSignal(abortSignal as any)
       .maybeSingle();
-    if (error || !data) return DEFAULT_HERO_CARDS;
+
+    if (error || !data) return padCards(DEFAULT_HERO_CARDS);
     const parsedVal = parseSupabaseVal<unknown>(data.setting_value);
     if (Array.isArray(parsedVal) && parsedVal.length) {
       return padCards(parsedVal);
     }
-    return DEFAULT_HERO_CARDS;
+    return padCards(DEFAULT_HERO_CARDS);
   } catch (e) {
     logWarn('Hero card fetch failed:', e);
-    return DEFAULT_HERO_CARDS;
+    return padCards(DEFAULT_HERO_CARDS);
   }
-      }
+}
