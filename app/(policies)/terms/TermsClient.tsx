@@ -47,7 +47,7 @@ function TruckDeliveryIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="1" y="3" width="15" height="13" rx="2" />
-      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+      <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
       <circle cx="5.5" cy="18.5" r="2.5" />
       <circle cx="18.5" cy="18.5" r="2.5" />
     </svg>
@@ -114,7 +114,7 @@ function ScaleJusticeIcon() {
 }
 
 export default function TermsClient() {
-  const { lang, t } = useT();
+  const { lang } = useT();
 
   return (
     <>
@@ -282,8 +282,8 @@ export default function TermsClient() {
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Invoice memo (included in parcel or downloaded from account).'
-              : 'ইনভয়েস মেমো (পার্সেলের সাথে প্রাপ্ত বা ওয়েবসাইট থেকে ডাউনলোডকৃত)।'}
+              ? 'Original official invoice paper provided inside the parcel box (digital/downloaded copies are not accepted for physical warranty claims).'
+              : 'পার্সেলের ভেতরে থাকা অফিসিয়াল ইনভয়েস পেপার/মেমো (সংরক্ষিত আসল কপি প্রদর্শন করতে হবে; কোনো ডাউনলোডকৃত ডিজিটাল কপি গ্রহণযোগ্য নয়)।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en' ? 'Continuous unboxing video proof.' : 'একটানা ধারণকৃত আনবক্সিং ভিডিও প্রমাণ।'}
