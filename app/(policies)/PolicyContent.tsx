@@ -110,34 +110,37 @@ export function PolicyHeader({
   return (
     <div className="relative mb-6 overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-brand-bg/40 via-[#DCEBFD]/50 to-white/90 p-5 sm:p-7 shadow-sh2 backdrop-blur-md">
       <HeaderDecor />
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-ink/10 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-xs">
-            {icon || <ShieldCheckIcon />}
-          </div>
-          <div>
-            <h1 className="font-body text-xl sm:text-2xl font-extrabold text-ink leading-tight">
-              {t(title)}
-            </h1>
-            <p className="mt-0.5 font-body text-[11.5px] font-bold text-brand-light">
-              {subtitle ? t(subtitle) : (lang === 'en' ? 'Official Legal Coverage' : 'অফিসিয়াল পলিসি কভারেজ')}
-            </p>
-          </div>
-        </div>
 
+      <div className="relative z-10 mb-4 flex items-center justify-between border-b border-ink/10 pb-3.5">
         <button
           type="button"
           onClick={handleBack}
-          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full border border-border-base bg-white/90 px-3.5 py-1.5 font-body text-xs font-bold text-ink shadow-xs transition-all duration-brand hover:border-brand-light hover:bg-white active:scale-95 cursor-pointer"
+          aria-label={lang === 'en' ? 'Back' : 'ফিরে যান'}
+          className="group inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/85 py-1.5 pl-2.5 pr-4 font-body text-xs font-bold text-ink shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-white hover:text-brand-light active:scale-95 cursor-pointer"
         >
-          <ArrowLeftIcon />
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white shadow-2xs transition-transform duration-brand group-hover:scale-105">
+            <ArrowLeftIcon />
+          </div>
           <span>{lang === 'en' ? 'Back' : 'ফিরে যান'}</span>
         </button>
+
+        <span className="font-body text-[11px] font-semibold text-muted">
+          {t('সর্বশেষ আপডেট:')} {t(updated)}
+        </span>
       </div>
 
-      <div className="relative z-10 mt-3 flex items-center justify-between font-body text-[11px] text-muted">
-        <span>{lang === 'en' ? 'Jurisdiction: Bangladesh' : 'কার্যকারিতা: সমগ্র বাংলাদেশ'}</span>
-        <span>{t('সর্বশেষ আপডেট:')} {t(updated)}</span>
+      <div className="relative z-10 flex items-center gap-3.5">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-xs">
+          {icon || <ShieldCheckIcon />}
+        </div>
+        <div>
+          <h1 className="font-body text-xl sm:text-2xl font-extrabold text-ink leading-tight">
+            {t(title)}
+          </h1>
+          <p className="mt-1 font-body text-[12px] font-bold text-brand-light">
+            {subtitle ? t(subtitle) : (lang === 'en' ? 'Official Legal Coverage' : 'অফিসিয়াল পলিসি কভারেজ')}
+          </p>
+        </div>
       </div>
     </div>
   );
