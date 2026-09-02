@@ -46,7 +46,7 @@ function IconTruck() {
   return (
     <svg {...lineIcon} width="15" height="15" strokeWidth={2} className="shrink-0 text-brand-light">
       <rect x="1" y="3" width="15" height="13" rx="1" />
-      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+      <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
       <circle cx="5.5" cy="18.5" r="2.5" />
       <circle cx="18.5" cy="18.5" r="2.5" />
     </svg>
@@ -319,17 +319,19 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
                   <li className={liClass}>
                     {lang === 'en'
                       ? 'Continuous unboxing video proof as specified in point 3 is mandatory for any replacement claim.'
-                      : 'রিপ্লেসমেন্ট ক্লেইম করার জন্য ৩ নম্বর পয়েন্ট অনুযায়ী একটানা ও আন-এডিটেড আনবক্সিং ভিডিও প্রমাণ হিসেবে দেওয়া বাধ্যতামূলক।'}
+                      : 'রিপ্লেসমেন্ট ক্লেইম করার জন্য ৩ নম্বর point অনুযায়ী একটানা ও আন-এডিটেড আনবক্সিং ভিডিও প্রমাণ হিসেবে দেওয়া বাধ্যতামূলক।'}
                   </li>
                 </ul>
               </Section>
 
-              <div className="flex items-center justify-center gap-1.5 border-t border-border-base/70 pt-3 text-center font-body text-[11.5px] font-medium text-muted">
+              <div className="flex items-center justify-center gap-2 border-t border-border-base/70 pt-3 text-center font-body text-[11.5px] font-medium text-muted leading-[1.65]">
                 <IconAlertShield />
                 <span>
-                  {lang === 'en'
-                    ? 'Vangcur reserves the right to update these policies at any time.'
-                    : 'ভাঙচুর কর্তৃপক্ষ যেকোনো সময় এই নীতিমালা পরিবর্তন অথবা আপডেট করার অধিকার রাখে।'}
+                  {lang === 'en' ? (
+                    <>Vangcur reserves the full right to update or<br />modify these policies and terms at any time.</>
+                  ) : (
+                    <>ভাঙচুর কর্তৃপক্ষ যেকোনো সময় এই নীতিমালা<br />পরিবর্তন অথবা আপডেট করার অধিকার রাখে।</>
+                  )}
                 </span>
               </div>
 
@@ -338,7 +340,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   onClick={onAgreeAndConfirm}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] active:scale-95"
+                  className="shimmer-sheen flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] active:scale-95"
                 >
                   <IconCheck />
                   <span>
