@@ -12,6 +12,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
+import useHistoryModal from '@/lib/useHistoryModal';
 import type { WishlistItem } from '@/types';
 
 function WishImg({ emoji }: { emoji?: string }) {
@@ -89,6 +90,8 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
   const router = useRouter();
   const items = useWishlistStore((s) => s.wishlist);
 
+  useHistoryModal(isOpen, onClose, 'wishlist-drawer');
+
   useEffect(() => {
     router.prefetch('/checkout');
     router.prefetch('/');
@@ -129,7 +132,6 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -139,7 +141,6 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
             onClick={onClose}
           />
 
-          {/* সেন্ট্রালাইজড উইন্ডো — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -147,7 +148,6 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex max-h-[86vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
           >
-            {/* হেডার */}
             <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
               <HeaderDecor />
               <div className="relative z-10 flex items-center justify-between">
@@ -172,7 +172,6 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
               </div>
             </div>
 
-            {/* প্রোডাক্ট আইটেম লিস্ট */}
             <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
               {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center py-12 text-center">
