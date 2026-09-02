@@ -20,6 +20,9 @@ export async function signUp(
 }
 
 export async function signInWithGoogle(supabase: SupabaseClient, redirectTo = '/') {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('vc_oauth_pending', '1');
+  }
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://vangcur.com';
   return supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -39,6 +42,20 @@ export async function logout(supabase: SupabaseClient): Promise<void> {
 }
 
 export async function checkOAuthCallback(supabase: SupabaseClient): Promise<CurrentUser | null> {
+  if (typeof window === 'undefined') return null;
+
+  const isPending = sessionStorage.getItem('vc_oauth_pending') === '1';
+  const hasOAuthParams =
+    window.location.hash.includes('access_token=') ||
+    window.location.search.includes('code=') ||
+    window.location.hash.includes('error_description=');
+
+  if (!isPending && !hasOAuthParams) {
+    return null;
+  }
+
+  sessionStorage.removeItem('vc_oauth_pending');
+
   try {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data?.user) return null;
