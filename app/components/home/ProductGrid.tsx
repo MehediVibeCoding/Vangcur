@@ -163,7 +163,11 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       // ignore
     }
     const t = setTimeout(() => {
-      document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const prodSec = document.getElementById('prodSec');
+      if (prodSec) {
+        const targetY = prodSec.getBoundingClientRect().top + window.scrollY - 85;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      }
     }, 60);
     return () => clearTimeout(t);
   }, [searchParams]);
@@ -183,7 +187,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
   const activeCategoryName = categoryName || cats.find((c) => c.id === activeCat)?.name;
 
   return (
-    <div className="mx-auto mb-11 min-h-[400px] max-w-[1300px] px-5" id="prodSec">
+    <div className="mx-auto mb-11 min-h-[400px] max-w-[1300px] px-5 scroll-mt-20 sm:scroll-mt-24" id="prodSec">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="border-l-[3px] border-brand-light pl-3 text-xl font-bold">
           {activeCategoryName && activeCat !== 'all' ? (
@@ -212,9 +216,6 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       ) : (
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {visibleItems.map((p, i) => (
-            // key-তে activeCat জুড়ে দেওয়া হয়েছে — ক্যাটাগরি বদলালে React কার্ডটাকে
-            // পুরনো instance reuse না করে নতুন করে mount করে, ফলে "একটা একটা করে
-            // fade-in হয়ে আসা" এনিমেশনটা পুরনো ওয়েবসাইটের মতোই প্রতিবার রিপ্লে হয়
             <ProductCard key={`${activeCat}-${p.id}`} prod={p} isFirst={i === 0} index={i} />
           ))}
           {showCategoryEndBtn && (
