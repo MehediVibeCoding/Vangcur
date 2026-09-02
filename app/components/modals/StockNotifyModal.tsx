@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { STOCK_NOTIFY_EVENT } from '@/lib/productData';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { validateName, sanitizePlainName, validatePhone, MAX_NAME_LEN } from '@/lib/security';
+import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 interface NotifyDetail {
@@ -14,7 +15,6 @@ interface NotifyDetail {
   name: string;
 }
 
-// 🛡️ রিয়েল-টাইম বাংলাদেশি ফোন ইনপুট ফিল্টার (013-019 বাউন্ডেড)
 function filterPhoneInput(value: string): string {
   const digits = value.replace(/\D/g, '');
   let out = '';
@@ -88,6 +88,16 @@ export default function StockNotifyModal() {
   const [phoneErr, setPhoneErr] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const isOpen = !!detail;
+
+  const close = useCallback(() => {
+    setDetail(null);
+    setNameErr('');
+    setPhoneErr('');
+  }, []);
+
+  useHistoryModal(isOpen, close, 'stock-notify-modal');
+
   useEffect(() => {
     const onOpen = (e: Event) => {
       const d = (e as CustomEvent<NotifyDetail>).detail;
@@ -108,13 +118,6 @@ export default function StockNotifyModal() {
     else unlockBody();
     return () => unlockBody();
   }, [detail]);
-
-  const isOpen = !!detail;
-  const close = () => {
-    setDetail(null);
-    setNameErr('');
-    setPhoneErr('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +193,6 @@ export default function StockNotifyModal() {
     <AnimatePresence>
       {isOpen && detail && (
         <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -200,7 +202,6 @@ export default function StockNotifyModal() {
             onClick={close}
           />
 
-          {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -208,7 +209,6 @@ export default function StockNotifyModal() {
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 shadow-sh3 ring-1 ring-white/80"
           >
-            {/* হেডার ডেকোর ও ক্লোজ বাটন */}
             <HeaderDecor />
             <motion.button
               whileTap={{ scale: 0.88 }}
@@ -219,12 +219,10 @@ export default function StockNotifyModal() {
               ✕
             </motion.button>
 
-            {/* নোটিফিকেশন বেল ব্যাজ */}
             <div className="relative z-10 mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/40 bg-brand-light text-white shadow-xs">
               <BellIcon />
             </div>
 
-            {/* টাইটেল */}
             <h3 className="relative z-10 text-center font-body text-[17px] font-extrabold text-ink">
               {lang === 'en' ? 'Stock Notification' : 'স্টক নোটিফিকেশন'}
             </h3>
@@ -236,7 +234,6 @@ export default function StockNotifyModal() {
                 : 'স্টকে এলে আপনাকে জানিয়ে দেওয়া হবে। এই তালিকা আপনার অ্যাকাউন্ট পেজে "স্টক নোটিফিকেশন"-এ পাবেন।'}
             </p>
 
-            {/* ফর্ম ইনপুটসমূহ */}
             <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3 pt-1">
               <div>
                 <label className="mb-1 block font-body text-[12px] font-bold text-ink">
@@ -276,7 +273,6 @@ export default function StockNotifyModal() {
                     value={phone}
                     maxLength={11}
                     onChange={(e) => {
-                      // 🛡️ রিয়েল-টাইম বাংলাদেশি ফোন ইনপুট ফিল্টারিং (013-019)
                       setPhone(filterPhoneInput(e.target.value));
                       if (phoneErr) setPhoneErr('');
                     }}
@@ -289,7 +285,6 @@ export default function StockNotifyModal() {
                 {phoneErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{phoneErr}</p>}
               </div>
 
-              {/* জমা দিন বাটন */}
               <div className="pt-2">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
