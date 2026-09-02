@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
-  DEFAULT_CATEGORIES, makeCatSlug, CATEGORY_FILTER_EVENT,
+  DEFAULT_CATEGORIES, CATEGORY_FILTER_EVENT,
 } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { useT } from '@/lib/i18n/useT';
@@ -100,8 +100,8 @@ export default function Categories({ initialCategories }: CategoriesProps) {
 
   const handleSelect = (catId: string) => {
     try {
-      const url = catId === 'all' ? '/' : '/category/' + makeCatSlug(catId);
-      window.history.replaceState({ vcStack: [], homeCurrent: true, vcCat: catId }, '', url);
+      const url = catId === 'all' ? '/' : `/?cat=${encodeURIComponent(catId)}`;
+      window.history.replaceState({ homeCurrent: true, vcCat: catId }, '', url);
     } catch {
       // ignore
     }
