@@ -13,6 +13,7 @@ import { fetchCustomProducts } from '@/lib/productData';
 import { createClient } from '@/lib/supabase/client';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
+import useHistoryModal from '@/lib/useHistoryModal';
 import {
   getAppliedCoupon,
   saveAppliedCoupon,
@@ -109,14 +110,14 @@ export default function QuickOrderModal() {
   const cart = useCartStore((s) => s.cart);
   const prodsRef = useRef<Product[]>([]);
 
-  // কুপন স্টেট
+  useHistoryModal(open, () => setOpen(false), 'quick-cart-modal');
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [couponError, setCouponError] = useState('');
 
-  // বাটন লোডিং ও সাকসেস স্টেট
   const [orderStatus, setOrderStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
   useEffect(() => {
@@ -170,7 +171,6 @@ export default function QuickOrderModal() {
   const subtotal = cartTotal(cart);
   const totalCount = cartCount(cart);
 
-  // কুপন ডিসকাউন্ট রিক্যালকুলেশন
   const { discountAmount, isValid: isCouponStillValid, reason: couponInvalidReason } = useMemo(() => {
     return recalculateDiscount(appliedCoupon, subtotal);
   }, [appliedCoupon, subtotal]);
@@ -185,12 +185,10 @@ export default function QuickOrderModal() {
     }
   }, [open, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // 🛡️ সুরক্ষিত ও ফিল্টার্ড কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
     
-    // শুধুমাত্র ২৫ অক্ষরের আলফা-নিউমেরিক টেক্সট গ্রহণ করা
     const clean = (customCode !== undefined ? customCode : couponCode)
       .trim()
       .toUpperCase()
@@ -282,15 +280,12 @@ export default function QuickOrderModal() {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-[975] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
         onClick={() => setOpen(false)}
       />
 
-      {/* Modal / Bottom Sheet */}
       <div className="fixed inset-x-0 bottom-0 z-[980] mx-auto flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:rounded-[28px]">
-        {/* Header */}
         <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
           <HeaderDecor />
           <div className="relative z-10 flex items-center justify-between">
@@ -314,7 +309,6 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Content List */}
         <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
           <AnimatePresence mode="popLayout" initial={false}>
             {cart.map((item, idx) => (
@@ -393,7 +387,6 @@ export default function QuickOrderModal() {
             ))}
           </AnimatePresence>
 
-          {/* কুপন সেকশন */}
           <div className="pt-0.5">
             {appliedCoupon && (
               <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
@@ -444,7 +437,6 @@ export default function QuickOrderModal() {
                       onFocus={() => setIsInputFocused(true)}
                       onBlur={() => setIsInputFocused(false)}
                       onChange={(e) => {
-                        // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং (শুধুমাত্র A-Z, 0-9, -, _)
                         const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, MAX_COUPON_LEN);
                         setCouponCode(clean);
                         if (couponError) setCouponError('');
@@ -475,7 +467,6 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="shrink-0 px-6 pb-6 pt-3">
           <div className="mb-4 flex items-center justify-between px-2">
             <span className="font-body text-[13.5px] font-bold text-muted">
