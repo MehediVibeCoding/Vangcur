@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CurrentUser, Order, OrderStats, DraftOrder, StockNotification, CelestialState } from '@/types';
+import { sanitizePlainName, validateName } from './security';
 import { logWarn } from './logger';
 
 const SCENERY_BY_STATE: Record<string, string> = {
@@ -103,33 +104,24 @@ const SCENERY_BY_STATE: Record<string, string> = {
            <path d="M0,40 Q90,18 180,30 T360,26 Q385,32 400,38 L400,100 L0,100 Z" fill="#1F2937" opacity="0.5" />
            <path d="M0,52 Q100,30 220,42 T400,40 L400,100 L0,100 Z" fill="#18202C" opacity="0.8" />
            
-           <!-- বামের বিস্তারিত ঝড়ো গাছ (বাতাসে নুয়ে পড়া) -->
            <path d="M 52,100 Q 58,58 64,30" stroke="#090E16" stroke-width="4.5" stroke-linecap="round" fill="none" />
            <polygon points="64,30 46,44 76,40" fill="#090E16" />
            <polygon points="61,40 40,56 78,52" fill="#090E16" />
            <polygon points="58,52 34,70 82,66" fill="#090E16" />
            
-           <!-- ডানের বিস্তারিত ঝড়ো গাছ -->
            <path d="M 334,100 Q 328,52 320,26" stroke="#090E16" stroke-width="4.5" stroke-linecap="round" fill="none" />
            <polygon points="320,26 304,38 334,35" fill="#090E16" />
            <polygon points="322,35 298,50 338,47" fill="#090E16" />
            <polygon points="326,47 292,66 344,62" fill="#090E16" />
 
-           <!-- ☔ পাহাড়ি পথে ছাতা মাথায় দিয়ে হেঁটে যাওয়া মানুষের জীবন্ত সিলুয়েট -->
            <g transform="translate(196, 26)">
-             <!-- ছাতা (Umbrella Canopy) -->
              <path d="M 0,22 Q 18,6 36,22 Q 18,18 0,22 Z" fill="#060910" />
-             <!-- ছাতার ডাঁট ও বাঁকা হাতল (Handle) -->
              <path d="M 18,6 L 18,32 Q 18,35 15,35" stroke="#060910" stroke-width="2" fill="none" stroke-linecap="round" />
-             <!-- মানুষের মাথা -->
              <circle cx="16" cy="25" r="3.6" fill="#060910" />
-             <!-- কোট ও শরীর -->
              <path d="M 11,28 L 22,28 L 24,45 L 9,45 Z" fill="#060910" />
-             <!-- পা (হাঁটার ভঙ্গি) -->
              <path d="M 13,45 L 9,58 M 20,45 L 25,56" stroke="#060910" stroke-width="2.6" stroke-linecap="round" />
            </g>
 
-           <!-- সামনের পাহাড়ি ঢাল ও ভেজা মাটি (Fills to bottom seamlessly) -->
            <path d="M0,64 Q110,48 220,66 T400,58 L400,100 L0,100 Z" fill="#0B0F19" />
          </svg>`,
 };
@@ -318,7 +310,6 @@ export function getGreeting(user: CurrentUser | null, now: Date): string {
   const minute = now.getMinutes();
   const timeVal = hour + minute / 60;
 
-  // শুক্রবার স্পেশাল গ্রিটিংস (Friday Special)
   if (day === 5) {
     if (timeVal >= 5 && timeVal < 14) {
       return `Hi ${firstName}, Happy Friday & Jumma Mubarak 🕌`;
@@ -328,7 +319,6 @@ export function getGreeting(user: CurrentUser | null, now: Date): string {
     }
   }
 
-  // সময়ভিত্তিক হিউম্যান-লাইক স্মার্ট স্লটস
   if (timeVal >= 5 && timeVal < 8) {
     return `Hi ${firstName}, Good Morning, Breakfast Time ☕`;
   }
@@ -389,23 +379,33 @@ export function orderStats(orders: Order[]): OrderStats {
   return { total, running, completed };
 }
 
-export async function updateProfileName(supabase: SupabaseClient, currentUser: CurrentUser, newName: string): Promise<void> {
+/**
+ * 🛡️ নিরাপদ প্রোফাইল নাম আপডেট (ডিপ স্যানিটাইজেশন ও লেন্থ লক)
+ */
+export async function updateProfileName(supabase: SupabaseClient, currentUser: CurrentUser, newName: string): Promise<boolean> {
+  const cleanName = sanitizePlainName(newName || '').trim();
+  if (!validateName(cleanName)) {
+    logWarn('[Vangcur] Invalid name rejected in updateProfileName:', newName);
+    return false;
+  }
+
   try {
-    const { error } = await supabase.auth.updateUser({ data: { name: newName } });
+    const { error } = await supabase.auth.updateUser({ data: { name: cleanName } });
     if (error) throw error;
   } catch (e) {
     logWarn('[Vangcur] auth.updateUser:', e);
   }
   try {
-    await supabase.from('profiles').upsert({ id: currentUser.id, name: newName, updated_at: new Date().toISOString() });
+    await supabase.from('profiles').upsert({ id: currentUser.id, name: cleanName, updated_at: new Date().toISOString() });
   } catch {
     // profiles table fallback
   }
   try {
-    await supabase.from('orders').update({ customer_name: newName }).eq('user_id', currentUser.id);
+    await supabase.from('orders').update({ customer_name: cleanName }).eq('user_id', currentUser.id);
   } catch {
     // order rows update fallback
   }
+  return true;
 }
 
 export function getStockNotifications(): StockNotification[] {
@@ -636,4 +636,4 @@ export function saveTierSpinReward(tierKey: string, slice: SpinSlice): TierSpinR
 
 export function hasUserSpunTier(tierKey: string): boolean {
   return getTierSpinReward(tierKey) !== null;
-}
+    }
