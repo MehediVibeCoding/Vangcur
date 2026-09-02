@@ -9,7 +9,6 @@ import {
   PolicyBulletPoint,
   policyPClass,
   policyUlClass,
-  policySubheadingClass,
 } from '../PolicyContent';
 
 function ReturnBoxIcon() {
@@ -164,8 +163,8 @@ export default function RefundPolicyClient() {
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'The invoice paper provided with the parcel or downloaded from your account.'
-              : 'পার্সেলের সাথে দেওয়া ইনভয়েস মেমো বা ওয়েবসাইট থেকে ডাউনলোডকৃত মেমো।'}
+              ? 'Original official invoice paper provided inside the parcel box (digital/downloaded copies are not accepted for physical verification).'
+              : 'পার্সেলের ভেতরে থাকা অফিসিয়াল ইনভয়েস পেপার/মেমো (সংরক্ষিত আসল কপি প্রদর্শন করতে হবে; কোনো ডাউনলোডকৃত ডিজিটাল কপি গ্রহণযোগ্য নয়)।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
