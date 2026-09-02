@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { getWarrantyModalContent } from '@/lib/warrantyData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
+import useHistoryModal from '@/lib/useHistoryModal';
 
 interface WarrantyModalProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ const lineIcon = {
 
 function ShieldSecurityIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <path d="m9 12 2 2 4-4" />
     </svg>
@@ -33,7 +34,7 @@ function ShieldSecurityIcon({ className = '' }: { className?: string }) {
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]" aria-hidden="true">
       <svg {...deco} width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
@@ -54,11 +55,31 @@ function ArrowLinkIcon() {
   );
 }
 
+function WarningShieldIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-amber-700">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
+function WorkflowIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
+      <circle cx="18" cy="18" r="3" />
+      <circle cx="6" cy="6" r="3" />
+      <path d="M13 6h3a2 2 0 0 1 2 2v7" />
+      <line x1="6" y1="9" x2="6" y2="21" />
+    </svg>
+  );
+}
+
 export default function WarrantyModal({ isOpen, onClose, warrantyText }: WarrantyModalProps) {
   const { t, lang } = useT();
   const rawContent = useMemo(() => getWarrantyModalContent(warrantyText), [warrantyText]);
 
-  // বাংলা সংখ্যা স্পষ্ট ও পাঠযোগ্য রাখার ক্লিন ফরম্যাটিং
   const content = useMemo(() => {
     let title = t(rawContent.title);
     let body = t(rawContent.body);
@@ -81,6 +102,8 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
     return { title, body };
   }, [rawContent, t, lang]);
 
+  useHistoryModal(isOpen, onClose, 'warranty-modal');
+
   useEffect(() => {
     if (isOpen) lockBody();
     else unlockBody();
@@ -96,129 +119,146 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
     return () => document.removeEventListener('keydown', onKeydown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <>
-      {/* ব্যাকড্রপ ব্লার */}
-      <div
-        className="fixed inset-0 z-[1200] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 bg-ink/55 backdrop-blur-[3px]"
+            onClick={onClose}
+          />
 
-      {/* সেন্ট্রালাইজড ভাসমান উইন্ডো — সিগনেচার ট্রাই-কালার ক্যানভাস */}
-      <div className="fixed inset-0 z-[1205] flex items-center justify-center p-4">
-        <div className="relative flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
-          
-          {/* হেডার — লাইন-আর্ট ওয়াটারমার্ক ও ফ্রস্টেড ক্লোজ বাটন */}
-          <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
-            <HeaderDecor />
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
-                  <ShieldSecurityIcon />
-                </span>
-                <div>
-                  <h3 className="font-body text-[17px] font-extrabold text-ink">
-                    {lang === 'en' ? 'Warranty Information' : 'ওয়ারেন্টি তথ্য'}
-                  </h3>
-                  <p className="font-body text-[12px] font-bold text-brand-light">
-                    {warrantyText || (lang === 'en' ? 'Official Brand Coverage' : 'অফিসিয়াল পলিসি কভারেজ')}
-                  </p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 flex max-h-[92vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
+          >
+            <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
+              <HeaderDecor />
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+                    <ShieldSecurityIcon />
+                  </span>
+                  <div>
+                    <h3 className="font-body text-[17px] font-extrabold text-ink leading-tight">
+                      {lang === 'en' ? 'Official Warranty Coverage' : 'অফিসিয়াল ওয়ারেন্টি নীতিমালা'}
+                    </h3>
+                    <p className="font-body text-[12px] font-bold text-brand-light">
+                      {warrantyText || (lang === 'en' ? 'Brand Replacement Guarantee' : 'ব্র্যান্ড রিপ্লেসমেন্ট গ্যারান্টি')}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
-                aria-label={t('বন্ধ করুন')}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          {/* কন্টেন্ট বডি */}
-          <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 pb-5 pt-5">
-            {/* পলিসি টাইটেল ও বর্ণনা */}
-            <div className="mb-4">
-              <h4 className="font-body text-[15.5px] font-bold text-ink leading-snug">
-                {content.title}
-              </h4>
-              <p className="mt-1.5 font-body text-[12.5px] leading-relaxed text-muted">
-                {content.body}
-              </p>
-            </div>
-
-            {/* শর্তাবলির তালিকা — কনসেন্ট্রিক বর্ডার রেডিয়াস অপটিমাইজড (rounded-[10px]) */}
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 rounded-[10px] border border-white/80 bg-white/70 p-3 shadow-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
-                  1
-                </span>
-                <p className="font-body text-[12.5px] leading-[1.65] text-ink/85">
-                  {lang === 'en'
-                    ? 'A continuous, uncut unboxing video recorded from the parcel opening is mandatory for any warranty or replacement claim.'
-                    : 'কুরিয়ার থেকে পার্সেল বুঝে নেওয়ার সময় প্যাকেটের বাইরে থেকে শুরু করে একটানা আন-কাট আনবক্সিং ভিডিও প্রমাণ হিসেবে সংরক্ষণ করতে হবে।'}
-                </p>
-              </div>
-
-              <div className="flex items-start gap-3 rounded-[10px] border border-white/80 bg-white/70 p-3 shadow-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
-                  2
-                </span>
-                <p className="font-body text-[12.5px] leading-[1.65] text-ink/85">
-                  {lang === 'en'
-                    ? 'The original product box, accessories, and invoice paper must be kept intact and returned during the claim process.'
-                    : 'ক্লেইম করার সময় প্রোডাক্টের অরিজিনাল বক্স, ইনভয়েস পেপার এবং সাথে থাকা সকল এক্সেসরিজ অক্ষত অবস্থায় ফেরত দিতে হবে।'}
-                </p>
-              </div>
-
-              <div className="flex items-start gap-3 rounded-[10px] border border-white/80 bg-white/70 p-3 shadow-xs">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-xs text-white shadow-xs">
-                  3
-                </span>
-                <p className="font-body text-[12.5px] leading-[1.65] text-ink/85">
-                  {lang === 'en'
-                    ? 'Free replacement is provided for manufacturing defects or internal technical issues. However, physical damage, accidental drops, intentional breakage, burning, or water damage are strictly excluded from warranty coverage.'
-                    : 'ম্যানুফ্যাকচারিং ত্রুটি বা অভ্যন্তরীণ টেকনিক্যাল সমস্যার ক্ষেত্রে সম্পূর্ণ ফ্রিতে রিপ্লেসমেন্ট প্রদান করা হবে। তবে ইচ্ছাকৃতভাবে ভেঙে ফেলা, হাত থেকে পড়ে যাওয়া, পুড়ে যাওয়া কিংবা ওয়াটার ড্যামেজের ক্ষেত্রে কোনো ওয়ারেন্টি প্রযোজ্য হবে না।'}
-                </p>
-              </div>
-            </div>
-
-            {/* পলিসি রেফারেন্স কলআউট বক্স — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[12px]) */}
-            <div className="mt-4 rounded-[12px] border border-brand-light/35 bg-white/80 p-3.5 shadow-xs backdrop-blur-md">
-              <div className="flex items-center justify-between gap-2">
-                <div className="font-body text-[12px] text-ink/80 leading-relaxed">
-                  {lang === 'en'
-                    ? 'Want to know more details about our warranty terms?'
-                    : 'ওয়ারেন্টির বিস্তারিত নীতিমালা ও শর্তাবলী জানতে চান?'}
-                </div>
-                <Link
-                  href="/terms"
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
                   onClick={onClose}
-                  className="inline-flex shrink-0 items-center gap-1 font-body text-[12px] font-extrabold text-brand-primary transition-colors hover:text-brand-light-hover hover:underline"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
+                  aria-label={t('বন্ধ করুন')}
                 >
-                  <span>{lang === 'en' ? 'Terms & Policy' : 'শর্তাবলী দেখুন'}</span>
-                  <ArrowLinkIcon />
-                </Link>
+                  ✕
+                </motion.button>
               </div>
             </div>
-          </div>
 
-          {/* ফুটার — স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন বাটন */}
-          <div className="shrink-0 px-6 pb-6 pt-2">
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-              onClick={onClose}
-              className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] focus-visible:outline-none"
-            >
-              {lang === 'en' ? 'Got It' : 'বুঝেছি'}
-            </motion.button>
-          </div>
+            <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 pb-4 pt-4 space-y-3.5">
+              <div className="rounded-[16px] border border-white/90 bg-white/85 p-4 shadow-xs backdrop-blur-md">
+                <h4 className="font-body text-[15px] font-bold text-ink leading-snug">
+                  {content.title}
+                </h4>
+                <p className="mt-1.5 font-body text-[12.5px] leading-relaxed text-ink/80">
+                  {content.body}
+                </p>
+              </div>
 
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-3 rounded-[14px] border border-white/80 bg-white/75 p-3 shadow-xs">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-[11px] text-white shadow-2xs">
+                    1
+                  </span>
+                  <div className="font-body text-[12.5px] leading-[1.65] text-ink/85">
+                    <strong>{lang === 'en' ? 'Unboxing Video Proof: ' : 'আনবক্সিং ভিডিও প্রমাণ: '}</strong>
+                    {lang === 'en'
+                      ? 'A continuous, uncut unboxing video recorded from the sealed parcel opening is mandatory for any warranty or replacement claim.'
+                      : 'কুরিয়ার থেকে পার্সেল বুঝে নেওয়ার সময় প্যাকেটের বাইরে থেকে শুরু করে একটানা আন-কাট আনবক্সিং ভিডিও প্রমাণ হিসেবে সংরক্ষণ করতে হবে।'}
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-[14px] border border-white/80 bg-white/75 p-3 shadow-xs">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-[11px] text-white shadow-2xs">
+                    2
+                  </span>
+                  <div className="font-body text-[12.5px] leading-[1.65] text-ink/85">
+                    <strong>{lang === 'en' ? 'Packaging & Invoice: ' : 'বক্স ও ইনভয়েস পেপার: '}</strong>
+                    {lang === 'en'
+                      ? 'The original product box, accessories, and invoice paper must be kept intact and returned during the claim process.'
+                      : 'ক্লেইম করার সময় প্রোডাক্টের অরিজিনাল বক্স, ইনভয়েস পেপার এবং সাথে থাকা সকল এক্সেসরিজ অক্ষত অবস্থায় ফেরত দিতে হবে।'}
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-[14px] border border-white/80 bg-white/75 p-3 shadow-xs">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-light font-body font-bold text-[11px] text-white shadow-2xs">
+                    3
+                  </span>
+                  <div className="font-body text-[12.5px] leading-[1.65] text-ink/85">
+                    <strong>{lang === 'en' ? 'Free Replacement: ' : '১০০% ফ্রি রিপ্লেসমেন্ট: '}</strong>
+                    {lang === 'en'
+                      ? 'Free replacement is provided for manufacturing defects or internal technical issues with zero additional logistics fees.'
+                      : 'ম্যানুফ্যাকচারিং ত্রুটি বা অভ্যন্তরীণ টেকনিক্যাল সমস্যার ক্ষেত্রে সম্পূর্ণ ফ্রিতে নতুন প্রোডাক্ট রিপ্লেসমেন্ট প্রদান করা হবে।'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-[14px] border border-amber-300/80 bg-amber-50/90 p-3 shadow-xs text-left">
+                <WarningShieldIcon />
+                <div className="font-body text-[11.5px] leading-[1.65] text-amber-950">
+                  <strong>{lang === 'en' ? 'Exclusions: ' : 'ওয়ারেন্টি বহির্ভূত: '}</strong>
+                  {lang === 'en'
+                    ? 'Physical breakage, accidental drops, burn marks, liquid/water damage, or unauthorized repairs are strictly excluded from warranty coverage.'
+                    : 'হাত থেকে পড়ে ভাঙা, পোড়া দাগ, ওয়াটার ড্যামেজ, উচ্চ ভোল্টেজের শর্টসার্কিট কিংবা অনুমতি ছাড়া সার্ভিসিং করা পণ্যে ওয়ারেন্টি প্রযোজ্য নয়।'}
+                </div>
+              </div>
+
+              <div className="rounded-[14px] border border-brand-light/35 bg-white/85 p-3 shadow-xs backdrop-blur-md">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 font-body text-[12px] text-ink/80">
+                    <WorkflowIcon />
+                    <span>
+                      {lang === 'en'
+                        ? 'Want to read full warranty terms?'
+                        : 'ওয়ারেন্টির বিস্তারিত আইনি নীতিমালা দেখতে চান?'}
+                    </span>
+                  </div>
+                  <Link
+                    href="/terms"
+                    onClick={onClose}
+                    className="inline-flex shrink-0 items-center gap-1 font-body text-[12px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover hover:underline"
+                  >
+                    <span>{lang === 'en' ? 'Terms & Policy' : 'শর্তাবলী দেখুন'}</span>
+                    <ArrowLinkIcon />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="shrink-0 px-6 pb-6 pt-2">
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                onClick={onClose}
+                className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] focus-visible:outline-none"
+              >
+                {lang === 'en' ? 'Got It' : 'বুঝেছি'}
+              </motion.button>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </>
+      )}
+    </AnimatePresence>
   );
 }
