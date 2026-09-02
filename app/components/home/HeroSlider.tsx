@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
-import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
@@ -376,12 +375,15 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const bg = card.bg || 'linear-gradient(155deg,#111,#222)';
             const catId = card.catId || 'all';
             const label = card.label || '';
-            // আগে শুধু প্রথম ২টা কার্ড eager ছিল — মোবাইলে (২টা কার্ড/পেজ) ঠিক
-            // ছিল, কিন্তু ডেস্কটপে (৬টা কার্ড/পেজ, getDuoPerPage()) ৩-৬ নম্বর
-            // কার্ড lazy-load থেকে যেত, ফলে সেগুলো দেরিতে পপ করত। এখন প্রথম
-            // ৬টাই (দুই ডিভাইসেই যথেষ্ট) eager — ছবিগুলো আগে থেকেই ছোট সাইজে
-            // (360px) optimize করা বলে বাড়তি খরচ নগণ্য।
-            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 6;
+            // ⚠️ এটা আগে একবার ৬-এ বাড়ানো হয়েছিল (ডেস্কটপের ৬-কার্ড পেজ কভার
+            // করতে), কিন্তু তাতে মোবাইলে (যেখানে একসাথে মাত্র ২টা কার্ড দেখা
+            // যায়) ৬টা ছবি একসাথে high-priority fetch+decode হতে গিয়ে মেইন
+            // থ্রেডে বাড়তি চাপ তৈরি করছিল — ঠিক entrance animation চলার সময়েই,
+            // যেটা সেই "মাঝখানে থেমে যাওয়া" freeze-এ অবদান রাখছিল। নিচের
+            // preload useEffect (getDuoPerPage()-ভিত্তিক) already ডেস্কটপের
+            // ৬টা ছবি আগেভাগে <link rel=preload> দিয়ে ক্যাশে নিয়ে আসে, তাই
+            // এখানে <img> ট্যাগের eager/fetchPriority প্রথম ২টাতেই যথেষ্ট।
+            const isEager = i >= DUO_TOTAL && i < DUO_TOTAL + 2;
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
             // ⚠️ আগে এখানে শুধু মাঝের কপিকে (i >= DUO_TOTAL) "initial visible"
@@ -420,12 +422,32 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                 key={`${catId}-${i}`}
                 className="aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
               >
-                <motion.div
-                  initial={isInitialVisible ? { opacity: 0, y: 24 } : false}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
-                  className="group relative flex h-full w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98]"
-                  style={{ background: bg }}
+                {/*
+                  ⚠️ আগে এখানে Framer Motion (`motion.div`, JS/requestAnimationFrame
+                  দিয়ে প্রতি ফ্রেমে opacity+translateY ক্যালকুলেট করত) ব্যবহার হতো।
+                  সমস্যা: ঠিক mount-এর সময়েই আরও কয়েকটা জিনিস মেইন থ্রেড দখল
+                  করছিল — navbar-এর কাস্টম ফন্ট সোয়াপ, একসাথে একাধিক হিরো ইমেজ
+                  ডিকোড হওয়া, আর প্রতিটা ছবি লোড হলে HeroCardImage-এর নিজের
+                  React state আপডেট (রি-রেন্ডার)। মেইন থ্রেড ব্যস্ত থাকা অবস্থায়
+                  JS-চালিত অ্যানিমেশনের ফ্রেম আপডেট হওয়ার সময় পেত না, ফলে কার্ড
+                  (আর তার ভেতরের লেবেল টেক্সট, যেটা একই এলিমেন্টের সন্তান) মাঝ
+                  পথে "জমে/থেমে" যেত, থ্রেড ফ্রি হলে আবার নড়া শুরু করত।
+
+                  ফিক্স: প্লেইন CSS `@keyframes` animation (নিচে <style> ট্যাগে
+                  সংজ্ঞায়িত, দেখো heroCardIn) — transform আর opacity-র CSS
+                  animation ব্রাউজারের compositor থ্রেডে চলে, মেইন থ্রেড যতই
+                  ব্যস্ত থাকুক না কেন থামে/জমে না। স্ট্যাগার ডিলে এখন
+                  animation-delay ইনলাইন স্টাইল দিয়ে করা হচ্ছে (আগে framer-motion-
+                  এর delay prop দিয়ে হতো)।
+                */}
+                <div
+                  className={`group relative flex h-full w-full cursor-pointer flex-col justify-end overflow-hidden rounded-[14px] bg-[#111] shadow-[0_4px_16px_rgba(0,0,0,.08)] transition-transform duration-300 ease-brand [-webkit-tap-highlight-color:transparent] hover:-translate-y-0.5 hover:scale-[1.006] active:scale-[.98] ${
+                    isInitialVisible ? 'animate-hero-card-in' : ''
+                  }`}
+                  style={{
+                    background: bg,
+                    animationDelay: isInitialVisible ? `${staggerDelay}s` : undefined,
+                  }}
                   onClick={() => goCategory(catId)}
                 >
                   {card.img ? (
@@ -458,12 +480,29 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                       {label} <span className="text-[12px] transition-transform duration-200 group-hover:translate-x-0.5">→</span>
                     </span>
                   </div>
-                </motion.div>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      {/*
+        heroCardIn কীফ্রেমটা এখানে একবারই রেন্ডার হচ্ছে (প্রতিটা কার্ডে না)।
+        `both` fill-mode ব্যবহার করা হয়েছে যাতে animation-delay চলাকালীন
+        কার্ড শুরুর (opacity:0) অবস্থায় থাকে, আর শেষ হওয়ার পরেও চূড়ান্ত
+        (opacity:1) অবস্থাতেই আটকে থাকে — কোনো ফ্ল্যাশ ছাড়াই।
+      */}
+      <style>{`
+        @keyframes heroCardIn {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-hero-card-in {
+          animation: heroCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          will-change: opacity, transform;
+        }
+      `}</style>
 
       <button
         className="absolute left-1 top-[calc(50%-7px)] z-20 hidden h-[38px] w-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-white/[.94] text-[22px] font-bold leading-none text-ink shadow-[0_4px_16px_rgba(0,0,0,.22)] transition-all duration-200 ease-out hover:scale-110 hover:bg-white hover:shadow-[0_6px_22px_rgba(0,0,0,.28)] md:flex"
