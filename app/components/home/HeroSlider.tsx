@@ -33,23 +33,39 @@ function HeroCardImage({
   src,
   alt,
   eager,
+  instant,
 }: {
   src: string;
   alt: string;
   eager: boolean;
+  instant: boolean;
 }) {
-  // 🌟 বাগ-১ সহায়ক ফিক্স (Image Pop / Secondary Drop):
-  // ছবি ডাউনলোড/ডিকোড শেষ না হওয়া পর্যন্ত opacity-0 রাখা হয়, লোড হওয়ার
-  // সাথে সাথে soft fade-in হয়। ফলে কার্ডের এন্ট্রি-অ্যানিমেশন শেষ হওয়ার
-  // *পরে* ছবি আলাদাভাবে হঠাৎ "পপ" করে ওঠার সমস্যা আর থাকে না — দুটো
-  // মোশন একসাথে একটাই মসৃণ অনুভূতি দেয়।
+  // 🌟 বাগ-১ আসল রুট কজ ফিক্স (Image Pop / Secondary Drop):
+  // আগের ভার্সনে সব কার্ডেই `loaded` স্টেট দিয়ে ছবির নিজস্ব আলাদা
+  // opacity fade (300ms) চালানো হতো — এটাই আসল "দ্বিতীয় অ্যানিমেশন"।
+  // কন্টেইনারের keyframe (0-.15s স্ট্যাগার সহ) ঠিকই সময়মতো/একসাথে চলতো,
+  // কিন্তু কার্ড ১-২ এর ছবি দ্রুত ডিকোড হয়ে সাথে সাথেই দেখা যেত, আর
+  // কার্ড ৩-৬ এর (ভারী/নতুন নেটওয়ার্ক ফেচ) ছবি দেরিতে ডিকোড হয়ে
+  // কন্টেইনার-অ্যানিমেশন শেষ হওয়ার অনেক পরে নিজে থেকে আলাদাভাবে "পপ"
+  // করে ভেসে উঠতো — এটাই ইউজার যেটাকে "ঝাঁকুনি/দেরি" হিসেবে দেখছিলেন,
+  // ডেটা ফাইলের সমস্যা না, এই কম্পোনেন্টেরই একটা লুকানো race condition।
+  //
+  // ফিক্স: প্রাথমিকভাবে দৃশ্যমান কার্ডগুলোর (i < 6, instant=true) ছবিতে
+  // কোনো নিজস্ব opacity fade রাখা হচ্ছে না — সবসময় opacity-100। ছবি
+  // ডাউনলোড শেষ হওয়ার আগ পর্যন্ত কার্ডের সলিড ব্যাকগ্রাউন্ড (bg gradient)
+  // দেখা যায়, আর ছবি রেডি হওয়ামাত্র কোনো পৃথক ফেড-ট্রানজিশন ছাড়াই
+  // ব্রাউজারের নিজস্ব পেইন্টে যোগ হয়ে যায় — ফলে প্রতিটি কার্ডে একটাই
+  // মোশন-ইভেন্ট থাকে (কন্টেইনারের মাইক্রো-স্ট্যাগার), কোনো দ্বিতীয়
+  // "লেট পপ" থাকে না। পরে সোয়াইপ/স্ক্রলে দেখা যাওয়া lazy কার্ডগুলোর
+  // জন্য (instant=false) আগের নরম fade বজায় রাখা হয়েছে, কারণ সেটা
+  // এন্ট্রি-অ্যানিমেশনের সাথে কোনো সংঘর্ষ করে না।
   const [loaded, setLoaded] = useState(false);
+  const opacityClass = instant ? 'opacity-100' : loaded ? 'opacity-100' : 'opacity-0';
+  const transitionClass = instant ? 'transition-transform' : 'transition-[opacity,transform]';
 
   return (
     <img
-      className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top transition-[opacity,transform] duration-300 ease-brand group-hover:scale-[1.05] ${
-        loaded ? 'opacity-100' : 'opacity-0'
-      }`}
+      className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top ${transitionClass} duration-300 ease-brand group-hover:scale-[1.05] ${opacityClass}`}
       src={src}
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
@@ -121,21 +137,38 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       return;
     }
 
-    // 🌟 বাগ-২ ফিক্স (Yo-Yo Rewind Glitch — রুট কজ):
-    // "transition: none" আর নতুন "transform" কখনোই একই টিকে (tick) সেট
-    // করা যাবে না — নাহলে ব্রাউজারের ট্রানজিশন ইঞ্জিন "none" অবস্থাটা
-    // কমিট হওয়ার আগেই পুরনো .48s ট্রানজিশন দিয়ে অফসেট-পরিবর্তনটাকেও
-    // অ্যানিমেট করে ফেলে (দৃশ্যমান পেছন দিকে দোদুল্যমান/রিওয়াইন্ড গ্লিচ)।
-    // তাই তিন ধাপে স্পষ্টভাবে ভাঙা হলো, প্রতি ধাপের মাঝে জোরপূর্বক রিফ্লো:
-    //   ধাপ ১: transition বন্ধ করা
-    //   ধাপ ২: void offsetHeight — "no-transition" অবস্থাটা ব্রাউজারে
-    //           তাৎক্ষণিকভাবে কমিট/পেইন্ট করানো
-    //   ধাপ ৩: এরপরই transform বদলানো — ফলে ০ms-এ অদৃশ্য ইনস্ট্যান্ট জাম্প
-    //   ধাপ ৪: আরেকবার রিফ্লো ফোর্স — Safari/Chrome উভয়ের জন্য চূড়ান্ত নিশ্চয়তা
+    // 🌟 বাগ-২ ফিক্স (Yo-Yo Rewind Glitch) — কেন ডাবল requestAnimationFrame
+    // ব্যবহার করা হয়নি সেটা গুরুত্বপূর্ণ: `duoStep`-এর ব্যাকওয়ার্ড-বাউন্ডারি
+    // কেসে ঠিক এই instant reset-টার পরপরই সিঙ্ক্রোনাসভাবে আরেকটা animate
+    // ধাপ (setPosition(true)) চেইন করা হয় (নিচে দেখুন)। rAF দিয়ে transform
+    // সেটিং-টা ডিফার করলে সেই পরের animate-কলটা আগে চলে এসে transition
+    // সেট করে ফেলবে, আর তারপর ২ ফ্রেম পরে এই ডিফার-করা instant-jump এসে
+    // সেই এনিমেশনটাকেই ওভাররাইট করে আবার ভুল পজিশনে স্ন্যাপ করবে — অর্থাৎ
+    // rAF-ভিত্তিক সমাধান এখানে উল্টো নতুন একটা রেস-কন্ডিশন তৈরি করত।
+    // তাই বরং সিঙ্ক্রোনাস reflow-প্যাটার্নটাই রাখা হলো (এটা স্পেক-অনুযায়ী
+    // সঠিক — `offsetHeight`/`getBoundingClientRect` পড়া মানেই ব্রাউজারকে
+    // বাধ্য করা style+layout সিঙ্ক্রোনাসভাবে ফ্লাশ করতে), শুধু দুইটা
+    // *ভিন্ন* লেআউট-API দিয়ে রিফ্লো ফোর্স করে রিডানডেন্সি বাড়ানো হলো
+    // (offsetHeight রিড ব্রাউজারের Layout সাব-সিস্টেম টাচ করে, আর
+    // getBoundingClientRect() অতিরিক্তভাবে Paint/Style সাব-সিস্টেমও টাচ
+    // করে) — যাতে ইঞ্জিন-ভেদে (Chrome/Safari/Firefox) কোনো এজ-কেসেই
+    // "none" স্টেটটা transform-লেখার আগে কমিট না হয়ে যাওয়ার সুযোগ না থাকে।
+    //
+    // এই বাউন্ডারি-রিসেট গণিত (২৪ ➔ ১২ সুইচ, DUO_TOTAL=12 হওয়ায়
+    // perPage=6-এর ক্লিন গুণিতক) নিজেই সঠিক ছিল — heroSliderData.ts
+    // ফাইলটাও এখানে দোষী না (DUO_TOTAL=12 আর padCards() সবসময় ঠিক ১২টা
+    // কার্ড গ্যারান্টি করে, অ্যাডমিন যত কার্ডই সেভ করুক)। বাস্তবে
+    // রিওয়াইন্ডটা দেখা যাওয়ার আসল কারণ ছিল Bug-1: প্রতিটা ছবি লোড হওয়ার
+    // সাথে সাথে HeroCardImage-এর নিজস্ব `loaded` স্টেট আপডেট হয়ে ৬টা
+    // আলাদা React রি-রেন্ডার ট্রিগার করত — ঠিক অটোপ্লে-র বাউন্ডারি-রিসেট
+    // মুহূর্তেই এই বার্স্ট প্রায়ই ঘটতো, মেইন থ্রেডে ভিড় লাগিয়ে সিঙ্ক্রোনাস
+    // reflow-এর টাইমিংকে অবিশ্বস্ত করে তুলতো। উপরে Bug-1 ফিক্স করায়
+    // (initial কার্ডে আর কোনো `loaded`-চালিত রি-রেন্ডার/ফেড হয় না) এই
+    // মেইন-থ্রেড কনজেশনটাই দূর হয়ে গেছে — তাই দুটো বাগ আসলে সম্পর্কিত ছিল।
     track.style.transition = 'none';
     void track.offsetHeight;
     track.style.transform = `translateX(-${offset}px)`;
-    void track.offsetHeight;
+    void track.getBoundingClientRect();
   }, []);
 
   const duoStep = useCallback((dir: number) => {
@@ -430,6 +463,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                       src={optimizeCloudinaryUrl(card.img, 360)}
                       alt={label}
                       eager={isEager}
+                      instant={isInitialCard}
                     />
                   ) : isSvgEmoji ? (
                     <div
