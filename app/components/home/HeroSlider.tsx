@@ -277,6 +277,18 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     };
 
     const onTransitionEnd = () => {
+      // ⚠️ আগে DUO_TOTAL ছিল ১৩ (বেজোড়) — duoStep() প্রতিবার
+      // getDuoPerPage() (মোবাইলে ২, ডেস্কটপে ৬) যোগ/বিয়োগ করত বলে
+      // duoIdxRef.current কখনো ঠিক DUO_TOTAL বা DUO_TOTAL*2 বাউন্ডারিতে
+      // ল্যান্ড করত না (যেমন ১৩+২+২+২... কখনো ঠিক ২৬-এ পড়ে না)। ফলে এই
+      // শর্তগুলো মিস অথবা ভুল সময়ে ট্রু হতো — মোবাইলে শেষ কার্ডে "বাড়ি
+      // খেয়ে" প্রথম কার্ডে হঠাৎ দেখানো, আর ডেস্কটপে উল্টো দিকে পুরো
+      // পিছিয়ে গিয়ে আবার শুরু থেকে animate করা।
+      //
+      // ফিক্স: DUO_TOTAL এখন ১২ — যেটা ২ ও ৬ দুটোরই গুণিতক, তাই
+      // duoIdxRef.current সবসময় ঠিক বাউন্ডারিতে ল্যান্ড করে এবং এই
+      // wrap-back নিঃশব্দে, নির্ভুল সময়ে ট্রিগার হয় — মোবাইল ও ডেস্কটপ
+      // উভয় ক্ষেত্রেই সিমলেস ইনফিনিট লুপ।
       if (infiniteJumpRef.current) return;
       if (duoIdxRef.current >= DUO_TOTAL * 2) {
         infiniteJumpRef.current = true;
@@ -439,7 +451,22 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             // অ্যানিমেট হতো, যেটা mount-এর সময় main thread ব্লক করে দিত এবং
             // এন্ট্রি অ্যানিমেশনটাকে "আটকে আটকে" দেখাত।
             const isVisibleCopy = i >= cards.length && i < cards.length * 2;
-            const isInitialVisible = isVisibleCopy && relativePos < Math.min(6, cards.length);
+            // ⚠️ আগে এখানে হার্ডকোড "6" ছিল — মানে ডেস্কটপ পেজের সাইজ ধরে
+            // প্রথম ৬টা কার্ডকেই "initial visible" (entrance animation
+            // প্রাপ্য) ধরা হতো, ডিভাইস যাই হোক না কেন। মোবাইলে per-page
+            // মাত্র ২, তাই ৩য়-৬ষ্ঠ কার্ড প্রাথমিক ভিউপোর্টে না দেখা গেলেও
+            // isInitialVisible=true পেয়ে যেত, ফলে entrance animation-এর
+            // জন্য তাদের background/badge শুরুতে opacity:0-এ বেকড থাকত।
+            // স্ক্রল করে ওগুলো ভিউপোর্টে আনার সাথে সাথে সেই বিলম্বিত/আটকে
+            // থাকা animation হঠাৎ চোখে পড়ত (কালো ওভারলে/badge "চলে যায়,
+            // আবার আসে" গ্লিচ) — normal static card না দেখিয়ে।
+            //
+            // ফিক্স: getDuoPerPage() ব্যবহার — মোবাইলে ঠিক প্রথম ২টা,
+            // ডেস্কটপে ঠিক প্রথম ৬টা কার্ডই entrance animation পায়;
+            // বাকিগুলো সবসময় স্ট্যাটিক (opacity:1) থাকে, স্ক্রল করলে
+            // normal ভাবেই দেখা যায়, কোনো animation পপ করে না।
+            const perPageForAnim = getDuoPerPage();
+            const isInitialVisible = isVisibleCopy && relativePos < Math.min(perPageForAnim, cards.length);
             const staggerDelay = isInitialVisible ? relativePos * 0.08 : 0;
 
             return (
