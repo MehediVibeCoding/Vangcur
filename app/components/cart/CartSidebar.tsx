@@ -22,6 +22,7 @@ import {
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
 } from '@/lib/couponData';
+import useHistoryModal from '@/lib/useHistoryModal';
 import type { Product } from '@/types';
 
 const MAX_COUPON_LEN = 25;
@@ -132,14 +133,14 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const cart = useCartStore((s) => s.cart);
   const prodsRef = useRef<Product[]>([]);
 
-  // কুপন স্টেট
+  useHistoryModal(isOpen, onClose, 'cart-drawer');
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [couponError, setCouponError] = useState('');
 
-  // চেকআউট বাটন লোডিং ও সাকসেস ট্রানজিশন স্টেট
   const [checkoutStatus, setCheckoutStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
   useEffect(() => {
@@ -203,12 +204,10 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const subtotal = cartTotal(cart);
   const totalCount = cartCount(cart);
 
-  // কুপন ডিসকাউন্ট রিক্যালকুলেশন
   const { discountAmount, isValid: isCouponStillValid, reason: couponInvalidReason } = useMemo(() => {
     return recalculateDiscount(appliedCoupon, subtotal);
   }, [appliedCoupon, subtotal]);
 
-  // 🛡️ শুধুমাত্র ড্রয়ার ওপেন থাকলেই কুপন রিমুভ চেক চলবে
   useEffect(() => {
     if (!isOpen) return;
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
@@ -219,12 +218,10 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     }
   }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
-  // 🛡️ সুরক্ষিত ও ফিল্টার্ড কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
     
-    // শুধুমাত্র ২৫ অক্ষরের আলফা-নিউমেরিক টেক্সট গ্রহণ করা
     const clean = (customCode !== undefined ? customCode : couponCode)
       .trim()
       .toUpperCase()
@@ -270,7 +267,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
-  // 🌟 ১-সেকেন্ডের অ্যানিমেশন সিকোয়েন্স সহ চেকআউট ট্রানজিশন হ্যান্ডলার
   const handleCheckout = async () => {
     if (!cart.length || checkoutStatus !== 'idle') {
       if (!cart.length) showToast(t('কার্ট খালি!'));
@@ -279,7 +275,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
     let currentDiscount = discountAmount;
 
-    // ১. যদি কুপন কোড বক্সে লেখা থাকে কিন্তু প্রয়োগে ক্লিক করা না হয়ে থাকে
     if (couponCode.trim() && !appliedCoupon) {
       setCheckoutStatus('verifying');
       const success = await handleApplyCoupon(undefined, couponCode);
@@ -300,7 +295,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
     const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
 
-    // ২. ২০,০০০ টাকার বেশি বিল হলে বাল্ক অর্ডার মডাল ওপেন
     if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
       setCheckoutStatus('idle');
       onClose();
@@ -326,7 +320,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[960] bg-ink/55 backdrop-blur-[3px] transition-opacity duration-brand ${
           isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
@@ -334,13 +327,11 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         onClick={onClose}
       />
 
-      {/* Main Cart Drawer */}
       <div
         className={`fixed inset-0 z-[965] flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 transition-transform duration-brand sm:inset-y-0 sm:left-auto sm:right-0 sm:my-3 sm:mr-3 sm:h-[calc(100%-24px)] sm:max-w-[440px] sm:rounded-[28px] ${
           isOpen ? 'translate-x-0' : 'translate-x-full sm:translate-x-[calc(100%+2rem)]'
         }`}
       >
-        {/* Header */}
         <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
           <HeaderDecor />
           <div className="relative z-10 flex items-center justify-between">
@@ -364,7 +355,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           </div>
         </div>
 
-        {/* Body / Scrollable Cart Items */}
         <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-3.5">
           {cart.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center py-10">
@@ -460,7 +450,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                   </motion.div>
                 ))}
 
-              {/* কুপন সেকশন */}
               <div className="pt-0.5">
                 {appliedCoupon && (
                   <div className="mb-2.5 flex items-center justify-between font-body text-[13px] font-bold text-muted px-0.5">
@@ -511,7 +500,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                           onFocus={() => setIsInputFocused(true)}
                           onBlur={() => setIsInputFocused(false)}
                           onChange={(e) => {
-                            // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং (শুধুমাত্র A-Z, 0-9, -, _)
                             const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, MAX_COUPON_LEN);
                             setCouponCode(clean);
                             if (couponError) setCouponError('');
@@ -545,7 +533,6 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           )}
         </div>
 
-        {/* Footer */}
         {cart.length > 0 && (
           <div className="shrink-0 px-6 pb-6 pt-3">
             <div className="mb-4 flex items-center justify-between px-2">
