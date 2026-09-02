@@ -175,8 +175,8 @@ function ThemedSocialBadge({ children }: { children: React.ReactNode }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 22,
-        height: 22,
+        width: 20,
+        height: 20,
         borderRadius: '50%',
         background: '#44A7FC',
         flexShrink: 0,
@@ -191,7 +191,7 @@ function ThemedSocialBadge({ children }: { children: React.ReactNode }) {
 function IconFacebookThemed() {
   return (
     <ThemedSocialBadge>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFFFFF">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="#FFFFFF">
         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
       </svg>
     </ThemedSocialBadge>
@@ -201,7 +201,7 @@ function IconFacebookThemed() {
 function IconYoutubeThemed() {
   return (
     <ThemedSocialBadge>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFFFFF">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="#FFFFFF">
         <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
       </svg>
     </ThemedSocialBadge>
@@ -211,7 +211,7 @@ function IconYoutubeThemed() {
 function IconTiktokThemed() {
   return (
     <ThemedSocialBadge>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="#FFFFFF">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="#FFFFFF">
         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
       </svg>
     </ThemedSocialBadge>
@@ -221,7 +221,7 @@ function IconTiktokThemed() {
 function IconInstagramThemed() {
   return (
     <ThemedSocialBadge>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFFFFF">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="#FFFFFF">
         <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
       </svg>
     </ThemedSocialBadge>
@@ -332,14 +332,30 @@ export default function InvoiceClient() {
         await document.fonts.ready;
       }
 
+      const images = Array.from(captureRef.current.querySelectorAll('img'));
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise((resolve) => {
+              if (img.complete) resolve(true);
+              else {
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(true);
+              }
+            })
+        )
+      );
+
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(captureRef.current, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
-        imageTimeout: 10000,
         allowTaint: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 480,
       });
 
       const link = document.createElement('a');
@@ -425,290 +441,308 @@ export default function InvoiceClient() {
     <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
       <DesktopSideDecor />
 
-      {/* ১. ফিক্সড ৫৮০px অফ-স্ক্রিন HD প্রিন্ট টেমপ্লেট */}
+      {/* ১. স্ট্যান্ডার্ড ৪৮০px পোর্ট্রেট অফ-স্ক্রিন HD প্রিন্ট টেমপ্লেট */}
       <div
-        ref={captureRef}
         style={{
           position: 'fixed',
           left: '-9999px',
           top: 0,
-          width: 580,
-          backgroundColor: '#ffffff',
-          color: '#1E293B',
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          boxSizing: 'border-box',
-          padding: '30px 28px',
-          zIndex: -999,
+          width: '480px',
+          overflow: 'visible',
+          zIndex: -9999,
         }}
+        aria-hidden="true"
       >
-        <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/vangcur-logo.png"
-              alt="Vangcur"
-              crossOrigin="anonymous"
-              style={{ height: 34, width: 'auto', display: 'block', margin: '0 auto' }}
-            />
-          </div>
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '2.5px',
-              color: '#64748B',
-              textTransform: 'uppercase',
-              marginBottom: 10,
-              lineHeight: '14px',
-            }}
-          >
-            YOUR FIRST CHOICE FOR GADGETS
-          </div>
-          
-          <div style={{ textAlign: 'center', margin: '0 auto' }}>
-            <div
-              style={{
-                display: 'inline-block',
-                padding: '4px 16px',
-                borderRadius: '20px',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#334155',
-                lineHeight: '18px',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
-              <span style={{ margin: '0 8px', color: '#CBD5E1' }}>•</span>
-              <span>Date: {ds}</span>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              color: '#44A7FC',
-              marginBottom: 6,
-              lineHeight: '14px',
-            }}
-          >
-            CUSTOMER DETAILS
-          </div>
-          <div
-            style={{
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-              borderRadius: 12,
-              padding: '12px 16px',
-              fontSize: 12,
-              lineHeight: '22px',
-            }}
-          >
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <tbody>
-                <tr>
-                  <td style={{ width: '50%', padding: '2px 0' }}>
-                    <span style={{ color: '#64748B' }}>Name: </span>
-                    <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
-                  </td>
-                  <td style={{ width: '50%', padding: '2px 0' }}>
-                    <span style={{ color: '#64748B' }}>Phone: </span>
-                    <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td style={{ width: '50%', padding: '2px 0' }}>
-                    <span style={{ color: '#64748B' }}>District: </span>
-                    <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
-                  </td>
-                  <td style={{ width: '50%', padding: '2px 0' }}>
-                    <span style={{ color: '#64748B' }}>Address: </span>
-                    <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         <div
+          ref={captureRef}
           style={{
-            backgroundColor: '#F8FAFC',
+            width: '480px',
+            backgroundColor: '#ffffff',
+            color: '#1E293B',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            boxSizing: 'border-box',
+            padding: '24px 20px 24px',
+            borderRadius: '20px',
             border: '1px solid #E2E8F0',
-            borderRadius: 14,
-            padding: '14px 16px',
-            marginBottom: 14,
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              color: '#44A7FC',
-              marginBottom: 10,
-              lineHeight: '14px',
-            }}
-          >
-            ORDER INVOICE
-          </div>
+          <InvoiceSubtleWatermark />
 
-          <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 10 }}>
-            {(order.items || []).map((i, idx) => (
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/vangcur-logo.png"
+                  alt="Vangcur"
+                  crossOrigin="anonymous"
+                  style={{ height: 32, width: 'auto', display: 'block', margin: '0 auto' }}
+                />
+              </div>
               <div
-                key={idx}
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: 700,
+                  letterSpacing: '2.5px',
+                  color: '#64748B',
+                  textTransform: 'uppercase',
+                  marginBottom: 10,
+                  lineHeight: '14px',
+                }}
+              >
+                YOUR FIRST CHOICE FOR GADGETS
+              </div>
+              
+              <div style={{ textAlign: 'center', margin: '0 auto' }}>
+                <div
+                  style={{
+                    display: 'inline-block',
+                    padding: '4px 14px',
+                    borderRadius: '20px',
+                    backgroundColor: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    color: '#334155',
+                    lineHeight: '18px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
+                  <span style={{ margin: '0 6px', color: '#CBD5E1' }}>•</span>
+                  <span>Date: {ds}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  color: '#44A7FC',
+                  marginBottom: 6,
+                  lineHeight: '14px',
+                }}
+              >
+                CUSTOMER DETAILS
+              </div>
+              <div
+                style={{
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontSize: 11.5,
+                  lineHeight: '20px',
+                }}
+              >
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ width: '50%', padding: '2px 0', verticalAlign: 'top' }}>
+                        <span style={{ color: '#64748B' }}>Name: </span>
+                        <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
+                      </td>
+                      <td style={{ width: '50%', padding: '2px 0', verticalAlign: 'top' }}>
+                        <span style={{ color: '#64748B' }}>Phone: </span>
+                        <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ width: '50%', padding: '2px 0', verticalAlign: 'top' }}>
+                        <span style={{ color: '#64748B' }}>District: </span>
+                        <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
+                      </td>
+                      <td style={{ width: '50%', padding: '2px 0', verticalAlign: 'top' }}>
+                        <span style={{ color: '#64748B' }}>Address: </span>
+                        <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div
+              style={{
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: 14,
+                padding: '14px 16px',
+                marginBottom: 14,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  color: '#44A7FC',
+                  marginBottom: 10,
+                  lineHeight: '14px',
+                }}
+              >
+                ORDER INVOICE
+              </div>
+
+              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 10 }}>
+                {(order.items || []).map((i, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      padding: '5px 0',
+                      fontSize: 12,
+                      color: '#1E293B',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                      <ItemThumb imgs={i.imgs} />
+                      <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: '18px', wordBreak: 'break-word' }}>
+                        {i.name} × {i.qty}
+                      </span>
+                    </div>
+                    <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap', fontSize: 12.5 }}>
+                      ৳{(i.price * i.qty).toLocaleString('en-US')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {order.subtotal ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#475569', padding: '3px 0' }}>
+                  <span>Subtotal</span>
+                  <span style={{ fontWeight: 600, color: '#1E293B' }}>৳{order.subtotal.toLocaleString('en-US')}</span>
+                </div>
+              ) : null}
+
+              {order.discountAmount && order.discountAmount > 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#059669', fontWeight: 600, padding: '3px 0' }}>
+                  <span>Coupon Discount ({order.couponCode || 'PROMO'})</span>
+                  <span style={{ color: '#10B981', fontWeight: 700 }}>- ৳{order.discountAmount.toLocaleString('en-US')}</span>
+                </div>
+              ) : null}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#475569', padding: '3px 0' }}>
+                <span style={{ color: isFreeShipping ? '#059669' : '#475569', fontWeight: isFreeShipping ? 600 : 400 }}>
+                  Delivery Charge ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
+                </span>
+                <span style={{ color: isFreeShipping ? '#10B981' : '#1E293B', fontWeight: isFreeShipping ? 800 : 600 }}>
+                  {isFreeShipping ? 'FREE' : `৳${order.shippingCost}`}
+                </span>
+              </div>
+
+              <div style={{ margin: '8px 0', borderTop: '1px dashed #CBD5E1' }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '3px 0' }}>
+                <span>Total Bill</span>
+                <span>৳{(order.total || 0).toLocaleString('en-US')}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#44A7FC', padding: '3px 0' }}>
+                <span>Advance Payment</span>
+                <span style={{ fontWeight: 700 }}>- ৳{advancePaid.toLocaleString('en-US')}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '4px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
+                <span>Cash on Delivery</span>
+                <span>৳{balanceDue.toLocaleString('en-US')}</span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 14,
+                padding: '8px 12px',
+                borderRadius: 20,
+                backgroundColor: '#F0F7FF',
+                border: '1px solid #DCEBFD',
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#44A7FC',
+                marginBottom: 14,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+                <span>Payment: bKash (Verified)</span>
+              </div>
+              <span style={{ color: '#BAE0FD' }}>|</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
+                <span>Courier: Pathao</span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '10px 14px',
+                background: 'linear-gradient(135deg, #F0F7FF 0%, #F8FAFC 100%)',
+                border: '1px solid #DCEBFD',
+                borderRadius: 12,
+                fontSize: 10.5,
+                lineHeight: '17px',
+                color: '#1E3A5F',
+                marginBottom: 14,
+              }}
+            >
+              {dueMsg}
+            </div>
+
+            <div
+              style={{
+                textAlign: 'center',
+                borderTop: '1px solid #F1F5F9',
+                paddingTop: 12,
+                fontSize: 10.5,
+                color: '#64748B',
+              }}
+            >
+              <div style={{ marginBottom: 8, fontWeight: 600, lineHeight: '16px' }}>
+                📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
+              </div>
+
+              <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  padding: '6px 0',
-                  fontSize: 12.5,
-                  color: '#1E293B',
+                  justifyContent: 'center',
+                  gap: 6,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                  <ItemThumb imgs={i.imgs} />
-                  <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: '18px' }}>
-                    {i.name} × {i.qty}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <IconFacebookThemed />
+                  <IconYoutubeThemed />
+                  <IconTiktokThemed />
+                  <IconInstagramThemed />
                 </div>
-                <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap', fontSize: 13 }}>
-                  ৳{(i.price * i.qty).toLocaleString('en-US')}
+                <span
+                  style={{
+                    fontWeight: 800,
+                    fontSize: 11,
+                    color: '#0F172A',
+                    letterSpacing: '-0.2px',
+                    marginLeft: 2,
+                  }}
+                >
+                  Vangcur Gadgets
                 </span>
               </div>
-            ))}
-          </div>
-
-          {order.subtotal ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#475569', padding: '3px 0' }}>
-              <span>Subtotal</span>
-              <span style={{ fontWeight: 600, color: '#1E293B' }}>৳{order.subtotal.toLocaleString('en-US')}</span>
             </div>
-          ) : null}
 
-          {order.discountAmount && order.discountAmount > 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#059669', fontWeight: 600, padding: '3px 0' }}>
-              <span>Coupon Discount ({order.couponCode || 'PROMO'})</span>
-              <span style={{ color: '#10B981', fontWeight: 700 }}>- ৳{order.discountAmount.toLocaleString('en-US')}</span>
-            </div>
-          ) : null}
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, color: '#475569', padding: '3px 0' }}>
-            <span style={{ color: isFreeShipping ? '#059669' : '#475569', fontWeight: isFreeShipping ? 600 : 400 }}>
-              Delivery Charge ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
-            </span>
-            <span style={{ color: isFreeShipping ? '#10B981' : '#1E293B', fontWeight: isFreeShipping ? 800 : 600 }}>
-              {isFreeShipping ? 'FREE' : `৳${order.shippingCost}`}
-            </span>
-          </div>
-
-          <div style={{ margin: '8px 0', borderTop: '1px dashed #CBD5E1' }} />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#0F172A', padding: '3px 0' }}>
-            <span>Total Bill</span>
-            <span>৳{(order.total || 0).toLocaleString('en-US')}</span>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontWeight: 600, color: '#44A7FC', padding: '3px 0' }}>
-            <span>Advance Payment</span>
-            <span style={{ fontWeight: 700 }}>- ৳{advancePaid.toLocaleString('en-US')}</span>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#0F172A', padding: '4px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
-            <span>Cash on Delivery</span>
-            <span>৳{balanceDue.toLocaleString('en-US')}</span>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 16,
-            padding: '8px 14px',
-            borderRadius: 20,
-            backgroundColor: '#F0F7FF',
-            border: '1px solid #DCEBFD',
-            fontSize: 11.5,
-            fontWeight: 700,
-            color: '#44A7FC',
-            marginBottom: 14,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-            <span>Payment: bKash (Verified)</span>
-          </div>
-          <span style={{ color: '#BAE0FD' }}>|</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
-            <span>Courier: Pathao</span>
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: '12px 16px',
-            background: 'linear-gradient(135deg, #F0F7FF 0%, #F8FAFC 100%)',
-            border: '1px solid #DCEBFD',
-            borderRadius: 12,
-            fontSize: 11,
-            lineHeight: '18px',
-            color: '#1E3A5F',
-            marginBottom: 16,
-          }}
-        >
-          {dueMsg}
-        </div>
-
-        <div
-          style={{
-            textAlign: 'center',
-            borderTop: '1px solid #F1F5F9',
-            paddingTop: 12,
-            fontSize: 11,
-            color: '#64748B',
-          }}
-        >
-          <div style={{ marginBottom: 8, fontWeight: 600, lineHeight: '16px' }}>
-            📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <IconFacebookThemed />
-              <IconYoutubeThemed />
-              <IconTiktokThemed />
-              <IconInstagramThemed />
-            </div>
-            <span
-              style={{
-                fontWeight: 800,
-                fontSize: 11.5,
-                color: '#0F172A',
-                letterSpacing: '-0.2px',
-                marginLeft: 2,
-              }}
-            >
-              Vangcur Gadgets
-            </span>
           </div>
         </div>
       </div>
@@ -758,10 +792,10 @@ export default function InvoiceClient() {
         </div>
       )}
 
-      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস */}
+      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস ভিউ (ছবি ১ এর হুবহু ডিজাইন) */}
       <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex flex-col items-center justify-start bg-white sm:bg-transparent">
         <div
-          className="w-full sm:max-w-[520px] rounded-none sm:rounded-[24px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
+          className="w-full sm:max-w-[480px] rounded-none sm:rounded-[20px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
           style={{
             color: '#1E293B',
             fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
