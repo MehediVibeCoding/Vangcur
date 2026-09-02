@@ -7,9 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
 } from '@/lib/footerData';
-import {
-  OPEN_OFFER_PAGE_EVENT, OPEN_INFO_EVENT,
-} from '@/lib/uiEvents';
+import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
 import { sanitizeHref } from '@/lib/security';
 import { useT } from '@/lib/i18n/useT';
 import type { FooterContact, FooterExtras, FooterLogo } from '@/types';
@@ -73,7 +71,7 @@ function InstagramIcon() {
 function TikTokIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" />
     </svg>
   );
 }
@@ -173,7 +171,6 @@ export default function Footer() {
   }, [supabase]);
 
   const openOfferPage = () => window.dispatchEvent(new CustomEvent(OPEN_OFFER_PAGE_EVENT));
-  const openInfo = (type: string) => window.dispatchEvent(new CustomEvent(OPEN_INFO_EVENT, { detail: { type } }));
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToCategories = () => document.getElementById('catCardsGrid')?.scrollIntoView({ behavior: 'smooth' });
@@ -298,7 +295,7 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
               <li><button className={colLinkClass} onClick={scrollToFaq}>FAQ</button></li>
-              <li><button className={colLinkClass} onClick={() => openInfo('shipping')}>Shipping Info</button></li>
+              <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Shipping Info' : 'শিপিং তথ্য'}</Link></li>
               <li><Link href="/terms" className={colLinkClass}>{lang === 'en' ? 'Warranty Info' : 'ওয়ারেন্টি তথ্য'}</Link></li>
               <li><Link href="/refund-policy" className={colLinkClass}>{lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}</Link></li>
               <li><Link href="/privacy-policy" className={colLinkClass}>{lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}</Link></li>
@@ -306,7 +303,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৩: কুইক লিঙ্কস (সরাসরি /account এবং /track-order রুটে লিংক) */}
+          {/* কলাম ৩: কুইক লিঙ্কস */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {t('কুইক লিঙ্কস')}
