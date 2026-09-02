@@ -10,6 +10,9 @@ const MAX_ANSWER_LEN = 500;
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
+/**
+ * 🛡️ নিরাপদ সেশন-ভেরিফায়েড অ্যাডমিন ও মডারেটর রোল ভ্যালিডেটর
+ */
 export async function checkIsUserAdmin(
   supabase: SupabaseClient,
   userId?: string | null,
@@ -35,15 +38,14 @@ export async function checkIsUserAdmin(
     }
   }
 
-  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই
-  if (userEmail && userEmail.toLowerCase() === MODERATOR_EMAIL.toLowerCase()) {
+  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (লগইন করা মডারেটর ১০০% প্রিভিলেজ পাবে)
+  if (userEmail && userEmail.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
     return true;
   }
 
   if (!targetId) return false;
 
   try {
-    // select('*') ব্যবহার করা হয়েছে যাতে কোনো কলামের নাম নিয়ে Postgres এরর না দেয়
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -169,9 +171,10 @@ export async function submitProductAnswer(
     const { data: sessionData } = await supabase.auth.getSession();
     const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
 
-    let userIsAdminOrMod = payload.isAdmin;
+    // 🛡️ স্পুফিং রোধ: শুধুমাত্র প্রকৃত সেশন-ভেরিফায়েড মডারেটর/অ্যাডমিনই "is_admin: true" সেট করতে পারবে
+    let isPrivilegedAdminOrMod = false;
     if (liveUserId) {
-      userIsAdminOrMod = await checkIsUserAdmin(supabase, liveUserId);
+      isPrivilegedAdminOrMod = await checkIsUserAdmin(supabase, liveUserId);
     }
 
     const { data, error } = await supabase
@@ -179,8 +182,8 @@ export async function submitProductAnswer(
       .insert({
         question_id: payload.questionId,
         user_id: liveUserId,
-        author_name: name || (userIsAdminOrMod ? 'Vangcur টিম' : 'ইউজার'),
-        is_admin: !!userIsAdminOrMod,
+        author_name: isPrivilegedAdminOrMod ? 'Vangcur টিম' : (name || 'ইউজার'),
+        is_admin: isPrivilegedAdminOrMod,
         answer: aText,
       })
       .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
