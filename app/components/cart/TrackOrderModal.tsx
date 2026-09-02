@@ -10,6 +10,7 @@ import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_ACCOUNT_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
+import useHistoryModal from '@/lib/useHistoryModal';
 import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { OrderListSkeleton } from '@/app/components/ui/Skeletons';
@@ -72,6 +73,8 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   const [orders, setOrders] = useState<Order[]>([]);
   const [notFound, setNotFound] = useState(false);
 
+  useHistoryModal(isOpen, onClose, 'track-order-modal');
+
   useEffect(() => {
     if (isOpen) lockBody();
     else unlockBody();
@@ -132,7 +135,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
 
   const openInvoice = (orderId: string | number) => {
     onClose();
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}&from=track`);
   };
 
   const handleOpenLogin = () => {
@@ -146,7 +149,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[965] flex items-center justify-center p-4">
-          {/* ব্যাকড্রপ ব্লার এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -156,7 +158,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
             onClick={onClose}
           />
 
-          {/* সেন্ট্রালাইজড ডায়ালগ — স্প্রিং স্কেল এন্ট্রি ও এক্সিট */}
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -164,7 +165,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex max-h-[88vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
           >
-            {/* হেডার */}
             <div className="relative shrink-0 overflow-hidden border-b border-ink/10 px-6 pb-3.5 pt-5 text-left">
               <HeaderDecor />
               <div className="relative z-10 flex items-center justify-between">
@@ -187,7 +187,6 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
               </div>
             </div>
 
-            {/* কন্টেন্ট বডি */}
             <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
               <SkeletonTransition isReady={!loading} skeleton={<OrderListSkeleton count={2} />}>
                 {notFound ? (
@@ -215,11 +214,10 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                   <div className="space-y-4">
                     <div className="space-y-3.5">
                       {orders.map((o) => (
-                        <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                        <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
                       ))}
                     </div>
 
-                    {/* ভিআইপি প্রিভিলেজ কলআউট কার্ড */}
                     <div className="rounded-[18px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
                       <div className="flex items-start gap-3">
                         <SparklesCrownSvgIcon />
