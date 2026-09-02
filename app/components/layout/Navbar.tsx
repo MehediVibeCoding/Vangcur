@@ -11,7 +11,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { fetchCustomProducts, productHref } from '@/lib/productData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
-import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug } from '@/lib/categoryData';
+import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { WISHLIST_NAV_HIT_EVENT } from '@/lib/uiEvents';
@@ -531,7 +531,24 @@ export default function Navbar({
     setSearchQuery('');
     setSearchResults([]);
     setCatResults([]);
-    router.push(catId === 'all' ? '/' : `/category/${makeCatSlug(catId)}`);
+
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      try {
+        const url = catId === 'all' ? '/' : `/?cat=${encodeURIComponent(catId)}`;
+        window.history.replaceState({ homeCurrent: true, vcCat: catId }, '', url);
+      } catch {
+        // ignore
+      }
+      window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId } }));
+      const prodSec = document.getElementById('prodSec');
+      if (prodSec) {
+        const navbarOffset = 85;
+        const targetY = prodSec.getBoundingClientRect().top + window.scrollY - navbarOffset;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      }
+    } else {
+      router.push(catId === 'all' ? '/' : `/?cat=${encodeURIComponent(catId)}`);
+    }
   };
 
   const goToSearch = () => {
