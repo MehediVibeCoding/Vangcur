@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
@@ -12,6 +12,11 @@ import {
   DEFAULT_HERO_CARDS,
   fetchHeroCards,
 } from '@/lib/heroSliderData';
+
+// সার্ভারে useLayoutEffect ওয়ার্নিং এড়াতে — ব্রাউজারে সবসময় useLayoutEffect,
+// প্রথম পেইন্টের আগেই ট্র্যাকের পজিশন বসিয়ে দেয়, তাই "ভুল স্লাইড" এক মুহূর্তের
+// জন্যও দেখা যায় না → hero card entrance আর ভেঙে ভেঙে আসবে না
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const AUTOPLAY_MS = 5500;
 const HOVER_AUTOPLAY_MS = 8000;
@@ -93,12 +98,23 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     }, intervalMs);
   }, [duoStep]);
 
+  useIsomorphicLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const track = trackRef.current;
+    if (!wrap || !track) return;
+
+    // আগে এটা requestAnimationFrame-এ ছিল, ফলে প্রথম পেইন্টে ব্রাউজার
+    // ভুল (untransformed) স্লাইড এক ফ্রেমের জন্য দেখিয়ে দিত, তারপর হঠাৎ
+    // মাঝের সেটে "জাম্প" করত — এটাই কার্ড এনিমেশন ভেঙে ভেঙে আসার কারণ।
+    // useLayoutEffect পেইন্টের আগেই সিঙ্ক্রোনাসলি চলে, তাই jump/flash হয় না।
+    setPosition(false);
+  }, [setPosition]);
+
   useEffect(() => {
     const wrap = wrapRef.current;
     const track = trackRef.current;
     if (!wrap || !track) return;
 
-    requestAnimationFrame(() => setPosition(false));
     startAuto(AUTOPLAY_MS);
 
     const observer = new IntersectionObserver(

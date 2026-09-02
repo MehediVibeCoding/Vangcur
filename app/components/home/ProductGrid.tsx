@@ -212,7 +212,10 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       ) : (
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {visibleItems.map((p, i) => (
-            <ProductCard key={p.id} prod={p} isFirst={i === 0} index={i} />
+            // key-তে activeCat জুড়ে দেওয়া হয়েছে — ক্যাটাগরি বদলালে React কার্ডটাকে
+            // পুরনো instance reuse না করে নতুন করে mount করে, ফলে "একটা একটা করে
+            // fade-in হয়ে আসা" এনিমেশনটা পুরনো ওয়েবসাইটের মতোই প্রতিবার রিপ্লে হয়
+            <ProductCard key={`${activeCat}-${p.id}`} prod={p} isFirst={i === 0} index={i} />
           ))}
           {showCategoryEndBtn && (
             <div className="col-span-full flex flex-col items-center gap-3.5 px-4 pb-2 pt-7 text-center">

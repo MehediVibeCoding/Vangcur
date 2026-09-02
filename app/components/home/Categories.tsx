@@ -26,19 +26,13 @@ interface CategoriesProps {
   initialCategories?: Category[];
 }
 
+// আগে এখানে ডানে/বামে (x-axis) স্লাইড করে "উল্টে" যাওয়ার একটা এনিমেশন ছিল —
+// ইউজারের অনুরোধ অনুযায়ী সেটা বাদ দেওয়া হয়েছে। এখন শুধু হালকা, দিকনির্দেশনাহীন
+// fade — normal অবস্থার মতোই, কিন্তু একদম হুট করে না বদলে স্মুথভাবে বদলায়।
 const slideVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 28 : -28,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -28 : 28,
-    opacity: 0,
-  }),
+  enter: { opacity: 0 },
+  center: { opacity: 1 },
+  exit: { opacity: 0 },
 };
 
 export default function Categories({ initialCategories }: CategoriesProps) {
@@ -47,7 +41,6 @@ export default function Categories({ initialCategories }: CategoriesProps) {
     initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES
   );
   const [catPage, setCatPage] = useState(0);
-  const [direction, setDirection] = useState(0);
   const [perPage, setPerPage] = useState(4);
 
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -76,7 +69,6 @@ export default function Categories({ initialCategories }: CategoriesProps) {
   }, [applyResponsive]);
 
   const slide = (dir: number, btnKey: 'prev' | 'next') => {
-    setDirection(dir);
     setCatPage((p) => {
       let next = p + dir;
       if (next > maxPage) next = 0;
@@ -157,17 +149,16 @@ export default function Categories({ initialCategories }: CategoriesProps) {
           &#8249;
         </button>
 
-        {/* ক্যাটাগরি গ্রিড কনটেইনার — ডিরেকশনাল স্প্রিং ট্রানজিশন */}
+        {/* ক্যাটাগরি গ্রিড কনটেইনার — হালকা fade ট্রানজিশন (আর কোনো ডিরেকশনাল স্লাইড নেই) */}
         <div className="touch-pan-y overflow-hidden py-1" ref={viewportRef}>
-          <AnimatePresence mode="wait" custom={direction} initial={false}>
+          <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={catPage}
-              custom={direction}
               variants={slideVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
               className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 md:gap-3"
             >
               {currentCategories.map((cat) => (
@@ -209,10 +200,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
             className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 ${
               p === catPage ? 'w-5 bg-brand-light' : 'w-1.5 bg-border-base'
             }`}
-            onClick={() => {
-              setDirection(p >= catPage ? 1 : -1);
-              setCatPage(p);
-            }}
+            onClick={() => setCatPage(p)}
           />
         ))}
       </div>

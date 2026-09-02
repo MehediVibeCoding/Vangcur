@@ -618,16 +618,25 @@ export default function Navbar({
               </Link>
             ) : (
               <Link className="flex shrink-0 items-center no-underline" href="/" prefetch={true}>
-                <Image
-                  src="/vangcur-logo.png"
-                  alt="Vangcur Gadgets"
-                  width={140}
-                  height={49}
-                  sizes="133px"
-                  priority
-                  className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
-                  draggable={false}
-                />
+                {/* লোগোর নিজস্ব এন্ট্রি এনিমেশন — পুরনো ওয়েবসাইটের মতো হালকা
+                    fade + উপর থেকে নিচে নেমে আসা, navbar-এর সাথেই একসাথে চলে */}
+                <motion.span
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
+                  className="flex shrink-0 items-center"
+                >
+                  <Image
+                    src="/vangcur-logo.png"
+                    alt="Vangcur Gadgets"
+                    width={140}
+                    height={49}
+                    sizes="133px"
+                    priority
+                    className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
+                    draggable={false}
+                  />
+                </motion.span>
               </Link>
             )}
 

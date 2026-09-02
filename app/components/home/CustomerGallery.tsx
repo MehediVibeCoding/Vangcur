@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -284,7 +285,15 @@ export default function CustomerGallery() {
   }
 
   return (
-    <section className="mx-auto mb-16 max-w-[1300px] px-4 sm:px-5">
+    // রিভিউ Supabase থেকে async লোড হওয়ার আগ পর্যন্ত এই section-টা mount-ই হয় না,
+    // তাই ডেটা আসামাত্র এখানে motion.section-এর initial→animate ফায়ার হয়ে
+    // পুরনো ওয়েবসাইটের মতো হালকা fade-up দিয়ে গ্যালারিটা দেখা যায় — হুট করে পপ-ইন করে না
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      className="mx-auto mb-16 max-w-[1300px] px-4 sm:px-5"
+    >
       {headerBlock}
 
       {totalReviews > 0 && (
@@ -450,6 +459,6 @@ export default function CustomerGallery() {
           ))}
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }
