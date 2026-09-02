@@ -346,7 +346,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const label = card.label || '';
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
-            // 🌟 প্রথম সেট (Set 1: i = 0..5) সরাসরি ভিউপোর্টে থাকবে এবং একটানা মসৃণ স্ট্যাগারে অ্যানিমেট হবে
+            // 🌟 প্রথম সেট (Set 1: i = 0..5) সরাসরি ভিউপোর্টে থাকবে এবং অতি সূক্ষ্ম ০.০২s মাইক্রো-স্ট্যাগারে একযোগে প্রবেশ করবে
             const isMobileInitial = i < 2;
             const isDesktopOnlyInitial = i >= 2 && i < 6;
 
@@ -357,7 +357,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
               : '';
 
             const isInitialVisible = isMobileInitial || isDesktopOnlyInitial;
-            const staggerDelay = isInitialVisible ? i * 0.07 : 0;
+            const staggerDelay = isInitialVisible ? i * 0.02 : 0;
             const isEager = i < 6;
 
             return (
@@ -413,16 +413,16 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
       <style>{`
         @keyframes heroCardIn {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .hero-card-anim-all {
-          animation: heroCardIn 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation: heroCardIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
           will-change: opacity, transform;
         }
         @media (min-width: 768px) {
           .hero-card-anim-desktop {
-            animation: heroCardIn 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation: heroCardIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
             will-change: opacity, transform;
           }
         }
