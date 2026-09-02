@@ -14,6 +14,20 @@ interface NotifyDetail {
   name: string;
 }
 
+// 🛡️ রিয়েল-টাইম বাংলাদেশি ফোন ইনপুট ফিল্টার (013-019 বাউন্ডেড)
+function filterPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  let out = '';
+  for (const ch of digits) {
+    if (out.length >= 11) break;
+    if (out.length === 0) { if (ch === '0') out += ch; }
+    else if (out.length === 1) { if (ch === '1') out += ch; }
+    else if (out.length === 2) { if (ch >= '3' && ch <= '9') out += ch; }
+    else { out += ch; }
+  }
+  return out;
+}
+
 const lineIcon = {
   viewBox: '0 0 24 24',
   fill: 'none',
@@ -80,7 +94,7 @@ export default function StockNotifyModal() {
       if (d && d.id !== undefined) {
         setDetail(d);
         setName(currentUser?.name || '');
-        setPhone(currentUser?.phone || '');
+        setPhone(currentUser?.phone ? filterPhoneInput(currentUser.phone) : '');
         setNameErr('');
         setPhoneErr('');
       }
@@ -108,7 +122,7 @@ export default function StockNotifyModal() {
 
     let hasErr = false;
     const cleanName = sanitizePlainName(name.trim());
-    const cleanPhone = phone.trim().replace(/\D/g, '');
+    const cleanPhone = filterPhoneInput(phone.trim());
 
     if (!validateName(cleanName)) {
       setNameErr(lang === 'en' ? 'Enter a valid name (min 3 characters)' : 'কমপক্ষে ৩ অক্ষরের সঠিক নাম দিন');
@@ -129,11 +143,14 @@ export default function StockNotifyModal() {
     setSubmitting(true);
 
     try {
+      const sanitizedProdName = String(detail.name || '').slice(0, 100);
+      const sanitizedProdId = String(detail.id || '').slice(0, 50);
+
       localStorage.setItem(
-        `vc_sn_${detail.id}`,
+        `vc_sn_${sanitizedProdId}`,
         JSON.stringify({
           prodId: detail.id,
-          prodName: detail.name,
+          prodName: sanitizedProdName,
           customerName: cleanName,
           phone: cleanPhone,
           ts: Date.now(),
@@ -145,10 +162,10 @@ export default function StockNotifyModal() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'addStockRequest',
-          productName: detail.name,
+          productName: sanitizedProdName,
           customerName: cleanName,
           mobileNumber: cleanPhone,
-          productId: String(detail.id),
+          productId: sanitizedProdId,
         }),
       }).catch(() => {});
 
@@ -196,7 +213,7 @@ export default function StockNotifyModal() {
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={close}
-              className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
               aria-label={t('বন্ধ করুন')}
             >
               ✕
@@ -259,7 +276,8 @@ export default function StockNotifyModal() {
                     value={phone}
                     maxLength={11}
                     onChange={(e) => {
-                      setPhone(e.target.value.replace(/\D/g, ''));
+                      // 🛡️ রিয়েল-টাইম বাংলাদেশি ফোন ইনপুট ফিল্টারিং (013-019)
+                      setPhone(filterPhoneInput(e.target.value));
                       if (phoneErr) setPhoneErr('');
                     }}
                     placeholder="01XXXXXXXXX"
@@ -271,7 +289,7 @@ export default function StockNotifyModal() {
                 {phoneErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{phoneErr}</p>}
               </div>
 
-              {/* জমা দিন স্প্রিং বাটন */}
+              {/* জমা দিন বাটন */}
               <div className="pt-2">
                 <motion.button
                   whileTap={{ scale: 0.96 }}
