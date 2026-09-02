@@ -61,7 +61,7 @@ function StepsCheckIcon() {
 function MemoReceiptIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1Z" />
       <path d="M8 7h8M8 11h8M8 15h5" />
     </svg>
   );
@@ -122,8 +122,8 @@ export default function GuideClient() {
     <>
       <PolicyHeader
         icon={<CompassNavIcon />}
-        title="ইউজার গাইড ও ওয়েবসাইট আর্কিটেকচার (User Guide)"
-        subtitle="Vangcur ই-কমার্স প্ল্যাটফর্ম ব্যবহারের পূর্ণাঙ্গ নির্দেশিকা"
+        title="ইউজার গাইড ও অর্ডার নির্দেশিকা (User Guide)"
+        subtitle="Vangcur ওয়েবসাইট ব্যবহারের সহজ ও পূর্ণাঙ্গ সহায়িকা"
         updated="আগস্ট ২০২৬"
       />
 
@@ -133,52 +133,52 @@ export default function GuideClient() {
       >
         <p className={policyPClass}>
           {lang === 'en'
-            ? 'Vangcur (vangcur.com) is an innovative tech gadget and lifestyle e-commerce platform in Bangladesh. Designed with a mobile-first architecture, customers can explore products effortlessly through multiple intuitive entry points:'
+            ? 'Vangcur (vangcur.com) is an innovative tech gadget and lifestyle e-commerce platform in Bangladesh. Designed for effortless shopping across all smartphones and desktops, customers can easily browse products through multiple convenient features:'
             : 'Vangcur (ভাঙচুর) বাংলাদেশের অন্যতম আধুনিক গ্যাজেট ও লাইফস্টাইল ই-কমার্স প্ল্যাটফর্ম। কাস্টমারদের দ্রুত ও আনন্দদায়ক কেনাকাটার অভিজ্ঞতা দিতে ওয়েবসাইটটিকে অত্যন্ত সহজ ও ডায়নামিক আর্কিটেকচারে সাজানো হয়েছে:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Floating Navbar: Displays real-time Wishlist counter, Cart badge with liquid fill physics, 1-tap Account dashboard access, and live Track Order modal.'
-              : 'ফ্লোটিং ন্যাভবার: ন্যাভবারের মাধ্যমে রিয়েল-টাইম উইশলিস্ট কাউন্টার, কার্ট ব্যাজ, ১-ট্যাপে একাউন্ট প্রোফাইল এবং লাইভ অর্ডার ট্র্যাকিং উইন্ডো তাৎক্ষণিকভাবে ব্যবহার করা যায়।'}
+              ? 'Floating Top Bar: Access your live Wishlist, Cart counter, Profile Dashboard, and Track Order modal with a single tap from anywhere on the site.'
+              : 'ফ্লোটিং ন্যাভবার: ন্যাভবারের মাধ্যমে রিয়েল-টাইম উইশলিস্ট, কার্ট কাউন্টার, প্রোফাইল একাউন্ট এবং লাইভ অর্ডার ট্র্যাকিং যেকোনো স্থান থেকে ১-ট্যাপে ব্যবহার করা যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Hero Duo Slider: Interactive horizontal story cards linking directly to curated product collections with smooth touch-drag physics.'
-              : 'হিরো স্টোরি স্লাইডার: হোমপেজের শীর্ষে থাকা কার্ডে ক্লিক করলে সরাসরি নির্দিষ্ট ট্রেন্ডিং কালেকশনে পৌঁছে যাওয়া যায়।'}
+              ? 'Trending Story Cards: Explore highlighted gadget collections directly from the top horizontal story slider on the homepage.'
+              : 'হিরো স্টোরি স্লাইডার: হোমপেজের শীর্ষে থাকা কার্ডে ক্লিক করে সরাসরি ট্রেন্ডিং ও বিশেষ গ্যাজেট কালেকশনে পৌঁছে যাওয়া যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Categories Carousel: Categorized product filters for RGB Lights, Smart Watches, TWS Earbuds, Power Banks, Crystal Lamps, and Unique Lifestyle Tech.'
-              : 'ক্যাটাগরি ক্যারোসেল: হোমপেজে ক্যাটাগরি চিপে ক্লিক করে নিমিষেই কাঙ্ক্ষিত গ্যাজেট ফিল্টার করে নেওয়া যায়।'}
+              ? 'Category Selector: Filter items instantly by category — RGB Lights, Smart Watches, TWS Earbuds, Power Banks, Acrylic Lamps, Rechargeable Fans, and Unique Tools.'
+              : 'ক্যাটাগরি ক্যারোসেল: ক্যাটাগরি আইকনে ক্লিক করে নিমিষেই কাঙ্ক্ষিত নির্দিষ্ট গ্যাজেটগুলো ফিল্টার করে দেখা যায়।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
 
       <PolicySection
         icon={<SearchMagnifyIcon />}
-        title={lang === 'en' ? '2. Product Search & Instant Keyword Matching' : '২. প্রোডাক্ট সার্চ ও কিউরেটেড কিওয়ার্ড ফিল্টারিং'}
+        title={lang === 'en' ? '2. Product Search & Keyword Suggestions' : '২. প্রোডাক্ট সার্চ ও কিউরেটেড কিওয়ার্ড ফিল্টারিং'}
       >
         <p className={policyPClass}>
           {lang === 'en'
-            ? 'Our global search engine supports debounced instant queries in both English and Bengali:'
-            : 'আমাদের গ্লোবাল সার্চ বারের মাধ্যমে ইংরেজি ও বাংলা উভয় ভাষায় দ্রুত প্রোডাক্ট খুঁজে পাওয়া যায়:'}
+            ? 'Our fast search bar helps you find gadgets instantly in both English and Bengali:'
+            : 'আমাদের সার্চ বারের মাধ্যমে ইংরেজি ও বাংলা উভয় ভাষায় দ্রুত প্রোডাক্ট খুঁজে পাওয়া যায়:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Search by English keywords (min 3 characters) or direct Bangla phonetic tags (e.g., "নিয়ন", "ঘড়ি", "স্পিকার").'
-              : 'ইংরেজি অক্ষরের পাশাপাশি সরাসরি বাংলা ট্যাগ লিখেও প্রোডাক্ট সার্চ করা সম্ভব।'}
+              ? 'Type product names in English (min 3 letters) or everyday Bangla terms (e.g., "নিয়ন", "ঘড়ি", "স্পিকার", "ফ্যান").'
+              : 'ইংরেজি অক্ষরের পাশাপাশি সরাসরি বাংলা নাম লিখেও যেকোনো গ্যাজেট নিমেষেই সার্চ করা যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Recent Searches: Browser-local search history saves your last queries for 1-tap access with zero server tracking.'
-              : 'সাম্প্রতিক অনুসন্ধান: পূর্বে খোঁজা কিওয়ার্ডগুলো লোকালি সেভ থাকে, যা ১-ট্যাপে পুনরায় সার্চ করা যায়।'}
+              ? 'Recent Searches: Your recent queries are remembered locally on your device for quick 1-tap re-searches.'
+              : 'সাম্প্রতিক অনুসন্ধান: পূর্বে খোঁজা কিওয়ার্ডগুলো সহজে দেখার জন্য সেভ থাকে, যা ১-ট্যাপে পুনরায় সার্চ করা যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Dedicated Search Results Page (/search): Filter products and explore related category suggestions in a full-grid layout.'
-              : 'পূর্ণাঙ্গ সার্চ পেজ (/search): সার্চ বারে এন্টার চাপলে সম্পূর্ণ সার্চ রেজাল্ট গ্রিডে দেখা যায়।'}
+              ? 'Full Search Page (/search): Press enter to view complete results, matched category suggestions, and item counts.'
+              : 'সার্চ রেজাল্ট পেজ (/search): সার্চ বারে এন্টার চাপলে সম্পূর্ণ সার্চ রেজাল্ট ও ক্যাটাগরি চিপস গ্রিড আকারে দেখা যায়।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
@@ -190,17 +190,17 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Wishlist Hearting: Tapping the heart icon triggers a parabolic flying animation to your top navigation bar, saving your favorite products for future visits.'
-              : 'উইশলিস্ট (পছন্দের তালিকা): হার্ট আইকনে ট্যাপ করলে প্যারাবলিক অ্যানিমেশনে প্রোডাক্টটি উইশলিস্টে যুক্ত হয়।'}
+              ? 'Wishlist Hearting: Tap the heart icon on any product to save it to your wishlist. Re-open your favorites anytime from the top bar.'
+              : 'উইশলিস্ট (পছন্দের তালিকা): হার্ট আইকনে ট্যাপ করে যেকোনো পছন্দের প্রোডাক্ট সেভ করে রাখা যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Add to Cart: Adds the item to your persistent cart drawer with instant quantity modification and real-time subtotal calculation.'
-              : 'কার্টে যোগ: কার্ট ড্রয়ারের মাধ্যমে প্রোডাক্টের পরিমাণ বাড়ানো-কমানো এবং রিয়েল-টাইম বিল পর্যবেক্ষণ করা যায়।'}
+              ? 'Add to Cart: Add multiple items to your cart, adjust quantities (+/-), and view real-time subtotal calculations.'
+              : 'কার্টে যোগ: কার্ট ড্রয়ারে একাধিক পণ্য যুক্ত করা, পরিমাণ পরিবর্তন এবং সর্বমোট বিল হিসাব করা যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? '1-Click Quick Order ("Order Now"): If your cart is empty, clicking "Order Now" bypasses extra steps and takes you directly to single-product checkout.'
+              ? '1-Click Quick Order ("Order Now"): Click "Order Now" on any single product to skip the cart and proceed straight to checkout.'
               : '১-ক্লিক কুইক অর্ডার ("অর্ডার করুন"): কার্ট খালি থাকলে সরাসরি "অর্ডার করুন" বাটনে ক্লিক করে একক প্রোডাক্টের চেকআউটে যাওয়া যায়।'}
           </PolicyBulletPoint>
         </ul>
@@ -212,36 +212,36 @@ export default function GuideClient() {
       >
         <p className={policyPClass}>
           {lang === 'en'
-            ? 'Discount coupons can be entered in the Cart Drawer, Quick Order modal, or during Checkout Step 1:'
-            : 'কার্ট ড্রয়ার, কুইক কার্ট মডাল কিংবা চেকআউটের ১ম ধাপে কুপন কোড ব্যবহার করা যায়:'}
+            ? 'Discount coupons can be easily redeemed inside the Cart Drawer or at Checkout Step 1:'
+            : 'শপিং কার্ট কিংবা চেকআউটের ১ম ধাপে কুপন কোড ব্যবহার করে অতিরিক্ত ডিসকাউন্ট পাওয়া যায়:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Live Validation: Enter your coupon code and tap Apply. If valid, the box transforms into a green success badge with an instant subtotal deduction.'
-              : 'লাইভ যাচাই: কুপন লিখে প্রয়োগ বাটনে চাপলে মুহূর্তের মধ্যে ডাটাবেজ থেকে ভ্যালিডেট হয়ে সবুজ ব্যাজে মোট ছাড় প্রদর্শিত হয়।'}
+              ? 'Live Verification: Type your coupon code and tap Apply to see your total bill discounted instantly.'
+              : 'লাইভ যাচাই: কুপন লিখে প্রয়োগ বাটনে চাপলে মুহূর্তের মধ্যে মোট বিল থেকে ছাড় সমন্বিত হয়ে যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Smart Auto-Apply: If you type a coupon code and directly click "Checkout" without hitting Apply, our system pauses for 900ms, validates the code, applies the discount animation, and proceeds seamlessly.'
-              : 'স্মার্ট অটো-অ্যাপ্লাই: কুপন লিখে আলাদাভাবে প্রয়োগ বাটনে না চেপে সরাসরি চেকআউট বাটনে চাপলেও সিস্টেম স্বয়ংক্রিয়ভাবে কোডটি যাচাই করে ডিসকাউন্ট যুক্ত করে পরবর্তী ধাপে নিয়ে যায়।'}
+              ? 'Smart Auto-Apply: If you enter a coupon code and directly click "Checkout" without hitting Apply, the system automatically validates the coupon and applies the discount before taking you to the next step.'
+              : 'স্মার্ট অটো-অ্যাপ্লাই: কুপন লিখে আলাদাভাবে প্রয়োগ বাটনে না চেপে সরাসরি চেকআউট বাটনে চাপলেও সিস্টেম স্বয়ংক্রিয়ভাবে কোডটি যাচাই করে ছাড় যোগ করে দেয়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'VIP Membership Coupons: Rewards won from the VIP Spin Wheel are uniquely tied to your tier and automatically recognized.'
-              : 'ভিআইপি কুপন: মেম্বারশিপ স্পিন হুইল থেকে প্রাপ্ত রিওয়ার্ড কোডগুলো চেকআউটে সরাসরি ব্যবহারযোগ্য।'}
+              ? 'VIP Tier Rewards: Lucky coupon codes won from the VIP Spin Wheel are directly accepted during checkout.'
+              : 'ভিআইপি কুপন: মেম্বারশিপ স্পিন হুইল থেকে জেতা ক্যাশব্যাক কুপন কোডগুলো চেকআউটে সরাসরি ব্যবহারযোগ্য।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
 
       <PolicySection
         icon={<StepsCheckIcon />}
-        title={lang === 'en' ? '5. 3-Step Secure Checkout & Tiered bKash Advance' : '৫. ৩-ধাপের নিরাপদ চেকআউট ও ৩-টায়ার বিকাশ অগ্রিম পেমেন্ট'}
+        title={lang === 'en' ? '5. 3-Step Simple Checkout & Tiered bKash Advance' : '৫. ৩-ধাপের সহজ চেকআউট ও ৩-টায়ার বিকাশ অগ্রিম পেমেন্ট'}
       >
         <p className={policyPClass}>
           {lang === 'en'
-            ? 'Our frictionless checkout flow (/checkout) takes less than 60 seconds across 3 streamlined steps:'
-            : 'আমাদের ৩-ধাপের চেকআউট প্রক্রিয়ায় এক মিনিটেরও কম সময়ে অর্ডার সম্পন্ন করা যায়:'}
+            ? 'Our streamlined checkout flow takes less than a minute across 3 easy steps:'
+            : 'আমাদের ৩-ধাপের চেকআউট প্রক্রিয়ায় এক মিনিটেরও কম সময়ে নিরাপদে অর্ডার সম্পন্ন করা যায়:'}
         </p>
 
         <div className={policySubheadingClass}>
@@ -250,8 +250,8 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Enter your Full Name, 11-digit mobile number, District dropdown, and complete home address. Shipping options update automatically based on location (Inside Dhaka ৳70, Outside Dhaka / All Bangladesh ৳120).'
-              : 'পূর্ণ নাম, ১১ ডিজিটের মোবাইল নম্বর, জেলা এবং সম্পূর্ণ ঠিকানা দিন। জেলা অনুযায়ী কুরিয়ার চার্জ স্বয়ংক্রিয়ভাবে যুক্ত হবে (ঢাকা সিটি ৭০ টাকা, সারা বাংলাদেশ ১২০ টাকা)।'}
+              ? 'Provide your Full Name, 11-digit mobile number, District dropdown, and complete street/house address. Delivery charges update automatically (Inside Dhaka ৳70, Outside Dhaka / All Bangladesh ৳120).'
+              : 'আপনার নাম, ১১ ডিজিটের ফোন নম্বর, জেলা ও সম্পূর্ণ ঠিকানা দিন। জেলা অনুযায়ী কুরিয়ার চার্জ স্বয়ংক্রিয়ভাবে হিসাব হবে (ঢাকা সিটি ৭০ টাকা, সারা বাংলাদেশ ১২০ টাকা)।'}
           </PolicyBulletPoint>
         </ul>
 
@@ -261,34 +261,34 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders below ৳8,000: Send Money a fixed ৳200 advance to our official bKash merchant number (01816-365504) or scan the on-screen QR code.'
+              ? 'Orders below ৳8,000: Send Money a fixed ৳200 advance to our official bKash number (01816-365504) or scan the on-screen QR code.'
               : '৮,০০০ টাকার নিচে অর্ডার: ফিক্সড ২০০ টাকা বিকাশ সেন্ড মানি করুন (01816-365504) অথবা স্ক্রিনের কিউআর কোড স্ক্যান করুন।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders ৳8,000 – ৳20,000: Send Money a 5% advance + 1.5% bKash transaction fee on the total bill (live breakdown viewable on-screen).'
-              : '৮,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ট্রানজেকশন ফি অগ্রিম পরিশোধ করুন (ড্রপডাউনে বিস্তারিত হিসাব দেখা যাবে)।'}
+              ? 'Orders ৳8,000 – ৳20,000: Send Money a 5% advance + 1.5% bKash transaction fee on the total bill (live breakdown viewable in the dropdown).'
+              : '৮,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ফি অগ্রিম পরিশোধ করুন (ড্রপডাউনে বিস্তারিত হিসাব দেখা যাবে)।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders above ৳20,000: Triggers the dedicated WhatsApp Bulk Order modal for customized logistics and corporate handling.'
-              : '২০,০০০ টাকার বেশি অর্ডার: স্বয়ংক্রিয়ভাবে বিশেষ WhatsApp বাল্ক অর্ডার মডাল ওপেন হবে।'}
+              ? 'Orders above ৳20,000: Automatically opens the dedicated WhatsApp Bulk Order modal for special support.'
+              : '২০,০০০ টাকার বেশি অর্ডার: বিশেষ WhatsApp বাল্ক অর্ডার মডালের মাধ্যমে অগ্রাধিকার ভিত্তিতে হ্যান্ডেল করা হবে।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Enter either the 10-character bKash Transaction ID (TxnID) or the Last 4 Digits of your payment number.'
-              : 'বিকাশ ট্রানজেকশন সম্পন্ন করে ১০ ডিজিটের TxnID অথবা প্রেরক নম্বরের শেষ ৪ ডিজিট বক্সে লিখুন।'}
+              : 'বিকাশ সেন্ড মানি করে ১০ ডিজিটের TxnID অথবা যে নম্বর থেকে টাকা পাঠিয়েছেন তার শেষ ৪ ডিজিট বক্সে লিখুন।'}
           </PolicyBulletPoint>
         </ul>
 
         <div className={policySubheadingClass}>
-          {lang === 'en' ? 'Step 3: Final Review & Confirmation' : 'ধাপ ৩: অর্ডার মেমো রিভিউ ও নিশ্চিতকরণ'}
+          {lang === 'en' ? 'Step 3: Review Invoice Memo & Confirm' : 'ধাপ ৩: অর্ডার মেমো রিভিউ ও কনফার্ম'}
         </div>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Review your itemized invoice breakdown, advance deduction, and Cash on Delivery (COD) due balance. Check the terms agreement and click "Confirm Order".'
-              : 'মোট বিল, অগ্রিম কর্তন ও বাকি ক্যাশ অন ডেলিভারি (COD) টাকার হিসাব দেখে শর্তাবলীতে টিক দিয়ে "অর্ডার কনফার্ম করুন" বাটনে চাপুন।'}
+              ? 'Review your total bill, advance deduction, and Cash on Delivery (COD) balance. Agree to the terms and tap "Confirm Order".'
+              : 'মোট বিল, অগ্রিম কর্তন ও বাকি ক্যাশ অন ডেলিভারি (COD) টাকার হিসাব দেখে শর্তাবলীতে সম্মতি দিয়ে "অর্ডার কনফার্ম করুন" বাটনে চাপুন।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
@@ -300,63 +300,63 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Real-Time Verification: After submission, our system monitors your payment in the background. Verification typically completes within 5–10 minutes.'
-              : 'রিয়েল-টাইম ভেরিফিকেশন: অর্ডার সাবমিটের পর আমাদের টিম ৫–১০ মিনিটের মধ্যে বিকাশ পেমেন্ট মিলিয়ে অর্ডার কনফার্ম করে।'}
+              ? 'Fast Verification: After submitting, our support team matches your payment details within 5 to 10 minutes (maximum 30 minutes).'
+              : 'দ্রুত ভেরিফিকেশন: অর্ডার সাবমিটের পর আমাদের সাপোর্ট টিম ৫–১০ মিনিটের মধ্যে বিকাশ পেমেন্ট নিশ্চিত করে অর্ডার কনফার্ম করে।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Official PNG Invoice Memo: Upon confirmation, an HD official invoice memo (/checkout/invoice) is generated with automatic download to your device.'
-              : 'অফিসিয়াল ইনভয়েস মেমো: অর্ডার কনফার্ম হওয়ামাত্র স্বয়ংক্রিয়ভাবে একটি ফুল এইচডি ডিজিটাল ইনভয়েস মেমো ডিভাইসে ডাউনলোড হয়ে যায়।'}
+              ? 'HD Invoice Memo: Once confirmed, an official digital invoice memo is generated and automatically downloaded to your device for your records.'
+              : 'ডিজিটাল ইনভয়েস মেমো: অর্ডার কনফার্ম হওয়ামাত্র একটি ফুল এইচডি ডিজিটাল ইনভয়েস মেমো ডিভাইসে সেভ করার সুবিধা পাওয়া যায়।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
 
       <PolicySection
         icon={<VideoProofIcon />}
-        title={lang === 'en' ? '7. Parcel Acceptance & Mandatory Unboxing Protocol' : '৭. পার্সেল গ্রহণ ও আনবক্সিং ভিডিও প্রোটোকল'}
+        title={lang === 'en' ? '7. Parcel Delivery & Mandatory Unboxing Protocol' : '৭. পার্সেল ডেলিভারি গ্রহণ ও আনবক্সিং ভিডিও নির্দেশিকা'}
       >
         <p className={policyPClass}>
           {lang === 'en'
-            ? 'When your parcel arrives at your doorstep via Pathao Courier:'
+            ? 'When Pathao Courier delivers the parcel to your doorstep:'
             : 'পাঠাও কুরিয়ারের ডেলিভারিম্যান যখন আপনার ঠিকানায় পার্সেল নিয়ে আসবেন:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Pay the remaining Cash on Delivery (COD) balance to the delivery person and collect the sealed box.'
-              : 'ডেলিভারিম্যানকে অবশিষ্ট ক্যাশ অন ডেলিভারির টাকা পরিশোধ করে সিলযুক্ত বক্স বুঝে নিন।'}
+              : 'ডেলিভারিম্যানকে অবশিষ্ট ক্যাশ অন ডেলিভারির টাকা পরিশোধ করে সিলযুক্ত পার্সেল বুঝে নিন।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Mandatory Unboxing Video: Record a continuous, uncut video from opening the outer courier flyer to powering on the device. This is legally required for any warranty or replacement claim.'
-              : 'বাধ্যতামূলক আনবক্সিং ভিডিও: পার্সেলের প্যাকেট কাটার শুরু থেকেই একটানা আন-কাট ভিডিও রেকর্ড করুন। কোনো ত্রুটির ক্ষেত্রে এই ভিডিও ওয়ারেন্টি ক্লেইমের একমাত্র অফিসিয়াল প্রমাণ।'}
+              ? 'Preserve the Clean Physical Invoice Paper: Inside the parcel box, an official clean paper invoice is specifically provided for future warranty records.'
+              : 'পার্সেলের ভেতরে থাকা মূল অফিসিয়াল ইনভয়েস পেপার: ভবিষ্যতে ওয়ারেন্টি কভারেজ পেতে পার্সেল বক্সের ভেতরে থাকা আলাদা ইনভয়েস পেপারটি সযত্নে সংরক্ষণ করুন।'}
+          </PolicyBulletPoint>
+          <PolicyBulletPoint>
+            {lang === 'en'
+              ? 'Record an Uncut Unboxing Video: Start recording continuously from the sealed outer package up to turning on the product. This video is mandatory for any warranty or replacement claim.'
+              : 'একটানা আনবক্সিং ভিডিও: পার্সেলের প্যাকেট কাটার শুরু থেকেই একটানা আন-কাট ভিডিও রেকর্ড করুন। কোনো ত্রুটির ক্ষেত্রে এই ভিডিও ওয়ারেন্টি ক্লেইমের একমাত্র প্রমাণ।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
 
       <PolicySection
         icon={<RadarTrackIcon />}
-        title={lang === 'en' ? '8. Live Order Tracking Across All Devices' : '৮. লাইভ অর্ডার ট্র্যাকিং পদ্ধতি'}
+        title={lang === 'en' ? '8. Live Parcel Tracking' : '৮. লাইভ পার্সেল ট্র্যাকিং পদ্ধতি'}
       >
-        <p className={policyPClass}>
-          {lang === 'en'
-            ? 'Track your parcel in real-time from booking to doorstep delivery:'
-            : 'আপনার অর্ডারের সর্বশেষ অবস্থা যেকোনো ডিভাইস থেকে লাইভ দেখতে পারবেন:'}
-        </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? <>Guest Tracking (/track-order): Enter your Order Number (e.g. VC-1082) on our <Link href="/track-order" className="font-bold text-brand-light hover:underline">Track Order</Link> page to view live courier status.</>
-              : <>গেস্ট ট্র্যাকিং: ওয়েবসাইটের <Link href="/track-order" className="font-bold text-brand-light hover:underline">অর্ডার ট্র্যাক</Link> পেজে অর্ডার নম্বর লিখে লাইভ স্ট্যাটাস দেখা যায়।</>}
+              ? <>Track Order Page (/track-order): Enter your Order Number (e.g. VC-1082) on our <Link href="/track-order" className="font-bold text-brand-light hover:underline">Track Order</Link> page to monitor courier dispatch stages.</>
+              : <>অর্ডার ট্র্যাক পেজ: ওয়েবসাইটের <Link href="/track-order" className="font-bold text-brand-light hover:underline">অর্ডার ট্র্যাক</Link> পেজে অর্ডার নম্বর লিখে লাইভ স্ট্যাটাস দেখা যায়।</>}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? <>Account Dashboard (/account/orders): Logged-in users can view full lifetime order history, re-download invoices, and monitor parcel transit stages.</>
-              : <>অ্যাকাউন্ট ড্যাশবোর্ড: লগইন করা থাকলে আজীবন সকল অর্ডারের মেমো ও ট্র্যাকিং হিস্টোরি একাউন্টে সংরক্ষিত থাকে।</>}
+              ? <>Account Dashboard (/account/orders): Logged-in customers can view their complete order history and track deliveries live across any device.</>
+              : <>অ্যাকাউন্ট ড্যাশবোর্ড: অ্যাকাউন্টে লগইন করা থাকলে যেকোনো ডিভাইস থেকে অর্ডার ইতিহাস ও লাইভ ট্র্যাকিং দেখা যায়।</>}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'SMS Tracking: Pathao Courier automatically sends an SMS with a direct tracking link once the parcel is scanned at the logistics hub.'
+              ? 'SMS Tracking: Pathao Courier sends an automated SMS with a tracking link once your parcel is dispatched.'
               : 'কুরিয়ার এসএমএস: পার্সেল কুরিয়ারে বুকিং হওয়ামাত্র আপনার ফোনে এসএমএসে ট্র্যাকিং লিংক পৌঁছে যায়।'}
           </PolicyBulletPoint>
         </ul>
@@ -369,17 +369,17 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? '1-Tap Google Login: Instant secure authentication linking all your guest orders to your permanent profile automatically.'
+              ? '1-Tap Google Login: Sign in with Google to link past orders, track deliveries, and manage account details seamlessly.'
               : '১-ট্যাপ গুগল লগইন: এক ক্লিকে গুগল দিয়ে লগইন করলে পূর্বের সকল গেস্ট অর্ডার স্বয়ংক্রিয়ভাবে প্রোফাইলে যুক্ত হয়ে যায়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Smart Draft Recovery: If you leave the checkout page unfinished, your filled details and cart are preserved for easy 1-click continuation upon return.'
+              ? 'Smart Draft Recovery: If you leave the checkout page unfinished, returning later lets you resume your order with 1 click.'
               : 'ড্রাফট রিকভারি: চেকআউট ফর্ম পূরণ করে বের হয়ে গেলেও পরবর্তীতে ফিরে এলে তথ্য পুনরায় লেখার প্রয়োজন হয় না।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'VIP Membership Club: Unlock Silver, Gold, Diamond, and Legendary tiers based on delivered orders. Enjoy daily Lucky Cash Spin Wheels, exclusive discounts, and Zero-Advance COD privileges.'
+              ? 'VIP Membership Club: Complete orders to unlock Silver, Gold, Diamond, and Legendary tiers with Lucky Cash Spin Wheels and Zero-Advance COD privileges.'
               : 'ভিআইপি মেম্বারশিপ: সফল অর্ডারের ভিত্তিতে সিলভার, গোল্ড, ডায়মন্ড ও লিজেন্ডারি ব্যাজ আনলক হয় এবং লাকি স্পিন হুইল থেকে ক্যাশব্যাক কুপন জেতা যায়।'}
           </PolicyBulletPoint>
         </ul>
@@ -392,12 +392,12 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Real Unboxing Gallery: Submit reviews with real product photos directly compressed to high-speed WebP. Verified buyer badges are awarded automatically upon order match.'
-              : 'আনবক্সিং গ্যালারি: প্রোডাক্ট হাতে পেয়ে কাস্টমাররা সরাসরি ছবি সহ রিভিউ প্রকাশ করতে পারেন।'}
+              ? 'Photo Reviews: Share your unboxing experience with real photos. Verified buyer badges are assigned automatically upon order matching.'
+              : 'আনবক্সিং রিভিউ: প্রোডাক্ট হাতে পেয়ে কাস্টমাররা সরাসরি ছবি সহ বাস্তব অভিজ্ঞতা প্রকাশ করতে পারেন।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Product Q&A: Ask questions about gadget compatibility, power specifications, or usage directly on product pages and receive official answers from the Vangcur technical team.'
+              ? 'Product Q&A: Ask questions about gadget features or specifications directly on product pages to receive official answers from our team.'
               : 'প্রশ্নোত্তর (Q&A): যেকোনো প্রোডাক্টের নিচে প্রশ্ন জিজ্ঞাসা করলে আমাদের টিম সরাসরি তার অফিসিয়াল উত্তর প্রদান করে।'}
           </PolicyBulletPoint>
         </ul>
@@ -405,67 +405,61 @@ export default function GuideClient() {
 
       <PolicySection
         icon={<SitemapTreeIcon />}
-        title={lang === 'en' ? '11. Full Website Route Architecture (AEO & GEO Reference)' : '১১. সম্পূর্ণ ওয়েবসাইট রাউট আর্কিটেকচার'}
+        title={lang === 'en' ? '11. Full Website Navigation Directory' : '১১. সম্পূর্ণ ওয়েবসাইট পেজ তালিকা ও লিঙ্ক গাইড'}
       >
-        <p className={policyPClass}>
-          {lang === 'en'
-            ? 'For automated search engines (Google SGE, Perplexity, ChatGPT) and customer navigation, the following table details all public endpoints of Vangcur:'
-            : 'ওয়েবসাইটের সকল প্রধান ফিচার ও পেজের সরাসরি লিঙ্ক কাঠামো নিচে দেওয়া হলো:'}
-        </p>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 font-body text-xs">
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              / (Home)
+              / (হোমপেজ)
             </Link>
             <span className="text-muted">হিরো স্লাইডার, ক্যাটাগরি, প্রোডাক্ট গ্রিড, রিভিউ গ্যালারি ও এফএকিউ।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/shipping" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /shipping (Shipping Policy)
+              /shipping (অর্ডার ও শিপিং তথ্য)
             </Link>
             <span className="text-muted">ডেলিভারি এলাকা, সময়সীমা, চার্জ ও কুরিয়ার ট্র্যাকিং নীতিমালা।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/refund-policy" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /refund-policy (Refunds)
+              /refund-policy (রিটার্ন ও রিফান্ড)
             </Link>
             <span className="text-muted">রিটার্ন, ১০০% ফ্রি রিপ্লেসমেন্ট ও আনবক্সিং ভিডিওর আইনি শর্তাবলী।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/terms" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /terms (Terms & Conditions)
+              /terms (শর্তাবলী)
             </Link>
             <span className="text-muted">ডিজিটাল কমার্স পরিচালনা চুক্তি ও আইনি শর্তাবলী।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/privacy-policy" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /privacy-policy (Privacy)
+              /privacy-policy (প্রাইভেসি পলিসি)
             </Link>
             <span className="text-muted">ব্যক্তিগত তথ্যের সুরক্ষা, এনক্রিপশন ও গোপনীয়তা প্রতিশ্রুতি।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/track-order" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /track-order (Tracking)
+              /track-order (অর্ডার ট্র্যাক)
             </Link>
             <span className="text-muted">অর্ডার নম্বর দিয়ে লাইভ পার্সেল ডেলিভারি স্ট্যাটাস ট্র্যাকিং।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/account" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /account (Profile Dashboard)
+              /account (প্রোফাইল ড্যাশবোর্ড)
             </Link>
             <span className="text-muted">কাস্টমার প্রোফাইল, লাইভ ওয়েদার কার্ড, অর্ডার মেমো ও মেম্বারশিপ স্পিনার।</span>
           </div>
 
           <div className="rounded-[12px] border border-border-base bg-white p-3 shadow-2xs">
             <Link href="/search" className="font-extrabold text-brand-light hover:underline block mb-0.5">
-              /search (Product Search)
+              /search (সার্চ পেজ)
             </Link>
             <span className="text-muted">বাংলা ও ইংরেজি কিওয়ার্ড দিয়ে প্রোডাক্ট সার্চ রেজাল্ট পেজ।</span>
           </div>
@@ -474,9 +468,9 @@ export default function GuideClient() {
 
       <PolicyNote type="info">
         {lang === 'en'
-          ? 'Need personalized assistance? Our dedicated support managers are live on WhatsApp at 01897-804055 from 9:00 AM to 10:00 PM daily.'
+          ? 'Have more questions? Contact our official WhatsApp Support directly at 01897-804055 (9:00 AM – 10:00 PM).'
           : 'যেকোনো প্রয়োজনে সরাসরি সহায়তা পেতে আমাদের অফিসিয়াল WhatsApp নম্বরে (01897-804055) প্রতিদিন সকাল ৯:০০ টা থেকে রাত ১০:০০ টা পর্যন্ত মেসেজ দিতে পারেন।'}
       </PolicyNote>
     </>
   );
-            }
+          }
