@@ -22,6 +22,8 @@ import type { Order } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 
+const MAX_ORDER_QUERY_LEN = 20;
+
 export default function AccountOrdersClient() {
   const { t, lang } = useT();
   const router = useRouter();
@@ -50,6 +52,7 @@ export default function AccountOrdersClient() {
 
   const stats = useMemo(() => orderStats(orders), [orders]);
 
+  // 🛡️ সুরক্ষিত ও ফিল্টার্ড অর্ডার নম্বর ম্যাচিং
   const filteredOrders = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return orders;
@@ -118,9 +121,14 @@ export default function AccountOrdersClient() {
               <div className="mb-5">
                 <input
                   type="text"
+                  maxLength={MAX_ORDER_QUERY_LEN}
                   placeholder={t('অর্ডার নম্বর দিয়ে খুঁজুন (যেমন: VC-1082)')}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    // 🛡️ শুধুমাত্র অর্ডার নম্বর উপযোগী ক্যারেক্টার গ্রহণ ও ২০ লেন্থ লক
+                    const clean = e.target.value.replace(/[^a-zA-Z0-9#\-_ ]/g, '').slice(0, MAX_ORDER_QUERY_LEN);
+                    setQuery(clean);
+                  }}
                   className="w-full rounded-full border border-border-base bg-white px-5 py-2.5 font-body text-[13px] text-ink outline-none transition-brand focus:border-brand-light/60 focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)]"
                 />
               </div>
