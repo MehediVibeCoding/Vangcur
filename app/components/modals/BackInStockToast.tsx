@@ -241,14 +241,14 @@ export default function BackInStockToast() {
 
   return (
     <div className="fixed inset-x-3 bottom-4 z-[950] sm:bottom-5 sm:left-auto sm:right-5 sm:w-[390px] animate-section-reveal">
-      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-white/85 p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-[10px]">
+      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-5 shadow-sh3 ring-1 ring-white/70 backdrop-blur-md">
         
         <HeaderDecor />
 
         <button
           type="button"
           onClick={handleDismissAll}
-          className="absolute right-3.5 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/80 text-ink/70 shadow-xs backdrop-blur-md transition-all duration-brand hover:bg-white hover:text-ink active:scale-90 focus-visible:outline-none"
+          className="absolute right-3.5 top-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-xs backdrop-blur-[8px] transition-all duration-brand hover:bg-white hover:text-ink active:scale-90 focus-visible:outline-none"
           aria-label={t('বন্ধ করুন')}
           title={t('বন্ধ করুন')}
         >
