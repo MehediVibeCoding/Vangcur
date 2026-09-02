@@ -24,6 +24,8 @@ import {
 } from '@/lib/couponData';
 import type { Product } from '@/types';
 
+const MAX_COUPON_LEN = 25;
+
 function CartItemThumb({ emoji }: { emoji?: string }) {
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
   if (isUrl) {
@@ -183,10 +185,18 @@ export default function QuickOrderModal() {
     }
   }, [open, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
 
+  // 🛡️ সুরক্ষিত ও ফিল্টার্ড কুপন অ্যাপ্লাই হ্যান্ডলার
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
-    const clean = (customCode !== undefined ? customCode : couponCode).trim().toUpperCase();
+    
+    // শুধুমাত্র ২৫ অক্ষরের আলফা-নিউমেরিক টেক্সট গ্রহণ করা
+    const clean = (customCode !== undefined ? customCode : couponCode)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9_-]/g, '')
+      .slice(0, MAX_COUPON_LEN);
+
     if (!clean) {
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
@@ -304,7 +314,7 @@ export default function QuickOrderModal() {
           </div>
         </div>
 
-        {/* Content List — ফ্লুইড AnimatePresence এক্সিট ও স্প্রিং মাইক্রো-ইন্টারঅ্যাকশন */}
+        {/* Content List */}
         <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-3.5 space-y-3.5">
           <AnimatePresence mode="popLayout" initial={false}>
             {cart.map((item, idx) => (
@@ -430,10 +440,13 @@ export default function QuickOrderModal() {
                     <input
                       type="text"
                       value={couponCode}
+                      maxLength={MAX_COUPON_LEN}
                       onFocus={() => setIsInputFocused(true)}
                       onBlur={() => setIsInputFocused(false)}
                       onChange={(e) => {
-                        setCouponCode(e.target.value.toUpperCase());
+                        // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং (শুধুমাত্র A-Z, 0-9, -, _)
+                        const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, MAX_COUPON_LEN);
+                        setCouponCode(clean);
                         if (couponError) setCouponError('');
                       }}
                       placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
