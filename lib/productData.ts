@@ -8,11 +8,6 @@ import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
-interface MinimalRouter {
-  push: (href: string) => void;
-}
-
-// পুরানো iOS Safari / iPhone 7 (iOS 15) সামঞ্জস্যপূর্ণ সেফ টাইমআউট সিগন্যাল
 function getTimeoutSignal(ms: number): AbortSignal | undefined {
   if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
     return AbortSignal.timeout(ms);
@@ -257,7 +252,6 @@ export const QUICK_CART_EVENT = 'vc:quickCart';
 export const QUICK_ORDER_MODAL_EVENT = 'vc:quickOrderModal';
 export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
 
-// ২৪ ঘণ্টায় এই ব্রাউজার থেকে ৩টি সফল অর্ডার হয়ে গেছে কি না যাচাই (মডারেটরের জন্য বাইপাস)
 export function hasExceededLocalOrderLimit(): boolean {
   if (typeof window === 'undefined') return false;
   try {
@@ -276,7 +270,6 @@ export function hasExceededLocalOrderLimit(): boolean {
   }
 }
 
-// সফল অর্ডার হলে টাইমস্ট্যাম্প রেকর্ড করা
 export function recordLocalOrderTimestamp(): void {
   if (typeof window === 'undefined') return;
   try {
@@ -292,18 +285,12 @@ export function recordLocalOrderTimestamp(): void {
 }
 
 export function startQuickOrder(
-  router: MinimalRouter,
+  router: { push: (href: string) => void },
   prod: Product,
   qty = 1,
-  // 🌟 ঐচ্ছিক নেভিগেশন ওভাররাইড — শুধুমাত্র "কার্ট খালি + ২০k নিচে" ব্র্যাঞ্চে
-  // (যেখানে সরাসরি /checkout-এ পুশ করা হয়) ব্যবহৃত হয়। ডিফল্ট আচরণ (router.push
-  // সাথে সাথে কল হওয়া) অপরিবর্তিত থাকে — যারা এই প্যারামিটার পাস করে না
-  // (যেমন ProductDetailClient.tsx) তাদের জন্য কোনো পরিবর্তন নেই।
-  navigate: (href: string) => void = (href) => router.push(href),
 ): void {
   if (!prod || prod.stock <= 0) return;
 
-  // ১. আর্লি রেট লিমিট গার্ড
   if (hasExceededLocalOrderLimit()) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
@@ -313,8 +300,6 @@ export function startQuickOrder(
 
   const currentCart = useCartStore.getState().cart;
   const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
-
-  // ২. আর্লি ২০,০০০ টাকার বাল্ক গার্ড (মডারেটর ছাড়া সাধারণ কাস্টমারদের জন্য)
   const isMod = useAuthStore.getState().currentUser?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
 
   if (!currentCart || currentCart.length === 0) {
@@ -326,7 +311,6 @@ export function startQuickOrder(
       return;
     }
 
-    // কেস ১: কার্ট খালি এবং ২০k-এর নিচে থাকলে সরাসরি একক প্রোডাক্ট চেকআউট
     const item: CartItem = {
       id: prod.id,
       name: prod.name,
@@ -338,13 +322,12 @@ export function startQuickOrder(
     try {
       sessionStorage.setItem('vc_quick_order_items', JSON.stringify([item]));
     } catch {
-      // storage unavailable, ignore
+      // ignore
     }
-    navigate('/checkout');
+    router.push('/checkout');
     return;
   }
 
-  // কেস ২: কার্টে ইতিমধ্যে পণ্য থাকলে নতুনটি কার্টে যোগ করা
   useCartStore.getState().addToCart([prod], prod.id, safeQty);
   try {
     sessionStorage.removeItem('vc_quick_order_items');
@@ -355,7 +338,6 @@ export function startQuickOrder(
   const updatedCart = useCartStore.getState().cart;
   const newCartTotal = cartTotal(updatedCart);
 
-  // কার্টের মোট বিল ২০k ছাড়িয়ে গেলে বাল্ক পপআপ
   if (newCartTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: newCartTotal } }));
@@ -363,7 +345,6 @@ export function startQuickOrder(
     return;
   }
 
-  // অন্যথায় ফ্লোটিং শপিং কার্ট মডাল ওপেন
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(OPEN_QUICK_CART_MODAL_EVENT));
   }
