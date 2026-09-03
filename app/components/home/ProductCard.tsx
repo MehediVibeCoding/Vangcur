@@ -227,13 +227,13 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   <CartIcon />
                 </button>
 
-                {/* Luminous Liquid Glass Order Button (Zero GPU Stutter) */}
+                {/* Ethereal Light Liquid Sky Glass Order Button (Zero GPU Overhead) */}
                 <button
                   type="button"
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/35 bg-gradient-to-r from-brand-light/85 via-[#38BDF8]/90 to-[#0058C7]/80 font-body text-[12px] font-extrabold tracking-wide text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.5),0_3px_12px_rgba(0,88,199,0.22)] transition-all duration-150 hover:brightness-110 hover:border-white/55 active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 bg-gradient-to-r from-[#38BDF8]/95 via-[#BAE6FD] to-[#38BDF8]/95 font-body text-[12px] font-extrabold tracking-wide text-[#072F57] shadow-[inset_0_1px_2px_rgba(255,255,255,0.75),0_2px_10px_rgba(56,189,248,0.28)] transition-all duration-150 hover:brightness-105 hover:border-white active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                 >
-                  <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
+                  <span className="relative z-10">
                     {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
                   </span>
                 </button>
