@@ -24,6 +24,18 @@ const RECOVERY_DISMISS_KEY = 'vc_recovery_dismissed';
 const RECOVERY_DISMISS_TIME_KEY = 'vc_toast_dismiss_time';
 const MAX_DRAFT_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
+function getTimeoutSignal(ms: number): AbortSignal | undefined {
+  if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms);
+  }
+  if (typeof AbortController !== 'undefined') {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), ms);
+    return controller.signal;
+  }
+  return undefined;
+}
+
 function HeaderDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]" aria-hidden="true">
@@ -124,10 +136,12 @@ export default function BackInStockToast() {
 
         const supabase = createClient();
         try {
+          const signal = getTimeoutSignal(5000);
           const { data, error } = await supabase
             .from('custom_products')
             .select('id, name, price, old, stock, imgs, cat')
-            .in('id', targetIds);
+            .in('id', targetIds)
+            .abortSignal(signal as any);
 
           if (error || !data || data.length === 0 || cancelled) return;
 
