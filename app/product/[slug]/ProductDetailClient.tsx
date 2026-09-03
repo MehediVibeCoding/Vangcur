@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
@@ -29,6 +30,28 @@ import ProductQnA from '@/app/components/product/ProductQnA';
 import ProductReviews from '@/app/components/product/ProductReviews';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, ProductSpecs } from '@/types';
+
+function VangcurPandaIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="32" height="32" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8.5" cy="9" r="4.8" fill="#1E293B" />
+      <circle cx="27.5" cy="9" r="4.8" fill="#1E293B" />
+      <circle cx="8.5" cy="9" r="2.2" fill="#475569" opacity="0.6" />
+      <circle cx="27.5" cy="9" r="2.2" fill="#475569" opacity="0.6" />
+      <ellipse cx="18" cy="20" rx="14.5" ry="12.5" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.6" />
+      <ellipse cx="12.2" cy="18.8" rx="4.2" ry="5" transform="rotate(-15 12.2 18.8)" fill="#1E293B" />
+      <ellipse cx="23.8" cy="18.8" rx="4.2" ry="5" transform="rotate(15 23.8 18.8)" fill="#1E293B" />
+      <circle cx="12.8" cy="18.2" r="1.7" fill="#FFFFFF" />
+      <circle cx="23.2" cy="18.2" r="1.7" fill="#FFFFFF" />
+      <circle cx="13.4" cy="17.8" r="0.6" fill="#38BDF8" />
+      <circle cx="22.6" cy="17.8" r="0.6" fill="#38BDF8" />
+      <ellipse cx="8.5" cy="23.5" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.9" />
+      <ellipse cx="27.5" cy="23.5" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.9" />
+      <ellipse cx="18" cy="22" rx="2.2" ry="1.5" fill="#1E293B" />
+      <path d="M15.8 24.2 Q18 26.2 20.2 24.2" stroke="#1E293B" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
 
 function SolidDocIcon({ className = '' }: { className?: string }) {
   return (
@@ -392,6 +415,8 @@ export default function ProductDetailClient({
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
 
+  // 🐼 আইকনিক ভাঙচুর পান্ডা কার্ট ড্রপ ও সাকসেস স্টেট ইঞ্জিন
+  const [cartButtonState, setCartButtonState] = useState<'idle' | 'animating' | 'added'>('idle');
   const [isStockNotified, setIsStockNotified] = useState(false);
 
   const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
@@ -435,6 +460,7 @@ export default function ProductDetailClient({
     setZoomed(false);
     setActiveTab('ppSecDesc');
     setOpenFaqIdx(null);
+    setCartButtonState('idle');
 
     trackViewItem({
       item_id: prod.id,
@@ -496,14 +522,28 @@ export default function ProductDetailClient({
     setQty((q) => Math.max(1, Math.min(maxQty, q + d)));
   };
 
+  // 🐼 কিউট পান্ডা কার্ট ড্রপ ও ট্যাকটাইল রিয়্যাকশন হ্যান্ডলার
   const addCartFromPP = () => {
-    if (!prod || sold) return;
+    if (!prod || sold || cartButtonState === 'animating') return;
+
     const res = useCartStore.getState().addToCart([prod], prod.id, qty);
     if (res.ok) {
-      showToast(t('কার্টে যোগ হয়েছে'));
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
-      }
+      setCartButtonState('animating');
+
+      // পান্ডাটি ০.৬৫ সেকেন্ডে কার্টে পড়বে, তখন সাকসেস মেসেজ ট্রানজিশন হবে
+      setTimeout(() => {
+        setCartButtonState('added');
+        showToast(t('কার্টে যোগ হয়েছে'));
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
+        }
+      }, 650);
+
+      // ১.৭ সেকেন্ড পর স্বাভাবিক অবস্থায় বাউন্স ব্যাক করবে
+      setTimeout(() => {
+        setCartButtonState('idle');
+      }, 1750);
     } else if (res.reason === 'stock') {
       showToast(t('স্টক শেষ!'));
     }
@@ -892,40 +932,104 @@ export default function ProductDetailClient({
             </div>
           </div>
 
+          {/* 🐼 প্রধান অ্যাকশন বাটনসমূহ — জিরো-আউটলাইন গ্লিচ ও কিউট পান্ডা ড্রপ ইঞ্জিন */}
           <div className="flex flex-col gap-2.5">
             {sold ? (
               isStockNotified ? (
                 <button
                   type="button"
                   disabled
-                  className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 cursor-default select-none"
+                  className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 cursor-default select-none border-none outline-none ring-0"
                 >
                   <BellIcon className="text-white" />
                   <span>{lang === 'en' ? 'You will be notified when back in stock' : 'স্টকে আসলে আপনাকে জানানো হবে'}</span>
                 </button>
               ) : (
-                <button
+                <motion.button
                   type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-98"
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className="flex w-full items-center justify-center gap-2 rounded-[14px] bg-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh1 transition-all duration-brand hover:bg-brand-light-hover border-none outline-none focus:outline-none focus:ring-0 active:outline-none [-webkit-tap-highlight-color:transparent]"
                   onClick={notifyStock}
                 >
                   <BellIcon className="text-white" />
                   <span>{lang === 'en' ? 'Notify Me When in Stock' : 'স্টকে আসলে আমাকে জানান'}</span>
-                </button>
+                </motion.button>
               )
             ) : (
               <>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 py-3.5 text-sm font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
-                  <CartIcon /> {t('কার্টে যোগ করুন')}
-                </button>
-                <button
+                {/* 🐼 ভাঙচুর পান্ডা জাম্প ও কার্ট ড্রপ বাটন */}
+                <motion.button
+                  type="button"
+                  whileTap={cartButtonState === 'idle' ? { scale: 0.97 } : undefined}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className={`relative flex w-full items-center justify-center gap-2 rounded-[14px] border-[1.5px] py-3.5 font-body text-sm font-bold transition-all duration-200 outline-none focus:outline-none focus:ring-0 active:outline-none [-webkit-tap-highlight-color:transparent] overflow-visible select-none ${
+                    cartButtonState === 'added'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-600 shadow-xs'
+                      : 'border-brand-light/40 bg-brand-bg/35 text-brand-light hover:bg-brand-bg/55 hover:border-brand-light'
+                  }`}
+                  onClick={addCartFromPP}
+                >
+                  {/* 🐼 উড়ন্ত পান্ডার কিউট বাউন্স ও ডিগবাজি লেয়ার */}
+                  <AnimatePresence>
+                    {cartButtonState === 'animating' && (
+                      <motion.div
+                        key="panda-cart-jump"
+                        initial={{ opacity: 0, y: 12, x: 24, scale: 0.3, rotate: 0 }}
+                        animate={{
+                          opacity: [0, 1, 1, 1, 0],
+                          y: [12, -48, -52, -6, 12],
+                          x: [24, 16, 0, -22, -26],
+                          scale: [0.3, 1.25, 1.1, 0.6, 0.15],
+                          rotate: [0, -18, 15, -8, 0],
+                        }}
+                        transition={{
+                          duration: 0.85,
+                          ease: [0.22, 0.7, 0.2, 1],
+                          times: [0, 0.2, 0.45, 0.8, 1],
+                        }}
+                        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 drop-shadow-[0_6px_12px_rgba(0,0,0,0.18)]"
+                      >
+                        <VangcurPandaIcon className="h-9 w-9" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* কার্ট আইকন ও টেক্সট ট্রানজিশন */}
+                  <span
+                    className={`inline-flex items-center justify-center transition-transform duration-200 ${
+                      cartButtonState === 'animating' ? 'animate-cart-jiggle' : ''
+                    }`}
+                  >
+                    {cartButtonState === 'added' ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <CartIcon />
+                    )}
+                  </span>
+
+                  <span className="transition-all duration-200">
+                    {cartButtonState === 'added'
+                      ? (lang === 'en' ? 'Added to Cart!' : 'কার্টে যোগ হয়েছে!')
+                      : t('কার্টে যোগ করুন')}
+                  </span>
+                </motion.button>
+
+                {/* ⚡ এখনই অর্ডার করুন বাটন — অ্যাপল স্প্রিং ফিজিক্স ও ইনস্ট্যান্ট ফিল */}
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   onMouseEnter={() => router.prefetch('/checkout')}
                   onTouchStart={() => router.prefetch('/checkout')}
-                  className="shimmer-sheen flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3"
+                  className="shimmer-sheen flex w-full items-center justify-center gap-2 rounded-[14px] border-none bg-gradient-to-r from-info to-brand-light py-3.5 font-body text-sm font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] outline-none focus:outline-none focus:ring-0 active:outline-none [-webkit-tap-highlight-color:transparent]"
                   onClick={orderNow}
                 >
-                  <BoltIcon /> {t('এখনই অর্ডার করুন')}
-                </button>
+                  <BoltIcon />
+                  <span>{t('এখনই অর্ডার করুন')}</span>
+                </motion.button>
               </>
             )}
           </div>
@@ -1124,6 +1228,7 @@ export default function ProductDetailClient({
       <WarrantyModal isOpen={warrantyOpen} onClose={() => setWarrantyOpen(false)} warrantyText={prod.warranty} />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
 
+      {/* 📱 মোবাইল স্টিকি বটম বার — স্প্রিং ট্যাকটাইল রেসপন্স ও জিরো-আউটলাইন বর্ডার */}
       <div className={`fixed inset-x-0 bottom-0 z-[45] border-t border-border-base bg-white/95 pb-[max(10px,env(safe-area-inset-bottom))] shadow-sh3 backdrop-blur transition-transform duration-300 ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 pt-2.5 md:px-8">
           <div className="min-w-0 flex flex-1 flex-col justify-center pr-2">
@@ -1141,41 +1246,57 @@ export default function ProductDetailClient({
                 <button
                   type="button"
                   disabled
-                  className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[10px] bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 cursor-default select-none"
+                  className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[12px] bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 cursor-default select-none border-none outline-none ring-0"
                 >
                   <BellIcon className="text-white h-4 w-4" />
                   <span>{lang === 'en' ? 'Notified' : 'জানানো হবে'}</span>
                 </button>
               ) : (
-                <button
+                <motion.button
                   type="button"
-                  className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[10px] bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[12px] bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 transition-all duration-brand hover:bg-brand-light-hover border-none outline-none focus:outline-none focus:ring-0 active:outline-none [-webkit-tap-highlight-color:transparent]"
                   onClick={notifyStock}
                 >
                   <BellIcon className="text-white h-4 w-4" />
                   <span>{lang === 'en' ? 'Notify' : 'জানান'}</span>
-                </button>
+                </motion.button>
               )
             ) : (
               <>
-                <button
+                <motion.button
                   type="button"
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   onMouseEnter={() => router.prefetch('/checkout')}
                   onTouchStart={() => router.prefetch('/checkout')}
-                  className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
+                  className="shimmer-sheen inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[12px] border-none bg-gradient-to-r from-info to-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 transition-[filter] duration-brand hover:brightness-[1.03] outline-none focus:outline-none focus:ring-0 active:outline-none [-webkit-tap-highlight-color:transparent]"
                   onClick={orderNow}
                 >
                   <BoltIcon />
                   <span>{t('অর্ডার করুন')}</span>
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="button"
-                  className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 px-4 text-[13px] font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55 active:scale-95"
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className={`inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] px-4 text-[13px] font-bold transition-all duration-200 outline-none focus:outline-none focus:ring-0 active:outline-none [-webkit-tap-highlight-color:transparent] ${
+                    cartButtonState === 'added'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
+                      : 'border-brand-light/40 bg-brand-bg/35 text-brand-light hover:bg-brand-bg/55'
+                  }`}
                   onClick={addCartFromPP}
                 >
-                  <CartIcon />
-                  <span>{t('কার্ট')}</span>
-                </button>
+                  {cartButtonState === 'added' ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <CartIcon />
+                  )}
+                  <span>{cartButtonState === 'added' ? (lang === 'en' ? 'Added!' : 'যোগ হয়েছে!') : t('কার্ট')}</span>
+                </motion.button>
               </>
             )}
           </div>
