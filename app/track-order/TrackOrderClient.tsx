@@ -90,14 +90,17 @@ export default function TrackOrderClient() {
     }
 
     (async () => {
+      const validGuests = guestList.filter((g) => g.id && g.phone);
+      const results = await Promise.allSettled(
+        validGuests.map((g) => fetchFullOrder(supabase, String(g.id), g.phone!))
+      );
+
       const fetched: Order[] = [];
-      for (const g of guestList) {
-        if (!g.id || !g.phone) continue;
-        const data = await fetchFullOrder(supabase, String(g.id), g.phone);
-        if (data) {
-          fetched.push(mapSupabaseOrderRow(data as Record<string, unknown>));
+      results.forEach((res) => {
+        if (res.status === 'fulfilled' && res.value) {
+          fetched.push(mapSupabaseOrderRow(res.value as Record<string, unknown>));
         }
-      }
+      });
 
       if (fetched.length > 0) {
         setOrders(fetched);
