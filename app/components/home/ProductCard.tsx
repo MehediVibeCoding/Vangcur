@@ -17,9 +17,6 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
-// পুরো সেশনে (ব্রাউজার ট্যাব বন্ধ না করা পর্যন্ত) একটা প্রোডাক্ট কার্ড একবার এন্ট্রি-অ্যানিমেশন
-// দেখানোর পর সেটা মনে রাখা হয় — প্রোডাক্ট পেজ থেকে হোমে ব্যাক করলে আবার একই কার্ড অ্যানিমেট হবে না,
-// কিন্তু নতুন ক্যাটাগরি/নতুন লোড-মোর ব্যাচের নতুন প্রোডাক্টে ঠিকই অ্যানিমেশন দেখাবে।
 const animatedProductIds = new Set<string>();
 
 function StarRating({ rating }: { rating: number }) {
@@ -94,8 +91,6 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
-  const [shimmerPlay, setShimmerPlay] = useState(false);
-  const shimmerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cardKey = String(p.id);
   const alreadyAnimated = animatedProductIds.has(cardKey);
@@ -103,28 +98,6 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
-
-  useEffect(() => () => {
-    if (shimmerTimerRef.current) clearTimeout(shimmerTimerRef.current);
-  }, []);
-
-  // ক্লাস আগে থেকে on থাকলেও অ্যানিমেশন যেন আবার নতুন করে শুরু হয় (double rAF দিয়ে রিসেট)
-  const triggerShimmer = () => {
-    setShimmerPlay(false);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setShimmerPlay(true));
-    });
-  };
-
-  // একবার শুধু — কার্ড স্ক্রলে ভিউতে ঢোকার একটু পরে Order Now বাটনে শাইন খেলবে;
-  // এই মুহূর্তেই কার্ডটা "দেখা হয়ে গেছে" হিসেবে মার্ক হয়ে যায় যাতে পরে ব্যাক করলে আর অ্যানিমেট না হয়
-  const handleEntranceReveal = () => {
-    animatedProductIds.add(cardKey);
-    shimmerTimerRef.current = setTimeout(triggerShimmer, 500);
-  };
-
-  // /checkout GlobalOverlays.tsx O Navbar.tsx-e page-level e ekbar-i prefetch hoye jay,
-  // tai protita card alada kore prefetch korche na -- hover/touch e intent-based prefetch niche royei geche
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -167,24 +140,20 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     startQuickOrder(router, p, 1);
   };
 
-  // আগে যে কার্ড একবার এন্ট্রি-অ্যানিমেশন দেখিয়ে ফেলেছে (এই সেশনে), সেটার জন্য কোনো motion prop-ই
-  // পাঠানো হয় না — তাই সেটা সরাসরি রেস্ট স্টেটে রেন্ডার হয়, প্রোডাক্ট পেজ থেকে ব্যাক করলে আর
-  // ফেড/স্লাইড রিপ্লে হয় না। নতুন কার্ড (নতুন ক্যাটাগরি বা লোড-মোর ব্যাচ) ঠিকই অ্যানিমেট হবে।
   const entranceMotionProps = alreadyAnimated
     ? {}
     : {
-        initial: { opacity: 0, y: 24 },
+        initial: { opacity: 0, y: 16 },
         whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, amount: 0.08, margin: '0px 0px -40px 0px' },
-        // fade + slide একই smooth "ease-out" কার্ভে, পুরো duration জুড়ে একসাথে মিশে চলে;
-        // index অনুযায়ী হালকা স্ট্যাগার দেওয়া হয়েছে যাতে অনেকগুলো কার্ড একসাথে না লাফিয়ে
-        // ঢেউয়ের মতো মসৃণভাবে একে একে উঠে আসে
+        viewport: { once: true, amount: 0.05, margin: '50px' },
         transition: {
-          duration: 0.6,
+          duration: 0.35,
           ease: [0.16, 1, 0.3, 1] as const,
-          delay: Math.min(index * 0.045, 0.27),
+          delay: Math.min(index * 0.03, 0.18),
         },
-        onViewportEnter: handleEntranceReveal,
+        onViewportEnter: () => {
+          animatedProductIds.add(cardKey);
+        },
       };
 
   return (
@@ -193,7 +162,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
       whileTap={{ scale: 0.98, transition: { type: 'spring', stiffness: 500, damping: 30 } }}
       onMouseEnter={() => router.prefetch('/checkout')}
       onTouchStart={() => router.prefetch('/checkout')}
-      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [transform:translateZ(0)]"
+      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)]"
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
         <Link
@@ -286,10 +255,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   type="button"
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className={`shimmer-sheen-oneshot${shimmerPlay ? ' shimmer-sheen-play' : ''} relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/80 font-body text-[12px] font-extrabold text-brand-light-hover shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10`}
-                  style={{
-                    background: 'linear-gradient(115deg, #FFFFFF 0%, #EAF3FE 55%, #CFE5FE 100%)',
-                  }}
+                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover font-body text-[12px] font-extrabold text-white shadow-sh1 transition-[filter] duration-brand hover:brightness-[1.03] sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                 >
                   {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
