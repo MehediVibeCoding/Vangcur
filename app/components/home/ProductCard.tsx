@@ -219,7 +219,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                 {/* Frosted Glass Cart Button */}
                 <button
                   type="button"
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-150 hover:bg-white/30 hover:border-white/60 active:scale-90 sm:h-9 lg:h-10"
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-150 hover:bg-white/30 hover:border-white/70 active:scale-90 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
                   aria-label={t('কার্টে যোগ করুন')}
                   onClick={handleAddToCartDirect}
@@ -227,10 +227,10 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   <CartIcon />
                 </button>
 
-                {/* Ethereal Light Liquid Sky Glass Order Button (Zero GPU Overhead) */}
+                {/* Refined Crystal Liquid Glass Button (Based on Image 3 with Fresh Ice-Sky Tint) */}
                 <button
                   type="button"
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 bg-gradient-to-r from-[#38BDF8]/95 via-[#BAE6FD] to-[#38BDF8]/95 font-body text-[12px] font-extrabold tracking-wide text-[#072F57] shadow-[inset_0_1px_2px_rgba(255,255,255,0.75),0_2px_10px_rgba(56,189,248,0.28)] transition-all duration-150 hover:brightness-105 hover:border-white active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/90 bg-gradient-to-r from-[#F0F8FF]/95 via-[#E0F2FE]/95 to-[#F0F8FF]/95 font-body text-[12px] font-extrabold tracking-wide text-[#0284C7] shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_3px_10px_rgba(0,88,199,0.12)] transition-all duration-150 hover:border-white hover:text-[#0062E3] hover:shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_4px_14px_rgba(0,88,199,0.18)] active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                 >
                   <span className="relative z-10">
