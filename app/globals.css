@@ -209,7 +209,7 @@
   }
 }
 
-/* ২. Ambient Shimmer Sheen */
+/* ২. Ambient Shimmer Sheen — checkout/cart/error ইত্যাদির CTA বাটনে সবসময়-চলা আসল ভার্সন, অপরিবর্তিত */
 .shimmer-sheen {
   position: relative;
   overflow: hidden;
@@ -233,6 +233,33 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .shimmer-sheen::after { animation: none; display: none; }
+}
+
+/* ২ক. হোমপেজ প্রোডাক্ট কার্ডের Order Now বাটনের জন্য আলাদা — event-triggered, transform-only (GPU), by-default off */
+.shimmer-sheen-oneshot {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shimmer-sheen-oneshot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 55%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-220%) skewX(-20deg);
+  pointer-events: none;
+}
+/* .shimmer-sheen-play React থেকে যোগ হয় — তখনই শুধু একবার সুইপ চলে */
+.shimmer-sheen-oneshot.shimmer-sheen-play::after {
+  animation: shimmerSweepOnce 0.8s cubic-bezier(.4,0,.2,1) 1;
+}
+@keyframes shimmerSweepOnce {
+  0%   { transform: translateX(-220%) skewX(-20deg); }
+  100% { transform: translateX(220%) skewX(-20deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-sheen-oneshot.shimmer-sheen-play::after { animation: none; display: none; }
 }
 
 /* ৩. Card Hover Glow (ডেস্কটপ অনলি) */
