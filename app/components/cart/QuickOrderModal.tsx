@@ -27,6 +27,20 @@ import type { Product } from '@/types';
 
 const MAX_COUPON_LEN = 25;
 
+function getCachedProds(): Product[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem('vc_search_prods_cache');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 function CartItemThumb({ emoji }: { emoji?: string }) {
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
   if (isUrl) {
@@ -121,10 +135,50 @@ export default function QuickOrderModal() {
   const [orderStatus, setOrderStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
   useEffect(() => {
-    fetchCustomProducts(supabase).then((prods) => {
-      if (prods.length) prodsRef.current = prods;
-    });
-  }, [supabase]);
+    prodsRef.current = getCachedProds();
+  }, []);
+
+  useEffect(() => {
+    if (!open && prodsRef.current.length > 0) return;
+    let cancelled = false;
+
+    const loadProds = async () => {
+      if (prodsRef.current.length > 0) return;
+      const cached = getCachedProds();
+      if (cached.length > 0) {
+        prodsRef.current = cached;
+        return;
+      }
+      try {
+        const rows = await fetchCustomProducts(supabase);
+        if (!cancelled && rows.length) {
+          prodsRef.current = rows;
+          try {
+            sessionStorage.setItem('vc_search_prods_cache', JSON.stringify(rows));
+            sessionStorage.setItem('vc_search_cache_ts', String(Date.now()));
+          } catch {
+            // ignore
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    if (open) {
+      loadProds();
+    } else {
+      const idleTimer = setTimeout(loadProds, 3500);
+      return () => {
+        cancelled = true;
+        clearTimeout(idleTimer);
+      };
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, supabase]);
 
   useEffect(() => {
     setAppliedCoupon(getAppliedCoupon());
