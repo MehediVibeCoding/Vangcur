@@ -64,7 +64,7 @@ function IconPhone() {
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]" aria-hidden="true">
       <svg {...deco} width="34" height="34" className="absolute -left-1 top-2 -rotate-12" viewBox="0 0 24 24">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       </svg>
@@ -97,6 +97,15 @@ export default function StockNotifyModal() {
   }, []);
 
   useHistoryModal(isOpen, close, 'stock-notify-modal');
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', onKeydown);
+    return () => document.removeEventListener('keydown', onKeydown);
+  }, [isOpen, close]);
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -210,10 +219,11 @@ export default function StockNotifyModal() {
             className="relative z-10 flex max-h-[90vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 shadow-sh3 ring-1 ring-white/80"
           >
             <HeaderDecor />
+            
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={close}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
+              className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
               aria-label={t('বন্ধ করুন')}
             >
               ✕
