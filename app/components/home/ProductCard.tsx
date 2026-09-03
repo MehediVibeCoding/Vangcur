@@ -89,15 +89,37 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
+  const [shimmerPlay, setShimmerPlay] = useState(false);
+  const shimmerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
 
-  // মাউন্ট হওয়ার সাথে সাথে ব্রাউজার মেমোরিতে চেকআউট রুট প্রি-ফেচ নিশ্চিত করা
-  useEffect(() => {
-    router.prefetch('/checkout');
-  }, [router]);
+  useEffect(() => () => {
+    if (shimmerTimerRef.current) clearTimeout(shimmerTimerRef.current);
+  }, []);
+
+  // ক্লাস আগে থেকে on থাকলেও অ্যানিমেশন যেন আবার নতুন করে শুরু হয় (double rAF দিয়ে রিসেট)
+  const triggerShimmer = () => {
+    setShimmerPlay(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setShimmerPlay(true));
+    });
+  };
+
+  // একবার শুধু — কার্ড স্ক্রলে ভিউতে ঢোকার একটু পরে Order Now বাটনে শাইন খেলবে
+  const handleEntranceReveal = () => {
+    shimmerTimerRef.current = setTimeout(triggerShimmer, 500);
+  };
+
+  // কার্ডে ক্লিক করে প্রোডাক্ট পেজে যাওয়ার মুহূর্তে একই শাইন আবার খেলবে, নেভিগেশনের সাথে সমান্তরালে
+  const handleCardNavigateClick = () => {
+    triggerShimmer();
+  };
+
+  // /checkout GlobalOverlays.tsx O Navbar.tsx-e page-level e ekbar-i prefetch hoye jay,
+  // tai protita card alada kore prefetch korche na -- hover/touch e intent-based prefetch niche royei geche
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -146,6 +168,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.08, margin: '0px 0px -40px 0px' }}
       transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      onViewportEnter={handleEntranceReveal}
       onMouseEnter={() => router.prefetch('/checkout')}
       onTouchStart={() => router.prefetch('/checkout')}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
@@ -154,6 +177,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
         <Link
           href={href}
           prefetch={true}
+          onClick={handleCardNavigateClick}
           className="absolute inset-0 block cursor-pointer transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.06]"
         >
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst && index >= 2} />
@@ -241,9 +265,9 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   type="button"
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/60 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10"
+                  className={`shimmer-sheen-oneshot${shimmerPlay ? ' shimmer-sheen-play' : ''} relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-brand-light/35 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10`}
                   style={{
-                    background: 'linear-gradient(115deg, rgba(255,255,255,.94) 0%, rgba(195,222,252,.9) 38%, rgba(255,255,255,.92) 64%, rgba(68,167,252,.35) 100%)',
+                    background: 'linear-gradient(115deg, rgba(255,255,255,.95) 0%, rgba(195,222,252,.7) 55%, rgba(68,167,252,.4) 100%)',
                   }}
                   onClick={handleOrderNowDirect}
                 >
