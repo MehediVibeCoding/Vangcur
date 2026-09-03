@@ -5,15 +5,17 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   productHref,
-  QUICK_ORDER_EVENT, QUICK_CART_EVENT,
+  startQuickOrder,
+  QUICK_CART_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import useHistoryModal from '@/lib/useHistoryModal';
-import type { WishlistItem } from '@/types';
+import type { WishlistItem, Product } from '@/types';
 
 function WishImg({ emoji }: { emoji?: string }) {
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
@@ -113,14 +115,51 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
     document.getElementById('prodSec')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const addToCart = (id: number | string) => {
-    window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id } }));
+  const addToCart = (item: WishlistItem) => {
+    const prod: Product = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      old: item.price,
+      imgs: [item.emoji || '📦'],
+      cat: item.cat || 'general',
+      cats: [item.cat || 'general'],
+      specs: {},
+      warranty: '৭ দিন',
+      badge: '',
+      stock: 99,
+      rating: 5,
+      discountColor: '',
+      desc: '',
+      _detailLoaded: false,
+    };
+    useCartStore.getState().addToCart([prod], prod.id, 1);
     showToast(t('কার্টে যোগ হয়েছে'));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: item.id } }));
+    }
   };
 
-  const orderNow = (id: number | string) => {
+  const handleOrderNow = (item: WishlistItem) => {
     onClose();
-    window.dispatchEvent(new CustomEvent(QUICK_ORDER_EVENT, { detail: { id } }));
+    const prod: Product = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      old: item.price,
+      imgs: [item.emoji || '📦'],
+      cat: item.cat || 'general',
+      cats: [item.cat || 'general'],
+      specs: {},
+      warranty: '৭ দিন',
+      badge: '',
+      stock: 99,
+      rating: 5,
+      discountColor: '',
+      desc: '',
+      _detailLoaded: false,
+    };
+    startQuickOrder(router, prod, 1);
   };
 
   const removeItem = (id: number | string) => {
@@ -244,7 +283,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                             type="button"
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                            onClick={() => addToCart(item.id)}
+                            onClick={() => addToCart(item)}
                             className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-all hover:bg-brand-light hover:text-white hover:border-brand-light"
                           >
                             <CartPlusIcon />
@@ -254,7 +293,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                             type="button"
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                            onClick={() => orderNow(item.id)}
+                            onClick={() => handleOrderNow(item)}
                             className="shimmer-sheen flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
                           >
                             <span>{lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}</span>
