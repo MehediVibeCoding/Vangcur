@@ -9,7 +9,6 @@ import { showToast } from '@/lib/toast';
 import { parseSupabaseVal } from '@/lib/categoryData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
-import { SHOW_POST_RECEIVE_INFO_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { InvoiceLoadingSkeleton } from '@/app/components/ui/Skeletons';
@@ -409,9 +408,6 @@ export default function InvoiceClient() {
       // ignore
     }
     clearPendingOrder();
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent(SHOW_POST_RECEIVE_INFO_EVENT));
-    }
     router.replace('/');
   };
 
