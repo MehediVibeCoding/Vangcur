@@ -321,6 +321,11 @@ export default function ProductDetailClient({
     !!initialProduct || (initialProducts && initialProducts.length > 0)
   );
 
+  // পেজ লোড হওয়ামাত্র ব্যাকগ্রাউন্ডে চেকআউট প্রি-ফেচিং সক্রিয় করা
+  useEffect(() => {
+    router.prefetch('/checkout');
+  }, [router]);
+
   useEffect(() => {
     let cancelled = false;
     fetchCustomProducts(supabase).then((customRows) => {
@@ -906,7 +911,12 @@ export default function ProductDetailClient({
                 <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-brand-light/40 bg-brand-bg/35 py-3.5 text-sm font-bold text-brand-light transition-brand duration-brand hover:bg-brand-bg/55" onClick={addCartFromPP}>
                   <CartIcon /> {t('কার্টে যোগ করুন')}
                 </button>
-                <button className="flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3" onClick={orderNow}>
+                <button
+                  onMouseEnter={() => router.prefetch('/checkout')}
+                  onTouchStart={() => router.prefetch('/checkout')}
+                  className="shimmer-sheen flex w-full items-center justify-center gap-2 rounded-[10px] border-none bg-brand-light py-3.5 text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:-translate-y-0.5 hover:bg-brand-light-hover hover:shadow-sh3"
+                  onClick={orderNow}
+                >
                   <BoltIcon /> {t('এখনই অর্ডার করুন')}
                 </button>
               </>
@@ -1143,6 +1153,8 @@ export default function ProductDetailClient({
               <>
                 <button
                   type="button"
+                  onMouseEnter={() => router.prefetch('/checkout')}
+                  onTouchStart={() => router.prefetch('/checkout')}
                   className="inline-flex h-[42px] min-h-[42px] box-border items-center justify-center gap-1.5 rounded-[10px] border-none bg-brand-light px-4 text-[13px] font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
                   onClick={orderNow}
                 >
