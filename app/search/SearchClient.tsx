@@ -10,6 +10,7 @@ import { searchProducts, matchCategories } from '@/lib/searchData';
 import { subscribeCustomProducts } from '@/lib/productData';
 import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 
@@ -18,10 +19,29 @@ const PRODS_AUTO_THRESHOLD = 2;
 const MAX_SEARCH_LEN = 60;
 
 function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: (v: string) => void }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [value, setValue] = useState(query);
+  const lastLimitToastRef = useRef(0);
 
   useEffect(() => { setValue(query); }, [query]);
+
+  const handleChange = (rawVal: string) => {
+    if (rawVal.length >= MAX_SEARCH_LEN) {
+      const now = Date.now();
+      if (now - lastLimitToastRef.current > 2200) {
+        lastLimitToastRef.current = now;
+        showToast(
+          lang === 'en'
+            ? 'Search limit reached (maximum 60 characters)'
+            : 'সার্চের সর্বোচ্চ সীমা ৬০ অক্ষরে পৌঁছে গেছে',
+          'error'
+        );
+      }
+    }
+    const clean = rawVal.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
+    setValue(clean);
+    onQueryChange(clean);
+  };
 
   return (
     <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
@@ -30,7 +50,7 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
           <Link
             href="/"
             aria-label={t('হোম পেইজে যান')}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-light shadow-sm transition-brand duration-brand hover:bg-brand-light hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-bg text-brand-light shadow-sm transition-colors duration-brand hover:bg-brand-light hover:text-white"
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 11.5 12 4l8 7.5" />
@@ -47,23 +67,19 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
               maxLength={MAX_SEARCH_LEN}
               value={value}
               placeholder={t('পুনরায় সার্চ করুন...')}
-              onChange={(e) => {
-                // 🛡️ রিয়েল-টাইম ক্যারেক্টার ফিল্টারিং ও ৬০ লেন্থ লক
-                const clean = e.target.value.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
-                setValue(clean);
-                onQueryChange(clean);
-              }}
+              onChange={(e) => handleChange(e.target.value)}
               autoComplete="off"
-              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none transition-brand duration-brand focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
+              style={{ outline: 'none', WebkitAppearance: 'none' }}
+              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none focus:outline-none focus:ring-0 focus-visible:outline-none transition-colors duration-200 focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
             />
             {value && (
               <button
                 type="button"
                 onClick={() => { setValue(''); onQueryChange(''); }}
                 aria-label={t('মুছুন')}
-                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors duration-brand hover:bg-brand-light hover:text-white"
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             )}
           </div>
@@ -91,7 +107,7 @@ function ArrowRightIcon() {
   );
 }
 
-const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]';
+const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-7 py-3 font-body text-sm font-bold text-white no-underline shadow-sh2 transition-colors duration-brand hover:brightness-[1.03]';
 
 function CategoryIcon({ icon }: { icon?: string }) {
   const isSvg = typeof icon === 'string' && icon.trim().startsWith('<svg');
@@ -188,7 +204,6 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
     return () => { supabase.removeChannel(channel); };
   }, [supabase]);
 
-  // 🛡️ ডেবাউন্সড ও স্যানিটাইজড সার্চ কুয়েরি হ্যান্ডলার
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleQueryChange = useCallback((value: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -299,7 +314,7 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
                       type="button"
                       key={c.id}
                       onClick={() => goToHomeCategory(c.id)}
-                      className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border-base bg-white px-4 py-2.5 text-[13px] font-semibold text-ink transition-brand duration-brand hover:border-brand-light hover:bg-brand-bg hover:text-brand-light"
+                      className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border-base bg-white px-4 py-2.5 text-[13px] font-semibold text-ink transition-colors duration-brand hover:border-brand-light hover:bg-brand-bg hover:text-brand-light"
                     >
                       <CategoryIcon icon={c.icon} />
                       {c.name}
@@ -335,7 +350,7 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
                   {showLoadMoreBtn && (
                     <button
                       onClick={handleLoadMoreClick}
-                      className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
+                      className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-colors duration-brand hover:brightness-[1.03]"
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
                       {t('আরো প্রোডাক্ট দেখুন')}
