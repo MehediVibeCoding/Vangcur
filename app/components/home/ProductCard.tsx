@@ -142,10 +142,10 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-30px' }}
-      transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+      viewport={{ once: true, amount: 0.08, margin: '0px 0px -40px 0px' }}
+      transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
       onMouseEnter={() => router.prefetch('/checkout')}
       onTouchStart={() => router.prefetch('/checkout')}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
