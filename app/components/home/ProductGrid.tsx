@@ -10,8 +10,7 @@ import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 import ProductCard from './ProductCard';
 
-const PRODS_PER_PAGE = 20;
-const PRODS_AUTO_THRESHOLD = 2;
+const LADDER_BATCHES = [24, 36, 60, 84, 120, 180];
 
 function EmptyBoxIcon() {
   return (
@@ -50,14 +49,12 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     ? initialProducts.filter((p) => prodInCat(p, initialCategory)).length
     : initialProducts.length;
 
-  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, initialFilteredCount || PRODS_PER_PAGE));
-  const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
+  const [renderedCount, setRenderedCount] = useState(() => Math.min(LADDER_BATCHES[0], initialFilteredCount || LADDER_BATCHES[0]));
   const [showSpinner, setShowSpinner] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const batchCountRef = useRef(1);
-  const loadMorePausedRef = useRef(false);
-  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, initialFilteredCount || PRODS_PER_PAGE));
+  const renderedCountRef = useRef(Math.min(LADDER_BATCHES[0], initialFilteredCount || LADDER_BATCHES[0]));
   const listRef = useRef<Product[]>([]);
   const prevCatRef = useRef(activeCat);
 
@@ -72,23 +69,22 @@ export default function ProductGrid({ initialProducts, initialCategory, category
   const appendNextBatch = useCallback(() => {
     const currentList = listRef.current;
     const cur = renderedCountRef.current;
-    if (cur >= currentList.length) return;
-    const nextCount = Math.min(cur + PRODS_PER_PAGE, currentList.length);
+    if (cur >= currentList.length) {
+      setShowSpinner(false);
+      return;
+    }
+
+    const currentBatchIdx = batchCountRef.current;
+    const nextAddition = LADDER_BATCHES[Math.min(currentBatchIdx, LADDER_BATCHES.length - 1)];
+    const nextCount = Math.min(cur + nextAddition, currentList.length);
+
     batchCountRef.current += 1;
     renderedCountRef.current = nextCount;
     setRenderedCount(nextCount);
 
     if (nextCount >= currentList.length) {
-      loadMorePausedRef.current = false;
-      setShowLoadMoreBtn(false);
-      setShowSpinner(false);
-    } else if (batchCountRef.current % PRODS_AUTO_THRESHOLD === 0) {
-      loadMorePausedRef.current = true;
-      setShowLoadMoreBtn(true);
       setShowSpinner(false);
     } else {
-      loadMorePausedRef.current = false;
-      setShowLoadMoreBtn(false);
       setShowSpinner(true);
     }
   }, []);
@@ -98,13 +94,11 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     prevCatRef.current = activeCat;
 
     batchCountRef.current = 0;
-    loadMorePausedRef.current = false;
     renderedCountRef.current = 0;
-    setShowLoadMoreBtn(false);
     setShowSpinner(false);
     setRenderedCount(0);
-    const t = setTimeout(() => appendNextBatch(), 0);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => appendNextBatch(), 0);
+    return () => clearTimeout(timer);
   }, [activeCat, appendNextBatch]);
 
   useEffect(() => {
@@ -120,28 +114,22 @@ export default function ProductGrid({ initialProducts, initialCategory, category
           if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
             return;
           }
-          if (renderedCountRef.current < listRef.current.length && !loadMorePausedRef.current) {
+          if (renderedCountRef.current < listRef.current.length) {
             appendNextBatch();
           }
-        }, 180);
+        }, 120);
       } else if (timer) {
         clearTimeout(timer);
         timer = null;
       }
-    }, { rootMargin: '300px' });
+    }, { rootMargin: '600px' });
+
     obs.observe(sentinel);
     return () => {
       if (timer) clearTimeout(timer);
       obs.disconnect();
     };
   }, [appendNextBatch]);
-
-  const handleLoadMoreClick = () => {
-    setShowLoadMoreBtn(false);
-    batchCountRef.current = 0;
-    loadMorePausedRef.current = false;
-    appendNextBatch();
-  };
 
   useEffect(() => {
     const onFilter = (e: Event) => {
@@ -232,22 +220,13 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       )}
 
       <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
-        {showSpinner && (
+        {showSpinner && !isDone && (
           <div className="flex items-center gap-2 text-[13px] text-muted">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin text-brand-light">
               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
             </svg>
             {t('লোড হচ্ছে...')}
           </div>
-        )}
-        {showLoadMoreBtn && (
-          <button
-            onClick={handleLoadMoreClick}
-            className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-brand duration-brand hover:brightness-[1.03]"
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-            {t('আরো প্রোডাক্ট দেখুন')}
-          </button>
         )}
       </div>
     </div>
