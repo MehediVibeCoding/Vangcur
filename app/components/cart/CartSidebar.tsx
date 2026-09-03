@@ -27,6 +27,20 @@ import type { Product } from '@/types';
 
 const MAX_COUPON_LEN = 25;
 
+function getCachedProds(): Product[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem('vc_search_prods_cache');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 function CartItemThumb({ emoji }: { emoji?: string }) {
   const isUrl = typeof emoji === 'string' && (emoji.startsWith('http://') || emoji.startsWith('https://'));
   if (isUrl) {
@@ -159,27 +173,77 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const customRows = await fetchCustomProducts(supabase);
-      if (!cancelled && customRows.length) {
-        prodsRef.current = customRows;
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [supabase]);
+    prodsRef.current = getCachedProds();
+  }, []);
 
   useEffect(() => {
-    const onQuickCart = (e: Event) => {
+    if (!isOpen && prodsRef.current.length > 0) return;
+    let cancelled = false;
+
+    const loadProds = async () => {
+      if (prodsRef.current.length > 0) return;
+      const cached = getCachedProds();
+      if (cached.length > 0) {
+        prodsRef.current = cached;
+        return;
+      }
+      try {
+        const customRows = await fetchCustomProducts(supabase);
+        if (!cancelled && customRows.length) {
+          prodsRef.current = customRows;
+          try {
+            sessionStorage.setItem('vc_search_prods_cache', JSON.stringify(customRows));
+            sessionStorage.setItem('vc_search_cache_ts', String(Date.now()));
+          } catch {
+            // ignore
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    if (isOpen) {
+      loadProds();
+    } else {
+      const idleTimer = setTimeout(loadProds, 3000);
+      return () => {
+        cancelled = true;
+        clearTimeout(idleTimer);
+      };
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, supabase]);
+
+  useEffect(() => {
+    const onQuickCart = async (e: Event) => {
       const id = (e as CustomEvent).detail?.id;
       if (id === undefined) return;
+
+      if (prodsRef.current.length === 0) {
+        const cached = getCachedProds();
+        if (cached.length > 0) {
+          prodsRef.current = cached;
+        } else {
+          try {
+            const rows = await fetchCustomProducts(supabase);
+            if (rows.length) prodsRef.current = rows;
+          } catch {
+            // ignore
+          }
+        }
+      }
+
       const res = useCartStore.getState().addToCart(prodsRef.current, id, 1);
       if (res.ok) showToast(t('কার্টে যোগ হয়েছে'));
       else if (res.reason === 'stock') showToast(t('স্টক শেষ!'));
     };
     window.addEventListener(QUICK_CART_EVENT, onQuickCart);
     return () => window.removeEventListener(QUICK_CART_EVENT, onQuickCart);
-  }, [t]);
+  }, [t, supabase]);
 
   useEffect(() => {
     if (isOpen) lockBody();
