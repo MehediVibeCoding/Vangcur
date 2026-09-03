@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { SHOW_POST_RECEIVE_INFO_EVENT } from '@/lib/uiEvents';
 import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
@@ -93,25 +93,29 @@ function IconCheckBadgeSolid() {
 export default function PostReceiveInfoModal() {
   const [open, setOpen] = useState(false);
   const { lang } = useT();
+  const pathname = usePathname();
 
   const close = useCallback(() => setOpen(false), []);
   useHistoryModal(open, close, 'post-receive-info-modal');
 
+  // ইনভয়েস পেজ থেকে "ফিরে যান"-এ ক্লিক করলে হোমে (pathname === '/') আসার পরই এই effect চলে —
+  // router.replace('/') এখনো শেষ না হতেই যদি এই মডাল আগেভাগে খুলে হিস্ট্রিতে push করে ফেলত,
+  // তাহলে পরে "বুঝেছি"-তে ক্লিক করলে history.back() ভুলভাবে সরাসরি ইনভয়েস পেজে ফিরে যেত এবং
+  // ইনভয়েস আবার অটো-ডাউনলোড হয়ে যেত। pathname-ভিত্তিক চেক নিশ্চিত করে যে নেভিগেশন পুরোপুরি
+  // শেষ হওয়ার পরই মডালটা খোলে, তাই হিস্ট্রি স্ট্যাক ঠিকভাবে সাজানো থাকে।
   useEffect(() => {
-    const onShow = () => setOpen(true);
-    window.addEventListener(SHOW_POST_RECEIVE_INFO_EVENT, onShow);
-
+    if (pathname !== '/') return undefined;
     try {
-      if (typeof window !== 'undefined' && sessionStorage.getItem('vc_show_post_receive_after_invoice') === '1') {
-        sessionStorage.removeItem('vc_show_post_receive_after_invoice');
-        setTimeout(() => setOpen(true), 350);
+      if (typeof window === 'undefined' || sessionStorage.getItem('vc_show_post_receive_after_invoice') !== '1') {
+        return undefined;
       }
+      sessionStorage.removeItem('vc_show_post_receive_after_invoice');
     } catch {
-      // ignore
+      return undefined;
     }
-
-    return () => window.removeEventListener(SHOW_POST_RECEIVE_INFO_EVENT, onShow);
-  }, []);
+    const timer = setTimeout(() => setOpen(true), 350);
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   useEffect(() => {
     if (open) lockBody();
