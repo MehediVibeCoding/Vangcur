@@ -1,8 +1,8 @@
 'use server';
 
+import { after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/serviceClient';
-import { fetchCustomProducts } from '@/lib/productData';
 import {
   DISTRICTS, getShipOptions, shipPrice, fetchShipConfig,
   validatePhone, validateAddress, validateEmail, validateTxnId,
@@ -24,6 +24,16 @@ const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 function fail(error: string): ActionResponse<CreateOrderResult> {
   return { ok: false, error };
+}
+
+function parseJsonish<T>(val: unknown, fallback: T): T {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val !== 'string') return val as T;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 export async function createOrder(payload: OrderPayload): Promise<ActionResponse<CreateOrderResult>> {
@@ -61,7 +71,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
 
   if (!rawItems.length || rawItems.length > MAX_ITEMS) return fail(t('কার্ট খালি বা অস্বাভাবিক, রিফ্রেশ করে আবার চেষ্টা করুন'));
 
-  // ১. ডুপ্লিকেট প্রোডাক্ট মার্জার (একই প্রোডাক্ট একাধিকবার থাকলে কোয়ান্টিটি যোগ করা)
+  // ১. ডুপ্লিকেট প্রোডাক্ট মার্জার
   const mergedMap: Record<string, number> = {};
   for (const raw of rawItems) {
     const id = String(raw?.id ?? '').trim();
@@ -73,6 +83,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   }
 
   const cleanItems: { id: string; qty: number }[] = Object.entries(mergedMap).map(([id, qty]) => ({ id, qty }));
+  const targetProductIds = cleanItems.map((item) => item.id);
 
   let service;
   try {
@@ -82,7 +93,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('সার্ভার কনফিগারেশন সমস্যা, একটু পরে চেষ্টা করুন'));
   }
 
-  // 🛡️ নিরাপদ সার্ভার-ভেরিফাইড সেশন অথেন্টিকেশন (মডারেটর ও অ্যাডমিন ডিটেকশন)
+  // 🛡️ নিরাপদ সার্ভার-ভেরিফাইড সেশন অথেন্টিকেশন
   let currentUserId: string | null = null;
   let isPrivilegedUser = false;
 
@@ -93,7 +104,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       currentUserId = userData.user.id;
       const verifiedUserEmail = (userData.user.email || '').toLowerCase().trim();
       
-      // শুধুমাত্র লগইন করা মডারেটরের ভেরিফাইড ইমেইল দিয়েই মডারেটর প্রিভিলেজ নিশ্চিত করা
       if (verifiedUserEmail === MODERATOR_EMAIL.toLowerCase()) {
         isPrivilegedUser = true;
       } else {
@@ -112,7 +122,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     // ignore
   }
 
-  // ২. রেট লিমিট যাচাই (লগইন করা মডারেটর/অ্যাডমিন হলে রেট লিমিট ১০০% বাইপাস)
+  // ২. রেট লিমিট যাচাই (লগইন করা মডারেটর/অ্যাডমিন হলে বাইপাস)
   if (!isPrivilegedUser) {
     try {
       const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
@@ -135,13 +145,41 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   }
 
-  // ৩. পণ্যের আসল দাম যাচাই
-  let authoritativeProds: Awaited<ReturnType<typeof fetchCustomProducts>> = [];
+  // ৩. স্পিড অপটিমাইজড টার্গেটেড প্রোডাক্ট কুয়েরি ও শিপিং কনফিগ (প্যারালাল ফেচ)
+  let authoritativeProds: { id: string | number; name: string; price: number; stock: number; cat: string; imgs: string[] }[] = [];
+  let shipCfg = DEFAULT_SHIP_CFG;
+
   try {
-    authoritativeProds = await fetchCustomProducts(service);
+    const [productsResult, fetchedShipCfg] = await Promise.all([
+      service
+        .from('custom_products')
+        .select('id, cat, name, price, stock, imgs')
+        .in('id', targetProductIds),
+      fetchShipConfig(service),
+    ]);
+
+    if (productsResult.data && productsResult.data.length > 0) {
+      authoritativeProds = productsResult.data.map((p) => {
+        let parsedImgs = parseJsonish<string[]>(p.imgs, []);
+        if (!Array.isArray(parsedImgs) || !parsedImgs.length) parsedImgs = ['📦'];
+        return {
+          id: p.id,
+          name: p.name || '',
+          price: Number(p.price) || 0,
+          stock: p.stock !== undefined && p.stock !== null ? Number(p.stock) : 0,
+          cat: p.cat || 'general',
+          imgs: parsedImgs,
+        };
+      });
+    }
+
+    if (fetchedShipCfg) {
+      shipCfg = fetchedShipCfg;
+    }
   } catch (e) {
-    logWarn('[checkout] authoritative product fetch failed:', e);
+    logWarn('[checkout] parallel fetch failed:', e);
   }
+
   if (!authoritativeProds.length) return fail(t(GENERIC_RETRY_MSG));
 
   const verifiedItems: { id: string | number; name: string; emoji: string; price: number; qty: number; cat: string }[] = [];
@@ -149,11 +187,15 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     const prod = authoritativeProds.find((p) => String(p.id) === item.id);
     if (!prod) return fail(t('একটি পণ্য আর পাওয়া যাচ্ছে না, পেজ রিফ্রেশ করে আবার চেষ্টা করুন'));
     verifiedItems.push({
-      id: prod.id, name: prod.name, emoji: (prod.imgs || ['📦'])[0], price: prod.price, qty: item.qty, cat: prod.cat,
+      id: prod.id,
+      name: prod.name,
+      emoji: prod.imgs[0] || '📦',
+      price: prod.price,
+      qty: item.qty,
+      cat: prod.cat,
     });
   }
 
-  const shipCfg = await fetchShipConfig(service);
   let sc = shipPrice(shipping, shipCfg);
   const vSub = verifiedItems.reduce((s, i) => s + i.price * i.qty, 0);
 
@@ -187,7 +229,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
   const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
-  // ২০k লিমিট গার্ড (লগইন করা মডারেটরের জন্য বাইপাস)
+  // ২০k লিমিট গার্ড
   if (vTotal > MAX_ONLINE_ORDER_TOTAL && !isPrivilegedUser) {
     return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
   }
@@ -216,7 +258,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     // fallback
   }
 
-  // ডুপ্লিকেট বিকাশ TxnID বাইপাস (মডারেটর টেস্টিংয়ের জন্য ইউনিক প্রিফিক্স যোগ করা)
+  // ডুপ্লিকেট বিকাশ TxnID বাইপাস (মডারেটর টেস্টের জন্য)
   let safeTxn = txn || null;
   if (safeTxn && isPrivilegedUser) {
     const { data: existingTxn } = await service
@@ -256,7 +298,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
 
   let insResult = await service.from('orders').insert(primaryPayload).select('id').single();
 
-  // যদি কোনো কলাম অনুপস্থিত থাকার কারণে ইনসার্ট ফেইল করে, তাহলে বেস কলামে ফলব্যাক ইনসার্ট
   if (insResult.error && insResult.error.code === '42703') {
     logWarn('[checkout] Missing optional columns in DB schema, falling back to core fields...');
     const fallbackPayload: Record<string, unknown> = {
@@ -283,7 +324,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   if (insResult.error || !insResult.data) {
     logError('[checkout] order insert failed:', insResult.error?.message, '| Code:', insResult.error?.code);
     
-    // মডারেটর/এডমিনকে আসল ডাটাবেজ এরর মেসেজ দেখানো
     if (isPrivilegedUser && insResult.error) {
       return fail(`[DB Error]: ${insResult.error.message} (Code: ${insResult.error.code})`);
     }
@@ -294,34 +334,37 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // ৭. কুপন ব্যবহার কাউন্ট বৃদ্ধি
-  if (appliedCouponCode) {
-    service
-      .rpc('increment_coupon_usage', { p_code: appliedCouponCode })
-      .then(
-        ({ error: incErr }) => {
-          if (incErr) logWarn('[checkout] increment_coupon_usage failed:', incErr.message);
-        },
-        () => {}
-      );
-  }
+  // 🚀 ৭. Next.js 15 Native Background Tasks (after)
+  // কাস্টমার কোনো বিলম্ব ছাড়াই সাথে সাথে রেসপন্স পাবে, আর পেছনের কাজগুলো সার্ভারলেস ড্রপ ছাড়া সম্পন্ন হবে
+  after(async () => {
+    // কুপন ব্যবহার কাউন্টার আপডেট
+    if (appliedCouponCode) {
+      try {
+        await service.rpc('increment_coupon_usage', { p_code: appliedCouponCode });
+      } catch (e) {
+        logWarn('[checkout] increment_coupon_usage failed:', e);
+      }
+    }
 
-  // ৮. টেলিগ্রাম নোটিফিকেশন
-  sendTelegramOrderNotification({
-    orderNum,
-    name,
-    phone,
-    district: dist,
-    address: addr,
-    email,
-    items: verifiedItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
-    total: vTotal,
-    advancePaid: advancePaidAmount,
-    shippingCost: sc,
-    paymentTxn: safeTxn || undefined,
-    paymentLast4: last4 || undefined,
-  }).catch((err) => {
-    logWarn('[checkout] telegram notification error:', err);
+    // টেলিগ্রাম নোটিফিকেশন ডেলিভারি
+    try {
+      await sendTelegramOrderNotification({
+        orderNum,
+        name,
+        phone,
+        district: dist,
+        address: addr,
+        email,
+        items: verifiedItems.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+        total: vTotal,
+        advancePaid: advancePaidAmount,
+        shippingCost: sc,
+        paymentTxn: safeTxn || undefined,
+        paymentLast4: last4 || undefined,
+      });
+    } catch (err) {
+      logWarn('[checkout] telegram background notification error:', err);
+    }
   });
 
   return { ok: true, data: { id: insResult.data.id, orderNum } };
