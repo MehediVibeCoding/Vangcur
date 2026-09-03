@@ -95,6 +95,14 @@ function HeartIcon({ filled = false }: { filled?: boolean }) {
   );
 }
 
+function ChevronIcon({ dir }: { dir: 'left' | 'right' }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d={dir === 'left' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+    </svg>
+  );
+}
+
 export default function ProductReviews({
   productId,
   productName,
@@ -234,26 +242,6 @@ export default function ProductReviews({
 
   const n = galleryItems.length;
 
-  // নিখুঁত ৩D সেন্টার ট্রিপলেট রেন্ডার লজিক — একটিভ কার্ড সবসময় ফিজিক্যাল সেন্টারে থাকবে
-  const visibleTriplet = useMemo(() => {
-    if (n === 0) return [];
-    if (n === 1) return [{ item: galleryItems[0], idx: 0, isCenter: true }];
-    if (n === 2) {
-      const other = (activeCardIdx + 1) % 2;
-      return [
-        { item: galleryItems[activeCardIdx], idx: activeCardIdx, isCenter: true },
-        { item: galleryItems[other], idx: other, isCenter: false },
-      ];
-    }
-    const prevIdx = (activeCardIdx - 1 + n) % n;
-    const nextIdx = (activeCardIdx + 1) % n;
-    return [
-      { item: galleryItems[prevIdx], idx: prevIdx, isCenter: false },
-      { item: galleryItems[activeCardIdx], idx: activeCardIdx, isCenter: true },
-      { item: galleryItems[nextIdx], idx: nextIdx, isCenter: false },
-    ];
-  }, [galleryItems, activeCardIdx, n]);
-
   const slide = (dir: number) => {
     if (n <= 1) return;
     setActiveCardIdx((cur) => (cur + dir + n) % n);
@@ -295,9 +283,9 @@ export default function ProductReviews({
 
       if (error) throw error;
       setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, is_approved: true, is_rejected: false } : r)));
-      showToast(t('✅ রিভিউটি লাইভ করা হয়েছে!'));
+      showToast(t('রিভিউটি লাইভ করা হয়েছে!'));
     } catch {
-      showToast(t('এরর: অনুমোদন করা যায়নি'));
+      showToast(t('এরর: অনুমোদন করা যায়নি'));
     }
   };
 
@@ -314,9 +302,9 @@ export default function ProductReviews({
 
       if (error) throw error;
       setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, is_approved: false, is_rejected: true, rejection_reason: reason } : r)));
-      showToast(t('রিভিউটি রিজেক্ট করা হয়েছে'));
+      showToast(t('রিভিউটি রিজেক্ট করা হয়েছে'));
     } catch {
-      showToast(t('এরর: রিজেক্ট করা যায়নি'));
+      showToast(t('এরর: রিজেক্ট করা যায়নি'));
     }
   };
 
@@ -327,9 +315,9 @@ export default function ProductReviews({
     const res = await deleteProductReview(supabase, reviewId, currentUser?.id);
     if (res.ok) {
       setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-      showToast(t('রিভিউটি মুছে ফেলা হয়েছে'));
+      showToast(t('রিভিউটি মুছে ফেলা হয়েছে'));
     } else {
-      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
+      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
     }
   };
 
@@ -341,7 +329,7 @@ export default function ProductReviews({
       } catch {
         // ignore
       }
-      showToast(t('রিভিউ দেওয়ার জন্য অনুগ্রহ করে আগে লগইন করুন'));
+      showToast(t('রিভিউ দেওয়ার জন্য অনুগ্রহ করে আগে লগইন করুন'));
       if (onOpenLogin) onOpenLogin();
       return;
     }
@@ -353,7 +341,7 @@ export default function ProductReviews({
         setRejectedReviewNotice(userExistingReview);
         return;
       }
-      showToast(t('আপনি ইতিমধ্যে এই প্রোডাক্টটিতে একটি রিভিউ দিয়েছেন'));
+      showToast(t('আপনি ইতিমধ্যে এই প্রোডাক্টটিতে একটি রিভিউ দিয়েছেন'));
       return;
     }
 
@@ -412,7 +400,7 @@ export default function ProductReviews({
             setErrorMessage(
               uploadErr?.message?.includes('preset')
                 ? t('ক্লাউডিনারি প্রিসেট সেট করা হয়নি। ছবি ছাড়া রিভিউ সাবমিট করতে পারেন।')
-                : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'))
+                : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'))
             );
             return;
           }
@@ -436,22 +424,21 @@ export default function ProductReviews({
           setLimitModalOpen(true);
           return;
         }
-        setErrorMessage(res.error || t('রিভিউ জমা দেওয়া যায়নি'));
+        setErrorMessage(res.error || t('তথ্য জমা দেওয়া সম্ভব হয়নি, আবার চেষ্টা করুন'));
         return;
       }
 
       setReviews((prev) => [res.data!, ...prev]);
       setWriteModalOpen(false);
-      showToast(t('🎉 আপনার রিভিউটি জমা হয়েছে! অনুমোদনের পর লাইভ হবে।'));
+      showToast(t('আপনার রিভিউটি জমা হয়েছে! অনুমোদনের পর লাইভ হবে।'));
     } catch (err: any) {
       setSubmitting(false);
-      setErrorMessage(err?.message || t('রিভিউ সাবমিশনে সমস্যা হয়েছে'));
+      setErrorMessage(err?.message || t('তথ্য জমা দেওয়া সম্ভব হয়নি, আবার চেষ্টা করুন'));
     }
   };
 
   return (
     <div className="py-1">
-      {/* Header Block — টু-টোন ব্র্যান্ড হেডার, মসৃণ Sans-serif ও স্কাই-ব্লু ব্যাজ */}
       <div className="mb-5 flex flex-col gap-1">
         <div className="flex items-center gap-2.5 font-body text-lg font-bold text-ink">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
@@ -495,13 +482,26 @@ export default function ProductReviews({
         </div>
       ) : (
         <div className="mb-1">
+          {/* 🌟 ৩D কভারফ্লো রিভিউ কন্টেইনার (CustomerGallery.tsx-এর মতো স্মুথ ও প্রিমিয়াম) */}
           <div
-            className="relative mx-auto w-full max-w-[850px] overflow-hidden py-1"
+            className="relative mx-auto w-full max-w-[960px] select-none overflow-hidden touch-pan-y py-2"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="flex items-center justify-center gap-3 sm:gap-6">
-              {visibleTriplet.map(({ item, idx, isCenter }) => {
+            <div className="relative h-[410px] sm:h-[440px] md:h-[470px] w-full flex items-center justify-center overflow-hidden">
+              {galleryItems.map((item, i) => {
+                let offset = (i - activeCardIdx + n) % n;
+                if (offset > n / 2) offset -= n;
+
+                const isActive = offset === 0;
+                const isLeft = offset === -1;
+                const isRight = offset === 1;
+                const isFarLeft = offset === -2;
+                const isFarRight = offset === 2;
+                const isVisible = Math.abs(offset) <= 2;
+
+                if (!isVisible) return null;
+
                 const isOwnPending = !item.isApproved && item.userId === currentUser?.id;
                 const isLiked = likedList.includes(String(item.reviewId));
                 const dateStr = item.createdAt
@@ -510,28 +510,63 @@ export default function ProductReviews({
                   })
                   : '';
 
+                let transformStyle = '';
+                let zIndex = 0;
+                let opacity = 0;
+                let pointerEvents: 'auto' | 'none' = 'none';
+
+                if (isActive) {
+                  transformStyle = 'translate3d(0, 0, 0) scale(1)';
+                  zIndex = 20;
+                  opacity = 1;
+                  pointerEvents = 'auto';
+                } else if (isLeft) {
+                  transformStyle = 'translate3d(-102%, 0, 0) scale(0.85)';
+                  zIndex = 10;
+                  opacity = 0.65;
+                  pointerEvents = 'auto';
+                } else if (isRight) {
+                  transformStyle = 'translate3d(102%, 0, 0) scale(0.85)';
+                  zIndex = 10;
+                  opacity = 0.65;
+                  pointerEvents = 'auto';
+                } else if (isFarLeft) {
+                  transformStyle = 'translate3d(-180%, 0, 0) scale(0.7)';
+                  zIndex = 5;
+                  opacity = 0;
+                } else if (isFarRight) {
+                  transformStyle = 'translate3d(180%, 0, 0) scale(0.7)';
+                  zIndex = 5;
+                  opacity = 0;
+                }
+
                 return (
                   <div
                     key={item.id}
                     onClick={() => {
-                      // যদি সাইড কার্ড হয়, তাহলে যেখান থেকেই ক্লিক হোক সরাসরি সেন্টারে স্লাইড হবে
-                      if (!isCenter) {
-                        setActiveCardIdx(idx);
+                      if (!isActive) {
+                        setActiveCardIdx(i);
                       }
                     }}
-                    className={`relative h-[390px] w-[225px] shrink-0 select-none overflow-hidden rounded-[20px] transition-all duration-300 ease-brand [-webkit-tap-highlight-color:transparent] sm:h-[420px] sm:w-[260px] md:w-[280px] ${
-                      isCenter
-                        ? 'z-10 scale-100 opacity-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] ring-1 ring-brand-light/30'
-                        : 'z-0 scale-[0.85] opacity-60 cursor-pointer hover:opacity-85'
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[380px] w-[230px] min-[400px]:w-[245px] sm:h-[420px] sm:w-[270px] md:h-[450px] md:w-[290px] shrink-0 select-none overflow-hidden rounded-[24px] transition-all duration-[500ms] ease-[cubic-bezier(0.22,1,0.36,1)] [-webkit-tap-highlight-color:transparent] ${
+                      isActive
+                        ? 'border border-white/90 shadow-[0_8px_25px_rgba(0,0,0,0.10)] ring-1 ring-white/80 cursor-zoom-in'
+                        : 'cursor-pointer hover:opacity-85'
                     }`}
+                    style={{
+                      transform: `translate(-50%, -50%) ${transformStyle}`,
+                      zIndex,
+                      opacity,
+                      pointerEvents,
+                      willChange: 'transform, opacity',
+                    }}
                   >
                     {/* ফটো রিভিউ বনাম ফ্রস্টেড গ্লাস টেক্সট রিভিউ */}
                     {item.imageUrl ? (
                       <div
-                        className={`group relative h-full w-full ${isCenter ? 'cursor-zoom-in' : 'cursor-pointer'}`}
+                        className={`group relative h-full w-full ${isActive ? 'cursor-zoom-in' : 'cursor-pointer'}`}
                         onClick={(e) => {
-                          // শুধুমাত্র মাঝখানের এক্টিভ কার্ডের ছবিতে ক্লিক করলেই জুম হবে
-                          if (isCenter) {
+                          if (isActive) {
                             e.stopPropagation();
                             setZoomImageUrl(item.imageUrl!);
                           }
@@ -539,12 +574,65 @@ export default function ProductReviews({
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={optimizeCloudinaryUrl(item.imageUrl, 500)}
+                          src={optimizeCloudinaryUrl(item.imageUrl, 520)}
                           alt="Review Unboxing"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 select-none"
                           loading="lazy"
+                          draggable={false}
                         />
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/75 via-transparent to-black/85" />
+
+                        {/* 🌟 স্প্লিট জিকেল ওভারলে — মাঝখানের ছবি ১০০% খাঁটি, ক্লিয়ার ও ব্রাইট থাকবে */}
+                        {/* ১. টপ হেডার গ্রেডিয়েন্ট (স্টার ও লেখার জন্য) */}
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/75 via-black/30 to-transparent" />
+
+                        {/* ২. বটম ফুটার গ্রেডিয়েন্ট (নাম ও লাইক বাটনের জন্য) */}
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
+
+                        {/* টপ কন্টেন্ট */}
+                        <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-4">
+                          <div>
+                            <div className="mb-1.5 flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <StarIcon key={star} filled={star <= Number(item.rating)} className="h-3.5 w-3.5 drop-shadow-sm" />
+                              ))}
+                            </div>
+                            <p className="line-clamp-3 font-body text-[12px] font-medium text-white drop-shadow-md leading-snug">
+                              &quot;{item.reviewText}&quot;
+                            </p>
+                          </div>
+                          {isOwnPending && (
+                            <span className="rounded-full bg-amber-500/90 px-2 py-0.5 font-body text-[9px] font-bold text-white shadow-xs">
+                              ⏳ {t('অনুমোদনের অপেক্ষায়')}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* বটম কন্টেন্ট */}
+                        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between p-4">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <UserAvatar name={item.userName} size="sm" />
+                            <div className="min-w-0 text-left">
+                              <div className="truncate font-body text-xs font-bold text-white drop-shadow-md">
+                                {item.userName}
+                              </div>
+                              <div className="flex items-center gap-1 font-body text-[10px] text-white/80 drop-shadow-sm">
+                                <span>{dateStr}</span>
+                                {item.isVerifiedBuyer && <VerifiedCheckIcon />}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => handleLikeClick(e, item.reviewId)}
+                            className={`flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
+                          >
+                            <HeartIcon filled={isLiked} />
+                            <span className="font-body text-[10.5px] font-bold text-white">
+                              {item.likeCount || 0}
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-br from-[#E0F2FE]/90 via-white to-[#F0F9FF]/95 p-5 backdrop-blur-md">
@@ -595,56 +683,7 @@ export default function ProductReviews({
                       </div>
                     )}
 
-                    {/* PHOTO CARD OVERLAYS */}
-                    {item.imageUrl && (
-                      <>
-                        <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-3.5 pt-4">
-                          <div>
-                            <div className="mb-1 flex gap-0.5">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <StarIcon key={star} filled={star <= Number(item.rating)} className="h-3.5 w-3.5" />
-                              ))}
-                            </div>
-                            <p className="line-clamp-3 font-body text-[12px] font-medium text-white drop-shadow">
-                              &quot;{item.reviewText}&quot;
-                            </p>
-                          </div>
-                          {isOwnPending && (
-                            <span className="rounded-full bg-amber-500/90 px-2 py-0.5 font-body text-[9px] font-bold text-white shadow-xs">
-                              ⏳ {t('অনুমোদনের অপেক্ষায়')}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between p-3.5 pb-4">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <UserAvatar name={item.userName} size="sm" />
-                            <div className="min-w-0 text-left">
-                              <div className="truncate font-body text-xs font-bold text-white drop-shadow-sm">
-                                {item.userName}
-                              </div>
-                              <div className="flex items-center gap-1 font-body text-[10px] text-white/75">
-                                <span>{dateStr}</span>
-                                {item.isVerifiedBuyer && <VerifiedCheckIcon />}
-                              </div>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={(e) => handleLikeClick(e, item.reviewId)}
-                            className={`flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
-                          >
-                            <HeartIcon filled={isLiked} />
-                            <span className="font-body text-[10.5px] font-bold text-white">
-                              {item.likeCount || 0}
-                            </span>
-                          </button>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Moderation Bar */}
+                    {/* মডারেশন কন্ট্রোলস (অ্যাডমিন / নিজস্ব রিভিউয়ের জন্য) */}
                     {(isAdmin || (currentUser?.id && item.userId === currentUser.id)) && (
                       <div className="absolute right-2.5 top-2.5 z-20 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md">
                         {isAdmin && !item.isApproved && (
@@ -679,32 +718,32 @@ export default function ProductReviews({
               })}
             </div>
 
-            {/* Desktop Navigation Arrows */}
+            {/* ডানে-বামে নেভিগেশন অ্যারো বাটন */}
             {galleryItems.length > 1 && (
               <>
                 <button
                   type="button"
                   onClick={() => slide(-1)}
                   aria-label="Previous"
-                  className="absolute left-1 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-sh2 hover:bg-white sm:flex"
+                  className="absolute left-2 top-1/2 z-30 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-white/90 text-ink shadow-sh2 backdrop-blur-sm transition-all duration-brand hover:border-brand-light hover:bg-white active:scale-95 sm:flex"
                 >
-                  &#8249;
+                  <ChevronIcon dir="left" />
                 </button>
                 <button
                   type="button"
                   onClick={() => slide(1)}
                   aria-label="Next"
-                  className="absolute right-1 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-sh2 hover:bg-white sm:flex"
+                  className="absolute right-2 top-1/2 z-30 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-white/90 text-ink shadow-sh2 backdrop-blur-sm transition-all duration-brand hover:border-brand-light hover:bg-white active:scale-95 sm:flex"
                 >
-                  &#8250;
+                  <ChevronIcon dir="right" />
                 </button>
               </>
             )}
           </div>
 
-          {/* Dots Indicator */}
+          {/* ডটস ইন্ডিকেটর */}
           {galleryItems.length > 1 && (
-            <div className="my-2 flex justify-center gap-1.5">
+            <div className="my-3 flex justify-center gap-1.5">
               {galleryItems.map((_, i) => (
                 <button
                   key={i}
@@ -716,12 +755,12 @@ export default function ProductReviews({
             </div>
           )}
 
-          {/* Bottom Button */}
+          {/* রিভিউ যুক্ত করার বাটন */}
           {(!userExistingReview || isAdmin) && (
-            <div className="mt-2.5 flex justify-center pt-1">
+            <div className="mt-3 flex justify-center pt-1">
               <button
                 onClick={handleOpenWriteReview}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand-light px-6 font-body text-xs font-bold text-white shadow-sh1 transition-brand duration-brand hover:bg-brand-light-hover active:scale-95"
               >
                 <PlusIcon /> {t('আপনার রিভিউ যুক্ত করুন')}
               </button>
@@ -956,4 +995,4 @@ export default function ProductReviews({
       )}
     </div>
   );
-      }
+}
