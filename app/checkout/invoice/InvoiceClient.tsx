@@ -682,7 +682,7 @@ export default function InvoiceClient() {
               </div>
               <span style={{ color: '#BAE0FD' }}>|</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
                 <span>Courier: Pathao</span>
               </div>
             </div>
@@ -792,13 +792,13 @@ export default function InvoiceClient() {
         </div>
       )}
 
-      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস ভিউ (ছবি ১ এর হুবহু ডিজাইন) */}
+      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস ভিউ */}
       <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex flex-col items-center justify-start bg-white sm:bg-transparent">
         <div
           className="w-full sm:max-w-[480px] rounded-none sm:rounded-[20px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
           style={{
             color: '#1E293B',
-            fontFamily: 'var(--font-dm-sans), var(--font-hind-siliguri), sans-serif',
+            fontFamily: 'var(--font-dm-sans), var(--font-bengali), sans-serif',
           }}
         >
           <InvoiceSubtleWatermark />
@@ -1006,7 +1006,7 @@ export default function InvoiceClient() {
               </div>
               <span style={{ color: '#BAE0FD' }}>|</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
                 <span>Courier: Pathao</span>
               </div>
             </div>
