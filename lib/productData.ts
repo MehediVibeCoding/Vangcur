@@ -3,7 +3,7 @@ import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
 import { useCartStore, cartTotal } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
-import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT } from './uiEvents';
+import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
@@ -298,10 +298,11 @@ export function startQuickOrder(
     return;
   }
 
-  const currentCart = useCartStore.getState().cart;
   const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
   const isMod = useAuthStore.getState().currentUser?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+  const currentCart = useCartStore.getState().cart;
 
+  // ১. যদি কার্টে আগে কোনো পণ্য না থাকে — সরাসরি একক পণ্যের জন্য সুরক্ষিত কুইক অর্ডার প্রস্তুত
   if (!currentCart || currentCart.length === 0) {
     const singleProductTotal = prod.price * safeQty;
     if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
@@ -319,21 +320,25 @@ export function startQuickOrder(
       qty: safeQty,
       cat: prod.cat,
     };
+
+    const serialized = JSON.stringify([item]);
     try {
-      sessionStorage.setItem('vc_quick_order_items', JSON.stringify([item]));
+      sessionStorage.setItem('vc_quick_order_items', serialized);
     } catch {
       // ignore
     }
+    try {
+      localStorage.setItem('vc_quick_order_items', serialized);
+    } catch {
+      // ignore
+    }
+
     router.push('/checkout');
     return;
   }
 
+  // ২. যদি কার্টে ইতিমধ্যে কোনো পণ্য থাকে — বর্তমান পণ্যটিকে কার্টে যুক্ত করে সরাসরি চেকআউট পেজে পাঠানো
   useCartStore.getState().addToCart([prod], prod.id, safeQty);
-  try {
-    sessionStorage.removeItem('vc_quick_order_items');
-  } catch {
-    // ignore
-  }
 
   const updatedCart = useCartStore.getState().cart;
   const newCartTotal = cartTotal(updatedCart);
@@ -345,9 +350,14 @@ export function startQuickOrder(
     return;
   }
 
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(OPEN_QUICK_CART_MODAL_EVENT));
+  try {
+    sessionStorage.removeItem('vc_quick_order_items');
+    localStorage.removeItem('vc_quick_order_items');
+  } catch {
+    // ignore
   }
+
+  router.push('/checkout');
 }
 
 export function makeSlug(str: string): string {
