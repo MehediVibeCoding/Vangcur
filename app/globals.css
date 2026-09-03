@@ -9,7 +9,13 @@
   html, body {
     touch-action: manipulation;
     min-height: 100vh;
-    overflow-x: clip;
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  @supports (overflow-x: clip) {
+    html, body {
+      overflow-x: clip;
+    }
   }
   img {
     -webkit-user-drag: none;
@@ -24,7 +30,7 @@
     -webkit-touch-callout: none;
   }
 
-  /* 🌟 ইনপুট, টেক্সটএরিয়া ও ড্রপডাউনের শার্প চারকোনা আউটলাইন স্থায়ীভাবে বন্ধ */
+  /* ইনপুট, টেক্সটএরিয়া ও ড্রপডাউনের শার্প চারকোনা আউটলাইন স্থায়ীভাবে বন্ধ */
   input, textarea, select {
     outline: none !important;
     -webkit-appearance: none;
@@ -209,7 +215,7 @@
   }
 }
 
-/* ২. Ambient Shimmer Sheen — checkout/cart/error ইত্যাদির CTA বাটনে সবসময়-চলা আসল ভার্সন, অপরিবর্তিত */
+/* ২. Ambient Shimmer Sheen */
 .shimmer-sheen {
   position: relative;
   overflow: hidden;
@@ -235,7 +241,7 @@
   .shimmer-sheen::after { animation: none; display: none; }
 }
 
-/* ২ক. হোমপেজ প্রোডাক্ট কার্ডের Order Now বাটনের জন্য আলাদা — event-triggered, transform-only (GPU), by-default off */
+/* ২ক. One-shot Shimmer */
 .shimmer-sheen-oneshot {
   position: relative;
   overflow: hidden;
@@ -250,7 +256,6 @@
   transform: translateX(-220%) skewX(-20deg);
   pointer-events: none;
 }
-/* .shimmer-sheen-play React থেকে যোগ হয় — তখনই শুধু একবার সুইপ চলে */
 .shimmer-sheen-oneshot.shimmer-sheen-play::after {
   animation: shimmerSweepOnce 0.8s cubic-bezier(.4,0,.2,1) 1;
 }
