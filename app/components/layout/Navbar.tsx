@@ -14,7 +14,7 @@ import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/se
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
-import { WISHLIST_NAV_HIT_EVENT } from '@/lib/uiEvents';
+import { WISHLIST_NAV_HIT_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, Category, CurrentUser } from '@/types';
@@ -410,6 +410,7 @@ export default function Navbar({
     router.prefetch('/search');
     router.prefetch('/track-order');
     router.prefetch('/account');
+    router.prefetch('/account/orders');
   }, [router]);
 
   const initSearchData = useCallback(async () => {
@@ -684,6 +685,17 @@ export default function Navbar({
     }
   };
 
+  const handleTrackClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (currentUser) {
+      router.push('/account/orders');
+    } else if (onTrackClick) {
+      onTrackClick();
+    } else {
+      window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT));
+    }
+  };
+
   const handleBackToHome = (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -899,7 +911,7 @@ export default function Navbar({
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
-                  onClick={onTrackClick}
+                  onClick={handleTrackClick}
                   title={t('অর্ডার ট্র্যাক করুন')}
                 >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
