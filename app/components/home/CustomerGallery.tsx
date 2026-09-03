@@ -17,6 +17,34 @@ interface Review {
 
 const AUTOPLAY_MS = 5200;
 const RESUME_DELAY_MS = 3200;
+const GALLERY_CACHE_KEY = 'vc_gallery_reviews_cache';
+const GALLERY_CACHE_TS_KEY = 'vc_gallery_reviews_ts';
+const GALLERY_CACHE_TTL_MS = 10 * 60 * 1000;
+
+function getCachedReviews(): Review[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(GALLERY_CACHE_KEY);
+    const ts = Number(sessionStorage.getItem(GALLERY_CACHE_TS_KEY)) || 0;
+    if (raw && Date.now() - ts < GALLERY_CACHE_TTL_MS) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function setCachedReviews(items: Review[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(GALLERY_CACHE_KEY, JSON.stringify(items));
+    sessionStorage.setItem(GALLERY_CACHE_TS_KEY, String(Date.now()));
+  } catch {
+    // storage limit safe
+  }
+}
 
 function CameraPhotoIcon() {
   return (
@@ -74,6 +102,15 @@ export default function CustomerGallery() {
 
   useEffect(() => {
     let cancelled = false;
+
+    const cached = getCachedReviews();
+    if (cached && cached.length > 0) {
+      setReviews(cached);
+      setActiveIdx(0);
+      setLoaded(true);
+      return;
+    }
+
     (async () => {
       try {
         const { data, error } = await supabase
@@ -81,8 +118,11 @@ export default function CustomerGallery() {
           .select('id,image_url,like_count,created_at')
           .order('created_at', { ascending: false })
           .limit(30);
+
         if (!cancelled && !error && data && data.length > 0) {
-          setReviews((data as Review[]).map((r) => ({ ...r, liked: false })));
+          const mapped = (data as Review[]).map((r) => ({ ...r, liked: false }));
+          setReviews(mapped);
+          setCachedReviews(mapped);
           setActiveIdx(0);
         }
       } catch {
@@ -91,6 +131,7 @@ export default function CustomerGallery() {
         if (!cancelled) setLoaded(true);
       }
     })();
+
     return () => { cancelled = true; };
   }, [supabase]);
 
@@ -227,9 +268,14 @@ export default function CustomerGallery() {
     if (review.liked) return;
     const newCount = (parseInt(String(review.like_count), 10) || 0) + 1;
 
-    setReviews((prev) => prev.map((r) => (
-      r.id === review.id ? { ...r, liked: true, like_count: newCount } : r
-    )));
+    setReviews((prev) => {
+      const updated = prev.map((r) => (
+        r.id === review.id ? { ...r, liked: true, like_count: newCount } : r
+      ));
+      setCachedReviews(updated);
+      return updated;
+    });
+
     setBeatId(review.id);
     setTimeout(() => setBeatId((cur) => (cur === review.id ? null : cur)), 400);
 
@@ -285,9 +331,6 @@ export default function CustomerGallery() {
   }
 
   return (
-    // রিভিউ Supabase থেকে async লোড হওয়ার আগ পর্যন্ত এই section-টা mount-ই হয় না,
-    // তাই ডেটা আসামাত্র এখানে motion.section-এর initial→animate ফায়ার হয়ে
-    // পুরনো ওয়েবসাইটের মতো হালকা fade-up দিয়ে গ্যালারিটা দেখা যায় — হুট করে পপ-ইন করে না
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -307,7 +350,6 @@ export default function CustomerGallery() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          {/* ৩D সমান্তরাল কভারফ্লো ভিউপোর্ট — নিখুঁত গ্যাপ সহ */}
           <div className="relative h-[390px] sm:h-[450px] md:h-[490px] w-full flex items-center justify-center">
             {reviews.map((r, i) => {
               let offset = (i - activeIdx + totalReviews) % totalReviews;
@@ -327,7 +369,6 @@ export default function CustomerGallery() {
                 ? r.image_url : null;
               const likeCount = parseInt(String(r.like_count), 10) || 0;
 
-              // নিখুঁত গ্যাপ নিশ্চিতকারী ট্রান্সফর্ম স্টাইল
               let transformStyle = '';
               let zIndex = 0;
               let opacity = 0;
@@ -396,10 +437,8 @@ export default function CustomerGallery() {
                       </div>
                     )}
 
-                    {/* সফট মসৃণ গ্রেডিয়েন্ট ওভারলে */}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-                    {/* লাইক কাউন্টার ও হার্ট বাটন */}
                     <div className="absolute bottom-3.5 right-3.5 z-10 flex items-center gap-1.5">
                       {likeCount > 0 && (
                         <span className="font-body text-[11.5px] font-extrabold text-white drop-shadow-md">
@@ -423,7 +462,6 @@ export default function CustomerGallery() {
             })}
           </div>
 
-          {/* নেভিগেশন অ্যারো বাটন */}
           <button
             type="button"
             className="absolute left-2 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 bg-white/90 text-ink shadow-sh2 backdrop-blur-sm transition-all duration-brand hover:border-brand-light hover:bg-white active:scale-95 sm:flex"
@@ -444,7 +482,6 @@ export default function CustomerGallery() {
         </div>
       )}
 
-      {/* পেজিনেশন ডটস */}
       {totalReviews > 1 && (
         <div className="mt-4 flex justify-center gap-1.5">
           {reviews.map((r, i) => (
