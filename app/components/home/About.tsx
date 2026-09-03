@@ -5,6 +5,34 @@ import { createClient } from '@/lib/supabase/client';
 import { parseSupabaseVal } from '@/lib/categoryData';
 import { useT } from '@/lib/i18n/useT';
 
+const ABOUT_CACHE_KEY = 'vc_about_desc_cache';
+const ABOUT_CACHE_TS_KEY = 'vc_about_desc_ts';
+const ABOUT_CACHE_TTL_MS = 30 * 60 * 1000;
+
+function getCachedAboutDesc(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(ABOUT_CACHE_KEY);
+    const ts = Number(sessionStorage.getItem(ABOUT_CACHE_TS_KEY)) || 0;
+    if (raw && Date.now() - ts < ABOUT_CACHE_TTL_MS) {
+      return raw;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function setCachedAboutDesc(val: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(ABOUT_CACHE_KEY, val);
+    sessionStorage.setItem(ABOUT_CACHE_TS_KEY, String(Date.now()));
+  } catch {
+    // storage limit safe
+  }
+}
+
 function HeaderDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.10]" aria-hidden="true">
@@ -38,6 +66,12 @@ export default function About() {
   useEffect(() => {
     let cancelled = false;
 
+    const cached = getCachedAboutDesc();
+    if (cached) {
+      setCustomDesc(cached);
+      return;
+    }
+
     (async () => {
       try {
         const { data, error } = await supabase
@@ -45,10 +79,16 @@ export default function About() {
           .select('setting_value')
           .eq('setting_key', 'vc_about_desc')
           .maybeSingle();
+
         if (!cancelled && !error && data && data.setting_value) {
           const parsed = parseSupabaseVal<unknown>(data.setting_value);
-          if (typeof parsed === 'string' && parsed.trim() && !parsed.includes('গ্যাজেট ও লাইফস্টাইল অ্যাক্সেসরিজের এক বিশ্বস্ত নাম')) {
+          if (
+            typeof parsed === 'string' &&
+            parsed.trim() &&
+            !parsed.includes('গ্যাজেট ও লাইফস্টাইল অ্যাক্সেসরিজের এক বিশ্বস্ত নাম')
+          ) {
             setCustomDesc(parsed);
+            setCachedAboutDesc(parsed);
           }
         }
       } catch {
@@ -56,46 +96,24 @@ export default function About() {
       }
     })();
 
-    const uniqueName = `about-desc-watch-${Math.random().toString(36).slice(2, 9)}`;
-    const channel = supabase
-      .channel(uniqueName)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_about_desc' },
-        (payload) => {
-          const row = payload.new as { setting_value?: unknown } | null;
-          if (!row) return;
-          const parsed = parseSupabaseVal<unknown>(row.setting_value);
-          if (typeof parsed === 'string' && parsed.trim()) {
-            setCustomDesc(parsed);
-          }
-        },
-      )
-      .subscribe();
-
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
     };
   }, [supabase]);
 
   return (
     <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5">
-      {/* অ্যাপল-স্টাইল মিনিমাল ফ্রস্টেড স্কাই-ব্লু ক্যানভাস (সফট শ্যাডো) */}
       <div className="relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-b from-brand-bg/30 via-[#EFF6FE]/55 to-white/95 p-6 sm:p-10 shadow-[0_4px_24px_rgba(68,167,252,0.08)] ring-1 ring-white/80 backdrop-blur-md">
         
-        {/* লাইন-আর্ট ওয়াটারমার্ক */}
         <HeaderDecor />
 
         <div className="relative z-10 mx-auto max-w-[860px] text-center">
           
-          {/* অফিসিয়াল ট্যাগলাইন ব্যাজ */}
           <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/30 bg-white/85 px-3 py-1 min-[380px]:px-4 min-[380px]:py-1.5 font-body text-[9.5px] min-[360px]:text-[10.5px] sm:text-[12px] font-bold uppercase tracking-[0.8px] min-[380px]:tracking-[1.3px] text-brand-light shadow-xs backdrop-blur-md whitespace-nowrap">
             <SparklesIcon />
             <span>Vangcur — Your First Choice For Gadgets</span>
           </div>
 
-          {/* মূল শিরোনাম */}
           <h2 className="mb-5 font-body font-extrabold text-ink leading-snug">
             {lang === 'en' ? (
               <>
@@ -120,7 +138,6 @@ export default function About() {
             )}
           </h2>
 
-          {/* কাস্টম ডেসক্রিপশন বা বিস্তারিত প্রফেশনাল টেক্সট */}
           {customDesc ? (
             <p className="font-body text-[14px] sm:text-[15px] leading-[1.85] text-ink/85 whitespace-pre-line text-left sm:text-center">
               {t(customDesc)}
