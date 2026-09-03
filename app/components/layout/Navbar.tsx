@@ -15,6 +15,7 @@ import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { WISHLIST_NAV_HIT_EVENT } from '@/lib/uiEvents';
+import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
 import type { Product, Category, CurrentUser } from '@/types';
 
@@ -126,8 +127,8 @@ function highlightMatch(text: string, q: string) {
   );
 }
 
-const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:outline-none';
-const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink transition-brand duration-brand placeholder:text-muted focus:border-brand-light/60 focus:bg-white focus:shadow-[0_0_0_3px_rgba(68,167,252,.12)] focus:outline-none';
+const searchInputClass = 'w-full rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-base text-ink placeholder:text-muted focus:border-brand-light focus:bg-white focus:outline-none focus:ring-0 focus-visible:outline-none outline-none';
+const desktopSearchInputClass = 'w-full cursor-text rounded-full border-[1.5px] border-brand-light/20 bg-brand-bg/25 py-[9px] pl-10 pr-3.5 font-body text-[13px] text-ink placeholder:text-muted focus:border-brand-light focus:bg-white focus:outline-none focus:ring-0 focus-visible:outline-none outline-none';
 
 const DEFAULT_POPULAR_SEARCHES = [
   'Neon Light', 'Smart Watch', 'Power Bank', 'TWS Earbuds', 'Headphone', 'Humidifier',
@@ -157,7 +158,7 @@ function SearchDefaultPanel({
             {recentSearches.map((term) => (
               <span
                 key={term}
-                className="flex items-center gap-1.5 rounded-full bg-surface-muted py-1.5 pl-3.5 pr-2 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
+                className="flex items-center gap-1.5 rounded-full bg-surface-muted py-1.5 pl-3.5 pr-2 text-[12.5px] font-medium text-ink transition-colors hover:bg-border-base"
               >
                 <button
                   type="button"
@@ -190,7 +191,7 @@ function SearchDefaultPanel({
               <button
                 key={term}
                 type="button"
-                className="cursor-pointer rounded-full bg-surface-muted py-1.5 px-3.5 text-[12.5px] font-medium text-ink transition-brand duration-brand hover:bg-border-base"
+                className="cursor-pointer rounded-full bg-surface-muted py-1.5 px-3.5 text-[12.5px] font-medium text-ink transition-colors hover:bg-border-base"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onPickRecent(term)}
               >
@@ -212,7 +213,7 @@ function SearchDefaultPanel({
               <button
                 type="button"
                 key={c.id}
-                className="flex flex-col items-center gap-1.5 rounded-[12px] p-1.5 text-center transition-brand duration-brand hover:bg-surface-muted"
+                className="flex flex-col items-center gap-1.5 rounded-[12px] p-1.5 text-center transition-colors hover:bg-surface-muted"
                 onClick={() => onGoToCat(c.id)}
               >
                 <CategoryIcon icon={c.icon} />
@@ -319,7 +320,7 @@ function SearchDropdown({
           </div>
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-brand duration-brand hover:bg-brand-light-hover"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-brand-light-hover"
               onClick={onGoToSearch}
             >
               <SearchIcon />
@@ -361,6 +362,7 @@ export default function Navbar({
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const prodsRef = useRef<Product[]>([]);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
+  const lastLimitToastRef = useRef(0);
 
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused || showDropdown;
@@ -371,7 +373,6 @@ export default function Navbar({
   );
   const popularSearches = DEFAULT_POPULAR_SEARCHES;
 
-  // ব্রাউজার ব্যাকগ্রাউন্ডে প্রধান রুটসমূহ সক্রিয়ভাবে প্রি-ফেচ করা
   useEffect(() => {
     router.prefetch('/checkout');
     router.prefetch('/search');
@@ -520,6 +521,20 @@ export default function Navbar({
   }, []);
 
   const handleSearchInput = useCallback((value: string) => {
+    const rawLen = value.length;
+    if (rawLen >= MAX_SEARCH_LEN) {
+      const now = Date.now();
+      if (now - lastLimitToastRef.current > 2200) {
+        lastLimitToastRef.current = now;
+        showToast(
+          lang === 'en'
+            ? 'Search limit reached (maximum 60 characters)'
+            : 'সার্চের সর্বোচ্চ সীমা ৬০ অক্ষরে পৌঁছে গেছে',
+          'error'
+        );
+      }
+    }
+
     const clean = value.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
     setSearchQuery(clean);
     setShowDropdown(true);
@@ -531,7 +546,7 @@ export default function Navbar({
       return;
     }
     debounceTimerRef.current = setTimeout(() => runSearch(clean), 280);
-  }, [runSearch, router]);
+  }, [runSearch, router, lang]);
 
   const goToCat = (catId: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -693,7 +708,7 @@ export default function Navbar({
                   }}
                   onMouseLeave={() => setDesktopSearchHovered(false)}
                   style={desktopSearchExpanded && desktopSearchGeo ? { left: desktopSearchGeo.left, width: desktopSearchGeo.width } : undefined}
-                  className={`absolute left-0 top-0 h-full w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
+                  className={`absolute left-0 top-0 h-full w-full rounded-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <svg className="pointer-events-none absolute left-[13px] top-1/2 -translate-y-1/2 text-brand-light/70" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -714,13 +729,14 @@ export default function Navbar({
                     onBlur={() => setDesktopSearchFocused(false)}
                     autoComplete="off"
                     name="product-search"
+                    style={{ outline: 'none', WebkitAppearance: 'none' }}
                     className={`${desktopSearchInputClass} h-full ${searchQuery ? 'pr-9' : ''}`}
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
+                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
                       title={t('মুছুন')}
                       aria-label={t('মুছুন')}
                     >
@@ -869,11 +885,12 @@ export default function Navbar({
                   onTouchStart={() => router.prefetch('/search')}
                   ref={mobileSearchInputRef}
                   autoComplete="off"
+                  style={{ outline: 'none', WebkitAppearance: 'none' }}
                   className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
                 />
                 {searchQuery && (
                   <button
-                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-brand duration-brand hover:bg-brand-light hover:text-white"
+                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
                     onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                     title={t('মুছুন')}
                     aria-label={t('মুছুন')}
