@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
 import {
   productHref,
   startQuickOrder,
@@ -16,8 +15,6 @@ import { WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
-
-const animatedProductIds = new Set<string>();
 
 function StarRating({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, rating || 4.5));
@@ -92,9 +89,6 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const [wished, setWished] = useState(false);
   const wishBtnRef = useRef<HTMLButtonElement>(null);
 
-  const cardKey = String(p.id);
-  const alreadyAnimated = animatedProductIds.has(cardKey);
-
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
@@ -140,31 +134,12 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     startQuickOrder(router, p, 1);
   };
 
-  const entranceMotionProps = alreadyAnimated
-    ? {}
-    : {
-        initial: { opacity: 0, y: 16 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, amount: 0.05, margin: '50px' },
-        transition: {
-          duration: 0.35,
-          ease: [0.16, 1, 0.3, 1] as const,
-          delay: Math.min(index * 0.03, 0.18),
-        },
-        onViewportEnter: () => {
-          animatedProductIds.add(cardKey);
-        },
-      };
-
   return (
-    <motion.div
-      {...entranceMotionProps}
-      whileTap={{ scale: 0.98, transition: { type: 'spring', stiffness: 500, damping: 30 } }}
+    <div
       onMouseEnter={() => router.prefetch('/checkout')}
-      onTouchStart={() => router.prefetch('/checkout')}
-      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)]"
+      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [contain:content] [transform:translateZ(0)]"
     >
-      <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
+      <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted [contain:paint_layout]">
         <Link
           href={href}
           prefetch={true}
@@ -175,7 +150,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.94) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 58%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.95) 100%)' }}
         />
 
         {sold ? (
@@ -188,36 +163,37 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
           </div>
         )}
 
-        <motion.button
+        <button
           ref={wishBtnRef}
-          whileTap={{ scale: 0.8 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full backdrop-blur-[6px] transition-transform duration-brand hover:scale-[1.15] sm:h-8 sm:w-8 ${
-            wished ? 'bg-white/95 text-[#FF5A6E]' : 'border border-white/50 bg-white/40 text-white'
-          }`}
+          type="button"
           onClick={handleWish}
           title="Wishlist"
           aria-label="Wishlist"
+          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110 active:scale-90 sm:h-8 sm:w-8 ${
+            wished
+              ? 'bg-white/95 text-[#FF5A6E] shadow-xs'
+              : 'border border-white/40 bg-black/25 text-white hover:bg-black/35'
+          }`}
         >
           <span className="flex h-full w-full items-center justify-center">
             <HeartIcon filled={wished} />
           </span>
-        </motion.button>
+        </button>
 
         <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
           <Link
             href={href}
             prefetch={true}
             title={p.name}
-            className="block w-full cursor-pointer truncate overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
+            className="block w-full cursor-pointer truncate overflow-hidden text-ellipsis whitespace-nowrap font-body text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
           >
             {p.name}
           </Link>
-          <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:mt-1 sm:text-[11px]">
+          <div className="mt-0.5 flex items-center gap-1 font-body text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/70">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            <span className="text-white/75">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
           </div>
-          <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5">
+          <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5 font-body">
             <span className="text-sm font-extrabold text-white sm:text-lg xl:text-sm">৳{p.price.toLocaleString('en-US')}</span>
             {p.old > p.price && (
               <>
@@ -240,31 +216,27 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
               </button>
             ) : (
               <>
-                <motion.button
+                <button
                   type="button"
-                  whileTap={{ scale: 0.88 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white backdrop-blur-[6px] transition-colors hover:bg-white/35 sm:h-9 lg:h-10"
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-xs transition-all duration-150 hover:bg-white/30 active:scale-90 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
                   aria-label={t('কার্টে যোগ করুন')}
                   onClick={handleAddToCartDirect}
                 >
                   <CartIcon />
-                </motion.button>
-                <motion.button
+                </button>
+                <button
                   type="button"
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover font-body text-[12px] font-extrabold text-white shadow-sh1 transition-[filter] duration-brand hover:brightness-[1.03] sm:h-9 sm:text-[13px] lg:h-10"
+                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover font-body text-[12px] font-extrabold text-white shadow-sh1 transition-all duration-150 hover:brightness-105 active:scale-95 sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                 >
                   {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
-                </motion.button>
+                </button>
               </>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
