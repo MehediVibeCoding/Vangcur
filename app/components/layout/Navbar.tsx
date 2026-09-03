@@ -746,15 +746,18 @@ export default function Navbar({
                 onClick={handleBackToHome}
                 aria-label={lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
                 title={lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
-                className="group flex shrink-0 items-center gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2.5 max-[400px]:pl-1.5"
+                className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
                 </div>
-                <span className="font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
+                <span className="hidden min-[420px]:inline font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
                   {lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
+                </span>
+                <span className="min-[420px]:hidden font-body text-[12px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
+                  {lang === 'en' ? 'Home' : 'হোম'}
                 </span>
               </Link>
             ) : (
@@ -900,7 +903,7 @@ export default function Navbar({
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                    className="flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-3.5 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 md:px-[18px]"
+                    className="flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-3.5 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 max-[400px]:text-[12px] md:px-[18px]"
                     onClick={onLoginClick}
                   >
                     {t('লগইন করুন')}
@@ -910,7 +913,7 @@ export default function Navbar({
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+                  className="hidden min-[401px]:flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   onClick={handleTrackClick}
                   title={t('অর্ডার ট্র্যাক করুন')}
                 >
