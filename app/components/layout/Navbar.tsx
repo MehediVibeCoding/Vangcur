@@ -371,6 +371,14 @@ export default function Navbar({
   );
   const popularSearches = DEFAULT_POPULAR_SEARCHES;
 
+  // ব্রাউজার ব্যাকগ্রাউন্ডে প্রধান রুটসমূহ সক্রিয়ভাবে প্রি-ফেচ করা
+  useEffect(() => {
+    router.prefetch('/checkout');
+    router.prefetch('/search');
+    router.prefetch('/track-order');
+    router.prefetch('/account');
+  }, [router]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -515,6 +523,7 @@ export default function Navbar({
     const clean = value.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
     setSearchQuery(clean);
     setShowDropdown(true);
+    router.prefetch('/search');
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     if (!clean.trim()) {
       setSearchResults([]);
@@ -522,7 +531,7 @@ export default function Navbar({
       return;
     }
     debounceTimerRef.current = setTimeout(() => runSearch(clean), 280);
-  }, [runSearch]);
+  }, [runSearch, router]);
 
   const goToCat = (catId: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -678,7 +687,10 @@ export default function Navbar({
               >
                 <div
                   ref={desktopSearchBoxRef}
-                  onMouseEnter={() => setDesktopSearchHovered(true)}
+                  onMouseEnter={() => {
+                    setDesktopSearchHovered(true);
+                    router.prefetch('/search');
+                  }}
                   onMouseLeave={() => setDesktopSearchHovered(false)}
                   style={desktopSearchExpanded && desktopSearchGeo ? { left: desktopSearchGeo.left, width: desktopSearchGeo.width } : undefined}
                   className={`absolute left-0 top-0 h-full w-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
@@ -694,7 +706,11 @@ export default function Navbar({
                     value={searchQuery}
                     onChange={(e) => handleSearchInput(e.target.value)}
                     onKeyDown={handleSearchKey}
-                    onFocus={() => { setDesktopSearchFocused(true); setShowDropdown(true); }}
+                    onFocus={() => {
+                      setDesktopSearchFocused(true);
+                      setShowDropdown(true);
+                      router.prefetch('/search');
+                    }}
                     onBlur={() => setDesktopSearchFocused(false)}
                     autoComplete="off"
                     name="product-search"
@@ -815,6 +831,7 @@ export default function Navbar({
                     const next = !mobileSearchOpen;
                     setMobileSearchOpen(next);
                     setShowDropdown(next);
+                    router.prefetch('/search');
                   }}
                   title="Search"
                 >
@@ -845,7 +862,11 @@ export default function Navbar({
                   value={searchQuery}
                   onChange={(e) => handleSearchInput(e.target.value)}
                   onKeyDown={handleSearchKey}
-                  onFocus={() => setShowDropdown(true)}
+                  onFocus={() => {
+                    setShowDropdown(true);
+                    router.prefetch('/search');
+                  }}
+                  onTouchStart={() => router.prefetch('/search')}
                   ref={mobileSearchInputRef}
                   autoComplete="off"
                   className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
