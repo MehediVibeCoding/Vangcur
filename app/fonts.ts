@@ -1,4 +1,4 @@
-import { Playfair_Display, DM_Sans, Hind_Siliguri } from 'next/font/google';
+import { Playfair_Display, DM_Sans, Noto_Sans_Bengali } from 'next/font/google';
 
 export const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
@@ -14,9 +14,9 @@ export const dmSans = DM_Sans({
   display: 'swap',
 });
 
-export const hindSiliguri = Hind_Siliguri({
-  subsets: ['bengali', 'latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-hind-siliguri',
+export const notoBengali = Noto_Sans_Bengali({
+  subsets: ['bengali'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-bengali',
   display: 'swap',
 });
