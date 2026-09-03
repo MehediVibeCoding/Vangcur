@@ -321,18 +321,21 @@ export default function ProductDetailClient({
     !!initialProduct || (initialProducts && initialProducts.length > 0)
   );
 
-  // পেজ লোড হওয়ামাত্র ব্যাকগ্রাউন্ডে চেকআউট প্রি-ফেচিং সক্রিয় করা
   useEffect(() => {
     router.prefetch('/checkout');
   }, [router]);
 
   useEffect(() => {
     let cancelled = false;
-    fetchCustomProducts(supabase).then((customRows) => {
-      if (cancelled) return;
-      if (customRows.length) setProds((prev) => mergeCustomProducts(prev, customRows));
-      setProdsLoaded(true);
-    });
+
+    if (!initialProducts || initialProducts.length === 0) {
+      fetchCustomProducts(supabase).then((customRows) => {
+        if (cancelled) return;
+        if (customRows.length) setProds((prev) => mergeCustomProducts(prev, customRows));
+        setProdsLoaded(true);
+      });
+    }
+
     const channel = subscribeCustomProducts(supabase, {
       onInsert: (mapped) => setProds((prev) => (
         prev.find((x) => String(x.id) === String(mapped.id)) ? prev : [...prev, mapped]
@@ -346,8 +349,12 @@ export default function ProductDetailClient({
       }),
       onDelete: (id) => setProds((prev) => prev.filter((x) => String(x.id) !== String(id))),
     });
-    return () => { cancelled = true; supabase.removeChannel(channel); };
-  }, [supabase]);
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, initialProducts]);
 
   const baseProd = useMemo(
     () => findProdBySlug(prods, slug) || (initialId ? prods.find((x) => String(x.id) === String(initialId)) : null),
