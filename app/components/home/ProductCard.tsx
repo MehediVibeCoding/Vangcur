@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import {
   productHref,
-  startQuickOrder, QUICK_CART_EVENT,
+  startQuickOrder,
+  QUICK_CART_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore } from '@/lib/store/cartStore';
@@ -59,7 +60,6 @@ function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?:
   if (!imgVal) return <span className="text-[52px]">📦</span>;
   if (isUrl && !broken) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={optimizeCloudinaryUrl(imgVal, 380)}
         alt={name || ''}
@@ -93,6 +93,11 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
+
+  // মাউন্ট হওয়ার সাথে সাথে ব্রাউজার মেমোরিতে চেকআউট রুট প্রি-ফেচ নিশ্চিত করা
+  useEffect(() => {
+    router.prefetch('/checkout');
+  }, [router]);
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -141,6 +146,8 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
       transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+      onMouseEnter={() => router.prefetch('/checkout')}
+      onTouchStart={() => router.prefetch('/checkout')}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
