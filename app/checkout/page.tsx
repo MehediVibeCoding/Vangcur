@@ -27,9 +27,9 @@ import {
   type AppliedCoupon,
 } from '@/lib/couponData';
 
-const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
-const PreConfirmLoginModal = dynamic(() => import('@/app/components/checkout/PreConfirmLoginModal'));
-const PolicyModal = dynamic(() => import('@/app/components/checkout/PolicyModal'));
+const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'), { ssr: false });
+const PreConfirmLoginModal = dynamic(() => import('@/app/components/checkout/PreConfirmLoginModal'), { ssr: false });
+const PolicyModal = dynamic(() => import('@/app/components/checkout/PolicyModal'), { ssr: false });
 
 import {
   DISTRICTS,
@@ -458,6 +458,7 @@ export default function CheckoutPage() {
     const savedShip = sessionStorage.getItem('vc_ship');
     if (savedShip) setSelectedShip(savedShip);
 
+    // ব্যাকগ্রাউন্ডে নন-ব্লকিং ফেচ
     fetchBkashNumber(supabase).then(setBkashNum);
     fetchShipConfig(supabase).then(setShipCfg);
     getFingerprintId().then((id) => { fingerprintIdRef.current = id; });
