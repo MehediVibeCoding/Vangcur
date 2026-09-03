@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { logWarn } from '@/lib/logger';
 
 // 🛡️ স্প্রেডশিট ফর্মুলা ইনজেকশন ফিল্টার (CSV / Sheets Formula Injection Sanitizer)
 function sanitizeSpreadsheetValue(val: unknown, maxLen = 300): string {
@@ -12,9 +13,9 @@ function sanitizeSpreadsheetValue(val: unknown, maxLen = 300): string {
   return clean.slice(0, maxLen);
 }
 
-// 🛡️ ইন-মেমোরি আইপি রেট লিমিটার (প্রতি ১০ মিনিটে সর্বোচ্চ ১৫টি লিড/স্টক রিকোয়েস্ট)
+// 🛡️ সার্ভারলেস ইনস্ট্যান্স আইপি রেট লিমিটার (প্রতি ১০ মিনিটে সর্বোচ্চ ২০টি রিকোয়েস্ট)
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 15;
+const MAX_REQUESTS_PER_WINDOW = 20;
 const ipRequestMap = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(ip: string): boolean {
@@ -43,7 +44,7 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
-    // ১. আইপি এক্সট্র্যাক্ট ও রেট লিমিট যাচাই
+    // ১. আইপি এক্সট্র্যাক্ট ও দ্রুত রেট লিমিট যাচাই
     const forwardedFor = req.headers.get('x-forwarded-for');
     const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (req.headers.get('x-real-ip') || '127.0.0.1');
 
@@ -61,7 +62,6 @@ export async function POST(req: NextRequest) {
 
     const endpoint = process.env.GOOGLE_APPS_SCRIPT_LEAD_URL;
     if (!endpoint) {
-      // গুগল অ্যাপস স্ক্রিপ্ট লিঙ্ক সেট করা না থাকলে সফটলি পাস হবে
       return NextResponse.json({ ok: true });
     }
 
@@ -85,11 +85,20 @@ export async function POST(req: NextRequest) {
         productId: sanitizeSpreadsheetValue(payload.productId, 50),
       };
 
-      await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(safeStockPayload),
-      }).catch(() => {});
+      // 🚀 Next.js 15 Native Background Task (after)
+      // ক্লায়েন্টকে সাথে সাথে ০.০১ সেকেন্ডে রেসপন্স দিয়ে ব্যাকগ্রাউন্ডে গুগল শিটে পুশ হবে
+      after(async () => {
+        try {
+          await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(safeStockPayload),
+            signal: AbortSignal.timeout(5000),
+          });
+        } catch (err) {
+          logWarn('[LeadAPI] Stock notification sheet sync error:', err);
+        }
+      });
 
       return NextResponse.json({ ok: true });
     }
@@ -115,11 +124,19 @@ export async function POST(req: NextRequest) {
       total: Number(payload.total) || 0,
     };
 
-    await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(safeLeadPayload),
-    }).catch(() => {});
+    // 🚀 Next.js 15 Native Background Task (after)
+    after(async () => {
+      try {
+        await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(safeLeadPayload),
+          signal: AbortSignal.timeout(5000),
+        });
+      } catch (err) {
+        logWarn('[LeadAPI] Lead sheet sync error:', err);
+      }
+    });
 
     return NextResponse.json({ ok: true });
   } catch {
