@@ -314,6 +314,7 @@ export default function CheckoutPage() {
     let hasItems = false;
     let loadedItems: CartItem[] = [];
 
+    // ১. কুইক অর্ডারের জন্য সেশন স্টোরেজ চেক
     try {
       const quickOrder = JSON.parse(sessionStorage.getItem('vc_quick_order_items') || 'null');
       if (Array.isArray(quickOrder) && quickOrder.length) {
@@ -326,6 +327,33 @@ export default function CheckoutPage() {
       // ignore
     }
 
+    // ২. কুইক অর্ডারের জন্য লোকাল স্টোরেজ ব্যাকআপ চেক
+    if (!hasItems) {
+      try {
+        const quickOrderLs = JSON.parse(localStorage.getItem('vc_quick_order_items') || 'null');
+        if (Array.isArray(quickOrderLs) && quickOrderLs.length) {
+          setCartItems(quickOrderLs);
+          loadedItems = quickOrderLs;
+          hasItems = true;
+          setIsDirectQuickOrder(true);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // ৩. লাইভ ইন-মেমোরি Zustand কার্ট চেক
+    if (!hasItems) {
+      const storeCart = useCartStore.getState().cart;
+      if (Array.isArray(storeCart) && storeCart.length > 0) {
+        setCartItems(storeCart);
+        loadedItems = storeCart;
+        hasItems = true;
+        setIsDirectQuickOrder(false);
+      }
+    }
+
+    // ৪. লোকাল স্টোরেজের পারসিস্টেড কার্ট চেক
     if (!hasItems) {
       try {
         const cart = JSON.parse(localStorage.getItem('vc_cart') || '[]');
@@ -341,6 +369,7 @@ export default function CheckoutPage() {
       }
     }
 
+    // ৫. পূর্বে পূরণ করা ড্রাফট অর্ডার চেক
     if (!hasItems) {
       try {
         const draft = getDraft();
@@ -361,6 +390,7 @@ export default function CheckoutPage() {
       }
     }
 
+    // কোনো উৎস থেকেই আইটেম না পাওয়া গেলে তবেই হোমপেজে নিরাপদ রিডাইরেক্ট
     if (!hasItems) {
       showToast(t('আপনার কার্ট খালি। অনুগ্রহ করে প্রথমে একটি প্রোডাক্ট কার্টে যোগ করুন।'));
       router.replace('/');
@@ -458,7 +488,6 @@ export default function CheckoutPage() {
     const savedShip = sessionStorage.getItem('vc_ship');
     if (savedShip) setSelectedShip(savedShip);
 
-    // ব্যাকগ্রাউন্ডে নন-ব্লকিং ফেচ
     fetchBkashNumber(supabase).then(setBkashNum);
     fetchShipConfig(supabase).then(setShipCfg);
     getFingerprintId().then((id) => { fingerprintIdRef.current = id; });
@@ -838,6 +867,7 @@ export default function CheckoutPage() {
         sessionStorage.removeItem('vc_form_draft');
         sessionStorage.removeItem('vc_lead_id');
         sessionStorage.removeItem('vc_quick_order_items');
+        localStorage.removeItem('vc_quick_order_items');
         sessionStorage.removeItem('vc_checkout_step');
         localStorage.setItem('vc_pending_ls', String(orderId));
         localStorage.setItem('vc_pending_num_ls', num);
@@ -936,7 +966,12 @@ export default function CheckoutPage() {
                   aria-label={t('বন্ধ করুন')}
                   title={t('বন্ধ করুন')}
                   onClick={() => {
-                    try { sessionStorage.removeItem('vc_quick_order_items'); } catch { /* ignore */ }
+                    try {
+                      sessionStorage.removeItem('vc_quick_order_items');
+                      localStorage.removeItem('vc_quick_order_items');
+                    } catch {
+                      // ignore
+                    }
                   }}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45 no-underline"
                 >
