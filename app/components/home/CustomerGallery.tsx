@@ -321,7 +321,7 @@ export default function CustomerGallery() {
 
   if (loaded && totalReviews === 0) {
     return (
-      <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5">
+      <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5 overflow-hidden">
         {headerBlock}
         <div className="rounded-[22px] border border-border-base/80 bg-white/70 py-10 text-center font-body text-sm font-semibold text-muted shadow-xs backdrop-blur-sm">
           <p>{t('এখনো কোনো রিভিউ নেই।')}</p>
@@ -335,13 +335,13 @@ export default function CustomerGallery() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-      className="mx-auto mb-16 max-w-[1300px] px-4 sm:px-5"
+      className="mx-auto mb-16 max-w-[1300px] px-4 sm:px-5 overflow-hidden"
     >
       {headerBlock}
 
       {totalReviews > 0 && (
         <div
-          className="relative mx-auto w-full max-w-[960px] select-none"
+          className="relative mx-auto w-full max-w-[960px] select-none overflow-hidden touch-pan-y"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onTouchStart={handleTouchStart}
@@ -350,7 +350,7 @@ export default function CustomerGallery() {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          <div className="relative h-[390px] sm:h-[450px] md:h-[490px] w-full flex items-center justify-center">
+          <div className="relative h-[390px] sm:h-[450px] md:h-[490px] w-full flex items-center justify-center overflow-hidden">
             {reviews.map((r, i) => {
               let offset = (i - activeIdx + totalReviews) % totalReviews;
               if (offset > totalReviews / 2) offset -= totalReviews;
