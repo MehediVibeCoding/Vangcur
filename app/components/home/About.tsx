@@ -102,16 +102,16 @@ export default function About() {
   }, [supabase]);
 
   return (
-    <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5 [contain:content] [transform:translateZ(0)]">
+    <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5 [contain:content] [transform:translateZ(0)] overflow-hidden">
       <div className="relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-b from-brand-bg/25 via-[#EFF6FE]/75 to-white/95 p-6 sm:p-10 shadow-[0_4px_24px_rgba(68,167,252,0.08)] ring-1 ring-white/80">
         
         <HeaderDecor />
 
         <div className="relative z-10 mx-auto max-w-[860px] text-center">
           
-          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/30 bg-white/95 px-3 py-1 min-[380px]:px-4 min-[380px]:py-1.5 font-body text-[9.5px] min-[360px]:text-[10.5px] sm:text-[12px] font-bold uppercase tracking-[0.8px] min-[380px]:tracking-[1.3px] text-brand-light shadow-2xs whitespace-nowrap">
+          <div className="mb-3.5 inline-flex max-w-full items-center gap-1.5 rounded-full border border-brand-light/30 bg-white/95 px-3 py-1 min-[380px]:px-4 min-[380px]:py-1.5 font-body text-[9.5px] min-[360px]:text-[10.5px] sm:text-[12px] font-bold uppercase tracking-[0.6px] min-[380px]:tracking-[1.2px] text-brand-light shadow-2xs">
             <SparklesIcon />
-            <span>Vangcur — Your First Choice For Gadgets</span>
+            <span className="truncate">Vangcur — Your First Choice For Gadgets</span>
           </div>
 
           <h2 className="mb-5 font-body font-extrabold text-ink leading-snug">
@@ -131,7 +131,7 @@ export default function About() {
                   Vangcur — ভাঙচুর
                 </span>
                 <span className="hidden sm:inline"> — </span>
-                <span className="block text-[13px] min-[360px]:text-[14.5px] min-[400px]:text-[16px] sm:inline sm:text-[28px] md:text-[30px] text-brand-light mt-1 sm:mt-0 whitespace-nowrap">
+                <span className="block text-[13px] min-[360px]:text-[14.5px] min-[400px]:text-[16px] sm:inline sm:text-[28px] md:text-[30px] text-brand-light mt-1 sm:mt-0">
                   আপনার বিশ্বস্ত গ্যাজেট ও লাইফস্টাইল শপ
                 </span>
               </>
