@@ -3,7 +3,7 @@ import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
 import { useCartStore, cartTotal } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
-import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT } from './uiEvents';
+import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
@@ -302,7 +302,7 @@ export function startQuickOrder(
   const isMod = useAuthStore.getState().currentUser?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
   const currentCart = useCartStore.getState().cart;
 
-  // ১. যদি কার্টে আগে কোনো পণ্য না থাকে — সরাসরি একক পণ্যের জন্য সুরক্ষিত কুইক অর্ডার প্রস্তুত
+  // ১. যদি কার্টে আগে থেকে কোনো পণ্য না থাকে (০ আইটেম) — একক পণ্যের কুইক অর্ডার সরাসরি /checkout-এ নিয়ে যাবে
   if (!currentCart || currentCart.length === 0) {
     const singleProductTotal = prod.price * safeQty;
     if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
@@ -324,10 +324,6 @@ export function startQuickOrder(
     const serialized = JSON.stringify([item]);
     try {
       sessionStorage.setItem('vc_quick_order_items', serialized);
-    } catch {
-      // ignore
-    }
-    try {
       localStorage.setItem('vc_quick_order_items', serialized);
     } catch {
       // ignore
@@ -337,7 +333,7 @@ export function startQuickOrder(
     return;
   }
 
-  // ২. যদি কার্টে ইতিমধ্যে কোনো পণ্য থাকে — বর্তমান পণ্যটিকে কার্টে যুক্ত করে সরাসরি চেকআউট পেজে পাঠানো
+  // ২. যদি কার্টে ইতিমধ্যে ১ বা একাধিক পণ্য থাকে (মাল্টিপল আইটেম) — পণ্যটি কার্টে যুক্ত করে কুইক অর্ডার মডাল ওপেন করবে
   useCartStore.getState().addToCart([prod], prod.id, safeQty);
 
   const updatedCart = useCartStore.getState().cart;
@@ -357,7 +353,10 @@ export function startQuickOrder(
     // ignore
   }
 
-  router.push('/checkout');
+  // মাল্টিপল প্রোডাক্ট থাকায় সরাসরি চেকআউটে না নিয়ে শপিং কার্ট (কুইক অর্ডার মডাল) প্রদর্শন
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(OPEN_QUICK_CART_MODAL_EVENT));
+  }
 }
 
 export function makeSlug(str: string): string {
