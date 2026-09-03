@@ -216,21 +216,26 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
               </button>
             ) : (
               <>
+                {/* Frosted Glass Cart Button */}
                 <button
                   type="button"
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-xs transition-all duration-150 hover:bg-white/30 active:scale-90 sm:h-9 lg:h-10"
+                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-150 hover:bg-white/30 hover:border-white/60 active:scale-90 sm:h-9 lg:h-10"
                   title={t('কার্টে যোগ করুন')}
                   aria-label={t('কার্টে যোগ করুন')}
                   onClick={handleAddToCartDirect}
                 >
                   <CartIcon />
                 </button>
+
+                {/* Luminous Liquid Glass Order Button (Zero GPU Stutter) */}
                 <button
                   type="button"
-                  className="shimmer-sheen relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover font-body text-[12px] font-extrabold text-white shadow-sh1 transition-all duration-150 hover:brightness-105 active:scale-95 sm:h-9 sm:text-[13px] lg:h-10"
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/35 bg-gradient-to-r from-brand-light/85 via-[#38BDF8]/90 to-[#0058C7]/80 font-body text-[12px] font-extrabold tracking-wide text-white shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.5),0_3px_12px_rgba(0,88,199,0.22)] transition-all duration-150 hover:brightness-110 hover:border-white/55 active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                 >
-                  {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
+                  <span className="relative z-10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
+                    {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
+                  </span>
                 </button>
               </>
             )}
