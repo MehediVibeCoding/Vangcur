@@ -227,13 +227,16 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   <CartIcon />
                 </button>
 
-                {/* Refined Crystal Liquid Glass Button (Based on Image 3 with Fresh Ice-Sky Tint) */}
+                {/* Multi-Layer Liquid Water Glass Button (With TrustStrip Soft Sky Tint) */}
                 <button
                   type="button"
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/90 bg-gradient-to-r from-[#F0F8FF]/95 via-[#E0F2FE]/95 to-[#F0F8FF]/95 font-body text-[12px] font-extrabold tracking-wide text-[#0284C7] shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_3px_10px_rgba(0,88,199,0.12)] transition-all duration-150 hover:border-white hover:text-[#0062E3] hover:shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_4px_14px_rgba(0,88,199,0.18)] active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(195,222,252,0.40) 45%, rgba(255,255,255,0.70) 50%, rgba(195,222,252,0.65) 100%)',
+                  }}
+                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/80 font-body text-[12px] font-black tracking-wide text-[#004CB3] shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.95),inset_0_-1.5px_2.5px_rgba(68,167,252,0.30),0_3px_10px_rgba(0,0,0,0.12)] transition-all duration-150 hover:brightness-105 hover:border-white active:scale-[0.96] sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                 >
-                  <span className="relative z-10">
+                  <span className="relative z-10 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
                     {lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}
                   </span>
                 </button>
