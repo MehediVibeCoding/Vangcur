@@ -20,6 +20,37 @@ import { useT } from '@/lib/i18n/useT';
 import type { Product, Category, CurrentUser } from '@/types';
 
 const MAX_SEARCH_LEN = 60;
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000;
+
+function getCachedSearchData(): { prods: Product[] | null; cats: Category[] | null } {
+  if (typeof window === 'undefined') return { prods: null, cats: null };
+  try {
+    const rawP = sessionStorage.getItem('vc_search_prods_cache');
+    const rawC = sessionStorage.getItem('vc_search_cats_cache');
+    const rawTs = sessionStorage.getItem('vc_search_cache_ts');
+    const ts = Number(rawTs) || 0;
+    if (Date.now() - ts < SEARCH_CACHE_TTL_MS && rawP) {
+      return {
+        prods: JSON.parse(rawP),
+        cats: rawC ? JSON.parse(rawC) : null,
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return { prods: null, cats: null };
+}
+
+function setCachedSearchData(prods: Product[], cats: Category[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (prods.length) sessionStorage.setItem('vc_search_prods_cache', JSON.stringify(prods));
+    if (cats.length) sessionStorage.setItem('vc_search_cats_cache', JSON.stringify(cats));
+    sessionStorage.setItem('vc_search_cache_ts', String(Date.now()));
+  } catch {
+    // storage might be full, safe to ignore
+  }
+}
 
 interface NavbarProps {
   cartCount?: number;
@@ -363,6 +394,7 @@ export default function Navbar({
   const prodsRef = useRef<Product[]>([]);
   const catsRef = useRef<Category[]>(DEFAULT_CATEGORIES);
   const lastLimitToastRef = useRef(0);
+  const searchDataLoadingRef = useRef(false);
 
   const hasResults = searchResults.length > 0 || catResults.length > 0;
   const desktopSearchExpanded = desktopSearchHovered || desktopSearchFocused || showDropdown;
@@ -380,22 +412,54 @@ export default function Navbar({
     router.prefetch('/account');
   }, [router]);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const customRows = await fetchCustomProducts(supabase);
-      if (!cancelled && customRows.length) {
+  const initSearchData = useCallback(async () => {
+    if (prodsRef.current.length > 0 || searchDataLoadingRef.current) return;
+
+    const cached = getCachedSearchData();
+    if (cached.prods && cached.prods.length) {
+      prodsRef.current = cached.prods;
+      if (cached.cats && cached.cats.length) {
+        catsRef.current = cached.cats;
+      }
+      return;
+    }
+
+    searchDataLoadingRef.current = true;
+    try {
+      const [customRows, catList] = await Promise.all([
+        fetchCustomProducts(supabase),
+        fetchCategories(supabase),
+      ]);
+
+      if (customRows && customRows.length) {
         prodsRef.current = customRows;
       }
-    })();
-    return () => { cancelled = true; };
+      if (catList && catList.length) {
+        catsRef.current = catList;
+      }
+
+      setCachedSearchData(prodsRef.current, catsRef.current);
+    } catch {
+      // fail safe
+    } finally {
+      searchDataLoadingRef.current = false;
+    }
   }, [supabase]);
 
   useEffect(() => {
-    let cancelled = false;
-    fetchCategories(supabase).then((list) => { if (!cancelled) catsRef.current = list; });
-    return () => { cancelled = true; };
-  }, [supabase]);
+    const cached = getCachedSearchData();
+    if (cached.prods && cached.prods.length) {
+      prodsRef.current = cached.prods;
+      if (cached.cats && cached.cats.length) {
+        catsRef.current = cached.cats;
+      }
+    } else {
+      const idleTimer = setTimeout(() => {
+        initSearchData();
+      }, 1500);
+      return () => clearTimeout(idleTimer);
+    }
+  }, [initSearchData]);
 
   useEffect(() => {
     setRecentSearches(getRecentSearches());
@@ -521,6 +585,8 @@ export default function Navbar({
   }, []);
 
   const handleSearchInput = useCallback((value: string) => {
+    initSearchData();
+
     const rawLen = value.length;
     if (rawLen >= MAX_SEARCH_LEN) {
       const now = Date.now();
@@ -546,7 +612,7 @@ export default function Navbar({
       return;
     }
     debounceTimerRef.current = setTimeout(() => runSearch(clean), 280);
-  }, [runSearch, router, lang]);
+  }, [runSearch, router, lang, initSearchData]);
 
   const goToCat = (catId: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -593,6 +659,7 @@ export default function Navbar({
   };
 
   const pickRecentSearch = (term: string) => {
+    initSearchData();
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     const cleanTerm = term.replace(/[<>`]/g, '').slice(0, MAX_SEARCH_LEN);
     setSearchQuery(cleanTerm);
@@ -704,6 +771,7 @@ export default function Navbar({
                   ref={desktopSearchBoxRef}
                   onMouseEnter={() => {
                     setDesktopSearchHovered(true);
+                    initSearchData();
                     router.prefetch('/search');
                   }}
                   onMouseLeave={() => setDesktopSearchHovered(false)}
@@ -722,6 +790,7 @@ export default function Navbar({
                     onChange={(e) => handleSearchInput(e.target.value)}
                     onKeyDown={handleSearchKey}
                     onFocus={() => {
+                      initSearchData();
                       setDesktopSearchFocused(true);
                       setShowDropdown(true);
                       router.prefetch('/search');
@@ -844,6 +913,7 @@ export default function Navbar({
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light md:hidden"
                   onClick={(e) => {
                     e.stopPropagation();
+                    initSearchData();
                     const next = !mobileSearchOpen;
                     setMobileSearchOpen(next);
                     setShowDropdown(next);
@@ -879,10 +949,14 @@ export default function Navbar({
                   onChange={(e) => handleSearchInput(e.target.value)}
                   onKeyDown={handleSearchKey}
                   onFocus={() => {
+                    initSearchData();
                     setShowDropdown(true);
                     router.prefetch('/search');
                   }}
-                  onTouchStart={() => router.prefetch('/search')}
+                  onTouchStart={() => {
+                    initSearchData();
+                    router.prefetch('/search');
+                  }}
                   ref={mobileSearchInputRef}
                   autoComplete="off"
                   style={{ outline: 'none', WebkitAppearance: 'none' }}
