@@ -35,6 +35,40 @@ interface OfferConfig {
   model3: OfferModel3;
 }
 
+const OFFER_CACHE_KEY = 'vc_offer_popup_cache';
+const OFFER_CACHE_TS_KEY = 'vc_offer_popup_ts';
+const OFFER_CACHE_TTL_MS = 10 * 60 * 1000;
+
+interface OfferCachePayload {
+  config: OfferConfig | null;
+  model3Product: Product | null;
+  items: Product[];
+}
+
+function getCachedOffer(): OfferCachePayload | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(OFFER_CACHE_KEY);
+    const ts = Number(sessionStorage.getItem(OFFER_CACHE_TS_KEY)) || 0;
+    if (raw && Date.now() - ts < OFFER_CACHE_TTL_MS) {
+      return JSON.parse(raw);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function setCachedOffer(payload: OfferCachePayload) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(OFFER_CACHE_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(OFFER_CACHE_TS_KEY, String(Date.now()));
+  } catch {
+    // storage limit safe
+  }
+}
+
 function HeaderDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]" aria-hidden="true">
@@ -158,6 +192,15 @@ export default function OfferPopup() {
       return;
     }
 
+    const cached = getCachedOffer();
+    if (cached) {
+      setConfig(cached.config);
+      setModel3Product(cached.model3Product);
+      setItems(cached.items);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const supabase = createClient();
     (async () => {
@@ -177,9 +220,11 @@ export default function OfferPopup() {
         }
       }
 
-      setConfig(useFallback ? null : cfg);
+      const activeConfig = useFallback ? null : cfg;
+      setConfig(activeConfig);
       setModel3Product(m3prod);
 
+      let offers: Product[] = [];
       if (useFallback) {
         let prods: Product[] = [];
         try {
@@ -187,11 +232,17 @@ export default function OfferPopup() {
         } catch {
           // network error fallback
         }
-        const offers = prods
+        offers = prods
           .filter((p) => discountPct(p) > 0 && p.stock > 0)
           .sort((a, b) => discountPct(b) - discountPct(a));
         setItems(offers);
       }
+
+      setCachedOffer({
+        config: activeConfig,
+        model3Product: m3prod,
+        items: offers,
+      });
 
       setLoading(false);
     })();
