@@ -4,7 +4,7 @@ import { after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/serviceClient';
 import {
-  DISTRICTS, getShipOptions, shipPrice, fetchShipConfig,
+  DISTRICTS, getShipOptions, shipPrice, fetchShipConfig, DEFAULT_SHIP_CFG,
   validatePhone, validateAddress, validateEmail, validateTxnId,
   calculateAdvancePayment, MAX_ONLINE_ORDER_TOTAL,
 } from '@/lib/checkoutData';
@@ -71,7 +71,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
 
   if (!rawItems.length || rawItems.length > MAX_ITEMS) return fail(t('কার্ট খালি বা অস্বাভাবিক, রিফ্রেশ করে আবার চেষ্টা করুন'));
 
-  // ১. ডুপ্লিকেট প্রোডাক্ট মার্জার
   const mergedMap: Record<string, number> = {};
   for (const raw of rawItems) {
     const id = String(raw?.id ?? '').trim();
@@ -93,7 +92,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('সার্ভার কনফিগারেশন সমস্যা, একটু পরে চেষ্টা করুন'));
   }
 
-  // 🛡️ নিরাপদ সার্ভার-ভেরিফাইড সেশন অথেন্টিকেশন
   let currentUserId: string | null = null;
   let isPrivilegedUser = false;
 
@@ -122,7 +120,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     // ignore
   }
 
-  // ২. রেট লিমিট যাচাই (লগইন করা মডারেটর/অ্যাডমিন হলে বাইপাস)
   if (!isPrivilegedUser) {
     try {
       const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
@@ -145,7 +142,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   }
 
-  // ৩. স্পিড অপটিমাইজড টার্গেটেড প্রোডাক্ট কুয়েরি ও শিপিং কনফিগ (প্যারালাল ফেচ)
   let authoritativeProds: { id: string | number; name: string; price: number; stock: number; cat: string; imgs: string[] }[] = [];
   let shipCfg = DEFAULT_SHIP_CFG;
 
@@ -199,7 +195,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   let sc = shipPrice(shipping, shipCfg);
   const vSub = verifiedItems.reduce((s, i) => s + i.price * i.qty, 0);
 
-  // ৪. কুপন ভ্যালিডেশন
   let discountAmount = 0;
   let appliedCouponCode: string | null = null;
 
@@ -229,16 +224,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
   const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
-  // ২০k লিমিট গার্ড
   if (vTotal > MAX_ONLINE_ORDER_TOTAL && !isPrivilegedUser) {
     return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
   }
 
-  // ৩-টায়ার অগ্রিম হিসাব
   const advanceBreakdown = calculateAdvancePayment(vTotal);
   const advancePaidAmount = advanceBreakdown.totalAdvance;
 
-  // ৫. স্টক হ্রাস
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
   try {
     const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
@@ -249,7 +241,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     logWarn('[checkout] stock decrement skipped:', e);
   }
 
-  // অর্ডার নম্বর তৈরি
   let orderNum = `#VC-${Date.now().toString(36).toUpperCase()}`;
   try {
     const { data: counterData, error: counterErr } = await service.rpc('increment_order_counter');
@@ -258,7 +249,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     // fallback
   }
 
-  // ডুপ্লিকেট বিকাশ TxnID বাইপাস (মডারেটর টেস্টের জন্য)
   let safeTxn = txn || null;
   if (safeTxn && isPrivilegedUser) {
     const { data: existingTxn } = await service
@@ -272,7 +262,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   }
 
-  // ৬. রেজিলিয়েন্ট অর্ডার ইনসার্ট
   const primaryPayload: Record<string, unknown> = {
     order_num: orderNum,
     created_at: new Date().toISOString(),
@@ -334,10 +323,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  // 🚀 ৭. Next.js 15 Native Background Tasks (after)
-  // কাস্টমার কোনো বিলম্ব ছাড়াই সাথে সাথে রেসপন্স পাবে, আর পেছনের কাজগুলো সার্ভারলেস ড্রপ ছাড়া সম্পন্ন হবে
   after(async () => {
-    // কুপন ব্যবহার কাউন্টার আপডেট
     if (appliedCouponCode) {
       try {
         await service.rpc('increment_coupon_usage', { p_code: appliedCouponCode });
@@ -346,7 +332,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       }
     }
 
-    // টেলিগ্রাম নোটিফিকেশন ডেলিভারি
     try {
       await sendTelegramOrderNotification({
         orderNum,
