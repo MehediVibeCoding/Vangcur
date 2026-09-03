@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { fetchCustomProducts } from '@/lib/productData';
+import { fetchCategories } from '@/lib/categoryData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 import SearchClient from './SearchClient';
 
@@ -23,11 +24,14 @@ export async function generateMetadata({
 
 export default async function SearchPage() {
   const supabase = await createClient();
-  const initialProducts = await fetchCustomProducts(supabase);
+  const [initialProducts, initialCategories] = await Promise.all([
+    fetchCustomProducts(supabase),
+    fetchCategories(supabase),
+  ]);
 
   return (
     <Suspense fallback={null}>
-      <SearchClient initialProducts={initialProducts} />
+      <SearchClient initialProducts={initialProducts} initialCategories={initialCategories} />
     </Suspense>
   );
 }
