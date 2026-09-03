@@ -17,6 +17,11 @@ import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
 
+// পুরো সেশনে (ব্রাউজার ট্যাব বন্ধ না করা পর্যন্ত) একটা প্রোডাক্ট কার্ড একবার এন্ট্রি-অ্যানিমেশন
+// দেখানোর পর সেটা মনে রাখা হয় — প্রোডাক্ট পেজ থেকে হোমে ব্যাক করলে আবার একই কার্ড অ্যানিমেট হবে না,
+// কিন্তু নতুন ক্যাটাগরি/নতুন লোড-মোর ব্যাচের নতুন প্রোডাক্টে ঠিকই অ্যানিমেশন দেখাবে।
+const animatedProductIds = new Set<string>();
+
 function StarRating({ rating }: { rating: number }) {
   const r = Math.max(0, Math.min(5, rating || 4.5));
   const full = Math.floor(r);
@@ -92,6 +97,9 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const [shimmerPlay, setShimmerPlay] = useState(false);
   const shimmerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const cardKey = String(p.id);
+  const alreadyAnimated = animatedProductIds.has(cardKey);
+
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
@@ -108,14 +116,11 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     });
   };
 
-  // একবার শুধু — কার্ড স্ক্রলে ভিউতে ঢোকার একটু পরে Order Now বাটনে শাইন খেলবে
+  // একবার শুধু — কার্ড স্ক্রলে ভিউতে ঢোকার একটু পরে Order Now বাটনে শাইন খেলবে;
+  // এই মুহূর্তেই কার্ডটা "দেখা হয়ে গেছে" হিসেবে মার্ক হয়ে যায় যাতে পরে ব্যাক করলে আর অ্যানিমেট না হয়
   const handleEntranceReveal = () => {
+    animatedProductIds.add(cardKey);
     shimmerTimerRef.current = setTimeout(triggerShimmer, 500);
-  };
-
-  // কার্ডে ক্লিক করে প্রোডাক্ট পেজে যাওয়ার মুহূর্তে একই শাইন আবার খেলবে, নেভিগেশনের সাথে সমান্তরালে
-  const handleCardNavigateClick = () => {
-    triggerShimmer();
   };
 
   // /checkout GlobalOverlays.tsx O Navbar.tsx-e page-level e ekbar-i prefetch hoye jay,
@@ -162,22 +167,38 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     startQuickOrder(router, p, 1);
   };
 
+  // আগে যে কার্ড একবার এন্ট্রি-অ্যানিমেশন দেখিয়ে ফেলেছে (এই সেশনে), সেটার জন্য কোনো motion prop-ই
+  // পাঠানো হয় না — তাই সেটা সরাসরি রেস্ট স্টেটে রেন্ডার হয়, প্রোডাক্ট পেজ থেকে ব্যাক করলে আর
+  // ফেড/স্লাইড রিপ্লে হয় না। নতুন কার্ড (নতুন ক্যাটাগরি বা লোড-মোর ব্যাচ) ঠিকই অ্যানিমেট হবে।
+  const entranceMotionProps = alreadyAnimated
+    ? {}
+    : {
+        initial: { opacity: 0, y: 24 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.08, margin: '0px 0px -40px 0px' },
+        // fade + slide একই smooth "ease-out" কার্ভে, পুরো duration জুড়ে একসাথে মিশে চলে;
+        // index অনুযায়ী হালকা স্ট্যাগার দেওয়া হয়েছে যাতে অনেকগুলো কার্ড একসাথে না লাফিয়ে
+        // ঢেউয়ের মতো মসৃণভাবে একে একে উঠে আসে
+        transition: {
+          duration: 0.6,
+          ease: [0.16, 1, 0.3, 1] as const,
+          delay: Math.min(index * 0.045, 0.27),
+        },
+        onViewportEnter: handleEntranceReveal,
+      };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.08, margin: '0px 0px -40px 0px' }}
-      transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
-      onViewportEnter={handleEntranceReveal}
+      {...entranceMotionProps}
+      whileTap={{ scale: 0.98, transition: { type: 'spring', stiffness: 500, damping: 30 } }}
       onMouseEnter={() => router.prefetch('/checkout')}
       onTouchStart={() => router.prefetch('/checkout')}
-      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] transition-transform duration-brand active:scale-[.98] [transform:translateZ(0)]"
+      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [transform:translateZ(0)]"
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted">
         <Link
           href={href}
           prefetch={true}
-          onClick={handleCardNavigateClick}
           className="absolute inset-0 block cursor-pointer transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.06]"
         >
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst && index >= 2} />
@@ -265,9 +286,9 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                   type="button"
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className={`shimmer-sheen-oneshot${shimmerPlay ? ' shimmer-sheen-play' : ''} relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-brand-light/35 font-body text-[12px] font-extrabold text-brand-primary backdrop-blur-[8px] shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10`}
+                  className={`shimmer-sheen-oneshot${shimmerPlay ? ' shimmer-sheen-play' : ''} relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/80 font-body text-[12px] font-extrabold text-brand-light-hover shadow-sh1 transition-all duration-brand hover:brightness-95 sm:h-9 sm:text-[13px] lg:h-10`}
                   style={{
-                    background: 'linear-gradient(115deg, rgba(255,255,255,.95) 0%, rgba(195,222,252,.7) 55%, rgba(68,167,252,.4) 100%)',
+                    background: 'linear-gradient(115deg, #FFFFFF 0%, #EAF3FE 55%, #CFE5FE 100%)',
                   }}
                   onClick={handleOrderNowDirect}
                 >
