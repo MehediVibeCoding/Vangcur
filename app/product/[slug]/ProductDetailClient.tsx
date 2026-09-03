@@ -33,22 +33,39 @@ import type { Product, ProductSpecs } from '@/types';
 
 function VangcurPandaIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="32" height="32" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="8.5" cy="9" r="4.8" fill="#1E293B" />
-      <circle cx="27.5" cy="9" r="4.8" fill="#1E293B" />
-      <circle cx="8.5" cy="9" r="2.2" fill="#475569" opacity="0.6" />
-      <circle cx="27.5" cy="9" r="2.2" fill="#475569" opacity="0.6" />
-      <ellipse cx="18" cy="20" rx="14.5" ry="12.5" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.6" />
-      <ellipse cx="12.2" cy="18.8" rx="4.2" ry="5" transform="rotate(-15 12.2 18.8)" fill="#1E293B" />
-      <ellipse cx="23.8" cy="18.8" rx="4.2" ry="5" transform="rotate(15 23.8 18.8)" fill="#1E293B" />
-      <circle cx="12.8" cy="18.2" r="1.7" fill="#FFFFFF" />
-      <circle cx="23.2" cy="18.2" r="1.7" fill="#FFFFFF" />
-      <circle cx="13.4" cy="17.8" r="0.6" fill="#38BDF8" />
-      <circle cx="22.6" cy="17.8" r="0.6" fill="#38BDF8" />
-      <ellipse cx="8.5" cy="23.5" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.9" />
-      <ellipse cx="27.5" cy="23.5" rx="2.5" ry="1.5" fill="#FDA4AF" opacity="0.9" />
-      <ellipse cx="18" cy="22" rx="2.2" ry="1.5" fill="#1E293B" />
-      <path d="M15.8 24.2 Q18 26.2 20.2 24.2" stroke="#1E293B" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+    <svg className={className} width="36" height="45" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* পিছনের হাত (রিল্যাক্সড, শরীরের পাশে) */}
+      <path d="M10.5 30 Q5.5 34.5 7.2 40.5" stroke="#1E293B" strokeWidth="5" strokeLinecap="round" fill="none" />
+      <circle cx="7.2" cy="41" r="3.3" fill="#1E293B" />
+
+      {/* শরীর */}
+      <ellipse cx="20" cy="35.5" rx="10.5" ry="10" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.5" />
+      {/* পা */}
+      <ellipse cx="14" cy="44.5" rx="4.2" ry="3" fill="#1E293B" />
+      <ellipse cx="26" cy="44.5" rx="4.2" ry="3" fill="#1E293B" />
+
+      {/* কান */}
+      <circle cx="9.5" cy="5.5" r="4.6" fill="#1E293B" />
+      <circle cx="30.5" cy="5.5" r="4.6" fill="#1E293B" />
+      <circle cx="9.5" cy="5.5" r="2.1" fill="#475569" opacity="0.6" />
+      <circle cx="30.5" cy="5.5" r="2.1" fill="#475569" opacity="0.6" />
+
+      {/* মাথা */}
+      <ellipse cx="20" cy="15" rx="12" ry="10.5" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.5" />
+      <ellipse cx="13.5" cy="14.5" rx="4.1" ry="5" transform="rotate(-15 13.5 14.5)" fill="#1E293B" />
+      <ellipse cx="26.5" cy="14.5" rx="4.1" ry="5" transform="rotate(15 26.5 14.5)" fill="#1E293B" />
+      <circle cx="14" cy="14" r="1.7" fill="#FFFFFF" />
+      <circle cx="26" cy="14" r="1.7" fill="#FFFFFF" />
+      <circle cx="14.5" cy="13.6" r="0.6" fill="#38BDF8" />
+      <circle cx="25.5" cy="13.6" r="0.6" fill="#38BDF8" />
+      <ellipse cx="9" cy="19" rx="2.3" ry="1.4" fill="#FDA4AF" opacity="0.9" />
+      <ellipse cx="31" cy="19" rx="2.3" ry="1.4" fill="#FDA4AF" opacity="0.9" />
+      <ellipse cx="20" cy="17.8" rx="2" ry="1.3" fill="#1E293B" />
+      <path d="M17.5 19.8 Q20 21.6 22.5 19.8" stroke="#1E293B" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+
+      {/* সামনের হাত (উপরে তোলা, হাই বলার ভঙ্গি — সবার উপরে আঁকা) */}
+      <path d="M29.5 30 Q36.5 25.5 34 15.5" stroke="#1E293B" strokeWidth="5" strokeLinecap="round" fill="none" />
+      <circle cx="34" cy="15" r="3.4" fill="#1E293B" />
     </svg>
   );
 }
@@ -538,12 +555,12 @@ export default function ProductDetailClient({
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: prod.id, qty } }));
         }
-      }, 650);
+      }, 1050);
 
       // ১.৭ সেকেন্ড পর স্বাভাবিক অবস্থায় বাউন্স ব্যাক করবে
       setTimeout(() => {
         setCartButtonState('idle');
-      }, 1750);
+      }, 2150);
     } else if (res.reason === 'stock') {
       showToast(t('স্টক শেষ!'));
     }
@@ -970,27 +987,42 @@ export default function ProductDetailClient({
                   }`}
                   onClick={addCartFromPP}
                 >
-                  {/* 🐼 উড়ন্ত পান্ডার কিউট বাউন্স ও ডিগবাজি লেয়ার */}
+                  {/* 🐼 কার্ডের উপরের বর্ডার-মাঝখান থেকে বেরিয়ে লাফ দেওয়া, হাই বলা, ফিরে ডুবে যাওয়া পান্ডা */}
                   <AnimatePresence>
                     {cartButtonState === 'animating' && (
                       <motion.div
                         key="panda-cart-jump"
-                        initial={{ opacity: 0, y: 12, x: 24, scale: 0.3, rotate: 0 }}
+                        initial={{ opacity: 0, y: 10, scale: 0.3, rotate: 0 }}
                         animate={{
-                          opacity: [0, 1, 1, 1, 0],
-                          y: [12, -48, -52, -6, 12],
-                          x: [24, 16, 0, -22, -26],
-                          scale: [0.3, 1.25, 1.1, 0.6, 0.15],
-                          rotate: [0, -18, 15, -8, 0],
+                          opacity: [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                          y: [10, -8, -46, -50, -50, -50, -46, -6, 10],
+                          scale: [0.3, 0.75, 1.05, 1.1, 1.1, 1.1, 1.05, 0.6, 0.25],
+                          rotate: [0, -4, 8, -14, 14, -10, 0, 0, 0],
                         }}
                         transition={{
-                          duration: 0.85,
+                          duration: 1.05,
                           ease: [0.22, 0.7, 0.2, 1],
-                          times: [0, 0.2, 0.45, 0.8, 1],
+                          times: [0, 0.16, 0.3, 0.42, 0.52, 0.62, 0.72, 0.88, 1],
                         }}
-                        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 drop-shadow-[0_6px_12px_rgba(0,0,0,0.18)]"
+                        style={{ transformOrigin: 'center bottom' }}
+                        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 z-30 drop-shadow-[0_6px_10px_rgba(0,0,0,0.18)]"
                       >
-                        <VangcurPandaIcon className="h-9 w-9" />
+                        <VangcurPandaIcon className="h-12 w-10" />
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{
+                            opacity: [0, 0, 1, 1, 1, 0, 0, 0, 0],
+                            scale: [0.5, 0.5, 1, 1, 1, 0.8, 0.5, 0.5, 0.5],
+                          }}
+                          transition={{
+                            duration: 1.05,
+                            ease: [0.22, 0.7, 0.2, 1],
+                            times: [0, 0.16, 0.3, 0.42, 0.52, 0.62, 0.72, 0.88, 1],
+                          }}
+                          className="absolute -right-3 -top-1 rounded-full border border-brand-light/40 bg-white px-1.5 py-0.5 text-[10px] font-extrabold text-brand-light shadow-sh1"
+                        >
+                          Hi!
+                        </motion.span>
                       </motion.div>
                     )}
                   </AnimatePresence>
