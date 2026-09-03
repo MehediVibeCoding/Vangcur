@@ -170,9 +170,10 @@ function EndOfResults() {
 
 interface SearchClientProps {
   initialProducts: Product[];
+  initialCategories?: Category[];
 }
 
-export default function SearchClient({ initialProducts }: SearchClientProps) {
+export default function SearchClient({ initialProducts, initialCategories }: SearchClientProps) {
   const { t, lang } = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -180,11 +181,15 @@ export default function SearchClient({ initialProducts }: SearchClientProps) {
 
   const supabase = useRef(createClient()).current;
   const [prods, setProds] = useState<Product[]>(initialProducts);
-  const [cats, setCats] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [cats, setCats] = useState<Category[]>(
+    initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES
+  );
 
   useEffect(() => {
-    fetchCategories(supabase).then((c) => { if (c.length) setCats(c); });
-  }, [supabase]);
+    if (!initialCategories || initialCategories.length === 0) {
+      fetchCategories(supabase).then((c) => { if (c.length) setCats(c); });
+    }
+  }, [supabase, initialCategories]);
 
   useEffect(() => {
     const channel = subscribeCustomProducts(supabase, {
