@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { getWarrantyModalContent } from '@/lib/warrantyData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -78,6 +78,7 @@ function WorkflowIcon() {
 
 export default function WarrantyModal({ isOpen, onClose, warrantyText }: WarrantyModalProps) {
   const { t, lang } = useT();
+  const router = useRouter();
   const rawContent = useMemo(() => getWarrantyModalContent(warrantyText), [warrantyText]);
 
   const content = useMemo(() => {
@@ -105,10 +106,14 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
   useHistoryModal(isOpen, onClose, 'warranty-modal');
 
   useEffect(() => {
-    if (isOpen) lockBody();
-    else unlockBody();
+    if (isOpen) {
+      lockBody();
+      router.prefetch('/terms');
+    } else {
+      unlockBody();
+    }
     return () => unlockBody();
-  }, [isOpen]);
+  }, [isOpen, router]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -118,6 +123,14 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
     document.addEventListener('keydown', onKeydown);
     return () => document.removeEventListener('keydown', onKeydown);
   }, [isOpen, onClose]);
+
+  const handleNavigateToTerms = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onClose();
+    setTimeout(() => {
+      router.push('/terms');
+    }, 120);
+  };
 
   return (
     <AnimatePresence>
@@ -234,14 +247,14 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                         : 'ওয়ারেন্টির বিস্তারিত আইনি নীতিমালা দেখতে চান?'}
                     </span>
                   </div>
-                  <Link
-                    href="/terms"
-                    onClick={onClose}
-                    className="inline-flex shrink-0 items-center gap-1 font-body text-[12px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover hover:underline"
+                  <button
+                    type="button"
+                    onClick={handleNavigateToTerms}
+                    className="inline-flex shrink-0 items-center gap-1 font-body text-[12px] font-extrabold text-brand-light transition-colors hover:text-brand-light-hover hover:underline cursor-pointer"
                   >
                     <span>{lang === 'en' ? 'Terms & Policy' : 'শর্তাবলী দেখুন'}</span>
                     <ArrowLinkIcon />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
