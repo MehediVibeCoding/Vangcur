@@ -6,6 +6,35 @@ import { DEFAULT_FAQS, fetchFAQs } from '@/lib/faqData';
 import type { Faq } from '@/lib/faqData';
 import { useT } from '@/lib/i18n/useT';
 
+const FAQ_CACHE_KEY = 'vc_faqs_cache';
+const FAQ_CACHE_TS_KEY = 'vc_faqs_cache_ts';
+const FAQ_CACHE_TTL_MS = 15 * 60 * 1000;
+
+function getCachedFAQs(): Faq[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(FAQ_CACHE_KEY);
+    const ts = Number(sessionStorage.getItem(FAQ_CACHE_TS_KEY)) || 0;
+    if (raw && Date.now() - ts < FAQ_CACHE_TTL_MS) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function setCachedFAQs(faqs: Faq[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(FAQ_CACHE_KEY, JSON.stringify(faqs));
+    sessionStorage.setItem(FAQ_CACHE_TS_KEY, String(Date.now()));
+  } catch {
+    // storage limit safe
+  }
+}
+
 function ChevronIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -32,8 +61,18 @@ export default function FAQ() {
 
   useEffect(() => {
     let cancelled = false;
+
+    const cached = getCachedFAQs();
+    if (cached && cached.length) {
+      setFaqs(cached);
+      return;
+    }
+
     fetchFAQs(supabase).then((list) => {
-      if (!cancelled) setFaqs(list);
+      if (!cancelled && list && list.length) {
+        setFaqs(list);
+        setCachedFAQs(list);
+      }
     });
 
     return () => {
@@ -51,7 +90,6 @@ export default function FAQ() {
 
   return (
     <div className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5" id="faqSec">
-      {/* পরিচ্ছন্ন ও মার্জিত হেডার ব্লক */}
       <div className="mb-8 text-center">
         <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-3.5 py-1 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light shadow-xs backdrop-blur-md">
           <SupportHelpIcon />
@@ -73,7 +111,6 @@ export default function FAQ() {
         </p>
       </div>
 
-      {/* অ্যাকর্ডিয়ন লিস্ট — স্লিম ও টাইট কম্প্যাক্ট ডিজাইন */}
       <div className="mx-auto max-w-[760px] space-y-3">
         {faqs.map((f, i) => {
           const open = openIndex === i;
@@ -99,7 +136,6 @@ export default function FAQ() {
                 />
               </button>
 
-              {/* জিরো-প্যাডিং নো-রিফ্লো গ্রিড কলাপ্স */}
               <div
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
                   open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
