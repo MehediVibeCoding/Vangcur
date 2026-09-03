@@ -34,23 +34,15 @@ import type { Product, ProductSpecs } from '@/types';
 function VangcurPandaIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="36" height="45" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* পিছনের হাত (রিল্যাক্সড, শরীরের পাশে) */}
       <path d="M10.5 30 Q5.5 34.5 7.2 40.5" stroke="#1E293B" strokeWidth="5" strokeLinecap="round" fill="none" />
       <circle cx="7.2" cy="41" r="3.3" fill="#1E293B" />
-
-      {/* শরীর */}
       <ellipse cx="20" cy="35.5" rx="10.5" ry="10" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.5" />
-      {/* পা */}
       <ellipse cx="14" cy="44.5" rx="4.2" ry="3" fill="#1E293B" />
       <ellipse cx="26" cy="44.5" rx="4.2" ry="3" fill="#1E293B" />
-
-      {/* কান */}
       <circle cx="9.5" cy="5.5" r="4.6" fill="#1E293B" />
       <circle cx="30.5" cy="5.5" r="4.6" fill="#1E293B" />
       <circle cx="9.5" cy="5.5" r="2.1" fill="#475569" opacity="0.6" />
       <circle cx="30.5" cy="5.5" r="2.1" fill="#475569" opacity="0.6" />
-
-      {/* মাথা */}
       <ellipse cx="20" cy="15" rx="12" ry="10.5" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.5" />
       <ellipse cx="13.5" cy="14.5" rx="4.1" ry="5" transform="rotate(-15 13.5 14.5)" fill="#1E293B" />
       <ellipse cx="26.5" cy="14.5" rx="4.1" ry="5" transform="rotate(15 26.5 14.5)" fill="#1E293B" />
@@ -62,8 +54,6 @@ function VangcurPandaIcon({ className = '' }: { className?: string }) {
       <ellipse cx="31" cy="19" rx="2.3" ry="1.4" fill="#FDA4AF" opacity="0.9" />
       <ellipse cx="20" cy="17.8" rx="2" ry="1.3" fill="#1E293B" />
       <path d="M17.5 19.8 Q20 21.6 22.5 19.8" stroke="#1E293B" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-
-      {/* সামনের হাত (উপরে তোলা, হাই বলার ভঙ্গি — সবার উপরে আঁকা) */}
       <path d="M29.5 30 Q36.5 25.5 34 15.5" stroke="#1E293B" strokeWidth="5" strokeLinecap="round" fill="none" />
       <circle cx="34" cy="15" r="3.4" fill="#1E293B" />
     </svg>
@@ -432,7 +422,6 @@ export default function ProductDetailClient({
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
 
-  // 🐼 আইকনিক ভাঙচুর পান্ডা কার্ট ড্রপ ও সাকসেস স্টেট ইঞ্জিন
   const [cartButtonState, setCartButtonState] = useState<'idle' | 'animating' | 'added'>('idle');
   const [isStockNotified, setIsStockNotified] = useState(false);
 
@@ -502,17 +491,17 @@ export default function ProductDetailClient({
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
+  // স্টিকি বার স্ক্রল চেকার: বিবরণ/ফিচারস বারটি যখন স্ক্রিনের ঠিক শীর্ষে হিট করবে (tabsTop <= 2), তখনই বটম বার আসবে
   useEffect(() => {
     let raf = 0;
     const checkSticky = () => {
       raf = 0;
-      const scrollY = window.scrollY;
       const tabsEl = tabsWrapRef.current;
       if (tabsEl) {
         const tabsTop = tabsEl.getBoundingClientRect().top;
-        setStickyShown(scrollY > 300 || tabsTop <= 80);
+        setStickyShown(tabsTop <= 2);
       } else {
-        setStickyShown(scrollY > 300);
+        setStickyShown(false);
       }
     };
 
@@ -539,7 +528,6 @@ export default function ProductDetailClient({
     setQty((q) => Math.max(1, Math.min(maxQty, q + d)));
   };
 
-  // 🐼 কিউট পান্ডা কার্ট ড্রপ ও ট্যাকটাইল রিয়্যাকশন হ্যান্ডলার
   const addCartFromPP = () => {
     if (!prod || sold || cartButtonState === 'animating') return;
 
@@ -547,7 +535,6 @@ export default function ProductDetailClient({
     if (res.ok) {
       setCartButtonState('animating');
 
-      // পান্ডাটি ০.৬৫ সেকেন্ডে কার্টে পড়বে, তখন সাকসেস মেসেজ ট্রানজিশন হবে
       setTimeout(() => {
         setCartButtonState('added');
         showToast(t('কার্টে যোগ হয়েছে'));
@@ -557,7 +544,6 @@ export default function ProductDetailClient({
         }
       }, 1050);
 
-      // ১.৭ সেকেন্ড পর স্বাভাবিক অবস্থায় বাউন্স ব্যাক করবে
       setTimeout(() => {
         setCartButtonState('idle');
       }, 2150);
@@ -762,7 +748,7 @@ export default function ProductDetailClient({
   const discountPct = prod.old && prod.old > prod.price ? Math.round((1 - prod.price / prod.old) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
+    <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white overflow-x-hidden">
       <Navbar {...navbarProps} />
 
       <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-3.5 md:grid-cols-2 md:px-8 md:pb-10">
@@ -868,7 +854,7 @@ export default function ProductDetailClient({
               <div ref={specPillsRef} className="relative overflow-hidden">
                 <div ref={specPillsMeasureRef} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 flex gap-2 opacity-0">
                   {quickSpecPills.map((pill, i) => (
-                    <div key={i} className="whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
+                    <div key={i} className="max-w-full truncate whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
                       {pill}
                     </div>
                   ))}
@@ -876,7 +862,7 @@ export default function ProductDetailClient({
                 {specPillRows === null ? (
                   <div className="flex flex-wrap gap-2">
                     {quickSpecPills.map((pill, i) => (
-                      <div key={i} className="rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
+                      <div key={i} className="max-w-full truncate rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
                         {pill}
                       </div>
                     ))}
@@ -884,9 +870,9 @@ export default function ProductDetailClient({
                 ) : (
                   <div className="flex flex-col gap-2">
                     {specPillRows.map((row, ri) => (
-                      <div key={ri} className="flex gap-2">
+                      <div key={ri} className="flex flex-wrap gap-2">
                         {row.map((pill, pi) => (
-                          <div key={pi} className="whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
+                          <div key={pi} className="max-w-full truncate whitespace-nowrap rounded-full bg-brand-bg/35 px-3 py-1.5 text-[13px] text-ink">
                             {pill}
                           </div>
                         ))}
@@ -949,7 +935,6 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          {/* 🐼 প্রধান অ্যাকশন বাটনসমূহ — জিরো-আউটলাইন গ্লিচ ও কিউট পান্ডা ড্রপ ইঞ্জিন */}
           <div className="flex flex-col gap-2.5">
             {sold ? (
               isStockNotified ? (
@@ -975,7 +960,6 @@ export default function ProductDetailClient({
               )
             ) : (
               <>
-                {/* 🐼 ভাঙচুর পান্ডা জাম্প ও কার্ট ড্রপ বাটন */}
                 <motion.button
                   type="button"
                   whileTap={cartButtonState === 'idle' ? { scale: 0.97 } : undefined}
@@ -987,7 +971,6 @@ export default function ProductDetailClient({
                   }`}
                   onClick={addCartFromPP}
                 >
-                  {/* 🐼 কার্ডের উপরের বর্ডার-মাঝখান থেকে বেরিয়ে লাফ দেওয়া, হাই বলা, ফিরে ডুবে যাওয়া পান্ডা */}
                   <AnimatePresence>
                     {cartButtonState === 'animating' && (
                       <motion.div
@@ -1027,7 +1010,6 @@ export default function ProductDetailClient({
                     )}
                   </AnimatePresence>
 
-                  {/* কার্ট আইকন ও টেক্সট ট্রানজিশন */}
                   <span
                     className={`inline-flex items-center justify-center transition-transform duration-200 ${
                       cartButtonState === 'animating' ? 'animate-cart-jiggle' : ''
@@ -1049,7 +1031,6 @@ export default function ProductDetailClient({
                   </span>
                 </motion.button>
 
-                {/* ⚡ এখনই অর্ডার করুন বাটন — অ্যাপল স্প্রিং ফিজিক্স ও ইনস্ট্যান্ট ফিল */}
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.96 }}
@@ -1260,7 +1241,6 @@ export default function ProductDetailClient({
       <WarrantyModal isOpen={warrantyOpen} onClose={() => setWarrantyOpen(false)} warrantyText={prod.warranty} />
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onAuthSuccess={handleAuthSuccess} />
 
-      {/* 📱 মোবাইল স্টিকি বটম বার — স্প্রিং ট্যাকটাইল রেসপন্স ও জিরো-আউটলাইন বর্ডার */}
       <div className={`fixed inset-x-0 bottom-0 z-[45] border-t border-border-base bg-white/95 pb-[max(10px,env(safe-area-inset-bottom))] shadow-sh3 backdrop-blur transition-transform duration-300 ${stickyShown ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-4 pt-2.5 md:px-8">
           <div className="min-w-0 flex flex-1 flex-col justify-center pr-2">
