@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
-import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
+import { playfairDisplay, dmSans, notoBengali } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
@@ -36,7 +36,7 @@ export default async function RootLayout({
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
   return (
-    <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}>
+    <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${notoBengali.variable}`}>
       <head>
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
