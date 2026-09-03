@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
@@ -35,7 +35,7 @@ function ClearTrackSvgIcon({ className = '' }: { className?: string }) {
 function ReceiptEmptySvgIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
       <path d="M8 7h8M8 11h8M8 15h5" />
     </svg>
   );
@@ -45,6 +45,15 @@ function SparklesCrownSvgIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
       <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+    </svg>
+  );
+}
+
+function SearchMagnifierIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   );
 }
@@ -71,12 +80,18 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const currentUser = useAuthStore((s) => s.currentUser);
+
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notFound, setNotFound] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
 
-  useHistoryModal(isOpen, onClose, 'track-order-modal');
+  const [manualOrderId, setManualOrderId] = useState('');
+  const [manualPhone, setManualPhone] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+
+  useHistoryModal(isOpen && !currentUser, onClose, 'track-order-modal');
 
   useEffect(() => {
     if (isOpen) lockBody();
@@ -84,18 +99,11 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     return () => unlockBody();
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (currentUser) {
-      onClose();
-      router.push('/account/orders');
-      return;
-    }
-
+  const loadGuestOrders = useCallback(async () => {
     setLoading(true);
     setNotFound(false);
     setOrders([]);
+    setSearchError('');
 
     const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
       try {
@@ -117,27 +125,71 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
       return;
     }
 
-    (async () => {
-      const validGuests = guestList.filter((g) => g.id && g.phone);
-      const results = await Promise.allSettled(
-        validGuests.map((g) => fetchFullOrder(supabase, String(g.id), g.phone!))
-      );
+    const validGuests = guestList.filter((g) => g.id && g.phone);
+    const results = await Promise.allSettled(
+      validGuests.map((g) => fetchFullOrder(supabase, String(g.id), g.phone!))
+    );
 
-      const fetched: Order[] = [];
-      results.forEach((res) => {
-        if (res.status === 'fulfilled' && res.value) {
-          fetched.push(mapSupabaseOrderRow(res.value as Record<string, unknown>));
-        }
-      });
-
-      if (fetched.length > 0) {
-        setOrders(fetched);
-      } else {
-        setNotFound(true);
+    const fetched: Order[] = [];
+    results.forEach((res) => {
+      if (res.status === 'fulfilled' && res.value) {
+        fetched.push(mapSupabaseOrderRow(res.value as Record<string, unknown>));
       }
-      setLoading(false);
-    })();
-  }, [isOpen, currentUser, router, supabase, onClose]);
+    });
+
+    if (fetched.length > 0) {
+      setOrders(fetched);
+      setNotFound(false);
+    } else {
+      setNotFound(true);
+    }
+    setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (currentUser) {
+      onClose();
+      router.push('/account/orders');
+      return;
+    }
+
+    loadGuestOrders();
+  }, [isOpen, currentUser, router, onClose, loadGuestOrders]);
+
+  const handleManualSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchError('');
+    const cleanId = manualOrderId.trim().replace(/^#/, '');
+    const cleanPhone = manualPhone.trim().replace(/\D/g, '');
+
+    if (!cleanId) {
+      setSearchError(lang === 'en' ? 'Enter Order Number or ID' : 'অর্ডার নম্বর বা আইডি লিখুন');
+      return;
+    }
+    if (!cleanPhone || cleanPhone.length < 11) {
+      setSearchError(lang === 'en' ? 'Enter valid 11-digit mobile number' : 'সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন');
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const data = await fetchFullOrder(supabase, cleanId, cleanPhone);
+      if (data) {
+        const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
+        setOrders([mapped]);
+        setNotFound(false);
+        setSearchError('');
+      } else {
+        setSearchError(lang === 'en' ? 'No order found with these details.' : 'এই তথ্যে কোনো অর্ডার পাওয়া যায়নি। নম্বরটি আবার চেক করুন।');
+      }
+    } catch {
+      setSearchError(lang === 'en' ? 'Search error, please try again.' : 'অনুসন্ধানে সমস্যা হয়েছে, পুনরায় চেষ্টা করুন।');
+    } finally {
+      setSearching(false);
+    }
+  };
 
   const openInvoice = (orderId: string | number) => {
     onClose();
@@ -199,25 +251,69 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
               <div className="sleek-scrollbar flex-1 overflow-y-auto px-6 py-4">
                 <SkeletonTransition isReady={!loading} skeleton={<OrderListSkeleton count={2} />}>
                   {notFound ? (
-                    <div className="py-8 text-center">
-                      <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white text-brand-light shadow-sm">
-                        <ReceiptEmptySvgIcon className="h-8 w-8 text-brand-light" />
+                    <div className="py-2 text-center">
+                      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white text-brand-light shadow-sm">
+                        <ReceiptEmptySvgIcon className="h-7 w-7 text-brand-light" />
                       </div>
-                      <div className="mb-1.5 font-body text-[16px] font-bold text-ink">
-                        {lang === 'en' ? 'No orders placed yet' : 'এখনো কোনো অর্ডার করেননি'}
+                      
+                      <div className="mb-1 font-body text-[15.5px] font-bold text-ink">
+                        {lang === 'en' ? 'Search & Track Your Order' : 'অর্ডার নম্বর দিয়ে খুঁজুন'}
                       </div>
-                      <p className="mx-auto mb-5 max-w-xs font-body text-[12.5px] leading-relaxed text-muted">
+                      <p className="mx-auto mb-4 max-w-xs font-body text-[12px] leading-relaxed text-muted">
                         {lang === 'en'
-                          ? 'Orders will appear here automatically once placed. Log in to track from any device.'
-                          : 'অর্ডার করলে সেটি এখানে স্বয়ংক্রিয়ভাবে দেখা যাবে। ভবিষ্যতে যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক করতে লগইন করে রাখুন।'}
+                          ? 'Enter your Order Number and Mobile Number below to track delivery live.'
+                          : 'লাইভ ডেলিভারি স্ট্যাটাস দেখতে আপনার অর্ডার নম্বর ও মোবাইল নম্বর দিন।'}
                       </p>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleOpenLogin}
-                        className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-7 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
-                      >
-                        {t('লগইন করুন')}
-                      </motion.button>
+
+                      <form onSubmit={handleManualSearch} className="mb-4 flex flex-col gap-2.5 text-left">
+                        <div>
+                          <input
+                            type="text"
+                            value={manualOrderId}
+                            maxLength={30}
+                            onChange={(e) => setManualOrderId(e.target.value)}
+                            placeholder={lang === 'en' ? 'Order Number (e.g. VC-1082)' : 'অর্ডার নম্বর (যেমন: VC-1082)'}
+                            className="w-full rounded-[12px] border border-border-base bg-white/90 px-3.5 py-2.5 font-body text-xs text-ink outline-none transition-brand focus:border-brand-light"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="tel"
+                            value={manualPhone}
+                            maxLength={11}
+                            onChange={(e) => setManualPhone(e.target.value.replace(/\D/g, ''))}
+                            placeholder={lang === 'en' ? 'Mobile Number (01XXXXXXXXX)' : 'মোবাইল নম্বর (01XXXXXXXXX)'}
+                            className="w-full rounded-[12px] border border-border-base bg-white/90 px-3.5 py-2.5 font-body text-xs text-ink outline-none transition-brand focus:border-brand-light"
+                          />
+                        </div>
+
+                        {searchError && (
+                          <div className="rounded-[10px] bg-red-50 p-2 font-body text-[11px] font-semibold text-red-600">
+                            {searchError}
+                          </div>
+                        )}
+
+                        <motion.button
+                          type="submit"
+                          disabled={searching}
+                          whileTap={{ scale: 0.96 }}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-all hover:brightness-[1.03]"
+                        >
+                          <SearchMagnifierIcon />
+                          <span>{searching ? (lang === 'en' ? 'Searching...' : 'খোঁজা হচ্ছে...') : (lang === 'en' ? 'Track Now' : 'ট্র্যাক করুন')}</span>
+                        </motion.button>
+                      </form>
+
+                      <div className="border-t border-ink/10 pt-3 text-center">
+                        <span className="font-body text-[11px] text-muted">{lang === 'en' ? 'Already have an account?' : 'পূর্বে একাউন্ট তৈরি করা থাকলে:'} </span>
+                        <button
+                          type="button"
+                          onClick={handleOpenLogin}
+                          className="font-body text-[11.5px] font-extrabold text-brand-light hover:underline"
+                        >
+                          {t('লগইন করুন')}
+                        </button>
+                      </div>
                     </div>
                   ) : orders.length > 0 ? (
                     <div className="space-y-4">
