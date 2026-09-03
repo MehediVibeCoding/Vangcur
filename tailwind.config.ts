@@ -36,7 +36,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ['var(--font-display)', 'serif'],
-        body: ['var(--font-dm-sans)', 'var(--font-hind-siliguri)', 'sans-serif'],
+        body: ['var(--font-dm-sans)', 'var(--font-bengali)', 'sans-serif'],
       },
       boxShadow: {
         sh1: '0 1px 4px rgba(0,0,0,.07)',
@@ -99,12 +99,6 @@ const config: Config = {
     },
   },
   plugins: [
-    // ══════════════════════════════════════════════════════════════════
-    // 🖱️ Touch-safe `hover:` — মোবাইলে হোভার আটকে থাকার (sticky hover)
-    // সমস্যা এড়াতে পুরো কোডবেসের সব hover: ক্লাসকে একবারে
-    // "শুধু আসল মাউস/ট্র্যাকপ্যাড থাকলে" চালু করা হলো। কোনো কম্পোনেন্ট
-    // আলাদা করে বদলাতে হচ্ছে না — এই একটা প্লাগিনেই পুরো সাইট কভার।
-    // ══════════════════════════════════════════════════════════════════
     plugin(({ addVariant }) => {
       addVariant('hover', '@media (hover: hover) and (pointer: fine) { &:hover }');
       addVariant('group-hover', '@media (hover: hover) and (pointer: fine) { :merge(.group):hover & }');
