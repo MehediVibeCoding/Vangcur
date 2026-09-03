@@ -73,7 +73,7 @@ function IconVideoCamera() {
   return (
     <svg {...lineIcon} width="15" height="15" strokeWidth={2} className="shrink-0 text-brand-light">
       <rect x="2" y="6" width="14" height="12" rx="2" />
-      <path d="m16 10 5-3.5v11L16 14" />
+      <polygon points="22 7 16 12 22 17 22 7" />
     </svg>
   );
 }
@@ -117,7 +117,7 @@ function IconCheck() {
 
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-4 rounded-[18px] border border-white/90 bg-white/85 p-4 shadow-xs backdrop-blur-md">
+    <div className="mb-4 rounded-[18px] border border-white/90 bg-white/85 p-4 sm:p-5 shadow-xs backdrop-blur-md">
       <h3 className="mb-2.5 flex items-center gap-2 font-body text-[14px] font-extrabold text-ink">
         {icon}
         <span>{title}</span>
@@ -132,7 +132,7 @@ const ulClass = 'mb-2 list-none space-y-2 pl-0.5';
 const liClass = 'flex items-start gap-2.5 font-body text-[12.5px] leading-[1.7] text-ink/85';
 
 export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: PolicyModalProps) {
-  const { lang, t } = useT();
+  const { lang } = useT();
 
   useHistoryModal(open, onClose, 'policy-modal');
 
@@ -152,7 +152,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[9800] flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-[9800] flex items-center justify-center p-0 sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -163,13 +163,13 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
           />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            initial={{ opacity: 0, scale: 0.96, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            className="sleek-scrollbar relative z-10 flex h-full max-h-[92vh] w-full max-w-[520px] flex-col overflow-y-auto rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
+            className="sleek-scrollbar relative z-10 flex h-full min-h-dvh sm:min-h-0 sm:h-auto max-h-dvh sm:max-h-[92vh] w-full sm:max-w-[520px] flex-col overflow-y-auto rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80"
           >
-            <div className="sticky top-0 z-[20] flex items-center justify-between border-b border-ink/10 bg-white/90 px-6 py-3.5 backdrop-blur-md">
+            <div className="sticky top-0 z-[20] flex items-center justify-between border-b border-ink/10 bg-white/95 px-5 sm:px-6 py-3.5 backdrop-blur-md">
               <div className="flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
                   <IconDocList />
@@ -188,7 +188,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
               </motion.button>
             </div>
 
-            <div className="relative flex-1 px-6 pb-6 pt-4">
+            <div className="relative flex-1 px-5 sm:px-6 pb-8 sm:pb-6 pt-4">
               <HeaderDecor />
 
               <Section
@@ -337,7 +337,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
                     <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" />
                     <span>
                       {lang === 'en'
-                        ? 'Original official invoice paper provided inside the parcel box.'
+                        ? 'Original official paper invoice provided inside the parcel box.'
                         : 'পার্সেলের ভেতরে থাকা মূল অফিসিয়াল ইনভয়েস পেপার (সংরক্ষিত আসল কপি প্রদর্শন করতে হবে)।'}
                     </span>
                   </li>
