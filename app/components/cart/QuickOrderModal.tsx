@@ -290,45 +290,55 @@ export default function QuickOrderModal() {
   const handleConfirmOrder = async () => {
     if (!cart.length || orderStatus !== 'idle') return;
 
-    let currentDiscount = discountAmount;
+    try {
+      let currentDiscount = discountAmount;
 
-    if (couponCode.trim() && !appliedCoupon) {
-      setOrderStatus('verifying');
-      const success = await handleApplyCoupon(undefined, couponCode);
-      if (!success) {
+      if (couponCode.trim() && !appliedCoupon) {
+        setOrderStatus('verifying');
+        const success = await handleApplyCoupon(undefined, couponCode);
+        if (!success) {
+          setOrderStatus('idle');
+          return;
+        }
+
+        await new Promise((r) => setTimeout(r, 900));
+
+        const freshlyApplied = getAppliedCoupon();
+        if (freshlyApplied) {
+          currentDiscount = freshlyApplied.discountAmount || 0;
+        }
+        setOrderStatus('success');
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
+
+      if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
         setOrderStatus('idle');
+        setOpen(false);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
+        }
         return;
       }
 
-      await new Promise((r) => setTimeout(r, 900));
-
-      const freshlyApplied = getAppliedCoupon();
-      if (freshlyApplied) {
-        currentDiscount = freshlyApplied.discountAmount || 0;
+      try {
+        sessionStorage.removeItem('vc_quick_order_items');
+        localStorage.removeItem('vc_quick_order_items');
+      } catch {
+        // ignore
       }
-      setOrderStatus('success');
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
-    const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
-
-    if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
-      setOrderStatus('idle');
       setOpen(false);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
-      }
-      return;
+      router.push('/checkout');
+    } catch (err) {
+      // আগে এখানে কোনো try/catch ছিল না — কোনো silent runtime error
+      // (নেটওয়ার্ক/Supabase হিঁচকি ইত্যাদি) হলে বাটনটা কোনো ফিডব্যাক
+      // ছাড়াই আটকে থাকত ("Confirm Order"-এ ক্লিক করলে কিছুই হয় না
+      // মনে হতো)। এখন ব্যর্থ হলে টোস্ট দেখিয়ে বাটন আবার সচল করে দেওয়া হয়।
+      console.error('handleConfirmOrder failed:', err);
+      setOrderStatus('idle');
+      showToast(t('একটি সমস্যা হয়েছে, আবার চেষ্টা করুন'), 'error');
     }
-
-    try {
-      sessionStorage.removeItem('vc_quick_order_items');
-      localStorage.removeItem('vc_quick_order_items');
-    } catch {
-      // ignore
-    }
-    setOpen(false);
-    router.push('/checkout');
   };
 
   if (!open || cart.length === 0) return null;
