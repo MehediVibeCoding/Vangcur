@@ -20,7 +20,7 @@ import {
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { checkPasswordResetLimit } from '@/lib/rateLimit';
 import { useT } from '@/lib/i18n/useT';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import TurnstileWidget, { type TurnstileHandle } from './TurnstileWidget';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import type { CurrentUser } from '@/types';
@@ -323,6 +323,9 @@ export default function LoginModal({
     try {
       const redirectPath = sessionStorage.getItem('vc_auth_redirect');
       if (redirectPath && window.location.pathname !== redirectPath) {
+        // মডাল বন্ধ হওয়ার (onClose() উপরে) effect cleanup যেন নিচের
+        // router.push()-কে deferred history.back() দিয়ে উল্টে না দেয়।
+        suppressHistoryCleanup();
         router.push(redirectPath);
       }
     } catch {

@@ -14,7 +14,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import type { WishlistItem, Product } from '@/types';
 
 function WishImg({ emoji }: { emoji?: string }) {
@@ -107,6 +107,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
 
   const openProduct = (item: WishlistItem) => {
     onClose();
+    suppressHistoryCleanup();
     router.push(productHref(item));
   };
 

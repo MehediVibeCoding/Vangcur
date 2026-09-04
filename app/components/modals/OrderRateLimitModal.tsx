@@ -12,7 +12,7 @@ import {
   fetchContactSettings,
   subscribeContactSettings,
 } from '@/lib/floatButtonsData';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 const lineIcon = {
@@ -73,6 +73,9 @@ export default function OrderRateLimitModal() {
 
   const closeAndGoHome = useCallback(() => {
     setOpen(false);
+    // মডাল বন্ধ হওয়ার effect cleanup যেন নিচের router.push('/')-কে
+    // deferred history.back() দিয়ে উল্টে না দেয়।
+    suppressHistoryCleanup();
     router.push('/');
   }, [router]);
 

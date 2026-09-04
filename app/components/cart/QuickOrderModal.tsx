@@ -13,7 +13,7 @@ import { fetchCustomProducts } from '@/lib/productData';
 import { createClient } from '@/lib/supabase/client';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import {
   getAppliedCoupon,
   saveAppliedCoupon,
@@ -329,6 +329,9 @@ export default function QuickOrderModal() {
         // ignore
       }
       setOpen(false);
+      // মডাল বন্ধ হওয়ার effect cleanup যেন নিচের router.push()-কে
+      // deferred history.back() দিয়ে উল্টে না দেয় — এটাই মূল বাগ ফিক্স।
+      suppressHistoryCleanup();
       router.push('/checkout');
     } catch (err) {
       // আগে এখানে কোনো try/catch ছিল না — কোনো silent runtime error

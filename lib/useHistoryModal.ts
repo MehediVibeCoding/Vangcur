@@ -57,6 +57,34 @@ function ensurePopstateListener() {
   listenerAttached = true;
 }
 
+/**
+ * suppressHistoryCleanup
+ * ─────────────────────────────────────────────────────────────────────
+ * যখনই কোনো কোড মডাল/ড্রয়ার বন্ধ করার (setOpen(false) / onClose())
+ * ঠিক পরপরই একটা আসল navigation করে (router.push দিয়ে অন্য রুটে যাওয়া),
+ * তখন এই ফাংশনটা সেই router.push()-এর *ঠিক আগে* কল করতে হবে।
+ *
+ * কেন দরকার: মডাল বন্ধ হলে useHistoryModal-এর cleanup একটা deferred
+ * (setTimeout দিয়ে) window.history.back() শিডিউল করে, যাতে আমরা নিজেরা
+ * পুশ করা "modalOpen" history entry-টা সাফ হয়ে যায়। কিন্তু router.push()
+ * নিজে React-এর startTransition-এ wrap করা থাকায় এর আসল
+ * history.pushState() কলটা ঠিক কখন ঘটবে তার নিশ্চয়তা নেই — অনেক সময়
+ * সেটা আমাদের deferred back()-এর *পরে* গিয়ে ঘটে, ফলে back() নতুন
+ * navigation-টাকেই উল্টে দেয় (ইউজার দেখে যেন বাটনে ক্লিক করে কিছুই
+ * হলো না)।
+ *
+ * এই ফাংশন কল করলে historySlotUsed/slotUrl সাথে সাথে রিসেট হয়ে যায়,
+ * তাই cleanup-এর `if (!historySlotUsed) return;` গার্ডেই থেমে যায় —
+ * কোনো replaceState/back() আর ট্রিগার হয় না। আমাদের পুশ করা পুরনো
+ * history entry-টা নতুন পেজে গিয়ে এমনিতেই অপ্রাসঙ্গিক হয়ে যায়, তাই
+ * সেটা পরিষ্কার না করলেও কোনো সমস্যা নেই।
+ */
+export function suppressHistoryCleanup(): void {
+  historySlotUsed = false;
+  slotUrl = null;
+  modalStack = [];
+}
+
 export function useHistoryModal(isOpen: boolean, onClose: () => void, modalKey?: string) {
   const onCloseRef = useRef(onClose);
   const entryRef = useRef<ModalStackEntry | null>(null);

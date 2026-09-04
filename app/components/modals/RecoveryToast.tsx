@@ -10,7 +10,7 @@ import {
 } from '@/lib/draftRecovery';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { hasExceededLocalOrderLimit } from '@/lib/productData';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 const DISMISS_KEY = 'vc_recovery_dismissed';
@@ -147,6 +147,10 @@ export default function RecoveryToast() {
     }
 
     setDraft(null);
+    // setDraft(null) উপরে useHistoryModal-এর isOpen false করে দেয়, যার
+    // effect cleanup যেন নিচের router.push()-কে deferred history.back()
+    // দিয়ে উল্টে না দেয়।
+    suppressHistoryCleanup();
     router.push('/checkout?resume=1');
   };
 

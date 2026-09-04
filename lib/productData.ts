@@ -5,6 +5,7 @@ import { useCartStore, cartTotal } from './store/cartStore';
 import { useAuthStore } from './store/authStore';
 import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
+import { suppressHistoryCleanup } from './useHistoryModal';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
@@ -329,6 +330,10 @@ export function startQuickOrder(
       // ignore
     }
 
+    // যদি এই কলের ঠিক আগে কোনো মডাল/ড্রয়ার বন্ধ করা হয়ে থাকে (যেমন
+    // WishlistDrawer-এর handleOrderNow), তার deferred history.back()
+    // যেন এই navigation-টা উল্টে না দেয় — সেই স্লট এখনই ক্লিয়ার করা হচ্ছে।
+    suppressHistoryCleanup();
     router.push('/checkout');
     return;
   }

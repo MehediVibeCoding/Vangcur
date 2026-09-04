@@ -22,7 +22,7 @@ import {
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
 } from '@/lib/couponData';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import type { Product } from '@/types';
 
 const MAX_COUPON_LEN = 25;
@@ -376,6 +376,9 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         // ignore
       }
       onClose();
+      // ড্রয়ার বন্ধ হওয়ার effect cleanup যেন নিচের router.push()-কে
+      // deferred history.back() দিয়ে উল্টে না দেয়।
+      suppressHistoryCleanup();
       router.push('/checkout');
     } catch (err) {
       // আগে এখানে কোনো try/catch ছিল না — কোনো silent runtime error হলে

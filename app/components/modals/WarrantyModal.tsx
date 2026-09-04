@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { getWarrantyModalContent } from '@/lib/warrantyData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
-import useHistoryModal from '@/lib/useHistoryModal';
+import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 
 interface WarrantyModalProps {
   isOpen: boolean;
@@ -128,6 +128,10 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
     e.preventDefault();
     onClose();
     setTimeout(() => {
+      // মডাল বন্ধ হওয়ার deferred cleanup (setTimeout(...,0)) এই push-এর
+      // আগেই ফায়ার হয়ে গেছে, কিন্তু নিশ্চিত হতে push-এর ঠিক আগে আবার
+      // suppress করা হচ্ছে — যদি এর মধ্যে অন্য কোনো মডাল স্লট নিয়ে থাকে।
+      suppressHistoryCleanup();
       router.push('/terms');
     }, 120);
   };
