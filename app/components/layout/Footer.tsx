@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/client';
 import {
   DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
 } from '@/lib/footerData';
-import { OPEN_OFFER_PAGE_EVENT } from '@/lib/uiEvents';
 import { sanitizeHref } from '@/lib/security';
 import { useT } from '@/lib/i18n/useT';
 import type { FooterContact, FooterExtras, FooterLogo } from '@/types';
@@ -170,8 +169,6 @@ export default function Footer() {
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
-  const openOfferPage = () => window.dispatchEvent(new CustomEvent(OPEN_OFFER_PAGE_EVENT));
-
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToCategories = () => document.getElementById('catCardsGrid')?.scrollIntoView({ behavior: 'smooth' });
 
@@ -180,7 +177,7 @@ export default function Footer() {
   return (
     <footer className="relative mt-12 overflow-hidden">
       
-      {/* ছবির উপরে পিওর কোডেড ভেক্টর ওয়েভ লেয়ার */}
+      {/* ছবির উপরে ভেক্টর ওয়েভ লেয়ার */}
       <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
         <svg
           viewBox="0 0 1440 60"
@@ -201,7 +198,7 @@ export default function Footer() {
         </svg>
       </div>
 
-      {/* ইলাস্ট্রেশন — গ্যাজেট লাইফস্টাইল ছবি */}
+      {/* ইলাস্ট্রেশন ছবি */}
       <div className="relative aspect-[1536/606] w-full select-none pointer-events-none bg-[#D3E7FC]">
         <Image
           src="/footer-illustration.webp"
@@ -213,13 +210,13 @@ export default function Footer() {
         />
       </div>
 
-      {/* ফুটার কনটেন্ট — ৪-কলাম গ্রিড */}
+      {/* ফুটার কনটেন্ট গ্রিড */}
       <div className="bg-[#D3E7FC] px-5 pb-8 pt-8 md:px-10 lg:px-16">
         <div className="mx-auto grid max-w-[1300px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
           
-          {/* কলাম ১ (বামে): ইমেজ লোগো, ট্যাগলাইন ও সোশ্যাল আইকনসমূহ */}
+          {/* কলাম ১: লোগো, ট্যাগলাইন ও সোশ্যাল আইকনসমূহ */}
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-            <Link href="/" className="mb-2 inline-block">
+            <Link href="/" prefetch={true} className="mb-2 inline-block">
               <Image
                 src="/vangcur-logo.png"
                 alt="Vangcur Gadgets"
@@ -287,46 +284,46 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* কলাম ২: গ্রাহক সেবা (Customer Care) — নতুন ইউজার গাইড ও সঠিক রাউটস */}
+          {/* কলাম ২: গ্রাহক সেবা (Customer Care) */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {lang === 'en' ? 'Customer Care' : 'গ্রাহক সেবা'}
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
               <li>
-                <Link href="/guide" className={colLinkClass}>
+                <Link href="/guide" prefetch={true} className={colLinkClass}>
                   {lang === 'en' ? 'User Guide & Help' : 'ইউজার গাইড ও সহায়িকা'}
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className={colLinkClass}>
+                <Link href="/shipping" prefetch={true} className={colLinkClass}>
                   {lang === 'en' ? 'Order & Shipping Info' : 'অর্ডার ও শিপিং তথ্য'}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className={colLinkClass}>
+                <Link href="/terms" prefetch={true} className={colLinkClass}>
                   {lang === 'en' ? 'Warranty Terms' : 'ওয়ারেন্টি নীতিমালা'}
                 </Link>
               </li>
               <li>
-                <Link href="/refund-policy" className={colLinkClass}>
+                <Link href="/refund-policy" prefetch={true} className={colLinkClass}>
                   {lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}
                 </Link>
               </li>
               <li>
-                <Link href="/privacy-policy" className={colLinkClass}>
+                <Link href="/privacy-policy" prefetch={true} className={colLinkClass}>
                   {lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className={colLinkClass}>
+                <Link href="/terms" prefetch={true} className={colLinkClass}>
                   {lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* কলাম ৩: কুইক লিঙ্কস */}
+          {/* কলাম ৩: কুইক লিঙ্কস — /offers পেজে ডিরেক্ট ০ms প্রি-ফেচ লিঙ্ক সহ */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {t('কুইক লিঙ্কস')}
@@ -334,15 +331,16 @@ export default function Footer() {
             <ul className="space-y-3 font-body text-[13.5px]">
               <li><button className={colLinkClass} onClick={scrollTop}>{t('হোম')}</button></li>
               <li><button className={colLinkClass} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button></li>
-              <li><Link href="/account" className={colLinkClass}>{t('মাই প্রোফাইল')}</Link></li>
-              <li><Link href="/track-order" className={colLinkClass}>{t('ট্র্যাক অর্ডার')}</Link></li>
+              <li><Link href="/account" prefetch={true} className={colLinkClass}>{t('মাই প্রোফাইল')}</Link></li>
+              <li><Link href="/track-order" prefetch={true} className={colLinkClass}>{t('ট্র্যাক অর্ডার')}</Link></li>
               <li>
-                <button
+                <Link
+                  href="/offers"
+                  prefetch={true}
                   className={`${colLinkClass} font-bold text-amber-700 hover:text-amber-800`}
-                  onClick={openOfferPage}
                 >
                   {lang === 'en' ? 'Current Offers' : 'চলতি অফারসমূহ'}
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
