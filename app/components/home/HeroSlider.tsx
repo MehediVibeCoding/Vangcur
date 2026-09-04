@@ -32,28 +32,22 @@ interface HeroSliderProps {
 function HeroCardImage({
   src,
   alt,
-  eager,
-  instant,
+  isPriority,
 }: {
   src: string;
   alt: string;
-  eager: boolean;
-  instant: boolean;
+  isPriority: boolean;
 }) {
-  const [loaded, setLoaded] = useState(false);
-  const opacityClass = instant ? 'opacity-100' : loaded ? 'opacity-100' : 'opacity-0';
-  const transitionClass = instant ? 'transition-transform' : 'transition-[opacity,transform]';
-
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
-      className={`absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top ${transitionClass} duration-300 ease-brand group-hover:scale-[1.05] ${opacityClass}`}
+      className="absolute inset-0 z-0 h-full w-full rounded-[inherit] object-cover object-top opacity-100 transition-transform duration-300 ease-brand group-hover:scale-[1.05]"
       src={src}
       alt={alt}
-      loading={eager ? 'eager' : 'lazy'}
-      fetchPriority={eager ? 'high' : undefined}
-      decoding="async"
-      onLoad={() => setLoaded(true)}
-      onError={() => setLoaded(true)}
+      loading={isPriority ? 'eager' : 'lazy'}
+      fetchPriority={isPriority ? 'high' : undefined}
+      decoding={isPriority ? 'sync' : 'async'}
+      draggable={false}
     />
   );
 }
@@ -76,6 +70,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
 
+  // প্রথম স্ক্রিনের দৃশ্যমান কার্ডগুলোর ক্লাউডিনারি প্রিলোড
   useEffect(() => {
     if (typeof window === 'undefined' || !cards.length) return;
     const count = Math.min(6, cards.length);
@@ -92,6 +87,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const track = trackRef.current;
     const wrap = wrapRef.current;
     if (!track || !wrap) return;
+
     const allCards = track.querySelectorAll<HTMLElement>('[data-cath-card]');
     const perPage = getDuoPerPage();
     const wrapWidth = wrap.clientWidth || wrap.getBoundingClientRect().width;
@@ -111,20 +107,20 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
     if (animate) {
       track.style.transition = 'transform .48s cubic-bezier(.4,0,.2,1)';
-      track.style.transform = `translateX(-${offset}px)`;
+      track.style.transform = `translate3d(-${offset}px, 0, 0)`;
       return;
     }
 
     track.style.transition = 'none';
-    void track.offsetHeight;
-    track.style.transform = `translateX(-${offset}px)`;
-    void track.getBoundingClientRect();
+    track.style.transform = `translate3d(-${offset}px, 0, 0)`;
   }, []);
 
+  // 🔄 জিরো-বাউন্স সিমেট্রিক্যাল ইনফিনিট সোয়াইপ হ্যান্ডলার
   const duoStep = useCallback((dir: number) => {
     const perPage = getDuoPerPage();
     const totalCards = cards.length;
 
+    // যদি ব্যবহারকারী একদম শুরুতে (0) থাকা অবস্থায় বাঁ থেকে ডানে (পেছনে) সোয়াইপ করে
     if (dir < 0 && duoIdxRef.current <= 0) {
       infiniteJumpRef.current = true;
       duoIdxRef.current = totalCards;
@@ -139,6 +135,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const startAuto = useCallback((intervalMs = AUTOPLAY_MS) => {
     if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     autoTimerRef.current = setInterval(() => {
+      // স্ক্রিনে দৃশ্যমান থাকা অবস্থায় সবসময় ডান থেকে বামে (Next: dir = 1) অগ্রসর হবে
       if (!isInteractingRef.current && isVisibleRef.current) {
         duoStep(1);
       }
@@ -159,18 +156,23 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
     startAuto(AUTOPLAY_MS);
 
+    // 🎯 স্ক্রিন আউট হলে তাৎক্ষণিক অটো-স্লাইডার পজ এবং পুনরায় স্ক্রিনে এলে যেখান থেকে স্টপ ছিল ওখান থেকে চালু
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         isVisibleRef.current = entry.isIntersecting;
-        if (!entry.isIntersecting && autoTimerRef.current) {
-          clearInterval(autoTimerRef.current);
-          autoTimerRef.current = null;
-        } else if (entry.isIntersecting && !autoTimerRef.current) {
-          startAuto(AUTOPLAY_MS);
+        if (!entry.isIntersecting) {
+          if (autoTimerRef.current) {
+            clearInterval(autoTimerRef.current);
+            autoTimerRef.current = null;
+          }
+        } else {
+          if (!autoTimerRef.current && !isInteractingRef.current) {
+            startAuto(AUTOPLAY_MS);
+          }
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.15 }
     );
     observer.observe(wrap);
 
@@ -178,7 +180,10 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       touchRef.current.startX = e.touches[0].clientX;
       touchRef.current.startY = e.touches[0].clientY;
       isInteractingRef.current = true;
-      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+      if (autoTimerRef.current) {
+        clearInterval(autoTimerRef.current);
+        autoTimerRef.current = null;
+      }
     };
 
     const onTouchEnd = (e: TouchEvent) => {
@@ -188,12 +193,14 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
         duoStep(dx < 0 ? 1 : -1);
       }
       isInteractingRef.current = false;
-      setTimeout(() => startAuto(AUTOPLAY_MS), 2500);
+      setTimeout(() => {
+        if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
+      }, 2500);
     };
 
     const onTouchCancel = () => {
       isInteractingRef.current = false;
-      startAuto(AUTOPLAY_MS);
+      if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
     };
 
     const onMouseEnter = () => {
@@ -213,7 +220,10 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       dragRef.current.startX = e.clientX;
       dragRef.current.active = true;
       isInteractingRef.current = true;
-      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+      if (autoTimerRef.current) {
+        clearInterval(autoTimerRef.current);
+        autoTimerRef.current = null;
+      }
     };
 
     const onMouseUp = (e: MouseEvent) => {
@@ -224,25 +234,32 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       if (Math.abs(dx) > 40) {
         duoStep(dx < 0 ? 1 : -1);
       }
-      setTimeout(() => startAuto(AUTOPLAY_MS), 1500);
+      setTimeout(() => {
+        if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
+      }, 1500);
     };
 
     const onMouseLeaveDrag = () => {
       if (dragRef.current.active) {
         dragRef.current.active = false;
         isInteractingRef.current = false;
-        startAuto(AUTOPLAY_MS);
+        if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
       }
     };
 
+    // ট্রানজিশন শেষে নির্বিঘ্নে ইনডেক্স স্বাভাবিকীকরণ (Zero Stutter)
     const onTransitionEnd = (e: TransitionEvent) => {
-      if (e.target !== trackRef.current) return;
-      if (infiniteJumpRef.current) return;
+      if (e.target !== trackRef.current || infiniteJumpRef.current) return;
 
       const totalCards = cards.length;
       if (duoIdxRef.current >= totalCards * 2) {
         infiniteJumpRef.current = true;
         duoIdxRef.current -= totalCards;
+        setPosition(false);
+        infiniteJumpRef.current = false;
+      } else if (duoIdxRef.current < totalCards) {
+        infiniteJumpRef.current = true;
+        duoIdxRef.current += totalCards;
         setPosition(false);
         infiniteJumpRef.current = false;
       }
@@ -261,9 +278,9 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
           autoTimerRef.current = null;
         }
       } else {
-        setPosition(false);
         isInteractingRef.current = false;
-        startAuto(AUTOPLAY_MS);
+        setPosition(false);
+        if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
       }
     };
 
@@ -311,21 +328,27 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
   const handleManualPrev = () => {
     isInteractingRef.current = true;
-    if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    if (autoTimerRef.current) {
+      clearInterval(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
     duoStep(-1);
     setTimeout(() => {
       isInteractingRef.current = false;
-      startAuto(AUTOPLAY_MS);
+      if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
     }, 2500);
   };
 
   const handleManualNext = () => {
     isInteractingRef.current = true;
-    if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    if (autoTimerRef.current) {
+      clearInterval(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
     duoStep(1);
     setTimeout(() => {
       isInteractingRef.current = false;
-      startAuto(AUTOPLAY_MS);
+      if (isVisibleRef.current) startAuto(AUTOPLAY_MS);
     }, 2500);
   };
 
@@ -343,6 +366,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     }
   };
 
+  // বাফার নিশ্চিত করার জন্য ৩ সেট কার্ড (Set A, Set B, Set C)
   const tripled = [...cards, ...cards, ...cards];
 
   return (
@@ -357,10 +381,11 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
           will-change: opacity, transform;
         }
         @media (max-width: 767.98px) {
+          /* মোবাইলে ৩নং থেকে ৬নং কার্ডের অ্যানিমেশন কঠোরভাবে বন্ধ */
           .hero-card-anim-in[data-hero-desktop-extra='true'] {
-            animation: none;
-            opacity: 1;
-            transform: none;
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
           }
         }
       `}</style>
@@ -373,11 +398,13 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const label = card.label || '';
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
+            // 🎯 অ্যানিমেশন রুলস: মোবাইলে শুধুমাত্র প্রথম ২টা (Index 0, 1)
+            // ডেক্সটপে প্রথম ৬টা (Index 0 থেকে 5)। বাকি সকল কার্ডে কোনো এন্ট্রান্স অ্যানিমেশন নেই!
             const isFirstDuo = i < 2;
             const isDesktopExtra = i >= 2 && i < 6;
             const isInitialCard = isFirstDuo || isDesktopExtra;
             const staggerDelay = i * 0.03;
-            const isEager = i < 6;
+            const isPriority = i < 2;
 
             return (
               <div
@@ -400,8 +427,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                     <HeroCardImage
                       src={optimizeCloudinaryUrl(card.img, 360)}
                       alt={label}
-                      eager={isEager}
-                      instant={isInitialCard}
+                      isPriority={isPriority}
                     />
                   ) : isSvgEmoji ? (
                     <div
