@@ -36,7 +36,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ['var(--font-display)', 'serif'],
-        body: ['var(--font-dm-sans)', 'var(--font-bengali)', 'sans-serif'],
+        body: ['var(--font-dm-sans)', "'Noto Sans Bengali'", 'var(--font-bengali)', 'sans-serif'],
       },
       boxShadow: {
         sh1: '0 1px 4px rgba(0,0,0,.07)',
