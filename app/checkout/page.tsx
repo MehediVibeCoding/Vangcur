@@ -217,38 +217,53 @@ function IconArrowLeft() {
   );
 }
 
-// 🚚 কনফার্ম-অর্ডার বাটনের ডেলিভারি-ট্রাক অ্যানিমেশনের জন্য আইকনসমূহ
+// 🚚 কনফার্ম-অর্ডার বাটনের ডেলিভারি-ট্রাক অ্যানিমেশনের জন্য আইকনসমূহ (রেফারেন্স ভিডিও থেকে হুবহু রঙ ও শেপ)
 function ConfirmTruckIcon() {
   return (
-    <svg width="58" height="27" viewBox="0 0 74 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* হেডলাইটের আলোকরশ্মি (পিছনে আঁকা, ট্রাকের সামনে) */}
+    <svg width="64" height="37" viewBox="0 0 70 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="vc-cargo-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFFFFF" />
+          <stop offset="100%" stopColor="#E1E7F5" />
+        </linearGradient>
+      </defs>
+
+      {/* হেডলাইটের আলোকরশ্মি (ট্রাকের সামনে, পিছনে আঁকা) */}
       <g className="animate-truck-headlight">
-        <path d="M55 16 L71 10 L71 16 L55 18 Z" fill="#FDE68A" opacity="0.7" />
-        <path d="M55 21 L71 24 L71 18 L55 18 Z" fill="#FDE68A" opacity="0.7" />
+        <path d="M60 15 L96 6 L96 15 L60 17 Z" fill="#FFC670" opacity="0.7" />
+        <path d="M60 23 L96 34 L96 25 L60 23 Z" fill="#FFC670" opacity="0.7" />
       </g>
+
+      {/* পিছনের দরজার ফ্ল্যাপ (লোডিং-এর সময় খুলবে, বন্ধ হবে) */}
+      <g style={{ transformOrigin: '2px 20px' }} className="animate-door-flap-top">
+        <line x1="2" y1="20" x2="2" y2="6" stroke="#F4F6FB" strokeWidth="1.6" strokeLinecap="round" />
+      </g>
+      <g style={{ transformOrigin: '2px 20px' }} className="animate-door-flap-bottom">
+        <line x1="2" y1="20" x2="2" y2="34" stroke="#F4F6FB" strokeWidth="1.6" strokeLinecap="round" />
+      </g>
+
       {/* কার্গো বক্স */}
-      <rect x="3" y="6" width="33" height="19" rx="4" fill="#FFFFFF" stroke="#0F172A" strokeWidth="1.6" />
-      <rect x="8" y="11" width="10" height="9" rx="1.5" fill="#C3DEFC" opacity="0.7" />
-      {/* ক্যাব */}
-      <path d="M36 12h13a3 3 0 0 1 2.6 1.5l3 5.2a2 2 0 0 1 .27 1V25a1 1 0 0 1-1 1H36V12Z" fill="#0058C7" stroke="#0F172A" strokeWidth="1.6" strokeLinejoin="round" />
-      <rect x="40.5" y="15" width="8" height="6.5" rx="1.3" fill="#C3DEFC" />
-      {/* হেডলাইট বাল্ব */}
-      <circle cx="54.5" cy="19.5" r="2" fill="#FDE68A" />
-      {/* চাকা */}
-      <circle cx="15" cy="27" r="4.4" fill="#0F172A" />
-      <circle cx="15" cy="27" r="1.7" fill="#94A3B8" />
-      <circle cx="46" cy="27" r="4.4" fill="#0F172A" />
-      <circle cx="46" cy="27" r="1.7" fill="#94A3B8" />
+      <rect x="2" y="6" width="32" height="28" rx="5" fill="url(#vc-cargo-grad)" stroke="#B9C4DA" strokeWidth="0.8" />
+
+      {/* ক্যাব (বোল্ড "D" শেপ, লাল) */}
+      <path d="M34 6 H46 A14 14 0 0 1 60 20 A14 14 0 0 1 46 34 H34 Z" fill="#FF4A43" stroke="#E23B35" strokeWidth="0.5" />
+      {/* উইন্ডো কাটআউট */}
+      <path d="M34 13 H43 A7 7 0 0 1 50 20 A7 7 0 0 1 43 27 H34 Z" fill="#171A27" />
+      <line x1="37" y1="15.5" x2="47" y2="20" stroke="#333A52" strokeWidth="1.4" opacity="0.7" strokeLinecap="round" />
+      <line x1="37" y1="20.5" x2="45" y2="24" stroke="#333A52" strokeWidth="1.2" opacity="0.5" strokeLinecap="round" />
+
+      {/* অ্যাম্বার অ্যাক্সেন্ট লাইট */}
+      <rect x="58.5" y="11.5" width="3.2" height="5" rx="1.5" fill="#FFC670" />
+      <rect x="58.5" y="23.5" width="3.2" height="5" rx="1.5" fill="#FFC670" />
     </svg>
   );
 }
 
 function ConfirmPackageIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2.5" y="6" width="19" height="15" rx="2.5" fill="#D4A853" stroke="#0F172A" strokeWidth="1.5" />
-      <path d="M2.5 6 12 11.5 21.5 6" stroke="#0F172A" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
-      <path d="M12 11.5V21" stroke="#0F172A" strokeWidth="1.3" opacity="0.4" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="20" height="20" rx="4" fill="#E0940D" />
+      <rect x="2" y="10.5" width="20" height="3" fill="#B8760A" />
     </svg>
   );
 }
@@ -319,7 +334,7 @@ export default function CheckoutPage() {
   // 🚚 কনফার্ম-অর্ডার বাটনের ডেলিভারি-ট্রাক অ্যানিমেশন স্টেট
   const [confirmAnim, setConfirmAnim] = useState<'idle' | 'driving' | 'success'>('idle');
   const confirmAnimStartRef = useRef(0);
-  const CONFIRM_ANIM_MIN_MS = 2600;
+  const CONFIRM_ANIM_MIN_MS = 3400;
 
   const [showPreConfirm, setShowPreConfirm] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -1673,34 +1688,41 @@ export default function CheckoutPage() {
                   whileTap={confirmAnim === 'idle' && !submitting ? { scale: 0.97 } : undefined}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
+                  {/* ক্লিক করা মাত্র বাটন স্মুথভাবে কালো হয়ে যাবে (রেফারেন্সের মতো) */}
+                  <span
+                    className={`pointer-events-none absolute inset-0 rounded-full bg-[#171A27] transition-opacity duration-500 ease-out ${
+                      confirmAnim !== 'idle' ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+
                   {/* রোডের ড্যাশড লাইন */}
                   {confirmAnim === 'driving' && (
                     <span
-                      className="pointer-events-none absolute left-3 right-3 top-1/2 h-[2px] -translate-y-1/2 animate-road-dash"
+                      className="pointer-events-none absolute left-2 right-2 top-1/2 h-[2.5px] -translate-y-1/2 animate-road-dash"
                       style={{
                         backgroundImage:
-                          'repeating-linear-gradient(90deg, rgba(255,255,255,.85) 0 10px, transparent 10px 22px)',
+                          'repeating-linear-gradient(90deg, #E1E7F5 0 11px, transparent 11px 24px)',
                       }}
                     />
                   )}
 
                   {/* প্যাকেজ */}
                   {confirmAnim === 'driving' && (
-                    <span className="pointer-events-none absolute bottom-1.5 right-[100px] animate-package-drop">
+                    <span className="pointer-events-none absolute bottom-[7px] right-[158px] animate-package-drop">
                       <ConfirmPackageIcon />
                     </span>
                   )}
 
                   {/* ট্রাক */}
                   {confirmAnim === 'driving' && (
-                    <span className="pointer-events-none absolute bottom-1 animate-truck-drive drop-shadow-[0_3px_6px_rgba(0,0,0,0.18)]">
+                    <span className="pointer-events-none absolute bottom-[5px] animate-truck-drive drop-shadow-[0_3px_6px_rgba(0,0,0,0.25)]">
                       <ConfirmTruckIcon />
                     </span>
                   )}
 
                   {/* টেক্সট / স্পিনার / সাকসেস */}
                   <span
-                    className={`inline-flex items-center justify-center gap-2 transition-opacity duration-300 ${
+                    className={`relative inline-flex items-center justify-center gap-2 transition-opacity duration-300 ${
                       confirmAnim === 'driving' ? 'opacity-0' : 'opacity-100'
                     }`}
                   >
