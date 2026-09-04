@@ -135,10 +135,19 @@ export default function ProductReviews({
   const [limitModalOpen, setLimitModalOpen] = useState(false);
   const [rejectedReviewNotice, setRejectedReviewNotice] = useState<ProductReview | null>(null);
 
-  // Lightbox Zoom
+  // Lightbox Interactive Zoom & Pan State
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [zoomTranslate, setZoomTranslate] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
 
-  // Touch Swipe
+  // Pinch-to-zoom & drag refs
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const initialPinchDistRef = useRef<number | null>(null);
+  const initialScaleRef = useRef(1);
+  const lastTapRef = useRef(0);
+
+  // Touch Swipe for Card Slider
   const touchRef = useRef({ startX: 0, startY: 0 });
 
   const loadReviewsData = useCallback(async () => {
@@ -437,6 +446,124 @@ export default function ProductReviews({
     }
   };
 
+  // ══════════════════════════════════════════════════════════════════════
+  // 🔍 Interactive Lightbox Touch, Pinch & Drag Engine
+  // ══════════════════════════════════════════════════════════════════════
+  const resetZoom = () => {
+    setZoomScale(1);
+    setZoomTranslate({ x: 0, y: 0 });
+  };
+
+  const closeLightbox = () => {
+    setZoomImageUrl(null);
+    resetZoom();
+  };
+
+  const handleLightboxTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      // Pinch Start
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialPinchDistRef.current = dist;
+      initialScaleRef.current = zoomScale;
+    } else if (e.touches.length === 1) {
+      // Double tap check
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        // Double tap toggle
+        if (zoomScale > 1) {
+          resetZoom();
+        } else {
+          setZoomScale(2.5);
+          setZoomTranslate({ x: 0, y: 0 });
+        }
+        lastTapRef.current = 0;
+        return;
+      }
+      lastTapRef.current = now;
+
+      // Pan Start
+      if (zoomScale > 1) {
+        setIsPanning(true);
+        dragStartRef.current = {
+          x: e.touches[0].clientX - zoomTranslate.x,
+          y: e.touches[0].clientY - zoomTranslate.y,
+        };
+      }
+    }
+  };
+
+  const handleLightboxTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && initialPinchDistRef.current !== null) {
+      // Pinching
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scaleFactor = dist / initialPinchDistRef.current;
+      const newScale = Math.min(4, Math.max(1, initialScaleRef.current * scaleFactor));
+      setZoomScale(newScale);
+      if (newScale === 1) {
+        setZoomTranslate({ x: 0, y: 0 });
+      }
+    } else if (e.touches.length === 1 && isPanning && zoomScale > 1) {
+      // Panning
+      e.preventDefault();
+      const maxTranslateX = (zoomScale - 1) * (window.innerWidth * 0.45);
+      const maxTranslateY = (zoomScale - 1) * (window.innerHeight * 0.45);
+      const rawX = e.touches[0].clientX - dragStartRef.current.x;
+      const rawY = e.touches[0].clientY - dragStartRef.current.y;
+
+      setZoomTranslate({
+        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, rawX)),
+        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, rawY)),
+      });
+    }
+  };
+
+  const handleLightboxTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length < 2) {
+      initialPinchDistRef.current = null;
+    }
+    if (e.touches.length === 0) {
+      setIsPanning(false);
+      if (zoomScale < 1.05) {
+        resetZoom();
+      }
+    }
+  };
+
+  const handleMouseDownPan = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (zoomScale > 1) {
+      setIsPanning(true);
+      dragStartRef.current = {
+        x: e.clientX - zoomTranslate.x,
+        y: e.clientY - zoomTranslate.y,
+      };
+    }
+  };
+
+  const handleMouseMovePan = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning && zoomScale > 1) {
+      const maxTranslateX = (zoomScale - 1) * (window.innerWidth * 0.45);
+      const maxTranslateY = (zoomScale - 1) * (window.innerHeight * 0.45);
+      const rawX = e.clientX - dragStartRef.current.x;
+      const rawY = e.clientY - dragStartRef.current.y;
+
+      setZoomTranslate({
+        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, rawX)),
+        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, rawY)),
+      });
+    }
+  };
+
+  const handleMouseUpPan = () => {
+    setIsPanning(false);
+  };
+
   return (
     <div className="py-1">
       <div className="mb-5 flex flex-col gap-1">
@@ -482,7 +609,7 @@ export default function ProductReviews({
         </div>
       ) : (
         <div className="mb-1">
-          {/* 🌟 ৩D কভারফ্লো রিভিউ কন্টেইনার (CustomerGallery.tsx-এর মতো স্মুথ ও প্রিমিয়াম) */}
+          {/* 🌟 সফট ও ন্যাচারাল প্রিমিয়াম শ্যাডোযুক্ত ৩D কভারফ্লো রিভিউ কন্টেইনার */}
           <div
             className="relative mx-auto w-full max-w-[960px] select-none overflow-hidden touch-pan-y py-2"
             onTouchStart={handleTouchStart}
@@ -550,8 +677,8 @@ export default function ProductReviews({
                     }}
                     className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[380px] w-[230px] min-[400px]:w-[245px] sm:h-[420px] sm:w-[270px] md:h-[450px] md:w-[290px] shrink-0 select-none overflow-hidden rounded-[24px] transition-all duration-[500ms] ease-[cubic-bezier(0.22,1,0.36,1)] [-webkit-tap-highlight-color:transparent] ${
                       isActive
-                        ? 'border border-white/90 shadow-[0_8px_25px_rgba(0,0,0,0.10)] ring-1 ring-white/80 cursor-zoom-in'
-                        : 'cursor-pointer hover:opacity-85'
+                        ? 'border border-white/85 shadow-[0_4px_22px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.03)] ring-1 ring-black/[0.03] cursor-zoom-in'
+                        : 'cursor-pointer opacity-70 hover:opacity-90'
                     }`}
                     style={{
                       transform: `translate(-50%, -50%) ${transformStyle}`,
@@ -561,7 +688,6 @@ export default function ProductReviews({
                       willChange: 'transform, opacity',
                     }}
                   >
-                    {/* ফটো রিভিউ বনাম ফ্রস্টেড গ্লাস টেক্সট রিভিউ */}
                     {item.imageUrl ? (
                       <div
                         className={`group relative h-full w-full ${isActive ? 'cursor-zoom-in' : 'cursor-pointer'}`}
@@ -569,6 +695,7 @@ export default function ProductReviews({
                           if (isActive) {
                             e.stopPropagation();
                             setZoomImageUrl(item.imageUrl!);
+                            resetZoom();
                           }
                         }}
                       >
@@ -581,11 +708,10 @@ export default function ProductReviews({
                           draggable={false}
                         />
 
-                        {/* 🌟 স্প্লিট জিকেল ওভারলে — মাঝখানের ছবি ১০০% খাঁটি, ক্লিয়ার ও ব্রাইট থাকবে */}
-                        {/* ১. টপ হেডার গ্রেডিয়েন্ট (স্টার ও লেখার জন্য) */}
+                        {/* টপ হেডার গ্রেডিয়েন্ট */}
                         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/75 via-black/30 to-transparent" />
 
-                        {/* ২. বটম ফুটার গ্রেডিয়েন্ট (নাম ও লাইক বাটনের জন্য) */}
+                        {/* বটম ফুটার গ্রেডিয়েন্ট */}
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
 
                         {/* টপ কন্টেন্ট */}
@@ -683,7 +809,7 @@ export default function ProductReviews({
                       </div>
                     )}
 
-                    {/* মডারেশন কন্ট্রোলস (অ্যাডমিন / নিজস্ব রিভিউয়ের জন্য) */}
+                    {/* মডারেশন কন্ট্রোলস */}
                     {(isAdmin || (currentUser?.id && item.userId === currentUser.id)) && (
                       <div className="absolute right-2.5 top-2.5 z-20 flex items-center gap-1 rounded-full bg-black/75 p-1 backdrop-blur-md">
                         {isAdmin && !item.isApproved && (
@@ -971,25 +1097,84 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Zoom Lightbox */}
+      {/* 🔍 Interactive Pinch-to-Zoom & Pan Fullscreen Lightbox */}
       {zoomImageUrl && (
         <div
-          className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-section-reveal"
-          onClick={() => setZoomImageUrl(null)}
+          className="fixed inset-0 z-[1300] flex flex-col items-center justify-center bg-black/95 p-2 sm:p-4 backdrop-blur-md animate-section-reveal select-none touch-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isPanning) {
+              closeLightbox();
+            }
+          }}
         >
-          <div className="relative max-h-[90vh] max-w-[90vw]">
+          {/* টপ ফ্লোটিং ক্লোজ ও রিসেট বাটন */}
+          <div className="absolute right-4 top-4 z-40 flex items-center gap-2">
+            {zoomScale > 1 && (
+              <button
+                onClick={resetZoom}
+                className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1.5 font-body text-xs font-bold text-white backdrop-blur-md hover:bg-white/30 active:scale-95"
+              >
+                <span>Reset (1x)</span>
+              </button>
+            )}
             <button
-              onClick={() => setZoomImageUrl(null)}
-              className="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink shadow-md"
+              onClick={closeLightbox}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white hover:text-ink active:scale-95"
+              aria-label={t('বন্ধ করুন')}
             >
               ✕
             </button>
+          </div>
+
+          {/* জুম ও প্যান কন্টেইনার */}
+          <div
+            className="relative flex h-full w-full items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
+            onTouchStart={handleLightboxTouchStart}
+            onTouchMove={handleLightboxTouchMove}
+            onTouchEnd={handleLightboxTouchEnd}
+            onMouseDown={handleMouseDownPan}
+            onMouseMove={handleMouseMovePan}
+            onMouseUp={handleMouseUpPan}
+            onMouseLeave={handleMouseUpPan}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={optimizeCloudinaryUrl(zoomImageUrl, 1200)}
+              src={optimizeCloudinaryUrl(zoomImageUrl, 1600)}
               alt="Full Resolution Unboxing"
-              className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain shadow-2xl"
+              style={{
+                transform: `translate3d(${zoomTranslate.x}px, ${zoomTranslate.y}px, 0) scale(${zoomScale})`,
+                transition: isPanning ? 'none' : 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
+                transformOrigin: 'center center',
+              }}
+              className="max-h-[85vh] max-w-[92vw] rounded-xl object-contain shadow-2xl pointer-events-none select-none"
+              draggable={false}
             />
+          </div>
+
+          {/* বটম ফ্লোটিং জুম কন্ট্রোল বার (+, -, Reset) */}
+          <div className="absolute bottom-5 z-40 flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 backdrop-blur-md">
+            <button
+              onClick={() => {
+                setZoomScale((prev) => Math.max(1, prev - 0.5));
+                if (zoomScale <= 1.5) setZoomTranslate({ x: 0, y: 0 });
+              }}
+              disabled={zoomScale <= 1}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-white hover:bg-white/20 disabled:opacity-30 active:scale-90"
+              aria-label="Zoom Out"
+            >
+              −
+            </button>
+            <span className="min-w-[42px] text-center font-body text-xs font-extrabold text-white">
+              {zoomScale.toFixed(1)}x
+            </span>
+            <button
+              onClick={() => setZoomScale((prev) => Math.min(4, prev + 0.5))}
+              disabled={zoomScale >= 4}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-white hover:bg-white/20 disabled:opacity-30 active:scale-90"
+              aria-label="Zoom In"
+            >
+              +
+            </button>
           </div>
         </div>
       )}
