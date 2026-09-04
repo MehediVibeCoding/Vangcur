@@ -736,7 +736,7 @@ export default function InvoiceClient() {
             width: '480px',
             backgroundColor: '#ffffff',
             color: '#1E293B',
-            fontFamily: 'var(--font-dm-sans), var(--font-bengali), sans-serif',
+            fontFamily: "var(--font-dm-sans), 'Noto Sans Bengali', var(--font-bengali), sans-serif",
             boxSizing: 'border-box',
             borderRadius: '20px',
             border: '1px solid #E2E8F0',
@@ -809,7 +809,7 @@ export default function InvoiceClient() {
           className="w-full sm:max-w-[480px] rounded-none sm:rounded-[20px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
           style={{
             color: '#1E293B',
-            fontFamily: 'var(--font-dm-sans), var(--font-bengali), sans-serif',
+            fontFamily: "var(--font-dm-sans), 'Noto Sans Bengali', var(--font-bengali), sans-serif",
           }}
         >
           <InvoiceSubtleWatermark />
