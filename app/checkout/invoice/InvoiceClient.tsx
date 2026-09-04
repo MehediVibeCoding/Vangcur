@@ -237,272 +237,279 @@ type InvoiceCardBodyProps = {
   isFreeShipping: boolean;
 };
 
-// একমাত্র উৎস (single source of truth): লাইভ প্রিভিউ এবং ডাউনলোড হওয়া PNG দুটোই
-// এই একই কম্পোনেন্ট থেকে রেন্ডার হয়, তাই ভবিষ্যতে দুটো ভিউ আলাদা হয়ে যাওয়ার (drift) সুযোগ নেই।
 function InvoiceCardBody({ order, ds, contact, dueMsg, advancePaid, balanceDue, isFreeShipping }: InvoiceCardBodyProps) {
   return (
-    <div style={{ padding: '24px 20px 26px', position: 'relative', zIndex: 1 }}>
-            <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/vangcur-logo.png"
-                  alt="Vangcur"
-                  crossOrigin="anonymous"
-                  style={{ height: 32, width: 'auto', display: 'block', margin: '0 auto' }}
-                />
-              </div>
-              <div
-                style={{
-                  fontSize: 9.5,
-                  fontWeight: 700,
-                  letterSpacing: '2.5px',
-                  color: '#64748B',
-                  textTransform: 'uppercase',
-                  marginBottom: 10,
-                }}
-              >
-                YOUR FIRST CHOICE FOR GADGETS
-              </div>
-              
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '4px 14px',
-                  borderRadius: 20,
-                  backgroundColor: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: '#334155',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
-                <span style={{ color: '#CBD5E1' }}>•</span>
-                <span>Date: {ds}</span>
-              </div>
-            </div>
+    <div style={{ padding: '24px 20px 26px', position: 'relative', zIndex: 1, boxSizing: 'border-box', width: '100%' }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: 14, marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/vangcur-logo.png"
+            alt="Vangcur"
+            crossOrigin="anonymous"
+            style={{ height: 32, width: 'auto', display: 'block', margin: '0 auto' }}
+          />
+        </div>
+        <div
+          style={{
+            fontSize: 9.5,
+            fontWeight: 700,
+            letterSpacing: '2.5px',
+            color: '#64748B',
+            textTransform: 'uppercase',
+            marginBottom: 10,
+          }}
+        >
+          YOUR FIRST CHOICE FOR GADGETS
+        </div>
+        
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '4px 14px',
+            borderRadius: 20,
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            fontSize: 11.5,
+            fontWeight: 600,
+            color: '#334155',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span>Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong></span>
+          <span style={{ color: '#CBD5E1' }}>•</span>
+          <span>Date: {ds}</span>
+        </div>
+      </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <div
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  color: '#44A7FC',
-                  marginBottom: 6,
-                }}
-              >
-                CUSTOMER DETAILS
-              </div>
-              <div
-                style={{
-                  backgroundColor: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: 12,
-                  padding: '10px 14px',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '6px 12px',
-                  fontSize: 11.5,
-                  lineHeight: 1.5,
-                }}
-              >
-                <div>
-                  <span style={{ color: '#64748B' }}>Name: </span>
-                  <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748B' }}>Phone: </span>
-                  <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748B' }}>District: </span>
-                  <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: '#64748B' }}>Address: </span>
-                  <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
-                </div>
-              </div>
-            </div>
+      {/* Customer Details - Fixed Flex Layout instead of CSS Grid */}
+      <div style={{ marginBottom: 16 }}>
+        <div
+          style={{
+            fontSize: 10.5,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            color: '#44A7FC',
+            marginBottom: 6,
+          }}
+        >
+          CUSTOMER DETAILS
+        </div>
+        <div
+          style={{
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            borderRadius: 12,
+            padding: '10px 14px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            rowGap: 8,
+            fontSize: 11.5,
+            lineHeight: 1.5,
+            boxSizing: 'border-box',
+          }}
+        >
+          <div style={{ width: '50%', boxSizing: 'border-box', paddingRight: 6 }}>
+            <span style={{ color: '#64748B' }}>Name: </span>
+            <strong style={{ color: '#0F172A' }}>{order.customer?.name || '-'}</strong>
+          </div>
+          <div style={{ width: '50%', boxSizing: 'border-box', paddingLeft: 6 }}>
+            <span style={{ color: '#64748B' }}>Phone: </span>
+            <strong style={{ color: '#0F172A' }}>{order.customer?.phone || '-'}</strong>
+          </div>
+          <div style={{ width: '50%', boxSizing: 'border-box', paddingRight: 6 }}>
+            <span style={{ color: '#64748B' }}>District: </span>
+            <strong style={{ color: '#0F172A' }}>{order.customer?.district || '-'}</strong>
+          </div>
+          <div style={{ width: '50%', boxSizing: 'border-box', paddingLeft: 6 }}>
+            <span style={{ color: '#64748B' }}>Address: </span>
+            <span style={{ color: '#0F172A', fontWeight: 600 }}>{order.customer?.address || '-'}</span>
+          </div>
+        </div>
+      </div>
 
+      {/* Order Items & Totals */}
+      <div
+        style={{
+          backgroundColor: '#F8FAFC',
+          border: '1px solid #E2E8F0',
+          borderRadius: 14,
+          padding: '14px 16px',
+          marginBottom: 14,
+          boxSizing: 'border-box',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 10.5,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            color: '#44A7FC',
+            marginBottom: 10,
+          }}
+        >
+          ORDER INVOICE
+        </div>
+
+        <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 10 }}>
+          {(order.items || []).map((i, idx) => (
             <div
-              style={{
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                borderRadius: 14,
-                padding: '14px 16px',
-                marginBottom: 14,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  color: '#44A7FC',
-                  marginBottom: 10,
-                }}
-              >
-                ORDER INVOICE
-              </div>
-
-              <div style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 10 }}>
-                {(order.items || []).map((i, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                      padding: '5px 0',
-                      fontSize: 12,
-                      color: '#1E293B',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-                      <ItemThumb imgs={i.imgs} />
-                      <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: 1.35, wordBreak: 'break-word' }}>
-                        {i.name} × {i.qty}
-                      </span>
-                    </div>
-                    <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>
-                      ৳{(i.price * i.qty).toLocaleString('en-US')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {order.subtotal ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#475569', padding: '3px 0' }}>
-                  <span>Subtotal</span>
-                  <span style={{ fontWeight: 600, color: '#1E293B' }}>৳{order.subtotal.toLocaleString('en-US')}</span>
-                </div>
-              ) : null}
-
-              {order.discountAmount && order.discountAmount > 0 ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#059669', fontWeight: 600, padding: '3px 0' }}>
-                  <span>Coupon Discount ({order.couponCode || 'PROMO'})</span>
-                  <span style={{ color: '#10B981', fontWeight: 700 }}>- ৳{order.discountAmount.toLocaleString('en-US')}</span>
-                </div>
-              ) : null}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#475569', padding: '3px 0' }}>
-                <span style={{ color: isFreeShipping ? '#059669' : '#475569', fontWeight: isFreeShipping ? 600 : 400 }}>
-                  Delivery Charge ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
-                </span>
-                <span style={{ color: isFreeShipping ? '#10B981' : '#1E293B', fontWeight: isFreeShipping ? 800 : 600 }}>
-                  {isFreeShipping ? 'FREE' : `৳${order.shippingCost}`}
-                </span>
-              </div>
-
-              <div style={{ margin: '8px 0', borderTop: '1px dashed #CBD5E1' }} />
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '3px 0' }}>
-                <span>Total Bill</span>
-                <span>৳{(order.total || 0).toLocaleString('en-US')}</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#44A7FC', padding: '3px 0' }}>
-                <span>Advance Payment</span>
-                <span style={{ fontWeight: 700 }}>- ৳{advancePaid.toLocaleString('en-US')}</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '4px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
-                <span>Cash on Delivery</span>
-                <span>৳{balanceDue.toLocaleString('en-US')}</span>
-              </div>
-            </div>
-
-            <div
+              key={idx}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: 14,
-                padding: '8px 12px',
-                borderRadius: 20,
-                backgroundColor: '#F0F7FF',
-                border: '1px solid #DCEBFD',
-                fontSize: 11,
-                fontWeight: 700,
-                color: '#44A7FC',
-                marginBottom: 14,
+                justifyContent: 'space-between',
+                gap: 10,
+                padding: '5px 0',
+                fontSize: 12,
+                color: '#1E293B',
+                boxSizing: 'border-box',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-                <span>Payment: bKash (Verified)</span>
-              </div>
-              <span style={{ color: '#BAE0FD' }}>|</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
-                <span>Courier: Pathao</span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: '10px 14px',
-                background: 'linear-gradient(135deg, #F0F7FF 0%, #F8FAFC 100%)',
-                border: '1px solid #DCEBFD',
-                borderRadius: 12,
-                fontSize: 10.5,
-                lineHeight: 1.6,
-                color: '#1E3A5F',
-                marginBottom: 14,
-              }}
-            >
-              {dueMsg}
-            </div>
-
-            <div
-              style={{
-                textAlign: 'center',
-                borderTop: '1px solid #F1F5F9',
-                paddingTop: 12,
-                fontSize: 10.5,
-                color: '#64748B',
-              }}
-            >
-              <div style={{ marginBottom: 8, fontWeight: 600 }}>
-                📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <IconFacebookThemed />
-                  <IconYoutubeThemed />
-                  <IconTiktokThemed />
-                  <IconInstagramThemed />
-                </div>
-                <span
-                  style={{
-                    fontWeight: 800,
-                    fontSize: 11,
-                    color: '#0F172A',
-                    letterSpacing: '-0.2px',
-                    marginLeft: 2,
-                  }}
-                >
-                  Vangcur Gadgets
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                <ItemThumb imgs={i.imgs} />
+                <span style={{ fontWeight: 600, color: '#0F172A', lineHeight: 1.35, wordBreak: 'break-word' }}>
+                  {i.name} × {i.qty}
                 </span>
               </div>
+              <span style={{ fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                ৳{(i.price * i.qty).toLocaleString('en-US')}
+              </span>
             </div>
+          ))}
+        </div>
+
+        {order.subtotal ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#475569', padding: '3px 0' }}>
+            <span>Subtotal</span>
+            <span style={{ fontWeight: 600, color: '#1E293B' }}>৳{order.subtotal.toLocaleString('en-US')}</span>
+          </div>
+        ) : null}
+
+        {order.discountAmount && order.discountAmount > 0 ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#059669', fontWeight: 600, padding: '3px 0' }}>
+            <span>Coupon Discount ({order.couponCode || 'PROMO'})</span>
+            <span style={{ color: '#10B981', fontWeight: 700 }}>- ৳{order.discountAmount.toLocaleString('en-US')}</span>
+          </div>
+        ) : null}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: '#475569', padding: '3px 0' }}>
+          <span style={{ color: isFreeShipping ? '#059669' : '#475569', fontWeight: isFreeShipping ? 600 : 400 }}>
+            Delivery Charge ({order.shipping === 'dhaka' ? 'Dhaka City' : 'All Bangladesh'})
+          </span>
+          <span style={{ color: isFreeShipping ? '#10B981' : '#1E293B', fontWeight: isFreeShipping ? 800 : 600 }}>
+            {isFreeShipping ? 'FREE' : `৳${order.shippingCost}`}
+          </span>
+        </div>
+
+        <div style={{ margin: '8px 0', borderTop: '1px dashed #CBD5E1' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '3px 0' }}>
+          <span>Total Bill</span>
+          <span>৳{(order.total || 0).toLocaleString('en-US')}</span>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: '#44A7FC', padding: '3px 0' }}>
+          <span>Advance Payment</span>
+          <span style={{ fontWeight: 700 }}>- ৳{advancePaid.toLocaleString('en-US')}</span>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 800, color: '#0F172A', padding: '4px 0', borderTop: '1px solid #E2E8F0', marginTop: 4 }}>
+          <span>Cash on Delivery</span>
+          <span>৳{balanceDue.toLocaleString('en-US')}</span>
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 14,
+          padding: '8px 12px',
+          borderRadius: 20,
+          backgroundColor: '#F0F7FF',
+          border: '1px solid #DCEBFD',
+          fontSize: 11,
+          fontWeight: 700,
+          color: '#44A7FC',
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+          <span>Payment: bKash (Verified)</span>
+        </div>
+        <span style={{ color: '#BAE0FD' }}>|</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#44A7FC" strokeWidth="2"><rect x="1" y="3" width="15" height="13" rx="1" /><polygon points="16 8 20 8 23 11 23 16 16 16 8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>
+          <span>Courier: Pathao</span>
+        </div>
+      </div>
+
+      {/* Notice Message */}
+      <div
+        style={{
+          padding: '10px 14px',
+          background: 'linear-gradient(135deg, #F0F7FF 0%, #F8FAFC 100%)',
+          border: '1px solid #DCEBFD',
+          borderRadius: 12,
+          fontSize: 10.5,
+          lineHeight: 1.6,
+          color: '#1E3A5F',
+          marginBottom: 14,
+        }}
+      >
+        {dueMsg}
+      </div>
+
+      {/* Footer Contact & Brand */}
+      <div
+        style={{
+          textAlign: 'center',
+          borderTop: '1px solid #F1F5F9',
+          paddingTop: 12,
+          fontSize: 10.5,
+          color: '#64748B',
+        }}
+      >
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>
+          📞 {contact.phoneLabel} &nbsp;•&nbsp; ✉️ {contact.email} &nbsp;•&nbsp; 🌐 vangcur.com
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IconFacebookThemed />
+            <IconYoutubeThemed />
+            <IconTiktokThemed />
+            <IconInstagramThemed />
+          </div>
+          <span
+            style={{
+              fontWeight: 800,
+              fontSize: 11,
+              color: '#0F172A',
+              letterSpacing: '-0.2px',
+              marginLeft: 2,
+            }}
+          >
+            Vangcur Gadgets
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -523,7 +530,7 @@ export default function InvoiceClient() {
   });
   const [downloading, setDownloading] = useState(false);
 
-  const captureRef = useRef<HTMLDivElement>(null);
+  const captureCardRef = useRef<HTMLDivElement>(null);
   const autoDownloadedRef = useRef(false);
 
   useEffect(() => {
@@ -602,8 +609,9 @@ export default function InvoiceClient() {
     return () => clearTimeout(emergencyTimer);
   }, [supabase]);
 
+  // 🎯 Bulletproof HD Canvas Rendering (Direct Clean Capture, Zero Distortions)
   const downloadPNG = useCallback(async () => {
-    if (!captureRef.current || downloading || !order || downloadCount >= MAX_DOWNLOAD_LIMIT) return;
+    if (!captureCardRef.current || downloading || !order || downloadCount >= MAX_DOWNLOAD_LIMIT) return;
     setDownloading(true);
 
     try {
@@ -611,7 +619,8 @@ export default function InvoiceClient() {
         await document.fonts.ready;
       }
 
-      const images = Array.from(captureRef.current.querySelectorAll('img'));
+      const cardElement = captureCardRef.current;
+      const images = Array.from(cardElement.querySelectorAll('img'));
       await Promise.all(
         images.map(
           (img) =>
@@ -626,7 +635,11 @@ export default function InvoiceClient() {
       );
 
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(captureRef.current, {
+      
+      const width = 480;
+      const height = cardElement.offsetHeight;
+
+      const canvas = await html2canvas(cardElement, {
         scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
@@ -634,7 +647,19 @@ export default function InvoiceClient() {
         allowTaint: false,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 480,
+        width: width,
+        height: height,
+        onclone: (clonedDoc) => {
+          const clonedCard = clonedDoc.querySelector('[data-invoice-target]') as HTMLElement;
+          if (clonedCard) {
+            clonedCard.style.width = '480px';
+            clonedCard.style.maxWidth = '480px';
+            clonedCard.style.minWidth = '480px';
+            clonedCard.style.boxSizing = 'border-box';
+            clonedCard.style.margin = '0';
+            clonedCard.style.transform = 'none';
+          }
+        },
       });
 
       const link = document.createElement('a');
@@ -714,117 +739,87 @@ export default function InvoiceClient() {
 
   return (
     <SkeletonTransition isReady skeleton={<InvoiceLoadingSkeleton />}>
-    <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
-      <DesktopSideDecor />
+      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between p-0 sm:p-0">
+        <DesktopSideDecor />
 
-      {/* ১. স্ট্যান্ডার্ড ৪৮০px পোর্ট্রেট অফ-স্ক্রিন HD প্রিন্ট টেমপ্লেট */}
-      {/* InvoiceCardBody-ই এখানে ব্যবহৃত হচ্ছে, যাতে ডাউনলোড হওয়া ছবিটা লাইভ প্রিভিউয়ের সাথে হুবহু মিলে যায় */}
-      <div
-        style={{
-          position: 'fixed',
-          left: '-9999px',
-          top: 0,
-          width: '480px',
-          overflow: 'visible',
-          zIndex: -9999,
-        }}
-        aria-hidden="true"
-      >
-        <div
-          ref={captureRef}
-          style={{
-            width: '480px',
-            backgroundColor: '#ffffff',
-            color: '#1E293B',
-            fontFamily: "var(--font-dm-sans), 'Noto Sans Bengali', var(--font-bengali), sans-serif",
-            boxSizing: 'border-box',
-            borderRadius: '20px',
-            border: '1px solid #E2E8F0',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          <InvoiceSubtleWatermark />
-          <InvoiceCardBody
-            order={order}
-            ds={ds}
-            contact={contact}
-            dueMsg={dueMsg}
-            advancePaid={advancePaid}
-            balanceDue={balanceDue}
-            isFreeShipping={isFreeShipping}
-          />
+        {/* টুলবার */}
+        <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
+          <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
+            <button
+              onClick={handleGoBack}
+              disabled={!canClose}
+              title={canClose ? undefined : (lang === 'en' ? 'Downloading your invoice first…' : 'আগে ইনভয়েসটা ডাউনলোড হচ্ছে…')}
+              className="flex items-center gap-1.5 rounded-full border border-border-base bg-white px-4 py-2 font-body text-[13px] font-bold text-ink transition-all duration-brand disabled:cursor-default disabled:opacity-40 enabled:hover:bg-surface-muted enabled:active:scale-95 cursor-pointer"
+            >
+              <IconChevronLeft />
+              <span>{t('ফিরে যান')}</span>
+            </button>
+
+            <button
+              onClick={downloadPNG}
+              disabled={downloading || isLimitReached}
+              className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-5 py-2 font-body text-[13px] font-bold text-white shadow-sh1 transition-all duration-brand disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:brightness-[1.03] enabled:active:scale-95 cursor-pointer"
+            >
+              {downloading ? <IconSpinner /> : (downloadCount > 0 && !isLimitReached ? <IconCheckCircle /> : <IconDownload />)}
+              <span>
+                {downloading
+                  ? t('তৈরি হচ্ছে...')
+                  : isLimitReached
+                  ? (lang === 'en' ? 'Downloaded' : 'ডাউনলোড সম্পন্ন')
+                  : downloadCount > 0
+                  ? (lang === 'en' ? 'Download again' : 'আবার ডাউনলোড')
+                  : t('ছবি ডাউনলোড')}
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
 
+        {!canClose && (
+          <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-brand-bg/40 py-1.5 font-body text-[11.5px] font-semibold text-brand-light border-b border-brand-light/20">
+            <IconSpinner />
+            {t('আপনার ইনভয়েস প্রস্তুত হচ্ছে, একটু অপেক্ষা করুন...')}
+          </div>
+        )}
+        {canClose && downloadCount > 0 && (
+          <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-emerald-50 py-1.5 font-body text-[11.5px] font-semibold text-emerald-700 border-b border-emerald-200">
+            <IconCheckCircle />
+            {t('ইনভয়েস সফলভাবে ডাউনলোড হয়েছে')}
+          </div>
+        )}
 
-      {/* ২. কন্ট্রোল টুলবার */}
-      <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/90 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
-        <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
-          <button
-            onClick={handleGoBack}
-            disabled={!canClose}
-            title={canClose ? undefined : (lang === 'en' ? 'Downloading your invoice first…' : 'আগে ইনভয়েসটা ডাউনলোড হচ্ছে…')}
-            className="flex items-center gap-1.5 rounded-full border border-border-base bg-white px-4 py-2 font-body text-[13px] font-bold text-ink transition-all duration-brand disabled:cursor-default disabled:opacity-40 enabled:hover:bg-surface-muted enabled:active:scale-95"
+        {/* সিঙ্গেল সোর্স অফ ট্রুথ — স্ক্রিন ও ডাউনলোডে ১০০% একই রেন্ডারিং */}
+        <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex flex-col items-center justify-start bg-white sm:bg-transparent">
+          <div
+            ref={captureCardRef}
+            data-invoice-target="true"
+            style={{
+              width: '480px',
+              maxWidth: '100%',
+              backgroundColor: '#ffffff',
+              color: '#1E293B',
+              fontFamily: "var(--font-dm-sans), 'Noto Sans Bengali', var(--font-bengali), sans-serif",
+              boxSizing: 'border-box',
+              borderRadius: '20px',
+              border: '1px solid #E2E8F0',
+              position: 'relative',
+              overflow: 'hidden',
+              WebkitTextSizeAdjust: '100%',
+            }}
+            className="shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)]"
           >
-            <IconChevronLeft />
-            <span>{t('ফিরে যান')}</span>
-          </button>
-
-          <button
-            onClick={downloadPNG}
-            disabled={downloading || isLimitReached}
-            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-5 py-2 font-body text-[13px] font-bold text-white shadow-sh1 transition-all duration-brand disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:brightness-[1.03] enabled:active:scale-95"
-          >
-            {downloading ? <IconSpinner /> : (downloadCount > 0 && !isLimitReached ? <IconCheckCircle /> : <IconDownload />)}
-            <span>
-              {downloading
-                ? t('তৈরি হচ্ছে...')
-                : isLimitReached
-                ? (lang === 'en' ? 'Downloaded' : 'ডাউনলোড সম্পন্ন')
-                : downloadCount > 0
-                ? (lang === 'en' ? 'Download again' : 'আবার ডাউনলোড')
-                : t('ছবি ডাউনলোড')}
-            </span>
-          </button>
+            <InvoiceSubtleWatermark />
+            <InvoiceCardBody
+              order={order}
+              ds={ds}
+              contact={contact}
+              dueMsg={dueMsg}
+              advancePaid={advancePaid}
+              balanceDue={balanceDue}
+              isFreeShipping={isFreeShipping}
+            />
+          </div>
         </div>
       </div>
-
-      {!canClose && (
-        <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-brand-bg/40 py-1.5 font-body text-[11.5px] font-semibold text-brand-light border-b border-brand-light/20">
-          <IconSpinner />
-          {t('আপনার ইনভয়েস প্রস্তুত হচ্ছে, একটু অপেক্ষা করুন...')}
-        </div>
-      )}
-      {canClose && downloadCount > 0 && (
-        <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 bg-emerald-50 py-1.5 font-body text-[11.5px] font-semibold text-emerald-700 border-b border-emerald-200">
-          <IconCheckCircle />
-          {t('ইনভয়েস সফলভাবে ডাউনলোড হয়েছে')}
-        </div>
-      )}
-
-      {/* ৩. লাইভ অন-স্ক্রিন ইনভয়েস ভিউ */}
-      <div className="relative z-10 flex-1 p-0 sm:px-4 sm:py-7 flex flex-col items-center justify-start bg-white sm:bg-transparent">
-        <div
-          className="w-full sm:max-w-[480px] rounded-none sm:rounded-[20px] bg-white border-0 sm:border sm:border-[#E2E8F0] shadow-none sm:shadow-[0_10px_32px_rgba(68,167,252,0.08)] relative overflow-hidden flex flex-col justify-start"
-          style={{
-            color: '#1E293B',
-            fontFamily: "var(--font-dm-sans), 'Noto Sans Bengali', var(--font-bengali), sans-serif",
-          }}
-        >
-          <InvoiceSubtleWatermark />
-          <InvoiceCardBody
-            order={order}
-            ds={ds}
-            contact={contact}
-            dueMsg={dueMsg}
-            advancePaid={advancePaid}
-            balanceDue={balanceDue}
-            isFreeShipping={isFreeShipping}
-          />
-        </div>
-      </div>
-    </div>
     </SkeletonTransition>
   );
-                }
+}
