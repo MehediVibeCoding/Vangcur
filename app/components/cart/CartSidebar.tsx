@@ -337,45 +337,54 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       return;
     }
 
-    let currentDiscount = discountAmount;
+    try {
+      let currentDiscount = discountAmount;
 
-    if (couponCode.trim() && !appliedCoupon) {
-      setCheckoutStatus('verifying');
-      const success = await handleApplyCoupon(undefined, couponCode);
-      if (!success) {
+      if (couponCode.trim() && !appliedCoupon) {
+        setCheckoutStatus('verifying');
+        const success = await handleApplyCoupon(undefined, couponCode);
+        if (!success) {
+          setCheckoutStatus('idle');
+          return;
+        }
+
+        await new Promise((r) => setTimeout(r, 900));
+
+        const freshlyApplied = getAppliedCoupon();
+        if (freshlyApplied) {
+          currentDiscount = freshlyApplied.discountAmount || 0;
+        }
+        setCheckoutStatus('success');
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
+
+      if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
         setCheckoutStatus('idle');
+        onClose();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
+        }
         return;
       }
 
-      await new Promise((r) => setTimeout(r, 900));
-
-      const freshlyApplied = getAppliedCoupon();
-      if (freshlyApplied) {
-        currentDiscount = freshlyApplied.discountAmount || 0;
+      try {
+        sessionStorage.removeItem('vc_quick_order_items');
+        localStorage.removeItem('vc_quick_order_items');
+      } catch {
+        // ignore
       }
-      setCheckoutStatus('success');
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
-    const currentFinalTotal = Math.max(0, subtotal - currentDiscount);
-
-    if (currentFinalTotal > MAX_ONLINE_ORDER_TOTAL) {
-      setCheckoutStatus('idle');
       onClose();
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: currentFinalTotal } }));
-      }
-      return;
+      router.push('/checkout');
+    } catch (err) {
+      // আগে এখানে কোনো try/catch ছিল না — কোনো silent runtime error হলে
+      // চেকআউট বাটনটা কোনো ফিডব্যাক ছাড়াই আটকে থাকত। এখন ব্যর্থ হলে
+      // টোস্ট দেখিয়ে বাটন আবার সচল করে দেওয়া হয়।
+      console.error('handleCheckout failed:', err);
+      setCheckoutStatus('idle');
+      showToast(t('একটি সমস্যা হয়েছে, আবার চেষ্টা করুন'), 'error');
     }
-
-    try {
-      sessionStorage.removeItem('vc_quick_order_items');
-      localStorage.removeItem('vc_quick_order_items');
-    } catch {
-      // ignore
-    }
-    onClose();
-    router.push('/checkout');
   };
 
   const goToProducts = () => {
