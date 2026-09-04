@@ -323,6 +323,7 @@ export default function QuickOrderModal() {
 
     try {
       sessionStorage.removeItem('vc_quick_order_items');
+      localStorage.removeItem('vc_quick_order_items');
     } catch {
       // ignore
     }
