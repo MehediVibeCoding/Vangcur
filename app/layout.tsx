@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
-import { playfairDisplay, dmSans, notoBengali } from './fonts';
+import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
@@ -36,10 +36,27 @@ export default async function RootLayout({
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
   return (
-    <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${notoBengali.variable}`}>
+    <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}>
       <head>
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        {/*
+          Digit-only font override.
+          Loads Noto Sans Bengali but the `text=` param tells Google Fonts to
+          subset it down to just the ten Bengali digits (০-৯), which also makes
+          Google generate a `unicode-range` on the @font-face limited to those
+          same characters. Because of that unicode-range, this font is ONLY
+          ever picked for digit characters - every other Bengali character
+          keeps falling through to Hind Siliguri. This is what lets digits and
+          regular text use two different fonts without wrapping every number
+          in its own <span>. See the font-family stacks in tailwind.config.ts
+          (`body`) and app/checkout/invoice/InvoiceClient.tsx for where it's
+          layered in - always list it BEFORE Hind Siliguri in those stacks.
+        */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&text=%E0%A7%A6%E0%A7%A7%E0%A7%A8%E0%A7%A9%E0%A7%AA%E0%A7%AB%E0%A7%AC%E0%A7%AD%E0%A7%AE%E0%A7%AF&display=swap"
+        />
         {gtmId && (
           <Script
             id="gtm-script"
