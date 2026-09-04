@@ -1,80 +1,106 @@
-# Vangcur — Design System
+# 🎨 Vangcur — Design System & UI/UX Blueprint
+**সর্বশেষ অডিট ও আপডেট:** সেপ্টেম্বর ২০২৬  
+**স্টাইল ফ্রেমওয়ার্ক:** Tailwind CSS v3 + Custom Design Tokens + Framer Motion / Motion v13
 
-## Brand Colors
+---
 
-Logo-ভিত্তিক, pixel-sample করা exact color (লাল থেকে নীল — স্থায়ী পরিবর্তন):
+## 💎 ১. ব্র্যান্ড কালার আর্কিটেকচার (Brand Colors)
 
-| Role | Hex | Tailwind token | ব্যবহার |
-|------|-----|-----------------|---------|
-| Background / Base | `#C3DEFC` | `brand-bg` | `<body>`-তে top-to-bottom gradient হিসেবে ব্যবহার হয় (`brand-bg` → `#DCEBFD` → `white`), solid fill না — Meta Business Suite-এর মতো হালকা fresh sky-blue-to-white আবহ তৈরি করতে |
-| Contrast / Primary | `#0058C7` | `brand-primary` | Button, link, heading emphasis, active state (আগে `--red` / `--hover`) |
-| Secondary Accent | `#005EFC` | `brand-accent` | Badge, hover highlight, selective touch (আগে `--red2` / `--hover2`) |
-| Surface | `#FFFFFF` | `brand-surface` | Card/nav/footer-content সাদা background (আগে `--white`) |
+Vangcur-এর মূল সিগনেচার কালার হলো **প্রাণবন্ত স্কাই-ব্লু (Sky Blue - `#44A7FC`)**। পুরো ওয়েবসাইটে কোনো বিচ্ছিন্ন বা কড়া ডার্ক ব্লু ব্যাকগ্রাউন্ড থাকবে না; বরং স্কাই-ব্লু থেকে সাদা গ্রেডিয়েন্টের একটি ফ্রেশ, আধুনিক ও প্রিমিয়াম আবহ বজায় থাকবে।
 
-## Neutral Colors (অপরিবর্তিত)
+| টোকেন (Token) | হেক্স কোড (Hex) | রোল ও বাস্তব ব্যবহার (Role & Usage) |
+| :--- | :--- | :--- |
+| **`brand-light` (Main)** | `#44A7FC` | **প্রধান সিগনেচার কালার:** বাটন, ক্লিকেবল লিংক, একটিভ আইকন, ব্যাজ, সিগনেচার বর্ডার ও প্রধান এমফ্যাসিস। |
+| **`brand-light-hover`** | `#3C93DE` | **বাটন ও লিংকের হোভার স্টেট:** প্রাইমারি বাটন ও ইন্টারঅ্যাকশনে গভীর ট্রানজিশন। |
+| **`brand-bg`** | `#C3DEFC` | **ক্যানভাস বেস গ্রেডিয়েন্ট:** বডি ও মডালের শীর্ষ গ্রেডিয়েন্ট আবহ (`from-brand-bg via-[#DCEBFD] to-white`)। |
+| **`brand-primary`** | `#0058C7` | **লোগো কন্ট্রাস্ট শেড:** লোগো ওয়ার্ডমার্ক ও বিশেষ ডিপ কন্ট্রাস্ট টাচ। |
+| **`brand-accent`** | `#005EFC` | **সেকেন্ডারি অ্যাকসেন্ট:** বিশেষ হাইলাইট। |
+| **`brand-surface`** | `#FFFFFF` | **সাদা ক্যানভাস সারফেস:** কার্ড, ইনপুট ও মূল সারফেস ব্যাকগ্রাউন্ড। |
 
-| Role | Hex | Tailwind token |
-|------|-----|-----------------|
-| Text (dark) | `#1A1A1A` | `ink` |
-| Muted text | `#6B7280` | `muted` |
-| Light background | `#F3F4F6` | `surface-muted` |
-| Border | `#E5E7EB` | `border-base` |
-| Gold (offer/badge) | `#D4A853` | `gold` |
-| Green (success) | `#10B981` | `success` |
-| Info blue (non-brand) | `#3B82F6` | `info` |
+---
 
-## Shadows
+## ⚪ ২. নিউট্রাল ও ফিডব্যাক কালার (Neutral & Semantic Palette)
 
-| Token | Value |
-|-------|-------|
-| `shadow-sh1` | `0 1px 4px rgba(0,0,0,.07)` |
-| `shadow-sh2` | `0 4px 18px rgba(0,0,0,.10)` |
-| `shadow-sh3` | `0 8px 36px rgba(0,0,0,.13)` |
+| টোকেন | হেক্স কোড | ব্যবহার |
+| :--- | :--- | :--- |
+| **`ink`** | `#1A1A1A` | মূল টেক্সট, শিরোনাম ও প্রাইমারি রিডিং কন্টেন্ট। |
+| **`muted`** | `#6B7280` | মেটা-টেক্সট, সাবটাইটেল, প্লেসহোল্ডার ও তারিখ। |
+| **`surface-muted`** | `#F3F4F6` | নিউট্রাল সফট ব্যাকগ্রাউন্ড, স্পেসার ও ডিজেবল্ড স্টেট। |
+| **`border-base`** | `#E5E7EB` | হেয়ারলাইন ডিভাইডার, কার্ড বর্ডার ও ইনপুট আউটলাইন। |
+| **`success`** | `#10B981` | অর্ডার কনফার্মেশন, সফল মেসেজ ও ইন-স্টক ব্যাজ। |
+| **`gold`** | `#D4A853` | স্টার রেটিং, ভিআইপি রিওয়ার্ড ও স্পেশাল অফার ট্যাগ। |
+| **`info`** | `#3B82F6` | জেনারেল ইনফো ব্যানার ও বাটন গ্রেডিয়েন্ট লেয়ার। |
 
-## Radius
+---
 
-| Token | Value |
-|-------|-------|
-| `rounded-brand` | `12px` (default card/element radius) |
-| Nav pill | `35px` (arbitrary `rounded-[35px]`, nav-only) |
+## 🖼️ ৩. সারফেস ও লেআউট আর্কিটেকচার (Surface & Layout Patterns)
 
-## Typography
+### ১. ট্রাই-কালার ব্যাকগ্রাউন্ড ক্যানভাস (Tri-Color Atmosphere)
+- সব পেজ, মডাল, সাইড ড্রয়ার ও পপআপে একক অভিন্ন ট্রাই-কালার গ্রেডিয়েন্ট ব্যবহৃত হবে:  
+  `bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white`
+- **নিয়ম:** কোনো বিচ্ছিন্ন ছোপযুক্ত ডার্ক ব্যাকগ্রাউন্ড থাকবে না — পুরো সাইটে একই ফ্রেশ স্কাই-ব্লু থেকে সাদার ক্যানভাস থাকবে।
 
-- Display / logo: `Playfair Display, serif`
-- Body / UI: `DM Sans, Hind Siliguri, sans-serif`
+### ২. ফ্রস্টেড গ্লাস ন্যাভবার (Frosted Glass Pill)
+- **টোকেন:** `navbar-glass` ➔ `border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px] rounded-[35px]`.
+- স্ক্রোল করার সময় ব্যাকগ্রাউন্ডের গ্রেডিয়েন্ট যাতে সূক্ষ্মভাবে ফুটে ওঠে, তার জন্য অপাসিটি ৮০% এবং ব্যাকড্রপ ব্লার রাখা হয়েছে।
 
-Tailwind tokens: `font-display`, `font-body`.
+### ৩. মডাল ও পপআপ হেডার ডেকোরেশন (Header & Line-Art)
+- প্রতিটি মডালের ভেতরে ১৪% অপাসিটির হালকা গ্যাজেট লাইন-আর্ট জলছাপ (`HeaderDecor @ text-brand-light/[0.14]`) থাকবে।
+- টপ-রাইট ক্লোজ বাটন: ফ্রস্টেড গ্লাস রাউন্ড বাটন (`h-8 w-8 rounded-full border border-white/60 bg-white/80 text-ink/60`).
+- হেডারের নিচে একটি পরিষ্কার এজ-টু-এজ হেয়ারলাইন ডিভাইডার (`border-b border-ink/10`).
 
-## Breakpoints (legacy-exact)
+---
 
-| Token | Width |
-|-------|-------|
-| `xs` | 359px |
-| `sm2` | 411px |
-| `sm` | 480px |
-| `md` | 768px |
-| `lg` | 1024px |
-| `xl` | 1200px |
-| `2xl` | 1440px |
+## 🔤 ৪. টাইপোগ্রাফি ও ফন্ট সিস্টেম (Typography Rules)
 
-## Transition
+- **বডি ও শিরোনাম ফন্ট:** `DM Sans` (ইংরেজি) + `Hind Siliguri` (বাংলা) — Tailwind টোকেন: `font-body`.
+- **🚫 নো-সেরিফ রুল:** কোনো হেডিং বা টেক্সটে সেরিফ ফন্ট (`font-display` / Playfair Display) ব্যবহার করা যাবে না। সব হেডিং ও টেক্সট হবে `font-body font-bold text-ink`।
+- **🔢 ডিজিট-অনলি ইউনিকোড-রেঞ্জ আর্কিটেকচার (`Noto Sans Bengali`):**  
+  `app/layout.tsx`-এ ইউনিকোড-রেঞ্জ (`০-৯`) সীমাবদ্ধ করে `Noto Sans Bengali` লোড করা হয়েছে। ফলে বাংলা এবং ইংরেজি উভয় ভাষার টেক্সটে সংখ্যাসমূহ সবসময় স্পষ্ট, সমানুপাতিক ও সুন্দরভাবে ফুটে ওঠে।
 
-`transition-brand` → `all .25s cubic-bezier(.4,0,.2,1)` (legacy `--tr`).
+---
 
-## Surface Patterns (body gradient onward)
+## 🔘 ৫. প্রমিত বাটন ও কম্পোনেন্ট সাইজিং (Component Standards)
 
-- **Floating navbar pill**: frosted-glass — `bg-white/70` + `backdrop-blur-md` + `border-white/60` + `shadow-sh2`, instead of solid `brand-surface`, so the body's sky-blue gradient shows through subtly as the page scrolls.
-- **Search dropdown / mobile search bar**: same frosted family at higher opacity (`bg-white/95` and `bg-white/85` respectively) — enough blur for cohesion, enough opacity for text readability.
-- **Footer**: `bg-gradient-to-b from-ink to-[#0f1a2e]` (matches the dark navy used in the About section, instead of flat `bg-ink`), topped with a 3px horizontal accent line — `bg-gradient-to-r from-brand-bg via-brand-accent to-brand-primary` — that visually threads the light body gradient into the dark footer using the brand's own 3-color ramp.
+### ১. সিগনেচার প্রাইমারি CTA বাটন (Primary Action Button)
+- **স্ট্যান্ডার্ড ক্লাস:** `shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] active:scale-95 disabled:opacity-60`
 
-## Notes
+### ২. স্টিকি বটম বার স্ট্যান্ডার্ড (`ProductDetailClient.tsx`)
+- স্টিকি বটম বারের উচ্চতা এবং "অর্ডার করুন" ও "কার্ট" বাটনের উচ্চতা সুনির্দিষ্টভাবে `h-[42px]` ও `rounded-[12px]` দিয়ে লক থাকবে।
 
-- Spacing, component sizing (button padding, icon sizes, gaps) follow the exact px values from the legacy CSS — converted to Tailwind's arbitrary-value syntax (`w-[42px]`, `gap-[14px]` etc.) per component, not a new spacing scale. Layout/spacing itself doesn't change in Phase 2 — শুধু color scheme বদলাচ্ছে।
-- Logo gradient makes `#0058C7`/`#005EFC` a mid-tone approximation. If an exact canonical hex is ever supplied by a designer, update the three brand tokens in `tailwind.config.ts` only — every component reads from those tokens, nothing is hardcoded elsewhere.
+### ৩. ফ্লোটিং কার্ট ও কন্টাক্ট বাটন
+- **ফ্লোটিং কার্ট ব্যাজ:** `bottom-[92px] right-5 h-14 w-14 rounded-full bg-brand-light text-white shadow-sh3`.
+- **ব্যাক-টু-টপ বাটন:** `bottom-[164px] right-5 h-14 w-14 rounded-full bg-brand-light text-white shadow-sh3`.
+- **চ্যাট বাটন:** `bottom-5 right-5 h-14 w-14 rounded-full bg-brand-light text-white shadow-sh3`.
 
-## Icon System (Trust Strip / Categories)
+---
 
-- No emoji anywhere in these two sections — custom hand-drawn line icons only (`viewBox 0 0 24 24`, `stroke="currentColor"`, `stroke-width 1.6–1.7`, no fill except tiny accent dots).
-- **Category icons** (`lib/categoryData.ts` → `DEFAULT_CATEGORIES`): every icon uses `stroke="currentColor"` with **zero embedded colors** — the wrapping bubble (`text-brand-primary`) controls the color, so all ~30 category icons render in one consistent brand hue instead of the old mixed rainbow/gradient SVGs. New categories added by the store owner (via Supabase `vc_categories`) can still bring their own colored SVG/emoji — this rule only governs the shipped defaults.
-- **Trust strip icons** (`app/components/home/TrustStrip.tsx`): each icon sits in a soft tinted circle drawn from the existing token set only — `brand-primary`, `brand-accent`, `gold`, `success`, `info` — never an arbitrary hex. This gives visual variety without breaking brand cohesion.
-- **Surface treatment**: both sections use the frosted-glass family (`bg-white/70–80` + `backdrop-blur` + soft shadow) so the body's sky-blue gradient reads through, matching the navbar/search-dropdown pattern already defined above — rather than a flat opaque white block.
+## 🎨 ৬. আইকন সিস্টেম ও নো-ইমোজি পলিসি (Iconography)
+
+1. **🚫 নো-ইমোজি পলিসি:** ইউজার ইন্টারফেসে কাঁচা ইমোজি ব্যবহার নিষিদ্ধ। সব জায়গায় মিনিমাল, প্রফেশনাল হ্যান্ড-ড্রন লাইন SVG আইকন ব্যবহার করতে হবে।  
+   *(ব্যতিক্রম: শুধুমাত্র `OrderCard` মেটা ইনফো লাইনে সুস্পষ্টতার জন্য অনুমোদিত 📅 ও 👤 ইমোজি)*।
+2. **আইকন কালার স্ট্যান্ডার্ড:** আইকন, স্ট্যাটাস ব্যাজ ও হাইলাইটে কখনো গাঢ় নীল নয় — সর্বদা সিগনেচার স্কাই-ব্লু `text-brand-light` / `bg-brand-light` (`#44A7FC`) ব্যবহৃত হবে।
+3. **ক্যাটাগরি আইকন:** `lib/categoryData.ts`-এর প্রতিটি ডিফল্ট ক্যাটাগরি আইকন কাস্টম ভেক্টর SVG হিসেবে রেন্ডার হবে।
+
+---
+
+## 💰 ৭. প্রাইস ও ইউনিট ডিসপ্লে কনভেনশন (Price Formatting)
+
+1. **প্রাইস রেন্ডারিং:** পণ্যের মূল্য এবং যেকোনো হিসাব সবসময় ইংরেজি ডিজিট ও কমা ফরম্যাটে রেন্ডার হবে:  
+   `৳{price.toLocaleString('en-US')}` ➔ (যেমন: **৳1,250** বা **৳11,350**)।
+2. **পিস লেবেল:** 
+   - বাংলা মোডে: **"৩ পিছ"** বা **"১ পিছ"**।
+   - ইংরেজি মোডে: **"3 Pcs"** বা **"1 Pcs"**।
+3. **ডেলিভারি চার্জ:** ঢাকা সিটিতে **৳70**, ঢাকার বাইরে সারা বাংলাদেশে **৳120**।
+
+---
+
+## 🌓 ৮. শ্যাডো ও ট্রানজিশন টোকেনস (Shadows & Transitions)
+
+| টোকেন | সিএসএস ভ্যালু | ব্যবহার |
+| :--- | :--- | :--- |
+| `shadow-sh1` | `0 1px 4px rgba(0,0,0,.07)` | ইনপুট, ছোট বাটন ও সাবটল কার্ড। |
+| `shadow-sh2` | `0 4px 18px rgba(0,0,0,.10)` | প্রধান কার্ড, ন্যাভবার ও প্রাইমারি বাটন। |
+| `shadow-sh3` | `0 8px 36px rgba(0,0,0,.13)` | ফ্লোটিং বাটন, ড্রয়ার ও সেন্ট্রাল মডাল। |
+| `transition-brand` | `all 250ms cubic-bezier(.4,0,.2,1)` | সার্বজনীন ট্রানজিশন টাইমিং। |
+| `shimmer-sheen` | ৬-সেকেন্ডের মৃদু লাইট বিম অ্যানিমেশন | প্রধান অ্যাকশন বাটনসমূহ। |
