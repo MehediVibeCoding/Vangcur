@@ -4,7 +4,6 @@ import PostReceiveInfoModal from './checkout/PostReceiveInfoModal';
 import StockNotifyModal from './modals/StockNotifyModal';
 import BackInStockToast from './modals/BackInStockToast';
 import MembershipModal from './modals/MembershipModal';
-import OfferPopup from './modals/OfferPopup';
 import RecoveryToast from './modals/RecoveryToast';
 import QuickOrderModal from './cart/QuickOrderModal';
 import OrderRateLimitModal from './modals/OrderRateLimitModal';
@@ -19,7 +18,6 @@ export default function RareOverlays() {
       <StockNotifyModal />
       <BackInStockToast />
       <MembershipModal />
-      <OfferPopup />
       <RecoveryToast />
       <QuickOrderModal />
       <OrderRateLimitModal />
