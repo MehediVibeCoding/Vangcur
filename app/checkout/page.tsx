@@ -257,6 +257,16 @@ export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDirectQuickOrder, setIsDirectQuickOrder] = useState(false);
 
+  // ⚡ তৃতীয় ধাপে পৌঁছানো মাত্রই ওয়েটিং (status) পেইজটা prefetch করে রাখবে,
+  // যাতে "অর্ডার কনফার্ম করুন"-এ ক্লিক করার পর নেভিগেট করার সময় স্কেলেটনের
+  // জন্য অপেক্ষা করতে না হয় — পেইজটা আগে থেকেই ব্রাউজারে warm থাকবে।
+  useEffect(() => {
+    if (step === 3) {
+      router.prefetch('/checkout/status');
+    }
+  }, [step, router]);
+
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [dist, setDist] = useState('');
@@ -805,6 +815,7 @@ export default function CheckoutPage() {
     }
     confirmAnimStartRef.current = Date.now();
     setConfirmAnim('loading');
+    router.prefetch('/checkout/status');
     submitOrderNow();
   };
 
@@ -908,7 +919,8 @@ export default function CheckoutPage() {
         }
       }
 
-      // 🚚 নূন্যতম ২.৬ সেকেন্ড ট্রাক-অ্যানিমেশন শেষ হওয়া পর্যন্ত অপেক্ষা করে তারপর সাকসেস দেখিয়ে নেভিগেট করবে
+      // ⏳ ন্যূনতম কিছুটা সময় (৫০০ms) লোডিং স্টেট দেখিয়ে তারপর সাকসেস দেখিয়ে নেভিগেট করবে —
+      // status রুট আগে থেকেই prefetch করা আছে, তাই এই push প্রায় সাথে সাথেই হবে
       const elapsed = Date.now() - confirmAnimStartRef.current;
       const remaining = Math.max(0, CONFIRM_ANIM_MIN_MS - elapsed);
       window.setTimeout(() => {
