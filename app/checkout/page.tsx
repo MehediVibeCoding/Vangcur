@@ -217,54 +217,14 @@ function IconArrowLeft() {
   );
 }
 
-// 🚚 কনফার্ম-অর্ডার বাটনের ডেলিভারি-ট্রাক অ্যানিমেশনের জন্য আইকনসমূহ (রেফারেন্স ভিডিও থেকে হুবহু রঙ ও শেপ)
-function ConfirmTruckIcon() {
+// ⏳ কনফার্ম-অর্ডার বাটনের সিম্পল লোডিং ডট (ব্র্যান্ড কালারেই, স্পিনারের পাশে অ্যানিমেটেড "..." )
+function LoadingDots() {
   return (
-    <svg width="64" height="37" viewBox="0 0 70 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
-      <defs>
-        <linearGradient id="vc-cargo-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#E1E7F5" />
-        </linearGradient>
-      </defs>
-
-      {/* হেডলাইটের আলোকরশ্মি (ট্রাকের সামনে, পিছনে আঁকা) */}
-      <g className="animate-truck-headlight">
-        <path d="M60 15 L96 6 L96 15 L60 17 Z" fill="#FFC670" opacity="0.7" />
-        <path d="M60 23 L96 34 L96 25 L60 23 Z" fill="#FFC670" opacity="0.7" />
-      </g>
-
-      {/* পিছনের দরজার ফ্ল্যাপ (লোডিং-এর সময় খুলবে, বন্ধ হবে) */}
-      <g style={{ transformOrigin: '2px 20px' }} className="animate-door-flap-top">
-        <line x1="2" y1="20" x2="2" y2="6" stroke="#F4F6FB" strokeWidth="1.6" strokeLinecap="round" />
-      </g>
-      <g style={{ transformOrigin: '2px 20px' }} className="animate-door-flap-bottom">
-        <line x1="2" y1="20" x2="2" y2="34" stroke="#F4F6FB" strokeWidth="1.6" strokeLinecap="round" />
-      </g>
-
-      {/* কার্গো বক্স */}
-      <rect x="2" y="6" width="32" height="28" rx="5" fill="url(#vc-cargo-grad)" stroke="#B9C4DA" strokeWidth="0.8" />
-
-      {/* ক্যাব (বোল্ড "D" শেপ, লাল) */}
-      <path d="M34 6 H46 A14 14 0 0 1 60 20 A14 14 0 0 1 46 34 H34 Z" fill="#FF4A43" stroke="#E23B35" strokeWidth="0.5" />
-      {/* উইন্ডো কাটআউট */}
-      <path d="M34 13 H43 A7 7 0 0 1 50 20 A7 7 0 0 1 43 27 H34 Z" fill="#171A27" />
-      <line x1="37" y1="15.5" x2="47" y2="20" stroke="#333A52" strokeWidth="1.4" opacity="0.7" strokeLinecap="round" />
-      <line x1="37" y1="20.5" x2="45" y2="24" stroke="#333A52" strokeWidth="1.2" opacity="0.5" strokeLinecap="round" />
-
-      {/* অ্যাম্বার অ্যাক্সেন্ট লাইট */}
-      <rect x="58.5" y="11.5" width="3.2" height="5" rx="1.5" fill="#FFC670" />
-      <rect x="58.5" y="23.5" width="3.2" height="5" rx="1.5" fill="#FFC670" />
-    </svg>
-  );
-}
-
-function ConfirmPackageIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="2" width="20" height="20" rx="4" fill="#E0940D" />
-      <rect x="2" y="10.5" width="20" height="3" fill="#B8760A" />
-    </svg>
+    <span className="inline-flex items-center gap-[3px]">
+      <span className="h-1.5 w-1.5 rounded-full bg-current animate-dot-bounce [animation-delay:0ms]" />
+      <span className="h-1.5 w-1.5 rounded-full bg-current animate-dot-bounce [animation-delay:150ms]" />
+      <span className="h-1.5 w-1.5 rounded-full bg-current animate-dot-bounce [animation-delay:300ms]" />
+    </span>
   );
 }
 
@@ -331,10 +291,10 @@ export default function CheckoutPage() {
   const confirmLockRef = useRef(false);
   const fingerprintIdRef = useRef('');
 
-  // 🚚 কনফার্ম-অর্ডার বাটনের ডেলিভারি-ট্রাক অ্যানিমেশন স্টেট
-  const [confirmAnim, setConfirmAnim] = useState<'idle' | 'driving' | 'success'>('idle');
+  // ⏳ কনফার্ম-অর্ডার বাটনের সিম্পল লোডিং স্টেট (idle → loading → success)
+  const [confirmAnim, setConfirmAnim] = useState<'idle' | 'loading' | 'success'>('idle');
   const confirmAnimStartRef = useRef(0);
-  const CONFIRM_ANIM_MIN_MS = 3400;
+  const CONFIRM_ANIM_MIN_MS = 500;
 
   const [showPreConfirm, setShowPreConfirm] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -844,7 +804,7 @@ export default function CheckoutPage() {
       return;
     }
     confirmAnimStartRef.current = Date.now();
-    setConfirmAnim('driving');
+    setConfirmAnim('loading');
     submitOrderNow();
   };
 
@@ -1688,51 +1648,19 @@ export default function CheckoutPage() {
                   whileTap={confirmAnim === 'idle' && !submitting ? { scale: 0.97 } : undefined}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
-                  {/* ক্লিক করা মাত্র বাটন স্মুথভাবে কালো হয়ে যাবে (রেফারেন্সের মতো) */}
-                  <span
-                    className={`pointer-events-none absolute inset-0 rounded-full bg-[#171A27] transition-opacity duration-500 ease-out ${
-                      confirmAnim !== 'idle' ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-
-                  {/* রোডের ড্যাশড লাইন */}
-                  {confirmAnim === 'driving' && (
-                    <span
-                      className="pointer-events-none absolute left-2 right-2 top-1/2 h-[2.5px] -translate-y-1/2 animate-road-dash"
-                      style={{
-                        backgroundImage:
-                          'repeating-linear-gradient(90deg, #E1E7F5 0 11px, transparent 11px 24px)',
-                      }}
-                    />
-                  )}
-
-                  {/* প্যাকেজ */}
-                  {confirmAnim === 'driving' && (
-                    <span className="pointer-events-none absolute bottom-[7px] right-[158px] animate-package-drop">
-                      <ConfirmPackageIcon />
-                    </span>
-                  )}
-
-                  {/* ট্রাক */}
-                  {confirmAnim === 'driving' && (
-                    <span className="pointer-events-none absolute bottom-[5px] animate-truck-drive drop-shadow-[0_3px_6px_rgba(0,0,0,0.25)]">
-                      <ConfirmTruckIcon />
-                    </span>
-                  )}
-
-                  {/* টেক্সট / স্পিনার / সাকসেস */}
-                  <span
-                    className={`relative inline-flex items-center justify-center gap-2 transition-opacity duration-300 ${
-                      confirmAnim === 'driving' ? 'opacity-0' : 'opacity-100'
-                    }`}
-                  >
+                  {/* টেক্সট / স্পিনার / সাকসেস — বাটনের নিজস্ব ব্র্যান্ড কালার (নীল গ্র্যাডিয়েন্ট) অপরিবর্তিত থাকবে */}
+                  <span className="relative inline-flex items-center justify-center gap-2">
                     {confirmAnim === 'success' ? (
                       <>
                         <IconCheck />
                         {lang === 'en' ? 'Order Placed!' : 'অর্ডার সম্পন্ন হয়েছে!'}
                       </>
-                    ) : submitting ? (
-                      <><IconSpinner /> {t('প্রক্রিয়া হচ্ছে...')}</>
+                    ) : confirmAnim === 'loading' || submitting ? (
+                      <>
+                        <IconSpinner />
+                        {t('প্রক্রিয়া হচ্ছে')}
+                        <LoadingDots />
+                      </>
                     ) : (
                       t('অর্ডার কনফার্ম করুন')
                     )}
