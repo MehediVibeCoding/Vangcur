@@ -370,6 +370,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
     try {
       sessionStorage.removeItem('vc_quick_order_items');
+      localStorage.removeItem('vc_quick_order_items');
     } catch {
       // ignore
     }
