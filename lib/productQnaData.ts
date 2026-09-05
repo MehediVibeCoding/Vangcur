@@ -11,53 +11,44 @@ const MAX_ANSWER_LEN = 500;
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 /**
- * 🛡️ নিরাপদ সেশন-ভেরিফায়েড অ্যাডমিন ও মডারেটর রোল ভ্যালিডেটর
+ * 🛡️ নিরাপদ সার্ভার সেশন-ভেরিফায়েড অ্যাডমিন ও মডারেটর রোল ভ্যালিডেটর
+ * কোনো লোকালস্টোরেজ বা ক্লায়েন্ট ডাটায় বিশ্বাস করা হবে না।
  */
 export async function checkIsUserAdmin(
   supabase: SupabaseClient,
   userId?: string | null,
 ): Promise<boolean> {
-  let targetId = userId;
-  let userEmail: string | null = null;
-
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!targetId) targetId = sessionData?.session?.user?.id || null;
-    userEmail = sessionData?.session?.user?.email || null;
-  } catch {
-    // fallback
-  }
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return false;
 
-  if (!userEmail && typeof window !== 'undefined') {
-    try {
-      const localUser = JSON.parse(localStorage.getItem('vc_user') || '{}');
-      if (localUser?.email) userEmail = localUser.email;
-      if (!targetId && localUser?.id) targetId = localUser.id;
-    } catch {
-      // ignore
+    // যদি নির্দিষ্ট কোনো userId দিয়ে ভেরিফাই করতে বলা হয় এবং বর্তমান সেশন আইডির সাথে না মিলে
+    if (userId && user.id !== userId) {
+      return false;
     }
-  }
 
-  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (লগইন করা মডারেটর ১০০% প্রিভিলেজ পাবে)
-  if (userEmail && userEmail.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
-    return true;
-  }
+    // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (শুধুমাত্র সার্ভার-ভেরিফায়েড অথেন্টিকেটেড ইমেইল)
+    const verifiedEmail = (user.email || '').toLowerCase().trim();
+    if (verifiedEmail === MODERATOR_EMAIL.toLowerCase()) {
+      return true;
+    }
 
-  if (!targetId) return false;
-
-  try {
-    const { data, error } = await supabase
+    // ২. প্রোফাইল টেবিল থেকে অ্যাডমিন বা অনুমোদিত রোল যাচাই
+    const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', targetId)
+      .select('is_admin, role')
+      .eq('id', user.id)
       .maybeSingle();
 
-    if (error || !data) return false;
+    if (profileErr || !profile) return false;
 
-    if (data.is_admin === true) return true;
-    if (data.role && ['admin', 'super_admin', 'moderator'].includes(data.role)) return true;
+    if (profile.is_admin === true) return true;
+    if (profile.role && ['admin', 'super_admin', 'moderator'].includes(profile.role)) {
+      return true;
+    }
     return false;
-  } catch {
+  } catch (e) {
+    logWarn('[QnA] checkIsUserAdmin exception:', e);
     return false;
   }
 }
@@ -77,10 +68,15 @@ export async function fetchProductQuestions(
 
     const questionIds = questions.map((q) => q.id);
 
-    const { data: answers } = await supabase
+    const { data: answers, error: aErr } = await supabase
       .from('product_question_answers')
       .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
-      .in('question_id', questionIds);
+      .in('question_id', questionIds)
+      .order('created_at', { ascending: true });
+
+    if (aErr) {
+      logWarn('[QnA] fetch answers error:', aErr);
+    }
 
     const answerMap: Record<string, ProductQuestionAnswer> = {};
     if (answers) {
@@ -122,8 +118,8 @@ export async function submitProductQuestion(
   }
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
+    const { data: { user } } = await supabase.auth.getUser();
+    const liveUserId = user?.id || null;
 
     const { data, error } = await supabase
       .from('product_questions')
@@ -168,21 +164,26 @@ export async function submitProductAnswer(
   }
 
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const liveUserId = sessionData?.session?.user?.id || payload.userId || null;
+    const { data: { user } } = await supabase.auth.getUser();
+    const liveUserId = user?.id || null;
 
-    // 🛡️ স্পুফিং রোধ: শুধুমাত্র প্রকৃত সেশন-ভেরিফায়েড মডারেটর/অ্যাডমিনই "is_admin: true" সেট করতে পারবে
+    // 🛡️ স্পুফিং রোধ: শুধুমাত্র প্রকৃত সার্ভার সেশন-ভেরিফায়েড মডারেটর/অ্যাডমিনই "is_admin: true" পেতে পারবে
     let isPrivilegedAdminOrMod = false;
     if (liveUserId) {
       isPrivilegedAdminOrMod = await checkIsUserAdmin(supabase, liveUserId);
     }
+
+    // অ্যাডমিন ছাড়া অন্য কেউ "Vangcur টিম" ব্র্যান্ড নেম স্পুফ করতে পারবে না
+    const finalAuthorName = isPrivilegedAdminOrMod
+      ? 'Vangcur টিম'
+      : (name && name !== 'Vangcur টিম' ? name : 'কাস্টমার');
 
     const { data, error } = await supabase
       .from('product_question_answers')
       .insert({
         question_id: payload.questionId,
         user_id: liveUserId,
-        author_name: isPrivilegedAdminOrMod ? 'Vangcur টিম' : (name || 'ইউজার'),
+        author_name: finalAuthorName,
         is_admin: isPrivilegedAdminOrMod,
         answer: aText,
       })
