@@ -30,17 +30,21 @@
     -webkit-touch-callout: none;
   }
 
-  /* ইনপুট, টেক্সটএরিয়া ও ড্রপডাউনের শার্প চারকোনা আউটলাইন স্থায়ীভাবে বন্ধ */
+  /* মাউস/টাচে শার্প চারকোনা আউটলাইন বন্ধ, কিন্তু কীবোর্ড অ্যাক্সেসিবিলিটির জন্য আধুনিক স্কাই-ব্লু রিং */
   input, textarea, select {
     outline: none !important;
     -webkit-appearance: none;
   }
-  input:focus, textarea:focus, select:focus,
-  input:focus-visible, textarea:focus-visible, select:focus-visible {
+  input:focus, textarea:focus, select:focus {
     outline: none !important;
   }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #44A7FC !important;
+    border-color: #44A7FC !important;
+  }
 
-  /* শুধুমাত্র বাটন ও লিংকের জন্য সেফ কীবোর্ড অ্যাক্সেসিবিলিটি রিং */
+  /* বাটন ও লিংকের জন্য সেফ কীবোর্ড অ্যাক্সেসিবিলিটি রিং */
   button:focus-visible,
   a:focus-visible,
   [role='button']:focus-visible {
@@ -437,11 +441,6 @@ html {
 
 /* ══════════════════════════════════════════════════════════════════════
    🌙 ডার্ক মোড সিস্টেম — Midnight Slate & Charcoal Navy
-   lib/store/themeStore.ts, <html> ট্যাগে .dark ক্লাস টগল হলেই পুরো সাইট
-   এই সেকশনের রুলগুলোর মাধ্যমে স্বয়ংক্রিয়ভাবে ডার্ক মোডে রূপান্তরিত হয়।
-   কোনো প্রোডাক্ট/চেকআউট/লজিক ফাইলে হাত দেওয়া হয়নি — শুধু গ্লোবাল টোকেন
-   ক্লাসগুলো (bg-white, text-ink, border-border-base, navbar-glass ইত্যাদি)
-   .dark স্কোপে ওভাররাইড করা হয়েছে।
    ══════════════════════════════════════════════════════════════════════ */
 
 html.dark {
@@ -494,7 +493,7 @@ body,
 .dark .hover\:bg-surface-muted:hover { background-color: #182339; }
 .dark .hover\:bg-border-base:hover { background-color: #22324D; }
 
-/* bg-white/N — সাদা ফ্রস্টেড কার্ড → ডার্ক ফ্রস্টেড কার্ড (একই অপাসিটি বজায় রেখে) */
+/* bg-white/N — সাদা ফ্রস্টেড কার্ড → ডার্ক ফ্রস্টেড কার্ড */
 .dark .bg-white\/15 { background-color: rgba(19, 29, 49, 0.15); }
 .dark .bg-white\/20 { background-color: rgba(19, 29, 49, 0.20); }
 .dark .bg-white\/25 { background-color: rgba(19, 29, 49, 0.25); }
@@ -583,7 +582,7 @@ body,
   background-color: rgba(68, 167, 252, 0.75);
 }
 
-/* থিম টগল বাটনের আইকন-সুইচ অ্যানিমেশন (Navbar ও Account পেজে ব্যবহৃত) */
+/* থিম টগল বাটনের আইকন-সুইচ অ্যানিমেশন */
 .theme-toggle-icon {
   transition: transform 0.45s cubic-bezier(.4,0,.2,1), opacity 0.3s ease;
 }
