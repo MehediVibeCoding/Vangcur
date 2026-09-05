@@ -223,7 +223,17 @@ export default function StatusClient() {
 
   useEffect(() => { orderRef.current = order; }, [order]);
 
+  const initRanRef = useRef(false);
+
   useEffect(() => {
+    // ⚠️ React Strict Mode (dev) প্রতিটা effect ইচ্ছাকৃতভাবে দুইবার চালায়।
+    // নিচের sessionStorage.removeItem() একটা non-idempotent সাইড-ইফেক্ট —
+    // দ্বিতীয়বার রান হলে flag আগেই মুছে যাওয়ায় ভুলভাবে redirect হয়ে যেত,
+    // যেটাই পেইজ বারবার আসা-যাওয়া/ফ্ল্যাশ করার আসল কারণ ছিল। এই গার্ডটা
+    // নিশ্চিত করে যে ভেতরের লজিকটা (production-এর মতোই) ঠিক একবারই চলে।
+    if (initRanRef.current) return;
+    initRanRef.current = true;
+
     const pending = readPendingOrder();
     if (!pending) {
       router.replace('/');
@@ -324,7 +334,7 @@ export default function StatusClient() {
       <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10">
         <DesktopSideDecor />
 
-        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-section-reveal flex flex-col justify-center sm:justify-start">
+        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
 
           {isPending && (
