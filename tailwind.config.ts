@@ -92,9 +92,9 @@ const config: Config = {
           '50%': { transform: 'scaleX(1.06)' },
           '75%': { transform: 'scaleX(.97)' },
         },
-        dotBounce: {
-          '0%, 80%, 100%': { transform: 'translateY(0)', opacity: '.4' },
-          '40%': { transform: 'translateY(-3px)', opacity: '1' },
+        softFadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
         },
       },
       animation: {
@@ -104,7 +104,7 @@ const config: Config = {
         heartbeat: 'heartbeat .45s ease forwards',
         ripple: 'ripple .55s linear forwards',
         'liquid-wobble': 'liquidWobble .65s ease-in-out',
-        'dot-bounce': 'dotBounce 1.1s ease-in-out infinite',
+        'soft-fade-in': 'softFadeIn .35s ease-out both',
       },
     },
   },
