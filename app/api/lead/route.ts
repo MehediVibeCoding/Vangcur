@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { logWarn } from '@/lib/logger';
 
-// 🛡️ স্প্রেডশিট ফর্মুলা ইনজেকশন ফিল্টার (CSV / Sheets Formula Injection Sanitizer)
-function sanitizeSpreadsheetValue(val: unknown, maxLen = 300): string {
+// 🛡️ স্প্রেডশিট ফর্মুলা ইনজেকশন ফিল্টার ও কঠোর সাইজ গার্ড
+function sanitizeSpreadsheetValue(val: unknown, maxLen = 100): string {
   if (val === null || val === undefined) return '';
-  let clean = String(val).trim().replace(/[\t\r\n]/g, ' ');
-  
-  // লেখার শুরুতে =, +, -, @ থাকলে তা স্প্রেডশিট ফর্মুলা রান করার চেষ্টা করে — এগুলো শুরু থেকে মুছে ফেলা
-  while (clean.length > 0 && /^[=+\-@]/.test(clean)) {
-    clean = clean.slice(1).trim();
-  }
-  return clean.slice(0, maxLen);
+  // ১. মেমোরি সুরক্ষায় শুরুতেই ইনপুটকে কঠোর লেন্থে কেটে নেওয়া (যাতে বড় সাইজের পেলোড দিয়ে CPU জ্যাম না করা যায়)
+  const clamped = String(val).trim().slice(0, maxLen).replace(/[\t\r\n]/g, ' ');
+  // ২. লেখার শুরুতে থাকা স্প্রেডশিট ফর্মুলা ক্যারেক্টার (=, +, -, @) লুপ ছাড়া একবারে মুছে ফেলা
+  return clamped.replace(/^[=+\-@]+/, '').trim();
 }
 
 // 🛡️ সার্ভারলেস ইনস্ট্যান্স আইপি রেট লিমিটার (প্রতি ১০ মিনিটে সর্বোচ্চ ২০টি রিকোয়েস্ট)
@@ -79,10 +76,10 @@ export async function POST(req: NextRequest) {
       const safeStockPayload = {
         action: 'addStockRequest',
         date: new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }),
-        productName: sanitizeSpreadsheetValue(payload.productName, 150),
-        customerName: sanitizeSpreadsheetValue(payload.customerName, 80),
+        productName: sanitizeSpreadsheetValue(payload.productName, 80),
+        customerName: sanitizeSpreadsheetValue(payload.customerName, 30), // নাম কঠোরভাবে সর্বোচ্চ ৩০ অক্ষরে লক
         mobileNumber: phoneStr,
-        productId: sanitizeSpreadsheetValue(payload.productId, 50),
+        productId: sanitizeSpreadsheetValue(payload.productId, 30),
       };
 
       // 🚀 Next.js 15 Native Background Task (after)
@@ -113,14 +110,14 @@ export async function POST(req: NextRequest) {
 
     const safeLeadPayload = {
       action: 'addLead',
-      leadId: sanitizeSpreadsheetValue(payload.leadId, 50),
-      date: sanitizeSpreadsheetValue(payload.date || new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }), 50),
-      name: sanitizeSpreadsheetValue(payload.name, 80),
+      leadId: sanitizeSpreadsheetValue(payload.leadId, 35),
+      date: sanitizeSpreadsheetValue(payload.date || new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' }), 40),
+      name: sanitizeSpreadsheetValue(payload.name, 30), // নাম কঠোরভাবে সর্বোচ্চ ৩০ অক্ষরে লক
       phone: phoneStr,
-      dist: sanitizeSpreadsheetValue(payload.dist, 50),
-      addr: sanitizeSpreadsheetValue(payload.addr, 250),
-      email: sanitizeSpreadsheetValue(payload.email, 120),
-      items: sanitizeSpreadsheetValue(payload.items, 400),
+      dist: sanitizeSpreadsheetValue(payload.dist, 30),
+      addr: sanitizeSpreadsheetValue(payload.addr, 200),
+      email: sanitizeSpreadsheetValue(payload.email, 100),
+      items: sanitizeSpreadsheetValue(payload.items, 300),
       total: Number(payload.total) || 0,
     };
 
