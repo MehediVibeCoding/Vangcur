@@ -313,10 +313,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   if (insResult.error || !insResult.data) {
     logError('[checkout] order insert failed:', insResult.error?.message, '| Code:', insResult.error?.code);
     
-    if (isPrivilegedUser && insResult.error) {
-      return fail(`[DB Error]: ${insResult.error.message} (Code: ${insResult.error.code})`);
-    }
-
     if (insResult.error?.code === '23505') {
       return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
     }
