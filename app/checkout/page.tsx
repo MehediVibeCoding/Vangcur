@@ -246,15 +246,11 @@ export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDirectQuickOrder, setIsDirectQuickOrder] = useState(false);
 
-  // ⚡ তৃতীয় ধাপে পৌঁছানো মাত্রই ওয়েটিং (status) পেইজটা prefetch করে রাখবে,
-  // যাতে "অর্ডার কনফার্ম করুন"-এ ক্লিক করার পর নেভিগেট করার সময় স্কেলেটনের
-  // জন্য অপেক্ষা করতে না হয় — পেইজটা আগে থেকেই ব্রাউজারে warm থাকবে।
   useEffect(() => {
     if (step === 3) {
       router.prefetch('/checkout/status');
     }
   }, [step, router]);
-
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -290,7 +286,6 @@ export default function CheckoutPage() {
   const confirmLockRef = useRef(false);
   const fingerprintIdRef = useRef('');
 
-  // ⏳ কনফার্ম-অর্ডার বাটনের সিম্পল লোডিং স্টেট (idle → loading → success)
   const [confirmAnim, setConfirmAnim] = useState<'idle' | 'loading' | 'success'>('idle');
   const confirmAnimStartRef = useRef(0);
   const CONFIRM_ANIM_MIN_MS = 500;
@@ -700,8 +695,9 @@ export default function CheckoutPage() {
       return;
     }
 
+    // 🛡️ শুধুমাত্র প্রকৃত লগইন সেশন থেকে আসা অথেন্টিকেটেড ইমেইল যাচাই হবে
     const user = useAuthStore.getState().currentUser;
-    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase() || email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
 
     if (isDirectQuickOrder && couponInput.trim() && !appliedCoupon) {
       setStep1BtnStatus('verifying');
@@ -811,8 +807,9 @@ export default function CheckoutPage() {
   const submitOrderNow = useCallback(async () => {
     if (confirmLockRef.current) return;
 
+    // 🛡️ শুধুমাত্র প্রকৃত লগইন সেশন থেকে আসা অথেন্টিকেটেড ইমেইল যাচাই হবে
     const user = useAuthStore.getState().currentUser;
-    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase() || email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
 
     if (!isMod && total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
@@ -908,8 +905,6 @@ export default function CheckoutPage() {
         }
       }
 
-      // ⏳ ন্যূনতম কিছুটা সময় (৫০০ms) লোডিং স্টেট দেখিয়ে তারপর সাকসেস দেখিয়ে নেভিগেট করবে —
-      // status রুট আগে থেকেই prefetch করা আছে, তাই এই push প্রায় সাথে সাথেই হবে
       const elapsed = Date.now() - confirmAnimStartRef.current;
       const remaining = Math.max(0, CONFIRM_ANIM_MIN_MS - elapsed);
       window.setTimeout(() => {
@@ -1343,7 +1338,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setShowBreakdown((v) => !v)}
-                          className="inline font-bold text-brand-light transition-colors hover:text-brand-light-hover ml-1"
+                          className="inline font-bold text-brand-light transition-colors hover:text-brand-light-hover ml-1 cursor-pointer"
                         >
                           View Breakdown {showBreakdown ? '↑' : '↓'}
                         </button>
@@ -1355,7 +1350,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => setShowBreakdown((v) => !v)}
-                          className="inline font-bold text-brand-light transition-colors hover:text-brand-light-hover ml-1"
+                          className="inline font-bold text-brand-light transition-colors hover:text-brand-light-hover ml-1 cursor-pointer"
                         >
                           বিস্তারিত হিসাব {showBreakdown ? '↑' : '↓'}
                         </button>
@@ -1411,7 +1406,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <button
-                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-2.5 py-2 min-[400px]:px-4 min-[400px]:py-2 font-body text-xs font-bold text-brand-light transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95 shadow-xs"
+                      className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-2.5 py-2 min-[400px]:px-4 min-[400px]:py-2 font-body text-xs font-bold text-brand-light transition-colors duration-200 hover:bg-brand-light hover:text-white active:scale-95 shadow-xs cursor-pointer"
                       onClick={copyBkash}
                       style={copyLabel !== 'Copy' ? { background: '#10B981', color: '#fff', borderColor: '#10B981' } : undefined}
                       title={copyLabel === 'Copy' ? t('কপি করুন') : t('কপি হয়েছে!')}
@@ -1425,7 +1420,7 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                   
-                  <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/50 bg-brand-bg/20 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:bg-brand-bg/35 active:scale-98" onClick={() => setQrOpen((v) => !v)}>
+                  <button className="mt-2 flex items-center justify-center gap-2 rounded-[12px] border border-dashed border-brand-light/50 bg-brand-bg/20 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-light transition-colors hover:bg-brand-bg/35 active:scale-98 cursor-pointer" onClick={() => setQrOpen((v) => !v)}>
                     <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="3" height="3" /></svg>
                     <span>{qrOpen ? t('QR কোড বন্ধ করুন') : t('QR কোড দিয়ে পেমেন্ট করুন')}</span>
                     <IconChevronDown open={qrOpen} />
@@ -1493,7 +1488,7 @@ export default function CheckoutPage() {
 
               <div className="pt-2">
                 <motion.button
-                  className={`${btnNextClass} flex items-center justify-center gap-2`}
+                  className={`${btnNextClass} flex items-center justify-center gap-2 cursor-pointer`}
                   onClick={goToStep3}
                   whileTap={{ scale: 0.97 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
@@ -1643,20 +1638,18 @@ export default function CheckoutPage() {
 
               <div className="pt-3">
                 <motion.button
-                  className={`${btnNextClass} relative flex items-center justify-center gap-2 overflow-hidden`}
+                  className={`${btnNextClass} relative flex items-center justify-center gap-2 overflow-hidden cursor-pointer`}
                   onClick={handleConfirmClick}
                   disabled={submitting || confirmAnim !== 'idle'}
                   whileTap={confirmAnim === 'idle' && !submitting ? { scale: 0.97 } : undefined}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
-                  {/* অর্ডার নিশ্চিত হলে সবুজ (success) কালার স্মুথভাবে ফেড-ইন হবে */}
                   <span
                     className={`pointer-events-none absolute inset-0 rounded-full bg-success transition-opacity duration-500 ease-out ${
                       confirmAnim === 'success' ? 'opacity-100' : 'opacity-0'
                     }`}
                   />
 
-                  {/* টেক্সট / স্পিনার / সাকসেস — লোডিং অবস্থায় ব্র্যান্ড কালার (নীল গ্র্যাডিয়েন্ট) অপরিবর্তিত থাকবে */}
                   <span className="relative inline-flex items-center justify-center gap-2">
                     {confirmAnim === 'success' ? (
                       <>
