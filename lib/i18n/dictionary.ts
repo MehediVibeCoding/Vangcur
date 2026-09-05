@@ -138,7 +138,7 @@ export const staticDictionary: Record<string, string> = {
   'বাকি বিল (Cash on Delivery)': 'Remaining Bill (Cash on Delivery)',
   'ডেলিভারি লেবেল (Shipping Label)': 'Delivery Label (Shipping Label)',
   'অর্ডার কনফার্ম করতে শর্তাবলী মেনে নেওয়া আবশ্যক': 'You must accept the terms to confirm the order',
-  'প্রক্রিয়া হচ্ছে...': 'Processing...',
+  'প্রক্রিয়া হচ্ছে': 'Processing',
   'অর্ডার কনফার্ম করুন': 'Confirm Order',
 
   // Product Grid, Detail & Stock
