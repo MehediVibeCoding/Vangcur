@@ -434,3 +434,156 @@ html {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   🌙 ডার্ক মোড সিস্টেম — Midnight Slate & Charcoal Navy
+   lib/store/themeStore.ts, <html> ট্যাগে .dark ক্লাস টগল হলেই পুরো সাইট
+   এই সেকশনের রুলগুলোর মাধ্যমে স্বয়ংক্রিয়ভাবে ডার্ক মোডে রূপান্তরিত হয়।
+   কোনো প্রোডাক্ট/চেকআউট/লজিক ফাইলে হাত দেওয়া হয়নি — শুধু গ্লোবাল টোকেন
+   ক্লাসগুলো (bg-white, text-ink, border-border-base, navbar-glass ইত্যাদি)
+   .dark স্কোপে ওভাররাইড করা হয়েছে।
+   ══════════════════════════════════════════════════════════════════════ */
+
+html.dark {
+  scrollbar-color: rgba(68, 167, 252, 0.5) transparent;
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #0B111E;
+  color: #F8FAFC;
+}
+
+/* মসৃণ থিম-ট্রানজিশন (ফ্লিকার-ফ্রি ফিল) */
+html,
+body,
+.navbar-glass,
+.search-dropdown-glass,
+.bg-white,
+.bg-surface-muted,
+.bg-brand-bg,
+.border-border-base {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+}
+
+/* ফ্রস্টেড গ্লাস ন্যাভবার ও সার্চ ড্রপডাউন — ডার্ক ভ্যারিয়েন্ট */
+.dark .navbar-glass {
+  background-color: rgba(19, 29, 49, 0.82) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .search-dropdown-glass {
+  background-color: rgba(19, 29, 49, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dark .navbar-glass { background-color: rgba(19, 29, 49, 0.97) !important; }
+  .dark .search-dropdown-glass { background-color: rgba(19, 29, 49, 0.98) !important; }
+}
+
+/* বেস (নন-অপাসিটি) টোকেন ওভাররাইড */
+.dark .bg-white { background-color: #131D31; }
+.dark .text-ink { color: #F8FAFC; }
+.dark .text-muted { color: #94A3B8; }
+.dark .border-border-base { border-color: #22324D; }
+.dark .bg-surface-muted { background-color: #182339; }
+.dark .bg-brand-bg { background-color: #0F172A; }
+.dark .text-slate-600 { color: #94A3B8; }
+.dark .text-slate-700 { color: #CBD5E1; }
+.dark .text-slate-800 { color: #E2E8F0; }
+.dark .border-blue-200\/80 { border-color: rgba(34, 50, 77, 0.6); }
+.dark .hover\:bg-surface-muted:hover { background-color: #182339; }
+.dark .hover\:bg-border-base:hover { background-color: #22324D; }
+
+/* bg-white/N — সাদা ফ্রস্টেড কার্ড → ডার্ক ফ্রস্টেড কার্ড (একই অপাসিটি বজায় রেখে) */
+.dark .bg-white\/15 { background-color: rgba(19, 29, 49, 0.15); }
+.dark .bg-white\/20 { background-color: rgba(19, 29, 49, 0.20); }
+.dark .bg-white\/25 { background-color: rgba(19, 29, 49, 0.25); }
+.dark .bg-white\/30 { background-color: rgba(19, 29, 49, 0.30); }
+.dark .bg-white\/35 { background-color: rgba(19, 29, 49, 0.35); }
+.dark .bg-white\/40 { background-color: rgba(19, 29, 49, 0.40); }
+.dark .bg-white\/45 { background-color: rgba(19, 29, 49, 0.45); }
+.dark .bg-white\/50 { background-color: rgba(19, 29, 49, 0.50); }
+.dark .bg-white\/60 { background-color: rgba(19, 29, 49, 0.60); }
+.dark .bg-white\/70 { background-color: rgba(19, 29, 49, 0.70); }
+.dark .bg-white\/75 { background-color: rgba(19, 29, 49, 0.75); }
+.dark .bg-white\/80 { background-color: rgba(19, 29, 49, 0.80); }
+.dark .bg-white\/85 { background-color: rgba(19, 29, 49, 0.85); }
+.dark .bg-white\/90 { background-color: rgba(19, 29, 49, 0.90); }
+.dark .bg-white\/95 { background-color: rgba(19, 29, 49, 0.95); }
+
+/* border-white/N — হালকা হেয়ারলাইন বর্ডার */
+.dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/25 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/30 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/40 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/50 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/60 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/70 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/80 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/85 { border-color: rgba(255, 255, 255, 0.10); }
+.dark .border-white\/90 { border-color: rgba(255, 255, 255, 0.10); }
+
+/* bg-brand-bg/N — হালকা নীল টিন্ট → ডার্ক নেভি টিন্ট */
+.dark .bg-brand-bg\/10 { background-color: rgba(15, 23, 42, 0.10); }
+.dark .bg-brand-bg\/20 { background-color: rgba(15, 23, 42, 0.20); }
+.dark .bg-brand-bg\/25 { background-color: rgba(15, 23, 42, 0.25); }
+.dark .bg-brand-bg\/30 { background-color: rgba(15, 23, 42, 0.30); }
+.dark .bg-brand-bg\/35 { background-color: rgba(15, 23, 42, 0.35); }
+.dark .bg-brand-bg\/40 { background-color: rgba(15, 23, 42, 0.40); }
+.dark .bg-brand-bg\/50 { background-color: rgba(15, 23, 42, 0.50); }
+.dark .bg-brand-bg\/55 { background-color: rgba(15, 23, 42, 0.55); }
+.dark .bg-brand-bg\/60 { background-color: rgba(15, 23, 42, 0.60); }
+.dark .bg-brand-bg\/70 { background-color: rgba(15, 23, 42, 0.70); }
+
+/* text-ink/N — সেকেন্ডারি টেক্সট অপাসিটি */
+.dark .text-ink\/10 { color: rgba(248, 250, 252, 0.10); }
+.dark .text-ink\/60 { color: rgba(248, 250, 252, 0.60); }
+.dark .text-ink\/75 { color: rgba(248, 250, 252, 0.75); }
+.dark .text-ink\/80 { color: rgba(248, 250, 252, 0.80); }
+.dark .text-ink\/85 { color: rgba(248, 250, 252, 0.85); }
+.dark .text-ink\/90 { color: rgba(248, 250, 252, 0.90); }
+
+/* border-border-base/N — সফট বর্ডার */
+.dark .border-border-base\/50 { border-color: rgba(34, 50, 77, 0.70); }
+.dark .border-border-base\/60 { border-color: rgba(34, 50, 77, 0.70); }
+.dark .border-border-base\/70 { border-color: rgba(34, 50, 77, 0.70); }
+.dark .border-border-base\/80 { border-color: rgba(34, 50, 77, 0.70); }
+
+/* bg-surface-muted/N */
+.dark .bg-surface-muted\/40 { background-color: rgba(24, 35, 57, 0.40); }
+.dark .bg-surface-muted\/50 { background-color: rgba(24, 35, 57, 0.50); }
+.dark .bg-surface-muted\/60 { background-color: rgba(24, 35, 57, 0.60); }
+.dark .bg-surface-muted\/70 { background-color: rgba(24, 35, 57, 0.70); }
+
+/* ডার্ক মোডে ইনপুট অটোফিল ফিক্স */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #F8FAFC;
+  -webkit-box-shadow: 0 0 0 1000px #131D31 inset;
+  box-shadow: 0 0 0 1000px #131D31 inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* ডার্ক মোড স্ক্রলবার */
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(68, 167, 252, 0.45);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(68, 167, 252, 0.75);
+}
+.dark .sleek-scrollbar {
+  scrollbar-color: rgba(68, 167, 252, 0.45) transparent;
+}
+.dark .sleek-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(68, 167, 252, 0.45);
+}
+.dark .sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(68, 167, 252, 0.75);
+}
+
+/* থিম টগল বাটনের আইকন-সুইচ অ্যানিমেশন (Navbar ও Account পেজে ব্যবহৃত) */
+.theme-toggle-icon {
+  transition: transform 0.45s cubic-bezier(.4,0,.2,1), opacity 0.3s ease;
+}

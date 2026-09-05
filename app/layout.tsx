@@ -36,8 +36,25 @@ export default async function RootLayout({
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
   return (
-    <html lang={lang} className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}>
+    <html
+      lang={lang}
+      suppressHydrationWarning
+      className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}
+    >
       <head>
+        {/*
+          🌙 ডার্ক মোড ফ্লিকার-ফ্রি স্ক্রিন গার্ড।
+          হাইড্রেশনের আগেই (beforeInteractive) সেভ করা থিম পড়ে <html> ট্যাগে
+          .dark ক্লাস বসিয়ে দেয়, যাতে রিফ্রেশে কোনো সাদা স্ক্রিন ফ্ল্যাশ না হয়।
+          lib/store/themeStore.ts এর সাথে key ('vc_theme') মিলিয়ে রাখা আবশ্যক।
+        */}
+        <Script
+          id="theme-flicker-guard"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var k='vc_theme',t=null;var m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(m)t=decodeURIComponent(m[1]);if(t!=='dark'&&t!=='light'){try{t=window.localStorage.getItem(k);}catch(e){}}if(t!=='dark'&&t!=='light'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}}catch(e){}})();`,
+          }}
+        />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         {/*
@@ -71,7 +88,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           />
         )}
       </head>
-      <body className="min-h-screen bg-white font-body text-ink antialiased">
+      <body className="min-h-screen bg-white font-body text-ink antialiased dark:bg-[#0B111E] dark:text-[#F8FAFC]">
         {gtmId && (
           <noscript>
             <iframe
@@ -84,7 +101,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         )}
         <div
           aria-hidden="true"
-          className="fixed inset-0 -z-10 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white"
+          className="fixed inset-0 -z-10 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white dark:from-[#090D16] dark:via-[#0F172A] dark:to-[#0B0F19]"
         />
         {children}
         <GlobalOverlays />

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import FloatCartBadge from './cart/FloatCartBadge';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import { useLanguageStore } from '@/lib/store/languageStore';
+import { useThemeStore } from '@/lib/store/themeStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { TOAST_EVENT, type ToastDetail, type ToastType, showToast } from '@/lib/toast';
@@ -111,6 +112,7 @@ export default function GlobalOverlays() {
   useEffect(() => {
     useCartStore.getState().hydrate();
     useWishlistStore.getState().hydrate();
+    useThemeStore.getState().hydrate();
   }, []);
 
   useEffect(() => {

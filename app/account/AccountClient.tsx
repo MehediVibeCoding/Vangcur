@@ -14,6 +14,7 @@ import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useLanguageStore, type Language } from '@/lib/store/languageStore';
+import { useThemeStore } from '@/lib/store/themeStore';
 import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
@@ -184,6 +185,8 @@ export default function AccountClient() {
   const { t, lang } = useT();
   const router = useRouter();
   const setLanguage = useLanguageStore((s) => s.setLanguage);
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const supabase = useRef(createClient()).current;
 
   const cartQty = useCartStore((s) => cartCount(s.cart));
@@ -793,16 +796,26 @@ export default function AccountClient() {
                     <div className="mt-1 font-body text-[11px] font-bold text-muted">{t('মোট অর্ডার')}</div>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
-                    <div className="flex items-center gap-1 text-brand-light">
-                      <IconSun />
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    aria-label="Toggle dark mode"
+                    title={theme === 'dark' ? (lang === 'en' ? 'Switch to Light Mode' : 'লাইট মোডে যান') : (lang === 'en' ? 'Switch to Dark Mode' : 'ডার্ক মোডে যান')}
+                    className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md transition-all hover:border-brand-light/40 active:scale-95"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span className={theme === 'light' ? 'text-brand-light' : 'text-muted/50'}>
+                        <IconSun />
+                      </span>
                       <span className="text-[11px] text-muted">/</span>
-                      <IconMoon />
+                      <span className={theme === 'dark' ? 'text-brand-light' : 'text-muted/50'}>
+                        <IconMoon />
+                      </span>
                     </div>
                     <div className="mt-1 font-body text-[11px] font-bold text-muted">
-                      {lang === 'en' ? 'Theme' : 'থিম মোড'}
+                      {lang === 'en' ? (theme === 'dark' ? 'Dark Mode' : 'Light Mode') : (theme === 'dark' ? 'ডার্ক মোড' : 'লাইট মোড')}
                     </div>
-                  </div>
+                  </button>
 
                   <div
                     onClick={() => setMembershipOpen(true)}
