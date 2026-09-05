@@ -217,17 +217,6 @@ function IconArrowLeft() {
   );
 }
 
-// ⏳ কনফার্ম-অর্ডার বাটনের সিম্পল লোডিং ডট (ব্র্যান্ড কালারেই, স্পিনারের পাশে অ্যানিমেটেড "..." )
-function LoadingDots() {
-  return (
-    <span className="inline-flex items-center gap-[3px]">
-      <span className="h-1.5 w-1.5 rounded-full bg-current animate-dot-bounce [animation-delay:0ms]" />
-      <span className="h-1.5 w-1.5 rounded-full bg-current animate-dot-bounce [animation-delay:150ms]" />
-      <span className="h-1.5 w-1.5 rounded-full bg-current animate-dot-bounce [animation-delay:300ms]" />
-    </span>
-  );
-}
-
 function DesktopSideDecor() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">
@@ -1660,7 +1649,14 @@ export default function CheckoutPage() {
                   whileTap={confirmAnim === 'idle' && !submitting ? { scale: 0.97 } : undefined}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 >
-                  {/* টেক্সট / স্পিনার / সাকসেস — বাটনের নিজস্ব ব্র্যান্ড কালার (নীল গ্র্যাডিয়েন্ট) অপরিবর্তিত থাকবে */}
+                  {/* অর্ডার নিশ্চিত হলে সবুজ (success) কালার স্মুথভাবে ফেড-ইন হবে */}
+                  <span
+                    className={`pointer-events-none absolute inset-0 rounded-full bg-success transition-opacity duration-500 ease-out ${
+                      confirmAnim === 'success' ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+
+                  {/* টেক্সট / স্পিনার / সাকসেস — লোডিং অবস্থায় ব্র্যান্ড কালার (নীল গ্র্যাডিয়েন্ট) অপরিবর্তিত থাকবে */}
                   <span className="relative inline-flex items-center justify-center gap-2">
                     {confirmAnim === 'success' ? (
                       <>
@@ -1668,11 +1664,7 @@ export default function CheckoutPage() {
                         {lang === 'en' ? 'Order Placed!' : 'অর্ডার সম্পন্ন হয়েছে!'}
                       </>
                     ) : confirmAnim === 'loading' || submitting ? (
-                      <>
-                        <IconSpinner />
-                        {t('প্রক্রিয়া হচ্ছে')}
-                        <LoadingDots />
-                      </>
+                      <><IconSpinner /> {t('প্রক্রিয়া হচ্ছে')}</>
                     ) : (
                       t('অর্ডার কনফার্ম করুন')
                     )}
