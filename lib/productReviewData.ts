@@ -12,11 +12,12 @@ const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 /**
  * 🛡️ ক্লাউডিনারি ইমেজ হোয়াইটলিস্টিং ও সিকিউরিটি স্যানিটাইজার
- * শুধুমাত্র আমাদের অনুমোদিত https://res.cloudinary.com/ ডোমেইনের ইমেজ ইউআরএল গ্রহণ করা হবে।
+ * শুধুমাত্র আমাদের অনুমোদিত ক্লাউড নেম ও https://res.cloudinary.com/ ডোমেইনের ইমেজ ইউআরএল গ্রহণ করা হবে।
  */
 export function validateAndCleanCloudinaryUrls(rawUrls?: string | null): string | null {
   if (!rawUrls || typeof rawUrls !== 'string') return null;
   const urls = rawUrls.split(',').map((u) => u.trim()).filter(Boolean);
+  const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dkjzleczw';
   
   const safeUrls = urls.filter((url) => {
     try {
@@ -24,6 +25,7 @@ export function validateAndCleanCloudinaryUrls(rawUrls?: string | null): string 
       return (
         parsed.protocol === 'https:' &&
         parsed.hostname === 'res.cloudinary.com' &&
+        parsed.pathname.startsWith(`/${CLOUD_NAME}/`) &&
         !/[<>"'`]/.test(url)
       );
     } catch {
@@ -34,51 +36,45 @@ export function validateAndCleanCloudinaryUrls(rawUrls?: string | null): string 
   return safeUrls.length > 0 ? safeUrls.slice(0, 3).join(',') : null;
 }
 
+/**
+ * 🛡️ নিরাপদ সার্ভার সেশন-ভেরিফায়েড অ্যাডমিন ও মডারেটর রোল ভ্যালিডেটর
+ * কোনো লোকালস্টোরেজ বা ক্লায়েন্ট ডাটায় বিশ্বাস করা হবে না।
+ */
 export async function checkIsReviewAdminOrMod(
   supabase: SupabaseClient,
   userId?: string | null,
 ): Promise<boolean> {
-  let targetId = userId;
-  let userEmail: string | null = null;
-
   try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!targetId) targetId = sessionData?.session?.user?.id || null;
-    userEmail = sessionData?.session?.user?.email || null;
-  } catch {
-    // fallback
-  }
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return false;
 
-  if (!userEmail && typeof window !== 'undefined') {
-    try {
-      const localUser = JSON.parse(localStorage.getItem('vc_user') || '{}');
-      if (localUser?.email) userEmail = localUser.email;
-      if (!targetId && localUser?.id) targetId = localUser.id;
-    } catch {
-      // ignore
+    // যদি নির্দিষ্ট কোনো userId দিয়ে ভেরিফাই করতে বলা হয় এবং বর্তমান সেশন আইডির সাথে না মিলে
+    if (userId && user.id !== userId) {
+      return false;
     }
-  }
 
-  // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (লগইন করা মডারেটর ১০০% প্রিভিলেজ পাবে)
-  if (userEmail && userEmail.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
-    return true;
-  }
+    // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (শুধুমাত্র সার্ভার-ভেরিফায়েড অথেন্টিকেটেড ইমেইল)
+    const verifiedEmail = (user.email || '').toLowerCase().trim();
+    if (verifiedEmail === MODERATOR_EMAIL.toLowerCase()) {
+      return true;
+    }
 
-  if (!targetId) return false;
-
-  try {
-    const { data, error } = await supabase
+    // ২. প্রোফাইল টেবিল থেকে অ্যাডমিন বা অনুমোদিত রোল যাচাই
+    const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', targetId)
+      .select('is_admin, role')
+      .eq('id', user.id)
       .maybeSingle();
 
-    if (error || !data) return false;
+    if (profileErr || !profile) return false;
 
-    if (data.is_admin === true) return true;
-    if (data.role && ['admin', 'super_admin', 'moderator'].includes(data.role)) return true;
+    if (profile.is_admin === true) return true;
+    if (profile.role && ['admin', 'super_admin', 'moderator'].includes(profile.role)) {
+      return true;
+    }
     return false;
-  } catch {
+  } catch (e) {
+    logWarn('[Review] checkIsReviewAdminOrMod exception:', e);
     return false;
   }
 }
