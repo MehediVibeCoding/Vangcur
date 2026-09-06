@@ -260,7 +260,7 @@ export interface ProductQuestion {
   user_name: string;
   question: string;
   created_at: string;
-  answer?: ProductQuestionAnswer | null;
+  answers?: ProductQuestionAnswer[];
 }
 
 // কাস্টমার রিভিউ (Reviews) টাইপসমূহ
