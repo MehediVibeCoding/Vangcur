@@ -282,10 +282,9 @@ export default function CustomerGallery() {
     if (review.id) {
       (async () => {
         try {
-          const { error } = await supabase
-            .from('customer_reviews')
-            .update({ like_count: newCount })
-            .eq('id', review.id);
+          const { error } = await supabase.rpc('increment_review_like', {
+            target_id: review.id,
+          });
           if (error) logWarn('Like update failed:', error);
         } catch (err) {
           logWarn('Like update failed:', err);
