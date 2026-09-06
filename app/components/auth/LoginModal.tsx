@@ -253,8 +253,10 @@ export default function LoginModal({
     (async () => {
       const safeUser = await checkOAuthCallback(supabase);
       if (!safeUser) return;
-      useAuthStore.getState().setCurrentUser(safeUser);
+      // 🛡️ আগে গেস্ট-অর্ডার জোড়া লাগানোর কাজ সম্পূর্ণ শেষ করা হচ্ছে,
+      // তারপর লগইন-স্টেট সেট করা হচ্ছে — যাতে "আমার অর্ডার" পেজ ডাটা আনার আগেই জোড়া লাগানো শেষ থাকে
       await mergeGuestOrdersToUser(supabase, safeUser.phone || '', safeUser.id || '');
+      useAuthStore.getState().setCurrentUser(safeUser);
       await applyWishlistSync(safeUser.id || '');
       showToast(t('Google দিয়ে লগইন সফল হয়েছে'));
 
@@ -310,8 +312,10 @@ export default function LoginModal({
   };
 
   const finishAuthSuccess = async (safeUser: CurrentUser, successMsg: string) => {
-    useAuthStore.getState().setCurrentUser(safeUser);
+    // 🛡️ আগে গেস্ট-অর্ডার জোড়া লাগানোর কাজ সম্পূর্ণ শেষ করা হচ্ছে,
+    // তারপর লগইন-স্টেট সেট করা হচ্ছে — একই কারণে (উপরের OAuth অংশে বলা হয়েছে)
     await mergeGuestOrdersToUser(supabase, safeUser.phone || '', safeUser.id || '');
+    useAuthStore.getState().setCurrentUser(safeUser);
     await applyWishlistSync(safeUser.id || '');
     showToast(successMsg);
     onClose();
