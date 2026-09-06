@@ -104,7 +104,10 @@ export async function checkOAuthCallback(supabase: SupabaseClient): Promise<Curr
       provider: user.app_metadata?.provider || 'email',
       createdAt: user.created_at,
     };
-    useAuthStore.getState().setCurrentUser(safeUser);
+    // 🛡️ এখানে ইচ্ছাকৃতভাবে currentUser সেট করা হচ্ছে না — যে ফাংশন এটাকে কল করছে
+    // (LoginModal / checkout page) সে আগে গেস্ট-অর্ডার জোড়া লাগানোর কাজ শেষ করবে,
+    // তারপর currentUser সেট করবে। এই ক্রম না মানলে "আমার অর্ডার" পেজ জোড়া লাগানোর
+    // কাজ শেষ হওয়ার আগেই ডাটা আনতে চলে যায় এবং খালি দেখায়।
     return safeUser;
   } catch {
     return null;
