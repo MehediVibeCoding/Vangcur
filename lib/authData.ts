@@ -109,14 +109,10 @@ export async function saveWishlistToSupabase(supabase: SupabaseClient, userId: s
   }
 }
 
-export async function mergeGuestOrdersToUser(supabase: SupabaseClient, email: string, userId: string): Promise<void> {
-  if (!email || !userId) return;
+export async function mergeGuestOrdersToUser(supabase: SupabaseClient, phone: string, userId: string): Promise<void> {
+  if (!phone || !userId) return;
   try {
-    await supabase
-      .from('orders')
-      .update({ user_id: userId })
-      .eq('customer_email', email.trim().toLowerCase())
-      .is('user_id', null);
+    await supabase.rpc('claim_guest_orders_by_phone', { p_phone: phone.trim() });
   } catch {
     // ignore
   }
