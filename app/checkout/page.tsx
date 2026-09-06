@@ -515,7 +515,7 @@ export default function CheckoutPage() {
 
       if (safeUser) {
         useAuthStore.getState().setCurrentUser(safeUser);
-        await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
+        await mergeGuestOrdersToUser(supabase, safeUser.phone || '', safeUser.id || '');
       }
       try { localStorage.removeItem('vc_post_login_action'); } catch { /* ignore */ }
 
