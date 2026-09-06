@@ -78,16 +78,18 @@ export async function fetchProductQuestions(
       logWarn('[QnA] fetch answers error:', aErr);
     }
 
-    const answerMap: Record<string, ProductQuestionAnswer> = {};
+    const answersByQuestion: Record<string, ProductQuestionAnswer[]> = {};
     if (answers) {
       answers.forEach((ans) => {
-        answerMap[String(ans.question_id)] = ans as ProductQuestionAnswer;
+        const key = String(ans.question_id);
+        if (!answersByQuestion[key]) answersByQuestion[key] = [];
+        answersByQuestion[key].push(ans as ProductQuestionAnswer);
       });
     }
 
     return questions.map((q) => ({
       ...q,
-      answer: answerMap[String(q.id)] || null,
+      answers: answersByQuestion[String(q.id)] || [],
     })) as ProductQuestion[];
   } catch (e) {
     logWarn('[QnA] fetchProductQuestions error:', e);
@@ -137,7 +139,7 @@ export async function submitProductQuestion(
       return { ok: false, error: 'প্রশ্ন জমা দেওয়া যায়নি। আবার চেষ্টা করুন।' };
     }
 
-    return { ok: true, data: { ...data, answer: null } as ProductQuestion };
+    return { ok: true, data: { ...data, answers: [] } as ProductQuestion };
   } catch (e) {
     logWarn('[QnA] submitProductQuestion exception:', e);
     return { ok: false, error: 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।' };
