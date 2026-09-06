@@ -63,9 +63,11 @@ function CheckBadgeIcon() {
   );
 }
 
-interface QuestionWithThread extends Omit<ProductQuestion, 'answer'> {
-  adminAnswer?: ProductQuestionAnswer | null;
-  authorReply?: ProductQuestionAnswer | null;
+// 🆕 এখন প্রতিটা প্রশ্নে দুইটা ফিক্সড স্লটের (adminAnswer/authorReply) বদলে
+// পুরো একটা "থ্রেড" (সময় অনুযায়ী সাজানো একাধিক উত্তর) রাখা হচ্ছে —
+// এতে admin আর customer বারবার আদান-প্রদান (একাধিক রাউন্ড) করতে পারবে।
+interface QuestionWithThread extends Omit<ProductQuestion, 'answers'> {
+  answers: ProductQuestionAnswer[];
 }
 
 export default function ProductQnA({ productId, productName }: ProductQnAProps) {
@@ -112,16 +114,11 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           .in('question_id', qIds)
           .order('created_at', { ascending: true });
 
-        const mapped: QuestionWithThread[] = qData.data.map((q) => {
-          const qAnswers = (answersData || []).filter((a) => a.question_id === q.id);
-          const adminAns = qAnswers.find((a) => a.is_admin) || null;
-          const authorAns = qAnswers.find((a) => !a.is_admin) || null;
-          return {
-            ...q,
-            adminAnswer: adminAns,
-            authorReply: authorAns,
-          };
-        });
+        const mapped: QuestionWithThread[] = qData.data.map((q) => ({
+          ...q,
+          // created_at অনুযায়ী ascending order-এ কোয়েরি করা হয়েছে, তাই থ্রেডের ক্রম এমনিতেই ঠিক থাকবে
+          answers: ((answersData || []).filter((a) => a.question_id === q.id)) as ProductQuestionAnswer[],
+        }));
         setQuestions(mapped);
       } else {
         setQuestions([]);
@@ -166,13 +163,13 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
     setSubmittingQ(false);
     if (!res.ok || !res.data) {
-      setAskError(res.error || t('প্রশ্ন জমা দেওয়া যায়নি'));
+      setAskError(res.error || t('প্রশ্ন জমা দেওয়া যায়নি'));
       return;
     }
 
-    setQuestions((prev) => [{ ...res.data!, adminAnswer: null, authorReply: null }, ...prev]);
+    setQuestions((prev) => [{ ...res.data!, answers: [] }, ...prev]);
     setAskModalOpen(false);
-    showToast(t('✅ আপনার প্রশ্নটি সফলভাবে জমা হয়েছে!'));
+    showToast(t('✅ আপনার প্রশ্নটি সফলভাবে জমা হয়েছে!'));
   };
 
   const openReplyModal = (question: QuestionWithThread, isFollowUp: boolean) => {
@@ -201,23 +198,20 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
     setSubmittingR(false);
     if (!res.ok || !res.data) {
-      setReplyError(res.error || t('উত্তর জমা দেওয়া যায়নি বা অনুমতি নেই।'));
+      setReplyError(res.error || t('উত্তর জমা দেওয়া যায়নি বা অনুমতি নেই।'));
       return;
     }
 
+    const newAnswer = res.data;
     setQuestions((prev) => prev.map((q) => {
       if (q.id === replyTarget.question.id) {
-        if (isAdmin) {
-          return { ...q, adminAnswer: res.data };
-        } else {
-          return { ...q, authorReply: res.data };
-        }
+        return { ...q, answers: [...q.answers, newAnswer] };
       }
       return q;
     }));
 
     setReplyTarget(null);
-    showToast(t('✅ উত্তর সফলভাবে প্রকাশিত হয়েছে!'));
+    showToast(t('✅ উত্তর সফলভাবে প্রকাশিত হয়েছে!'));
   };
 
   const handleDeleteQuestion = async (qId: number | string) => {
@@ -226,26 +220,26 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
       const { error } = await supabase.from('product_questions').delete().eq('id', qId);
       if (error) throw error;
       setQuestions((prev) => prev.filter((q) => q.id !== qId));
-      showToast(t('প্রশ্নটি মুছে ফেলা হয়েছে'));
+      showToast(t('প্রশ্নটি মুছে ফেলা হয়েছে'));
     } catch {
-      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
+      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
     }
   };
 
-  const handleDeleteAnswer = async (ansId: number | string, qId: number | string, isAdm: boolean) => {
+  const handleDeleteAnswer = async (ansId: number | string, qId: number | string) => {
     if (!window.confirm('আপনি কি এই উত্তরটি মুছে ফেলতে চান?')) return;
     try {
       const { error } = await supabase.from('product_question_answers').delete().eq('id', ansId);
       if (error) throw error;
       setQuestions((prev) => prev.map((q) => {
         if (q.id === qId) {
-          return isAdm ? { ...q, adminAnswer: null } : { ...q, authorReply: null };
+          return { ...q, answers: q.answers.filter((a) => a.id !== ansId) };
         }
         return q;
       }));
-      showToast(t('উত্তরটি মুছে ফেলা হয়েছে'));
+      showToast(t('উত্তরটি মুছে ফেলা হয়েছে'));
     } catch {
-      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
+      showToast(t('মুছে ফেলা সম্ভব হয়নি'));
     }
   };
 
@@ -269,7 +263,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
             </span>
           </div>
 
-          {/* প্রশ্ন থাকা অবস্থায় হেডারের ডানপাশের বাটন */}
+          {/* প্রশ্ন থাকা অবস্থায় হেডারের ডানপাশের বাটন */}
           {hasQuestions && (
             <button
               onClick={openAskModal}
@@ -294,7 +288,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-brand-light text-white">
             <SolidChatQuestionIcon className="h-5 w-5 fill-current text-white" />
           </div>
-          <p className="font-body text-sm font-bold text-ink">{t('এখনো কোনো প্রশ্ন করা হয়নি')}</p>
+          <p className="font-body text-sm font-bold text-ink">{t('এখনো কোনো প্রশ্ন করা হয়নি')}</p>
           <p className="mt-1 max-w-sm font-body text-xs text-muted">
             {t('এই প্রোডাক্ট সম্পর্কে আপনার কোনো কিছু জানার থাকলে সবার আগে প্রশ্ন করুন!')}
           </p>
@@ -314,10 +308,17 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               })
               : '';
 
-            const isAuthor = currentUser?.id && q.user_id === currentUser.id;
+            const isAuthor = Boolean(currentUser?.id) && q.user_id === currentUser?.id;
             const canDeleteQuestion = isAdmin || isAuthor;
-            const canAdminAnswer = isAdmin && !q.adminAnswer;
-            const canAuthorFollowUp = isAuthor && q.adminAnswer && !q.authorReply;
+
+            // 🆕 turn-based হিসাব: প্রশ্নে এ পর্যন্ত admin কতবার আর customer কতবার উত্তর দিয়েছে
+            const adminCount = q.answers.filter((a) => a.is_admin).length;
+            const customerCount = q.answers.filter((a) => !a.is_admin).length;
+
+            // অ্যাডমিনের কোনো লিমিট নেই — DB পলিসির সাথে মিলিয়ে সবসময় উত্তর দিতে পারবে
+            const canAdminAnswer = isAdmin;
+            // কাস্টমার তখনই রিপ্লাই দিতে পারবে যখন admin-এর উত্তর সংখ্যা customer-এর রিপ্লাই সংখ্যার চেয়ে বেশি
+            const canAuthorFollowUp = isAuthor && adminCount > customerCount;
 
             return (
               <div
@@ -349,89 +350,92 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   </div>
                 </div>
 
-                {/* ২. Admin Official Answer */}
-                {q.adminAnswer ? (
-                  <div className="mt-3.5 flex items-start gap-3 rounded-[12px] border border-[#BAE0FD] bg-[#F0F9FF] p-3.5 sm:ml-9">
-                    <UserAvatar
-                      name={q.adminAnswer.author_name}
-                      size="sm"
-                      isAdmin
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-body text-[12.5px] font-bold text-ink">
-                            {q.adminAnswer.author_name}
-                          </span>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2 py-0.5 font-body text-[10px] font-bold text-white shadow-xs">
-                            <CheckBadgeIcon /> Vangcur টিম
-                          </span>
+                {/* ২. পুরো উত্তর-থ্রেড — admin ও customer-এর সব উত্তর সময় অনুযায়ী */}
+                {q.answers.length > 0 && (
+                  <div className="mt-3.5 flex flex-col gap-2.5">
+                    {q.answers.map((a) =>
+                      a.is_admin ? (
+                        <div
+                          key={a.id}
+                          className="flex items-start gap-3 rounded-[12px] border border-[#BAE0FD] bg-[#F0F9FF] p-3.5 sm:ml-9"
+                        >
+                          <UserAvatar name={a.author_name} size="sm" isAdmin />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-body text-[12.5px] font-bold text-ink">
+                                  {a.author_name}
+                                </span>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2 py-0.5 font-body text-[10px] font-bold text-white shadow-xs">
+                                  <CheckBadgeIcon /> Vangcur টিম
+                                </span>
+                              </div>
+
+                              {isAdmin && (
+                                <button
+                                  onClick={() => handleDeleteAnswer(a.id, q.id)}
+                                  title={t('উত্তর মুছে ফেলুন')}
+                                  className="text-muted/60 transition-colors hover:text-red-500"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              )}
+                            </div>
+                            <p className="mt-1 font-body text-[13px] leading-relaxed text-ink/80">
+                              {a.answer}
+                            </p>
+                          </div>
                         </div>
+                      ) : (
+                        <div
+                          key={a.id}
+                          className="flex items-start gap-3 rounded-[12px] border border-border-base bg-surface-muted/60 p-3 sm:ml-16"
+                        >
+                          <UserAvatar name={a.author_name} size="sm" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-body text-[12px] font-bold text-ink">
+                                  {a.author_name}
+                                </span>
+                                <span className="rounded-full bg-surface-muted px-2 py-0.5 font-body text-[9.5px] font-semibold text-muted">
+                                  {t('প্রশ্নকর্তার মন্তব্য')}
+                                </span>
+                              </div>
 
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleDeleteAnswer(q.adminAnswer!.id, q.id, true)}
-                            title={t('উত্তর মুছে ফেলুন')}
-                            className="text-muted/60 transition-colors hover:text-red-500"
-                          >
-                            <TrashIcon />
-                          </button>
-                        )}
-                      </div>
-                      <p className="mt-1 font-body text-[13px] leading-relaxed text-ink/80">
-                        {q.adminAnswer.answer}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  // সাধারণ ইউজারের ক্ষেত্রে টেক্সট হাইড থাকবে, শুধু এডমিন/মডারেটরকে বাটন দেখাবে
-                  canAdminAnswer && (
-                    <div className="mt-3 flex justify-end pt-1 sm:ml-9">
-                      <button
-                        onClick={() => openReplyModal(q, false)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-brand-light/50 bg-brand-bg/40 px-3 py-1 font-body text-xs font-bold text-brand-primary hover:bg-brand-bg"
-                      >
-                        <ReplyCurveIcon /> {t('উত্তর দিন (Admin)')}
-                      </button>
-                    </div>
-                  )
-                )}
-
-                {/* ৩. Author Follow-up Reply */}
-                {q.authorReply && (
-                  <div className="mt-2.5 flex items-start gap-3 rounded-[12px] border border-border-base bg-surface-muted/60 p-3 sm:ml-16">
-                    <UserAvatar
-                      name={q.authorReply.author_name}
-                      size="sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-body text-[12px] font-bold text-ink">
-                            {q.authorReply.author_name}
-                          </span>
-                          <span className="rounded-full bg-surface-muted px-2 py-0.5 font-body text-[9.5px] font-semibold text-muted">
-                            {t('প্রশ্নকর্তার মন্তব্য')}
-                          </span>
+                              {(isAdmin || isAuthor) && (
+                                <button
+                                  onClick={() => handleDeleteAnswer(a.id, q.id)}
+                                  title={t('মন্তব্য মুছে ফেলুন')}
+                                  className="text-muted/60 transition-colors hover:text-red-500"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              )}
+                            </div>
+                            <p className="mt-1 font-body text-[12.5px] leading-relaxed text-ink/80">
+                              {a.answer}
+                            </p>
+                          </div>
                         </div>
-
-                        {(isAdmin || isAuthor) && (
-                          <button
-                            onClick={() => handleDeleteAnswer(q.authorReply!.id, q.id, false)}
-                            title={t('মন্তব্য মুছে ফেলুন')}
-                            className="text-muted/60 transition-colors hover:text-red-500"
-                          >
-                            <TrashIcon />
-                          </button>
-                        )}
-                      </div>
-                      <p className="mt-1 font-body text-[12.5px] leading-relaxed text-ink/80">
-                        {q.authorReply.answer}
-                      </p>
-                    </div>
+                      )
+                    )}
                   </div>
                 )}
 
+                {/* ৩. অ্যাডমিনের উত্তর/আরেকটি উত্তর দেওয়ার বাটন — এখন উত্তর আগে থেকে থাকলেও হাইড হয় না */}
+                {canAdminAnswer && (
+                  <div className="mt-3 flex justify-end pt-1 sm:ml-9">
+                    <button
+                      onClick={() => openReplyModal(q, false)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-light/50 bg-brand-bg/40 px-3 py-1 font-body text-xs font-bold text-brand-primary hover:bg-brand-bg"
+                    >
+                      <ReplyCurveIcon /> {adminCount > 0 ? t('আরেকটি উত্তর দিন (Admin)') : t('উত্তর দিন (Admin)')}
+                    </button>
+                  </div>
+                )}
+
+                {/* ৪. কাস্টমারের ফলো-আপ বাটন — এখন প্রতিটা admin-উত্তরের পর আবার একবার করে সুযোগ পাবে */}
                 {canAuthorFollowUp && (
                   <div className="mt-2.5 flex justify-end sm:ml-9">
                     <button
@@ -548,7 +552,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="font-body text-xs font-bold text-ink">
-                    {isAdmin ? t('অফিসিয়াল উত্তর লিখুন') : t('আপনার মন্তব্য')}
+                    {isAdmin ? t('অফিসিয়াল উত্তর লিখুন') : t('আপনার মন্তব্য')}
                   </label>
                   <span className="font-body text-[11px] text-muted">{replyText.length}/500</span>
                 </div>
