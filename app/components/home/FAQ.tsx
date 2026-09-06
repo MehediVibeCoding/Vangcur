@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import { useState } from 'react';
 import { useT } from '@/lib/i18n/useT';
 
 export interface Faq {
@@ -13,82 +11,33 @@ export interface Faq {
 const DEFAULT_FAQS: Faq[] = [
   {
     q: 'পেমেন্ট কীভাবে করব ও অগ্রিম কত?',
-    a: 'বিকাশে (bKash) অগ্রিম দিয়ে বাকি টাকা ক্যাশ অন ডেলিভারিতে (COD) পরিশোধ করতে পারবেন। ৮,০০০ টাকার নিচে অর্ডারে ফিক্সড ২০০ টাকা এবং ৮,০০০ থেকে ২০,০০০ টাকার অর্ডারে মোট বিলের ৫% অগ্রিম প্রযোজ্য।',
+    a: 'বিকাশে (bKash) অগ্রিম দিয়ে বাকি টাকা ক্যাশ অন ডেলিভারিতে (COD) পরিশোধ করতে পারবেন। ৮,০০০ টাকার নিচে অর্ডারে ফিক্সড ২০০ টাকা এবং ৮,০০০ থেকে ২০,০০০ টাকার অর্ডারে মোট বিলের ৫% অগ্রিম প্রযোজ্য।',
   },
   {
     q: 'ডেলিভারি পেতে কতদিন লাগে এবং চার্জ কত?',
-    a: 'পাঠাও কুরিয়ারে ঢাকা সিটির ভেতরে ১–২ দিনে (চার্জ ৭০ টাকা) এবং ঢাকা সিটির বাইরে সারা দেশে ২–৪ দিনে (চার্জ ১২০ টাকা) হোম ডেলিভারি দেওয়া হয়।',
+    a: 'পাঠাও কুরিয়ারে ঢাকা সিটির ভেতরে ১–২ দিনে (চার্জ ৭০ টাকা) এবং ঢাকা সিটির বাইরে সারা দেশে ২–৪ দিনে (চার্জ ১২০ টাকা) হোম ডেলিভারি দেওয়া হয়।',
   },
   {
-    q: 'প্রোডাক্টে কি ওয়ারেন্টি আছে?',
-    a: 'হ্যাঁ, সব প্রোডাক্টে ন্যূনতম ৭ দিনের ফ্রি রিপ্লেসমেন্ট ওয়ারেন্টি থাকে। এছাড়া নির্বাচিত ব্র্যান্ডেড গ্যাজেটে ৬ মাস থেকে ২ বছর পর্যন্ত অফিসিয়াল ওয়ারেন্টি সুবিধা রয়েছে।',
+    q: 'প্রোডাক্টে কি ওয়ারেন্টি আছে?',
+    a: 'হ্যাঁ, সব প্রোডাক্টে ন্যূনতম ৭ দিনের ফ্রি রিপ্লেসমেন্ট ওয়ারেন্টি থাকে। এছাড়া নির্বাচিত ব্র্যান্ডেড গ্যাজেটে ৬ মাস থেকে ২ বছর পর্যন্ত অফিসিয়াল ওয়ারেন্টি সুবিধা রয়েছে।',
   },
   {
     q: 'প্রোডাক্টে সমস্যা থাকলে রিপ্লেসমেন্ট কীভাবে পাব?',
-    a: 'পার্সেল খোলার সময় একটানা আন-কাট আনবক্সিং ভিডিও করে রাখুন। কোনো ত্রুটি বা ট্রানজিট ড্যামেজ থাকলে ভিডিওসহ আমাদের WhatsApp-এ জানালে সম্পূর্ণ ফ্রিতে নতুন প্রোডাক্ট রিপ্লেস করে দেওয়া হবে।',
+    a: 'পার্সেল খোলার সময় একটানা আন-কাট আনবক্সিং ভিডিও করে রাখুন। কোনো ত্রুটি বা ট্রানজিট ড্যামেজ থাকলে ভিডিওসহ আমাদের WhatsApp-এ জানালে সম্পূর্ণ ফ্রিতে নতুন প্রোডাক্ট রিপ্লেস করে দেওয়া হবে।',
   },
   {
     q: 'পছন্দ না হলে কি রিটার্ন করা যাবে?',
-    a: 'প্রোডাক্ট সঠিক থাকলে কেবল ব্যক্তিগত পছন্দ-অপছন্দ বা মন পরিবর্তনের (Change of Mind) কারণে রিটার্ন নেওয়া হয় না। তবে কোনো ত্রুটি থাকলে ১০০% ফ্রি রিপ্লেসমেন্ট সুবিধা পাবেন।',
+    a: 'প্রোডাক্ট সঠিক থাকলে কেবল ব্যক্তিগত পছন্দ-অপছন্দ বা মন পরিবর্তনের (Change of Mind) কারণে রিটার্ন নেওয়া হয় না। তবে কোনো ত্রুটি থাকলে ১০০% ফ্রি রিপ্লেসমেন্ট সুবিধা পাবেন।',
   },
   {
     q: 'অর্ডার ট্র্যাক করব কীভাবে?',
-    a: 'পার্সেল বুকিংয়ের পর আপনার ফোনে এসএমএসে ট্র্যাকিং লিংক যাবে। এছাড়া ওয়েবসাইটের "অর্ডার ট্র্যাক" অপশনে অর্ডার নম্বর ও ফোন নম্বর দিয়ে যেকোনো সময় লাইভ স্ট্যাটাস দেখতে পারবেন।',
+    a: 'পার্সেল বুকিংয়ের পর আপনার ফোনে এসএমএসে ট্র্যাকিং লিংক যাবে। এছাড়া ওয়েবসাইটের "অর্ডার ট্র্যাক" অপশনে অর্ডার নম্বর ও ফোন নম্বর দিয়ে যেকোনো সময় লাইভ স্ট্যাটাস দেখতে পারবেন।',
   },
   {
     q: 'কাস্টমার কেয়ারে যোগাযোগের নম্বর কোনটি?',
-    a: 'যেকোনো প্রয়োজনে আমাদের অফিসিয়াল WhatsApp হেল্পলাইনে (01897-804055) প্রতিদিন সকাল ৯:০০ টা থেকে রাত ১০:০০ টা পর্যন্ত সরাসরি মেসেজ দিতে পারেন।',
+    a: 'যেকোনো প্রয়োজনে আমাদের অফিসিয়াল WhatsApp হেল্পলাইনে (01897-804055) প্রতিদিন সকাল ৯:০০ টা থেকে রাত ১০:০০ টা পর্যন্ত সরাসরি মেসেজ দিতে পারেন।',
   },
 ];
-
-const FAQ_CACHE_KEY = 'vc_faqs_cache';
-const FAQ_CACHE_TS_KEY = 'vc_faqs_cache_ts';
-const FAQ_CACHE_TTL_MS = 15 * 60 * 1000;
-
-function getCachedFAQs(): Faq[] | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = sessionStorage.getItem(FAQ_CACHE_KEY);
-    const ts = Number(sessionStorage.getItem(FAQ_CACHE_TS_KEY)) || 0;
-    if (raw && Date.now() - ts < FAQ_CACHE_TTL_MS) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
-
-function setCachedFAQs(faqs: Faq[]) {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem(FAQ_CACHE_KEY, JSON.stringify(faqs));
-    sessionStorage.setItem(FAQ_CACHE_TS_KEY, String(Date.now()));
-  } catch {
-    // storage limit safe
-  }
-}
-
-async function fetchCustomFaqs(supabase: SupabaseClient): Promise<Faq[] | null> {
-  try {
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('setting_value')
-      .eq('setting_key', 'vc_faqs')
-      .maybeSingle();
-
-    if (error || !data?.setting_value) return null;
-    const raw = data.setting_value;
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].q && parsed[0].a) {
-      return parsed as Faq[];
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 function ChevronIcon({ className = '' }: { className?: string }) {
   return (
@@ -110,34 +59,11 @@ function SupportHelpIcon() {
 
 export default function FAQ() {
   const { t, lang } = useT();
-  const supabase = useRef(createClient()).current;
-  const [faqs, setFaqs] = useState<Faq[]>(DEFAULT_FAQS);
+  // vc_faqs সেটিংটা এখন অ্যাডমিন প্যানেল থেকে এডিট করার কোনো উপায় নেই (ফিচার
+  // সরানো হয়েছে), তাই Supabase-এ বারবার খুঁজে দেখার দরকার নেই — সবসময় নিচের
+  // ডিফল্ট তালিকাটাই দেখানো হবে।
+  const faqs = DEFAULT_FAQS;
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const cached = getCachedFAQs();
-    if (cached && cached.length) {
-      setFaqs(cached);
-      return;
-    }
-
-    fetchCustomFaqs(supabase).then((customList) => {
-      if (!cancelled && customList && customList.length) {
-        setFaqs(customList);
-        setCachedFAQs(customList);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    setOpenIndex(null);
-  }, [faqs]);
 
   const toggleFAQ = (i: number) => {
     setOpenIndex((prev) => (prev === i ? null : i));

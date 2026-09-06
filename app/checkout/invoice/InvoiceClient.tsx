@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client';
 import { fetchFullOrder, readLatestGuestOrder, clearPendingOrder } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { showToast } from '@/lib/toast';
-import { parseSupabaseVal } from '@/lib/categoryData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import { useT } from '@/lib/i18n/useT';
@@ -486,10 +485,13 @@ export default function InvoiceClient() {
   const [loading, setLoading] = useState(true);
   const [downloadCount, setDownloadCount] = useState(0);
   const [allowEmergencyClose, setAllowEmergencyClose] = useState(false);
-  const [contact, setContact] = useState<InvoiceContact>({
+  // vc_contact সেটিংটা এখন অ্যাডমিন প্যানেল থেকে এডিট করার কোনো উপায় নেই
+  // (ফিচার সরানো হয়েছে), তাই এটা Supabase থেকে না এনে সরাসরি ডিফল্ট মান
+  // ব্যবহার করা হচ্ছে।
+  const contact: InvoiceContact = {
     phoneLabel: DEFAULT_FOOTER.contact.phoneLabel,
     email: DEFAULT_FOOTER.contact.email,
-  });
+  };
   const [downloading, setDownloading] = useState(false);
   const [previewScale, setPreviewScale] = useState(1);
 
@@ -560,33 +562,12 @@ export default function InvoiceClient() {
   }, [searchParams, supabase, router, t]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('store_settings')
-          .select('setting_value')
-          .eq('setting_key', 'vc_contact')
-          .maybeSingle();
-        const raw = data
-          ? parseSupabaseVal<{ phone?: string; email?: string }>(data.setting_value)
-          : null;
-        if (raw) {
-          setContact({
-            phoneLabel: raw.phone || DEFAULT_FOOTER.contact.phoneLabel,
-            email: raw.email || DEFAULT_FOOTER.contact.email,
-          });
-        }
-      } catch {
-        // keep defaults
-      }
-    })();
-
     const emergencyTimer = setTimeout(() => {
       setAllowEmergencyClose(true);
     }, 4000);
 
     return () => clearTimeout(emergencyTimer);
-  }, [supabase]);
+  }, []);
 
   // 🎯 পিক্সেল-পারফেক্ট ও লেআউট-অক্ষত ডাউনলোড ইঞ্জিন
   const downloadPNG = useCallback(async () => {

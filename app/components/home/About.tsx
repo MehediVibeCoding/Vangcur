@@ -1,37 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { parseSupabaseVal } from '@/lib/categoryData';
 import { useT } from '@/lib/i18n/useT';
-
-const ABOUT_CACHE_KEY = 'vc_about_desc_cache';
-const ABOUT_CACHE_TS_KEY = 'vc_about_desc_ts';
-const ABOUT_CACHE_TTL_MS = 30 * 60 * 1000;
-
-function getCachedAboutDesc(): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = sessionStorage.getItem(ABOUT_CACHE_KEY);
-    const ts = Number(sessionStorage.getItem(ABOUT_CACHE_TS_KEY)) || 0;
-    if (raw && Date.now() - ts < ABOUT_CACHE_TTL_MS) {
-      return raw;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
-
-function setCachedAboutDesc(val: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem(ABOUT_CACHE_KEY, val);
-    sessionStorage.setItem(ABOUT_CACHE_TS_KEY, String(Date.now()));
-  } catch {
-    // storage limit safe
-  }
-}
 
 function HeaderDecor() {
   return (
@@ -59,47 +28,10 @@ function SparklesIcon() {
 }
 
 export default function About() {
-  const { t, lang } = useT();
-  const supabase = useRef(createClient()).current;
-  const [customDesc, setCustomDesc] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const cached = getCachedAboutDesc();
-    if (cached) {
-      setCustomDesc(cached);
-      return;
-    }
-
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('store_settings')
-          .select('setting_value')
-          .eq('setting_key', 'vc_about_desc')
-          .maybeSingle();
-
-        if (!cancelled && !error && data && data.setting_value) {
-          const parsed = parseSupabaseVal<unknown>(data.setting_value);
-          if (
-            typeof parsed === 'string' &&
-            parsed.trim() &&
-            !parsed.includes('গ্যাজেট ও লাইফস্টাইল অ্যাক্সেসরিজের এক বিশ্বস্ত নাম')
-          ) {
-            setCustomDesc(parsed);
-            setCachedAboutDesc(parsed);
-          }
-        }
-      } catch {
-        // fallback to rich default
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase]);
+  // vc_about_desc সেটিংটা এখন অ্যাডমিন প্যানেল থেকে এডিট করার কোনো উপায় নেই
+  // (ফিচার সরানো হয়েছে), তাই Supabase-এ বারবার খুঁজে দেখার দরকার নেই — সবসময়
+  // নিচের ডিফল্ট লেখাটাই দেখানো হবে।
+  const { lang } = useT();
 
   return (
     <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5 [contain:content] [transform:translateZ(0)] overflow-hidden">
@@ -138,29 +70,23 @@ export default function About() {
             )}
           </h2>
 
-          {customDesc ? (
-            <p className="font-body text-[14px] sm:text-[15px] leading-[1.85] text-ink/85 whitespace-pre-line text-left sm:text-center">
-              {t(customDesc)}
+          <div className="space-y-4 font-body text-[13.5px] sm:text-[15px] leading-[1.85] sm:leading-[1.9] text-ink/80 text-left sm:text-center">
+            <p>
+              {lang === 'en' ? (
+                <>Vangcur is one of Bangladesh&apos;s leading innovative gadget and lifestyle e-commerce brands. Catering to modern lifestyle tech and everyday creative needs, we bring you the finest collection of trending RGB &amp; neon lights, ambient crystal lamps, premium TWS earbuds, smartwatches, portable cooling fans, and unique utility gadgets.</>
+              ) : (
+                <>Vangcur (ভাঙচুর) বাংলাদেশের অন্যতম উদ্ভাবনী ও আধুনিক গ্যাজেট এবং লাইফস্টাইল ই-কমার্স ব্র্যান্ড। আমরা নতুন প্রজন্মের রুচি ও দৈনন্দিন প্রযুক্তিগত চাহিদাকে প্রাধান্য দিয়ে সেরা মানের ট্রেন্ডি RGB ও নিয়ন লাইট, ডেকোরেটিভ ক্রিস্টাল ল্যাম্প, প্রিমিয়াম TWS ইয়ারবাডস, স্মার্ট ওয়াচ, রিচার্জেবল ফ্যান এবং ইউনিক লাইফস্টাইল ইলেকট্রনিক্স গ্যাজেট সরবরাহ করে থাকি।</>
+              )}
             </p>
-          ) : (
-            <div className="space-y-4 font-body text-[13.5px] sm:text-[15px] leading-[1.85] sm:leading-[1.9] text-ink/80 text-left sm:text-center">
-              <p>
-                {lang === 'en' ? (
-                  <>Vangcur is one of Bangladesh&apos;s leading innovative gadget and lifestyle e-commerce brands. Catering to modern lifestyle tech and everyday creative needs, we bring you the finest collection of trending RGB &amp; neon lights, ambient crystal lamps, premium TWS earbuds, smartwatches, portable cooling fans, and unique utility gadgets.</>
-                ) : (
-                  <>Vangcur (ভাঙচুর) বাংলাদেশের অন্যতম উদ্ভাবনী ও আধুনিক গ্যাজেট এবং লাইফস্টাইল ই-কমার্স ব্র্যান্ড। আমরা নতুন প্রজন্মের রুচি ও দৈনন্দিন প্রযুক্তিগত চাহিদাকে প্রাধান্য দিয়ে সেরা মানের ট্রেন্ডি RGB ও নিয়ন লাইট, ডেকোরেটিভ ক্রিস্টাল ল্যাম্প, প্রিমিয়াম TWS ইয়ারবাডস, স্মার্ট ওয়াচ, রিচার্জেবল ফ্যান এবং ইউনিক লাইফস্টাইল ইলেকট্রনিক্স গ্যাজেট সরবরাহ করে থাকি।</>
-                )}
-              </p>
 
-              <p>
-                {lang === 'en' ? (
-                  <>Every product undergoes strict quality inspections to ensure uncompromised quality before reaching your doorstep. Partnered with top logistics providers, we offer fast and reliable home delivery across all 64 districts of Bangladesh, backed by genuine replacement warranties and dedicated customer support to ensure a secure, transparent, and seamless shopping experience.</>
-                ) : (
-                  <>আমাদের প্রতিটি পণ্য নিজস্ব কোয়ালিটি চেকের মাধ্যমে শতভাগ গুণগত মান নিশ্চিত করে গ্রাহকের কাছে পৌঁছানো হয়। দেশের স্বনামধন্য কুরিয়ার পার্টনারের মাধ্যমে ঢাকা সিটি সহ সমগ্র বাংলাদেশের ৬৪টি জেলাতেই রয়েছে আমাদের দ্রুত হোম ডেলিভারি সুবিধা। প্রতিটি অর্ডারে জেনুইন রিপ্লেসমেন্ট ওয়ারেন্টি এবং সার্বক্ষণিক কাস্টমার সাপোর্ট প্রদান করে একটি নিরাপদ, স্বচ্ছ ও প্রিমিয়াম কেনাকাটার অভিজ্ঞতা দেওয়াই আমাদের মূল অঙ্গীকার।</>
-                )}
-              </p>
-            </div>
-          )}
+            <p>
+              {lang === 'en' ? (
+                <>Every product undergoes strict quality inspections to ensure uncompromised quality before reaching your doorstep. Partnered with top logistics providers, we offer fast and reliable home delivery across all 64 districts of Bangladesh, backed by genuine replacement warranties and dedicated customer support to ensure a secure, transparent, and seamless shopping experience.</>
+              ) : (
+                <>আমাদের প্রতিটি পণ্য নিজস্ব কোয়ালিটি চেকের মাধ্যমে শতভাগ গুণগত মান নিশ্চিত করে গ্রাহকের কাছে পৌঁছানো হয়। দেশের স্বনামধন্য কুরিয়ার পার্টনারের মাধ্যমে ঢাকা সিটি সহ সমগ্র বাংলাদেশের ৬৪টি জেলাতেই রয়েছে আমাদের দ্রুত হোম ডেলিভারি সুবিধা। প্রতিটি অর্ডারে জেনুইন রিপ্লেসমেন্ট ওয়ারেন্টি এবং সার্বক্ষণিক কাস্টমার সাপোর্ট প্রদান করে একটি নিরাপদ, স্বচ্ছ ও প্রিমিয়াম কেনাকাটার অভিজ্ঞতা দেওয়াই আমাদের মূল অঙ্গীকার।</>
+              )}
+            </p>
+          </div>
 
         </div>
       </div>

@@ -235,19 +235,11 @@ export function validateTxnId(txn: string): boolean {
   return txnRegex.test(txn) && hasLetter && hasDigit && !allSame;
 }
 
-export async function fetchBkashNumber(supabase: SupabaseClient): Promise<string> {
-  try {
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('setting_value')
-      .eq('setting_key', 'vc_contact')
-      .maybeSingle();
-    if (error || !data) return '01816365504';
-    const val = typeof data.setting_value === 'string' ? JSON.parse(data.setting_value) : data.setting_value;
-    return (val && (val.bk || val.phone)) || '01816365504';
-  } catch {
-    return '01816365504';
-  }
+// vc_contact সেটিংটা এখন অ্যাডমিন প্যানেল থেকে এডিট করার কোনো উপায় নেই (ফিচার
+// সরানো হয়েছে), তাই Supabase-এ বারবার খুঁজে দেখার দরকার নেই — সরাসরি ডিফল্ট
+// বিকাশ নম্বরটাই রিটার্ন করা হচ্ছে।
+export async function fetchBkashNumber(_supabase: SupabaseClient): Promise<string> {
+  return '01816365504';
 }
 
 export async function fetchShipConfig(supabase: SupabaseClient): Promise<ShipConfig> {

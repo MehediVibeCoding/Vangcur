@@ -1,6 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import type { FooterContact, FooterLogo, ServiceLink } from '@/types';
-import { parseSupabaseVal } from './categoryData';
 import { sanitizeHref } from './security';
 
 export const DEFAULT_FOOTER = {
@@ -54,39 +53,21 @@ export interface FooterSettingsRaw {
   vc_footer_links?: { url?: string; label?: string }[];
 }
 
-export async function fetchFooterSettings(supabase: SupabaseClient): Promise<FooterSettingsRaw> {
-  try {
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('setting_key,setting_value')
-      .in('setting_key', ['vc_logo', 'vc_contact', 'vc_footer', 'vc_footer_links']);
-    if (error || !data) return {};
-    const out: Record<string, unknown> = {};
-    data.forEach((row: { setting_key: string; setting_value: unknown }) => {
-      out[row.setting_key] = parseSupabaseVal(row.setting_value);
-    });
-    return out as FooterSettingsRaw;
-  } catch {
-    return {};
-  }
+// vc_logo, vc_contact, vc_footer, vc_footer_links — এই সেটিংসগুলো এখন অ্যাডমিন
+// প্যানেল থেকে এডিট করার কোনো উপায় নেই (ফিচার সরানো হয়েছে), তাই Supabase-এ
+// বারবার খুঁজে দেখার দরকার নেই — সবসময় খালি অবজেক্ট রিটার্ন হবে, ফলে
+// Footer কম্পোনেন্ট উপরের DEFAULT_FOOTER-ই ব্যবহার করবে।
+export async function fetchFooterSettings(_supabase: SupabaseClient): Promise<FooterSettingsRaw> {
+  return {};
 }
 
+// আসল ডাটা কখনো বদলাবে না (এডিট করার পথ নেই), তাই এখানে postgres_changes
+// লিসেনার লাগানো হয়নি — শুধু কলার-দের কোড অপরিবর্তিত রাখতে (supabase.removeChannel
+// নিরাপদে কল করা যাবে) একটা খালি চ্যানেল ফেরত দেওয়া হচ্ছে।
 export function subscribeFooterSettings(
   supabase: SupabaseClient,
-  onChange: (key: 'vc_logo' | 'vc_contact', val: unknown) => void,
-) {
+  _onChange: (key: 'vc_logo' | 'vc_contact', val: unknown) => void,
+): RealtimeChannel {
   const uniqueName = `footer-settings-watch-${Math.random().toString(36).slice(2, 9)}`;
-  return supabase
-    .channel(uniqueName)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_logo' },
-      (payload) => payload.new && onChange('vc_logo', parseSupabaseVal((payload.new as { setting_value: unknown }).setting_value)),
-    )
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_contact' },
-      (payload) => payload.new && onChange('vc_contact', parseSupabaseVal((payload.new as { setting_value: unknown }).setting_value)),
-    )
-    .subscribe();
+  return supabase.channel(uniqueName).subscribe();
 }
