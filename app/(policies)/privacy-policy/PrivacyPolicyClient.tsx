@@ -113,7 +113,7 @@ export default function PrivacyPolicyClient() {
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'User Account Data: If you register or authenticate via Google OAuth, we store your profile name, verified email, and encrypted credentials managed securely by Supabase Auth.'
+              ? 'User Account Data: If you register or authenticate via Google OAuth, we store your profile name and verified email in encrypted form on our secure servers.'
               : 'অ্যাকাউন্ট তথ্য: আপনি রেজিস্ট্রেশন করলে বা Google দিয়ে লগইন করলে আপনার নাম ও ইমেইল সুরক্ষিত সার্ভারে এনক্রিপ্টেড আকারে সংরক্ষিত থাকে।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
@@ -170,23 +170,13 @@ export default function PrivacyPolicyClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Supabase: Enterprise PostgreSQL database infrastructure, real-time sync, and encrypted authentication.'
-              : 'Supabase: ডেটাবেজ নিরাপত্তা, সেশন অথেন্টিকেশন ও রিয়েল-টাইম অর্ডার স্ট্যাটাস আপডেটের জন্য।'}
-          </PolicyBulletPoint>
-          <PolicyBulletPoint>
-            {lang === 'en'
-              ? 'Cloudinary: High-speed CDN delivery and optimization for product imagery and unboxing gallery media.'
-              : 'Cloudinary: প্রোডাক্ট ফটো ও কাস্টমার রিভিউ ইমেজ সুরক্ষিতভাবে অপটিমাইজ করার জন্য।'}
-          </PolicyBulletPoint>
-          <PolicyBulletPoint>
-            {lang === 'en'
               ? 'Pathao Courier: Recipient name, destination address, and contact number are transmitted strictly for closed-box home delivery fulfillment.'
-              : 'পাঠাও কুরিয়ার: পার্সেল পৌঁছে দেওয়ার জন্য প্রয়োজনীয় নাম, ঠিকানা ও ফোন নম্বর কেবল কুরিয়ার সিস্টেমে যুক্ত করা হয়।'}
+              : 'পাঠাও কুরিয়ার: পার্সেল পৌঁছে দেওয়ার জন্য প্রয়োজনীয় নাম, ঠিকানা ও ফোন নম্বর কেবল কুরিয়ার সিস্টেমে যুক্ত করা হয়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'bKash Merchant Verification: Manual verification via transaction ID and reference digits. We never capture or access your personal bKash PIN.'
-              : 'বিকাশ ভেরিফিকেশন: পেমেন্ট কেবল রেফারেন্স মিলিয়ে ম্যানুয়ালি নিশ্চিত করা হয়; কোনো পিন বা ওটিপি সংগ্রহ করা হয় না।'}
+              ? 'bKash Payment Verification: Verified via transaction ID and reference digits. We never capture or access your personal bKash PIN.'
+              : 'বিকাশ ভেরিফিকেশন: পেমেন্ট রেফারেন্স মিলিয়ে নিশ্চিত করা হয়; কোনো পিন বা ওটিপি সংগ্রহ করা হয় না।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
@@ -219,8 +209,8 @@ export default function PrivacyPolicyClient() {
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Database access is restricted by Postgres Row Level Security (RLS) policies.'
-              : 'ডাটাবেজে কঠোর Row Level Security (RLS) পলিসি সক্রিয় থাকায় ব্যবহারকারী কেবল নিজের ডেটা অ্যাক্সেস করতে পারেন।'}
+              ? 'Strict access-control rules ensure each user can only access their own data.'
+              : 'কঠোর অ্যাক্সেস-কন্ট্রোল নীতিমালা থাকায় ব্যবহারকারী কেবল নিজের ডেটা অ্যাক্সেস করতে পারেন।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
