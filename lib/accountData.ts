@@ -404,11 +404,9 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
   } catch {
     // profiles table fallback
   }
-  try {
-    await supabase.from('orders').update({ customer_name: cleanName }).eq('user_id', currentUser.id);
-  } catch {
-    // order rows update fallback
-  }
+  // এখানে ইচ্ছাকৃতভাবে orders.customer_name আপডেট করা হয় না — অর্ডারের নাম
+  // অর্ডার-করার-সময়কারই থাকা দরকার (যাচাইয়ের জন্য), অ্যাকাউন্টের নাম
+  // বদলালে পুরনো অর্ডারের নাম বদলে যাওয়া উচিত না।
   return true;
 }
 
