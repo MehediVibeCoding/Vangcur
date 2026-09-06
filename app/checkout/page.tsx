@@ -514,8 +514,9 @@ export default function CheckoutPage() {
       if (!user) return;
 
       if (safeUser) {
-        useAuthStore.getState().setCurrentUser(safeUser);
+        // 🛡️ আগে গেস্ট-অর্ডার জোড়া লাগানোর কাজ সম্পূর্ণ শেষ করা হচ্ছে, তারপর লগইন-স্টেট সেট করা হচ্ছে
         await mergeGuestOrdersToUser(supabase, safeUser.phone || '', safeUser.id || '');
+        useAuthStore.getState().setCurrentUser(safeUser);
       }
       try { localStorage.removeItem('vc_post_login_action'); } catch { /* ignore */ }
 
