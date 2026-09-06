@@ -360,9 +360,13 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
     let q = supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (currentUser.id) q = q.eq('user_id', currentUser.id);
     const { data, error } = await q;
-    if (!error && data && data.length) return data.map(mapOrderRow);
-    throw new Error('no data');
-  } catch {
+    // 🛡️ আসল এরর হলে এখানেই throw করা হচ্ছে — সত্যিকারের খালি ফলাফল (data = [])
+    // আর প্রকৃত ডাটাবেজ এরর আর একইভাবে গিলে ফেলা হচ্ছে না
+    if (error) throw error;
+    return (data || []).map(mapOrderRow);
+  } catch (e) {
+    // 🛡️ আসল কারণটা কনসোলে লগ করা হচ্ছে, যাতে ভবিষ্যতে এই ধরনের সমস্যা চুপচাপ চাপা না পড়ে
+    logWarn('[Vangcur] fetchMyOrders ব্যর্থ হয়েছে:', e);
     try {
       const all: Order[] = JSON.parse(localStorage.getItem('vc_orders') || '[]');
       return all.filter((o) => o.userId === currentUser?.id || o.custEmail === currentUser?.email);
