@@ -33,17 +33,28 @@ export async function signInWithGoogle(supabase: SupabaseClient, redirectTo = '/
 }
 
 export async function logout(supabase: SupabaseClient): Promise<void> {
+  let globalSignOutFailed = false;
   try {
     await supabase.auth.signOut({ scope: 'global' });
   } catch {
-    // ignore
+    // 🛡️ "সব ডিভাইস থেকে লগআউট" (global) নেটওয়ার্ক-নির্ভর — এটা ব্যর্থ হলে
+    // নিচে নিশ্চিতভাবে local সাইন-আউট চালানো হবে, যাতে আসল কুকি/সেশন অবশ্যই মুছে যায়
+    globalSignOutFailed = true;
+  }
+  if (globalSignOutFailed) {
+    try {
+      // 🛡️ local সাইন-আউট নেটওয়ার্ক-নির্ভর না, তাই এটা প্রায় সবসময়ই আসল সেশন/কুকি ক্লিয়ার করে
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // ignore
+    }
   }
   useAuthStore.getState().setCurrentUser(null);
   try {
-    // 🛡️ নিশ্চিত করা হচ্ছে সেশন সত্যিই শেষ হয়েছে — না হলে আরেকবার চেষ্টা
+    // 🛡️ নিশ্চিত করা হচ্ছে সেশন সত্যিই শেষ হয়েছে — এখনো জীবিত থাকলে জোর করে local সাইন-আউট
     const { data } = await supabase.auth.getUser();
     if (data?.user) {
-      await supabase.auth.signOut({ scope: 'global' });
+      await supabase.auth.signOut({ scope: 'local' });
     }
   } catch {
     // ignore
