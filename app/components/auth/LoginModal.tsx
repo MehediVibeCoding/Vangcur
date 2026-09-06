@@ -254,7 +254,7 @@ export default function LoginModal({
       const safeUser = await checkOAuthCallback(supabase);
       if (!safeUser) return;
       useAuthStore.getState().setCurrentUser(safeUser);
-      await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
+      await mergeGuestOrdersToUser(supabase, safeUser.phone || '', safeUser.id || '');
       await applyWishlistSync(safeUser.id || '');
       showToast(t('Google দিয়ে লগইন সফল হয়েছে'));
 
@@ -311,7 +311,7 @@ export default function LoginModal({
 
   const finishAuthSuccess = async (safeUser: CurrentUser, successMsg: string) => {
     useAuthStore.getState().setCurrentUser(safeUser);
-    await mergeGuestOrdersToUser(supabase, safeUser.email || '', safeUser.id || '');
+    await mergeGuestOrdersToUser(supabase, safeUser.phone || '', safeUser.id || '');
     await applyWishlistSync(safeUser.id || '');
     showToast(successMsg);
     onClose();
