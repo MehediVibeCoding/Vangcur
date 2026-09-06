@@ -282,8 +282,8 @@ export default function CustomerGallery() {
     if (review.id) {
       (async () => {
         try {
-          const { error } = await supabase.rpc('increment_review_like', {
-            target_id: review.id,
+          const { error } = await supabase.rpc('increment_gallery_like', {
+            p_review_id: review.id,
           });
           if (error) logWarn('Like update failed:', error);
         } catch (err) {
