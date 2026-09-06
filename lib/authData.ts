@@ -109,10 +109,42 @@ export async function saveWishlistToSupabase(supabase: SupabaseClient, userId: s
   }
 }
 
-export async function mergeGuestOrdersToUser(supabase: SupabaseClient, phone: string, userId: string): Promise<void> {
-  if (!phone || !userId) return;
+function getLocalGuestOrderIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  const ids = new Set<string>();
   try {
-    await supabase.rpc('claim_guest_orders_by_phone', { p_phone: phone.trim() });
+    const raw = localStorage.getItem('vc_guest_orders');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        for (const entry of parsed) {
+          const id = typeof entry === 'string' ? entry : entry?.id;
+          if (id) ids.add(String(id));
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    const pending = localStorage.getItem('vc_pending_ls');
+    if (pending) ids.add(pending);
+  } catch {
+    // ignore
+  }
+  return Array.from(ids);
+}
+
+export async function mergeGuestOrdersToUser(supabase: SupabaseClient, phone: string, userId: string): Promise<void> {
+  if (!userId) return;
+  const orderIds = getLocalGuestOrderIds();
+  const trimmedPhone = phone ? phone.trim() : '';
+  if (!trimmedPhone && orderIds.length === 0) return;
+  try {
+    await supabase.rpc('claim_guest_orders', {
+      p_phone: trimmedPhone || null,
+      p_order_ids: orderIds.length > 0 ? orderIds : null,
+    });
   } catch {
     // ignore
   }
