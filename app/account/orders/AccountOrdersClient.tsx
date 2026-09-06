@@ -11,6 +11,7 @@ import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { OrderListSkeleton } from '@/app/components/ui/Skeletons';
 import { fetchMyOrders, orderStats } from '@/lib/accountData';
+import { getLiveUser } from '@/lib/authData';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -39,15 +40,37 @@ export default function AccountOrdersClient() {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    fetchMyOrders(supabase, currentUser).then((data) => {
-      setOrders(data);
-      setLoading(false);
-    });
+    let cancelled = false;
+
+    (async () => {
+      // 🛡️ ক্যাশ করা তথ্য বিশ্বাস না করে সরাসরি সার্ভারের কাছে আসল/লাইভ সেশন যাচাই করা হচ্ছে
+      const liveUser = await getLiveUser(supabase);
+      if (cancelled) return;
+
+      if (!liveUser) {
+        // আসল সেশন নেই — ক্যাশে পুরনো লগইন তথ্য থাকলে সেটা মুছে ফেলা হচ্ছে
+        if (currentUser) useAuthStore.getState().setCurrentUser(null);
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      // ক্যাশ আর আসল সেশন না মিললে ক্যাশ আপডেট করা হচ্ছে
+      if (!currentUser || currentUser.id !== liveUser.id) {
+        useAuthStore.getState().setCurrentUser(liveUser);
+      }
+
+      setLoading(true);
+      const data = await fetchMyOrders(supabase, liveUser);
+      if (!cancelled) {
+        setOrders(data);
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser, supabase]);
 
   const stats = useMemo(() => orderStats(orders), [orders]);
