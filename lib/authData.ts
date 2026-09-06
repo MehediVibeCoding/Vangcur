@@ -34,11 +34,45 @@ export async function signInWithGoogle(supabase: SupabaseClient, redirectTo = '/
 
 export async function logout(supabase: SupabaseClient): Promise<void> {
   try {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'global' });
   } catch {
     // ignore
   }
   useAuthStore.getState().setCurrentUser(null);
+  try {
+    // 🛡️ নিশ্চিত করা হচ্ছে সেশন সত্যিই শেষ হয়েছে — না হলে আরেকবার চেষ্টা
+    const { data } = await supabase.auth.getUser();
+    if (data?.user) {
+      await supabase.auth.signOut({ scope: 'global' });
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * 🛡️ ব্রাউজারের ক্যাশ নয়, সরাসরি সার্ভারের কাছে জিজ্ঞেস করে আসল/লাইভ লগইন সেশন যাচাই করা।
+ * RLS-নির্ভর কোনো ডেটা আনার আগে এটা ব্যবহার করা উচিত, কারণ ক্যাশ করা ইউজার তথ্য
+ * মাঝেমধ্যে আসল সেশনের সাথে অমিল হয়ে যেতে পারে।
+ */
+export async function getLiveUser(supabase: SupabaseClient): Promise<CurrentUser | null> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) return null;
+    const user = data.user;
+    const meta = user.user_metadata || {};
+    return {
+      id: user.id,
+      email: user.email,
+      name: meta.full_name || meta.name || user.email?.split('@')[0] || 'Customer',
+      phone: meta.phone || '',
+      avatar: meta.avatar_url || meta.picture || '',
+      provider: user.app_metadata?.provider || 'email',
+      createdAt: user.created_at,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function checkOAuthCallback(supabase: SupabaseClient): Promise<CurrentUser | null> {
