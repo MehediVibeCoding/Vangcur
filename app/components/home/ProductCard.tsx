@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   productHref,
   startQuickOrder,
@@ -11,7 +12,6 @@ import {
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { showToast } from '@/lib/toast';
-import { WISHLIST_FLY_EVENT } from '@/lib/uiEvents';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Product } from '@/types';
@@ -41,6 +41,74 @@ function HeartIcon({ filled }: { filled: boolean }) {
     <svg width="52%" height="52%" viewBox="0 0 24 24" fill={filled ? '#FF5A6E' : 'none'} stroke={filled ? '#FF5A6E' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
     </svg>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// উইশলিস্টে "লাভ" (হার্ট) ক্লিক করলে প্রোডাক্ট কার্ডের হার্ট আইকন থেকেই
+// ৫-৬টা ছোট হার্ট ছড়িয়ে/ভেসে উঠে ফেড-আউট হয়ে যায় — Navbar পর্যন্ত উড়ে
+// যাওয়ার বদলে পুরো এফেক্টটা কার্ডেই ঘটে (প্রোডাক্ট পেজে এই এনিমেশন হয় না,
+// শুধু প্রোডাক্ট গ্রিড/কার্ডে হয়)।
+interface HeartParticle {
+  id: number;
+  dx: number;
+  dy: number;
+  size: number;
+  color: string;
+  delay: number;
+  rot: number;
+}
+
+const HEART_BURST_COLORS = ['#FF5A6E', '#FF7D90', '#FFA3B0', '#FF5A6E', '#FF93A4'];
+
+function makeHeartBurst(seed: number): HeartParticle[] {
+  const count: number = 6;
+  const spreadDeg = 156; // উপরের দিকে হালকা বাঁকা একটা "ফ্যান" আকারে ছড়িয়ে পড়ে
+  const baseAngle = -90; // সোজা উপরের দিক
+  const particles: HeartParticle[] = [];
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const jitter = Math.random() * 16 - 8;
+    const angleDeg = baseAngle - spreadDeg / 2 + spreadDeg * t + jitter;
+    const rad = (angleDeg * Math.PI) / 180;
+    const distance = 24 + Math.random() * 18;
+    particles.push({
+      id: seed * 10 + i,
+      dx: Math.cos(rad) * distance,
+      dy: Math.sin(rad) * distance,
+      size: 7 + Math.random() * 6,
+      color: HEART_BURST_COLORS[i % HEART_BURST_COLORS.length],
+      delay: i * 0.03,
+      rot: Math.random() * 50 - 25,
+    });
+  }
+  return particles;
+}
+
+function BurstHeart({ p }: { p: HeartParticle }) {
+  return (
+    <motion.span
+      initial={{ opacity: 0, scale: 0.3, x: 0, y: 0, rotate: 0 }}
+      animate={{
+        opacity: [0, 1, 1, 0],
+        scale: [0.3, 1, 1, 0.5],
+        x: p.dx,
+        y: p.dy,
+        rotate: p.rot,
+      }}
+      transition={{
+        duration: 0.8,
+        delay: p.delay,
+        ease: [0.22, 0.7, 0.2, 1],
+        times: [0, 0.22, 0.62, 1],
+      }}
+      className="pointer-events-none absolute left-1/2 top-1/2"
+      style={{ marginLeft: -p.size / 2, marginTop: -p.size / 2 }}
+    >
+      <svg width={p.size} height={p.size} viewBox="0 0 24 24" fill={p.color}>
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+      </svg>
+    </motion.span>
   );
 }
 
@@ -87,11 +155,17 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const router = useRouter();
   const rawWished = useWishlistStore((s) => s.wishlist.some((x) => String(x.id) === String(p.id)));
   const [wished, setWished] = useState(false);
-  const wishBtnRef = useRef<HTMLButtonElement>(null);
+  const [burst, setBurst] = useState<{ id: number; particles: HeartParticle[] } | null>(null);
+  const burstSeedRef = useRef(0);
+  const burstTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setWished(rawWished);
   }, [rawWished]);
+
+  useEffect(() => () => {
+    if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
+  }, []);
 
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -103,11 +177,17 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     e.preventDefault();
     e.stopPropagation();
     const added = useWishlistStore.getState().toggleWish(p);
-    if (added && wishBtnRef.current) {
-      const r = wishBtnRef.current.getBoundingClientRect();
-      window.dispatchEvent(new CustomEvent(WISHLIST_FLY_EVENT, {
-        detail: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
-      }));
+    if (added) {
+      const reducedMotion = typeof window !== 'undefined' && !!window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reducedMotion) {
+        const seed = ++burstSeedRef.current;
+        if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
+        setBurst({ id: seed, particles: makeHeartBurst(seed) });
+        burstTimerRef.current = setTimeout(() => {
+          setBurst((prev) => (prev && prev.id === seed ? null : prev));
+        }, 850);
+      }
     }
   };
 
@@ -163,22 +243,39 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
           </div>
         )}
 
-        <button
-          ref={wishBtnRef}
-          type="button"
-          onClick={handleWish}
-          title="Wishlist"
-          aria-label="Wishlist"
-          className={`absolute right-[4.5%] top-[4.5%] z-[3] flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110 active:scale-90 sm:h-8 sm:w-8 ${
-            wished
-              ? 'bg-white/95 text-[#FF5A6E] shadow-xs'
-              : 'border border-white/40 bg-black/25 text-white hover:bg-black/35'
-          }`}
-        >
-          <span className="flex h-full w-full items-center justify-center">
-            <HeartIcon filled={wished} />
-          </span>
-        </button>
+        <div className="absolute right-[4.5%] top-[4.5%] z-[3] h-7 w-7 sm:h-8 sm:w-8">
+          <button
+            type="button"
+            onClick={handleWish}
+            title="Wishlist"
+            aria-label="Wishlist"
+            className={`flex h-full w-full shrink-0 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110 active:scale-90 ${
+              wished
+                ? 'bg-white/95 text-[#FF5A6E] shadow-xs'
+                : 'border border-white/40 bg-black/25 text-white hover:bg-black/35'
+            }`}
+          >
+            <motion.span
+              key={burst ? `pop-${burst.id}` : 'idle'}
+              initial={burst ? { scale: 1 } : false}
+              animate={burst ? { scale: [1, 1.35, 0.92, 1.05, 1] } : { scale: 1 }}
+              transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+              className="flex h-full w-full items-center justify-center"
+            >
+              <HeartIcon filled={wished} />
+            </motion.span>
+          </button>
+
+          <AnimatePresence>
+            {burst && (
+              <div className="pointer-events-none absolute inset-0">
+                {burst.particles.map((pt) => (
+                  <BurstHeart key={pt.id} p={pt} />
+                ))}
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
           <Link
