@@ -133,9 +133,14 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
               <div className="py-8 text-center font-body text-xs text-muted">{t('লোড হচ্ছে...')}</div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-                <p className="-mt-1 mb-1 rounded-lg bg-emerald-50 p-2.5 font-body text-[12px] leading-relaxed text-emerald-700">
-                  🟢 {t('নাম, ফোন, জেলা ও ঠিকানা সম্পূর্ণ করুন — একটা সবুজ ভেরিফিকেশন ব্যাজ পাবেন যেটা আপনার প্রশ্ন ও রিভিউয়ের পাশে দেখা যাবে, আর পরের অর্ডারে সব তথ্য অটোমেটিক পূরণ হয়ে যাবে।')}
-                </p>
+                <div className="-mt-1 mb-1 rounded-lg bg-emerald-50 p-2.5 font-body text-[12px] leading-relaxed text-emerald-700">
+                  <p className="font-bold">
+                    ✨ {t('প্রোফাইল সম্পূর্ণ করলে যা পাবেন')}
+                  </p>
+                  <p className="mt-1">
+                    {t('একটি সবুজ ভেরিফাইড ব্যাজ, যা আপনার প্রশ্ন ও রিভিউয়ের পাশে সবাই দেখতে পাবে — আর পরের যেকোনো অর্ডারে আপনার তথ্য নিজে থেকেই পূরণ হয়ে যাবে, তাই বারবার টাইপ করতে হবে না।')}
+                  </p>
+                </div>
 
                 <div>
                   <label className="mb-1 block font-body text-xs font-bold text-ink">{t('আপনার নাম')}</label>
@@ -166,17 +171,24 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
 
                 <div>
                   <label className="mb-1 block font-body text-xs font-bold text-ink">{t('জেলা')}</label>
-                  <select
-                    required
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-base bg-white px-3.5 py-2.5 font-body text-[13.5px] text-ink outline-none transition-brand focus:border-brand-light"
-                  >
-                    <option value="">{t('জেলা সিলেক্ট করুন')}</option>
-                    {DISTRICTS.map((d) => (
-                      <option key={d} value={d}>{getDistrictLabel(d, lang)}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      required
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-border-base bg-white px-3.5 py-2.5 pr-9 font-body text-[13.5px] text-ink outline-none transition-brand focus:border-brand-light"
+                    >
+                      <option value="">{t('জেলা সিলেক্ট করুন')}</option>
+                      {DISTRICTS.map((d) => (
+                        <option key={d} value={d}>{getDistrictLabel(d, lang)}</option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
 
                 <div>

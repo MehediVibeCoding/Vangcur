@@ -7,8 +7,6 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { showToast } from '@/lib/toast';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
-import { sanitizePlainName, validateName, MAX_NAME_LEN } from '@/lib/security';
-import { checkNameChangeLimit } from '@/lib/rateLimit';
 import { productHref, QUICK_CART_EVENT } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
@@ -23,7 +21,7 @@ import {
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
-  fetchMyOrders, orderStats, updateProfileName,
+  fetchMyOrders, orderStats,
   getStockNotifications, removeStockNotification, clearAllStockNotifications,
   fetchDrafts, deleteDraft, deleteAllDrafts,
 } from '@/lib/accountData';
@@ -31,6 +29,7 @@ import {
   getTier, tierIconSVG, crownSVG,
 } from '@/lib/membershipData';
 import { fetchMyProfile, isProfileComplete } from '@/lib/profileData';
+import { VerifiedCustomerBadge } from '@/app/components/product/VerifiedBadges';
 import Footer from '@/app/components/layout/Footer';
 import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
@@ -205,10 +204,6 @@ export default function AccountClient() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [cardWidth, setCardWidth] = useState(320);
 
-  const [nameEditOpen, setNameEditOpen] = useState(false);
-  const [nameEditValue, setNameEditValue] = useState('');
-  const [nameEditErr, setNameEditErr] = useState('');
-
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -255,7 +250,7 @@ export default function AccountClient() {
       setLoadingOrders(false);
       return;
     }
-    setNameEditOpen(false);
+    setCompleteProfileOpen(false);
     const notifs = getStockNotifications();
     setStockNotifs(notifs);
 
@@ -308,38 +303,6 @@ export default function AccountClient() {
       year: 'numeric', month: 'long', day: 'numeric',
     })
     : '';
-
-  const openNameEdit = () => {
-    if (!currentUser) return;
-    setNameEditValue(sanitizePlainName(currentUser.name || ''));
-    setNameEditErr('');
-    setNameEditOpen(true);
-  };
-
-  const closeNameEdit = () => {
-    setNameEditOpen(false);
-    setNameEditErr('');
-  };
-
-  const saveNameEdit = async () => {
-    if (!currentUser) return;
-    const nm = nameEditValue.trim();
-    if (!validateName(nm)) {
-      setNameEditErr(t('অন্তত ২ ও সর্বোচ্চ ৩০ অক্ষরের প্লেন নাম দিন (কোনো চিহ্ন/ইমোজি ছাড়া)'));
-      return;
-    }
-    if (currentUser.id) {
-      const limit = await checkNameChangeLimit(supabase, currentUser.id);
-      if (!limit.allowed) {
-        setNameEditErr(t('আপনি দৈনিক ৩ বার নাম পরিবর্তনের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'));
-        return;
-      }
-    }
-    await updateProfileName(supabase, currentUser, nm);
-    useAuthStore.getState().setCurrentUser({ ...currentUser, name: nm });
-    closeNameEdit();
-    showToast(t('নাম পরিবর্তন হয়েছে'));
-  };
 
   const doLogout = async () => {
     setShowLogoutConfirm(false);
@@ -549,26 +512,6 @@ export default function AccountClient() {
               </div>
             </div>
 
-            {/* 🆕 প্রোফাইল অসম্পূর্ণ থাকলে ব্যানার — সম্পূর্ণ করলে ভেরিফিকেশন ব্যাজ পাওয়া যাবে */}
-            {profileComplete === false && (
-              <div className="mb-6 flex flex-col items-start gap-3 rounded-[18px] border border-brand-light/40 bg-brand-bg/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="font-body text-[13.5px] font-bold text-ink">
-                    {t('আপনার প্রোফাইল সম্পূর্ণ করুন')}
-                  </div>
-                  <p className="mt-0.5 font-body text-[12px] text-muted">
-                    {t('নাম, ফোন, জেলা ও ঠিকানা যোগ করে ভেরিফিকেশন ব্যাজ পান এবং পরের অর্ডারে অটো-ফিল সুবিধা নিন।')}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCompleteProfileOpen(true)}
-                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
-                >
-                  {t('এখনই সম্পূর্ণ করুন')}
-                </button>
-              </div>
-            )}
-
             {/* ২-কলাম ড্যাশবোর্ড গ্রিড */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
               
@@ -762,7 +705,10 @@ export default function AccountClient() {
                       </div>
                     </div>
                     <div className="min-w-0 flex-1 text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.65)' }}>
-                      <div className="truncate font-body text-[15px] font-extrabold">{currentUser.name || '-'}</div>
+                      <div className="flex items-center gap-1.5 font-body text-[15px] font-extrabold">
+                        <span className="min-w-0 truncate">{currentUser.name || '-'}</span>
+                        {profileComplete === true && <VerifiedCustomerBadge />}
+                      </div>
                       <div className="truncate font-body text-[12px] text-white/80">{currentUser.email || '-'}</div>
                       {createdStr && (
                         <div className="mt-0.5 font-body text-[10.5px] text-white/70">
@@ -774,13 +720,23 @@ export default function AccountClient() {
 
                   {/* নিচের অংশ: এডিট ও লগআউট বাটন (কালো ছোপ ছাড়া সফট ফ্রস্টেড গ্লাস স্ট্রিপ) */}
                   <div className="relative z-20 mt-auto pt-3">
+                    {profileComplete === false && (
+                      <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold text-amber-200">
+                        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-amber-300 text-[9px] font-black text-amber-950">!</span>
+                        <span className="truncate">{t('🛡️ ভেরিফাইড ব্যাজ পেতে প্রোফাইল সম্পূর্ণ করুন')}</span>
+                      </div>
+                    )}
                     <div className="flex gap-2 border-t border-white/[0.16] pt-3">
                       <button
-                        onClick={openNameEdit}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
+                        onClick={() => setCompleteProfileOpen(true)}
+                        className={`flex flex-1 items-center justify-center gap-1.5 rounded-full border py-2 font-body text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all active:scale-95 ${
+                          profileComplete === false
+                            ? 'border-brand-light/80 bg-brand-light/35 hover:bg-brand-light/45'
+                            : 'border-white/25 bg-white/15 hover:bg-white/25'
+                        }`}
                       >
                         <IconEdit />
-                        <span>{t('এডিট')}</span>
+                        <span>{profileComplete === false ? t('সেটআপ') : t('এডিট')}</span>
                       </button>
                       <button
                         onClick={() => setShowLogoutConfirm(true)}
@@ -790,38 +746,6 @@ export default function AccountClient() {
                         <span>{t('লগআউট')}</span>
                       </button>
                     </div>
-
-                    {nameEditOpen && (
-                      <div className="mt-3 rounded-[16px] bg-black/45 p-3.5 backdrop-blur-md animate-section-reveal">
-                        <div className="mb-1.5 font-body text-[11.5px] font-bold text-white/80">
-                          {t('নতুন নাম লিখুন')}
-                        </div>
-                        <div className="flex gap-1.5">
-                          <input
-                            type="text"
-                            placeholder={t('আপনার নাম')}
-                            value={nameEditValue}
-                            maxLength={MAX_NAME_LEN}
-                            onChange={(e) => setNameEditValue(sanitizePlainName(e.target.value))}
-                            onKeyDown={(e) => { if (e.key === 'Enter') saveNameEdit(); }}
-                            className="flex-1 rounded-[10px] border border-white/20 bg-white/15 px-3 py-1.5 font-body text-[13px] text-white outline-none placeholder:text-white/50 focus:border-brand-light"
-                          />
-                          <button
-                            onClick={saveNameEdit}
-                            className="rounded-[10px] bg-brand-light px-3.5 font-body text-xs font-bold text-white shadow-xs hover:bg-brand-light-hover"
-                          >
-                            {t('সেভ')}
-                          </button>
-                          <button
-                            onClick={closeNameEdit}
-                            className="rounded-[10px] bg-white/20 px-2.5 font-body text-xs text-white"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        {nameEditErr && <div className="mt-1.5 font-body text-[11px] text-red-300">{nameEditErr}</div>}
-                      </div>
-                    )}
                   </div>
                 </div>
 
