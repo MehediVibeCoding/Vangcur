@@ -133,14 +133,21 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
               <div className="py-8 text-center font-body text-xs text-muted">{t('লোড হচ্ছে...')}</div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-                <div className="-mt-1 mb-1 rounded-lg bg-emerald-50 p-2.5 font-body text-[12px] leading-relaxed text-emerald-700">
-                  <p className="font-bold">
-                    ✨ {t('প্রোফাইল সম্পূর্ণ করলে যা পাবেন')}
-                  </p>
-                  <p className="mt-1">
-                    {t('একটি সবুজ ভেরিফাইড ব্যাজ, যা আপনার প্রশ্ন ও রিভিউয়ের পাশে সবাই দেখতে পাবে — আর পরের যেকোনো অর্ডারে আপনার তথ্য নিজে থেকেই পূরণ হয়ে যাবে, তাই বারবার টাইপ করতে হবে না।')}
-                  </p>
-                </div>
+                {/* 🛠️ ফিক্স: আগে এই বক্সটা সবসময় দেখাত, প্রোফাইল আগে থেকে
+                    সম্পূর্ণ থাকলেও — যেটা ইতিমধ্যে ভেরিফায়েড ইউজারের কাছে
+                    অপ্রাসঙ্গিক (সে তো সুবিধাটা আগেই পেয়ে গেছে)। এখন নিচের
+                    "✓ সম্পূর্ণ" মেসেজের মতোই complete স্টেট চেক করে শুধু
+                    অসম্পূর্ণ থাকলেই দেখাবে। */}
+                {!complete && (
+                  <div className="-mt-1 mb-1 rounded-lg bg-emerald-50 p-2.5 font-body text-[12px] leading-relaxed text-emerald-700">
+                    <p className="font-bold">
+                      ✨ {t('প্রোফাইল সম্পূর্ণ করলে যা পাবেন')}
+                    </p>
+                    <p className="mt-1">
+                      {t('একটি সবুজ ভেরিফাইড ব্যাজ, যা আপনার প্রশ্ন ও রিভিউয়ের পাশে সবাই দেখতে পাবে — আর পরের যেকোনো অর্ডারে আপনার তথ্য নিজে থেকেই পূরণ হয়ে যাবে, তাই বারবার টাইপ করতে হবে না।')}
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label className="mb-1 block font-body text-xs font-bold text-ink">{t('আপনার নাম')}</label>
