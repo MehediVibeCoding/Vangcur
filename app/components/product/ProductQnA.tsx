@@ -191,6 +191,16 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
     setQuestions((prev) => [{ ...res.data!, answers: [] }, ...prev]);
     setAskModalOpen(false);
     showToast(t('✅ আপনার প্রশ্নটি সফলভাবে জমা হয়েছে!'));
+
+    // 🛠️ ফিক্স: অপটিমিস্টিক আপডেটে নতুন প্রশ্নটা লোকাল স্টেটে ঢুকে গেলেও
+    // verifiedMap-এ নিজের এন্ট্রি না থাকলে (প্রথমবার প্রশ্ন করলে) ব্যাজ
+    // দেখাত না — যদিও প্রোফাইল আসলে সম্পূর্ণ। তাই এখানে নিজের আইডির জন্য
+    // আলাদা করে ব্যাচ-চেক করে verifiedMap মার্জ করে দেওয়া হচ্ছে।
+    if (currentUser?.id) {
+      fetchProfileCompletionMap(supabase, [currentUser.id]).then((m) => {
+        setVerifiedMap((prev) => ({ ...prev, ...m }));
+      });
+    }
   };
 
   const openReplyModal = (question: QuestionWithThread, isFollowUp: boolean) => {
@@ -233,6 +243,14 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
     setReplyTarget(null);
     showToast(t('✅ উত্তর সফলভাবে প্রকাশিত হয়েছে!'));
+
+    // 🛠️ ফিক্স: নিজের উত্তরের ক্ষেত্রেও একই কারণে verifiedMap মার্জ করা হচ্ছে
+    // (অ্যাডমিনের উত্তরে এর দরকার নেই, TeamVerifiedBadge সবসময় স্ট্যাটিক)
+    if (!isAdmin && currentUser?.id) {
+      fetchProfileCompletionMap(supabase, [currentUser.id]).then((m) => {
+        setVerifiedMap((prev) => ({ ...prev, ...m }));
+      });
+    }
   };
 
   const handleDeleteQuestion = async (qId: number | string) => {
