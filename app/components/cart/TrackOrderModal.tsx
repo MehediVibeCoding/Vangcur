@@ -49,15 +49,6 @@ function SparklesCrownSvgIcon() {
   );
 }
 
-function SearchMagnifierIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
 function HeaderDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.14]">
@@ -86,10 +77,12 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
   const [notFound, setNotFound] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
 
-  const [manualOrderId, setManualOrderId] = useState('');
-  const [manualPhone, setManualPhone] = useState('');
-  const [searching, setSearching] = useState(false);
-  const [searchError, setSearchError] = useState('');
+  // 🛡️ এটি শুধুমাত্র এই ডিভাইসে আগেই অটোমেটিকভাবে লোড হওয়া (localStorage-ভিত্তিক,
+  // ইতিমধ্যে সার্ভার থেকে যাচাই করা) অর্ডারের ওপর ক্লায়েন্ট-সাইড ফিল্টার — এখানে
+  // কোনো arbitrary ফোন নম্বর/অর্ডার নম্বর দিয়ে সরাসরি ডাটাবেজে নতুন করে কোয়েরি
+  // করা হয় না, তাই অন্য কারো অর্ডার খোঁজার কোনো সুযোগ নেই।
+  const [query, setQuery] = useState('');
+  const MAX_QUERY_LEN = 20;
 
   useHistoryModal(isOpen && !currentUser, onClose, 'track-order-modal');
 
@@ -103,7 +96,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setLoading(true);
     setNotFound(false);
     setOrders([]);
-    setSearchError('');
+    setQuery('');
 
     const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
       try {
@@ -161,38 +154,14 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     loadGuestOrders();
   }, [isOpen, currentUser, router, onClose, loadGuestOrders]);
 
-  const handleManualSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearchError('');
-    const cleanId = manualOrderId.trim().replace(/^#/, '');
-    const cleanPhone = manualPhone.trim().replace(/\D/g, '');
-
-    if (!cleanId) {
-      setSearchError(lang === 'en' ? 'Enter Order Number or ID' : 'অর্ডার নম্বর বা আইডি লিখুন');
-      return;
-    }
-    if (!cleanPhone || cleanPhone.length < 11) {
-      setSearchError(lang === 'en' ? 'Enter valid 11-digit mobile number' : 'সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন');
-      return;
-    }
-
-    setSearching(true);
-    try {
-      const data = await fetchFullOrder(supabase, cleanId, cleanPhone);
-      if (data) {
-        const mapped = mapSupabaseOrderRow(data as Record<string, unknown>);
-        setOrders([mapped]);
-        setNotFound(false);
-        setSearchError('');
-      } else {
-        setSearchError(lang === 'en' ? 'No order found with these details.' : 'এই তথ্যে কোনো অর্ডার পাওয়া যায়নি। নম্বরটি আবার চেক করুন।');
-      }
-    } catch {
-      setSearchError(lang === 'en' ? 'Search error, please try again.' : 'অনুসন্ধানে সমস্যা হয়েছে, পুনরায় চেষ্টা করুন।');
-    } finally {
-      setSearching(false);
-    }
-  };
+  // 🛡️ এই ডিভাইসে ইতিমধ্যে fetch হওয়া অর্ডারের মধ্যেই শুধু ফিল্টার — নতুন কোনো
+  // ডাটাবেজ কোয়েরি হয় না (account/orders পেজের মতোই নিরাপদ প্যাটার্ন), তাই
+  // arbitrary অর্ডার নম্বর/ফোন নম্বর দিয়ে অন্য কারো অর্ডার খোঁজার সুযোগ নেই।
+  const filteredOrders = orders.filter((o) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return String(o.orderNum).toLowerCase().includes(q);
+  });
 
   const openInvoice = (orderId: string | number) => {
     onClose();
@@ -261,73 +230,63 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                       <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white text-brand-light shadow-sm">
                         <ReceiptEmptySvgIcon className="h-7 w-7 text-brand-light" />
                       </div>
-                      
+
                       <div className="mb-1 font-body text-[15.5px] font-bold text-ink">
-                        {lang === 'en' ? 'Search & Track Your Order' : 'অর্ডার নম্বর দিয়ে খুঁজুন'}
+                        {lang === 'en' ? 'No orders yet' : 'এখনো কোনো অর্ডার নেই'}
                       </div>
                       <p className="mx-auto mb-4 max-w-xs font-body text-[12px] leading-relaxed text-muted">
                         {lang === 'en'
-                          ? 'Enter your Order Number and Mobile Number below to track delivery live.'
-                          : 'লাইভ ডেলিভারি স্ট্যাটাস দেখতে আপনার অর্ডার নম্বর ও মোবাইল নম্বর দিন।'}
+                          ? 'Orders will appear here automatically once placed. This device has no order information yet — meaning you haven\'t placed an order so far.'
+                          : 'অর্ডার করলে সেটি এখানে দেখা যাবে। এই ডিভাইসে এখন পর্যন্ত কোনো অর্ডারের তথ্য নেই, অর্থাৎ আপনি এখন পর্যন্ত অর্ডার করেননি।'}
                       </p>
 
-                      <form onSubmit={handleManualSearch} className="mb-4 flex flex-col gap-2.5 text-left">
-                        <div>
-                          <input
-                            type="text"
-                            value={manualOrderId}
-                            maxLength={30}
-                            onChange={(e) => setManualOrderId(e.target.value)}
-                            placeholder={lang === 'en' ? 'Order Number (e.g. VC-1082)' : 'অর্ডার নম্বর (যেমন: VC-1082)'}
-                            className="w-full rounded-[12px] border border-border-base bg-white/90 px-3.5 py-2.5 font-body text-xs text-ink outline-none transition-brand focus:border-brand-light"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="tel"
-                            value={manualPhone}
-                            maxLength={11}
-                            onChange={(e) => setManualPhone(e.target.value.replace(/\D/g, ''))}
-                            placeholder={lang === 'en' ? 'Mobile Number (01XXXXXXXXX)' : 'মোবাইল নম্বর (01XXXXXXXXX)'}
-                            className="w-full rounded-[12px] border border-border-base bg-white/90 px-3.5 py-2.5 font-body text-xs text-ink outline-none transition-brand focus:border-brand-light"
-                          />
-                        </div>
-
-                        {searchError && (
-                          <div className="rounded-[10px] bg-red-50 p-2 font-body text-[11px] font-semibold text-red-600">
-                            {searchError}
-                          </div>
-                        )}
-
-                        <motion.button
-                          type="submit"
-                          disabled={searching}
-                          whileTap={{ scale: 0.96 }}
-                          className="flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-info to-brand-light py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-all hover:brightness-[1.03]"
-                        >
-                          <SearchMagnifierIcon />
-                          <span>{searching ? (lang === 'en' ? 'Searching...' : 'খোঁজা হচ্ছে...') : (lang === 'en' ? 'Track Now' : 'ট্র্যাক করুন')}</span>
-                        </motion.button>
-                      </form>
-
-                      <div className="border-t border-ink/10 pt-3 text-center">
-                        <span className="font-body text-[11px] text-muted">{lang === 'en' ? 'Already have an account?' : 'পূর্বে একাউন্ট তৈরি করা থাকলে:'} </span>
-                        <button
-                          type="button"
-                          onClick={handleOpenLogin}
-                          className="font-body text-[11.5px] font-extrabold text-brand-light hover:underline"
-                        >
-                          {t('লগইন করুন')}
-                        </button>
+                      <div className="mb-4 rounded-[14px] border border-brand-light/30 bg-white/70 p-3.5 text-left">
+                        <p className="font-body text-[11.5px] leading-relaxed text-ink/80">
+                          {lang === 'en'
+                            ? 'Please log in before placing your order — this keeps your order secure and unlocks membership benefits, free delivery, discounts, and coupons.'
+                            : 'অর্ডার প্লেস করার আগে অবশ্যই লগইন করে অর্ডার প্লেস করবেন। এতে আপনার অর্ডারের সুরক্ষা নিশ্চিত হয়, এবং আপনি মেম্বারশিপ সুবিধা, ফ্রি ডেলিভারি চার্জ, ডিসকাউন্ট ও কুপনের মতো সুবিধা পেতে পারেন।'}
+                        </p>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={handleOpenLogin}
+                        className="w-full rounded-full bg-gradient-to-r from-info to-brand-light py-2.5 font-body text-xs font-bold text-white shadow-sh1 transition-all hover:brightness-[1.03] active:scale-95"
+                      >
+                        {t('লগইন করুন')}
+                      </button>
                     </div>
                   ) : orders.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="space-y-3.5">
-                        {orders.map((o) => (
-                          <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
-                        ))}
+                      <div>
+                        <input
+                          type="text"
+                          value={query}
+                          maxLength={MAX_QUERY_LEN}
+                          onChange={(e) => {
+                            // 🛡️ শুধুমাত্র অর্ডার নম্বর উপযোগী ক্যারেক্টার গ্রহণ ও লেন্থ লক
+                            const clean = e.target.value.replace(/[^a-zA-Z0-9#\-_ ]/g, '').slice(0, MAX_QUERY_LEN);
+                            setQuery(clean);
+                          }}
+                          placeholder={lang === 'en' ? 'Search by Order Number (e.g. VC-1082)' : 'অর্ডার নম্বর দিয়ে খুঁজুন (যেমন: VC-1082)'}
+                          className="w-full rounded-full border border-border-base bg-white/90 px-4 py-2.5 font-body text-xs text-ink outline-none transition-brand focus:border-brand-light"
+                        />
                       </div>
+
+                      {filteredOrders.length === 0 ? (
+                        <div className="py-6 text-center">
+                          <div className="mb-2 text-2xl">🔍</div>
+                          <div className="font-body text-[13px] font-bold text-ink">
+                            {lang === 'en' ? 'No order found with this number' : 'এই নম্বরে কোনো অর্ডার পাওয়া যায়নি'}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3.5">
+                          {filteredOrders.map((o) => (
+                            <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
+                          ))}
+                        </div>
+                      )}
 
                       <div className="rounded-[18px] border border-brand-light/35 bg-white/75 p-4 shadow-xs backdrop-blur-md">
                         <div className="flex items-start gap-3">
