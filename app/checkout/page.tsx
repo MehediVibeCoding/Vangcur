@@ -426,7 +426,15 @@ export default function CheckoutPage() {
     let draftLoaded = false;
     try {
       const sessionDraft = JSON.parse(sessionStorage.getItem('vc_form_draft') || 'null');
-      const persistentDraft = getDraft();
+      // 🛠️ ফিক্স: persistentDraft (localStorage, ২৪ ঘণ্টা পর্যন্ত পুরনো হতে পারে)
+      // আগে সবসময় লোড হতো — এমনকি প্রোফাইল সম্পূর্ণ থাকলেও, ফলে সেটাই
+      // প্রোফাইল/লাস্ট-অর্ডার প্রায়োরিটি লজিককে সাইলেন্টলি বাইপাস করে দিত।
+      // RecoveryToast এই ড্রাফটটা এক্সপ্লিসিটলি "resume" করার জন্যই বানানো
+      // (?resume=1 দিয়ে পাঠায়), তাই এখন শুধু সেই ফ্লো থেকে এলেই এটা ব্যবহার
+      // হবে। sessionDraft (একই ট্যাবে টাইপ করার সময়ের ড্রাফট) আগের মতোই
+      // সবসময় কাজ করবে — রিফ্রেশে টাইপ করা ডেটা হারাবে না।
+      const isResumeFlow = new URLSearchParams(window.location.search).get('resume') === '1';
+      const persistentDraft = isResumeFlow ? getDraft() : null;
       const activeDraft = sessionDraft || persistentDraft;
 
       if (activeDraft && (activeDraft.name || activeDraft.phone || activeDraft.addr)) {
