@@ -447,6 +447,16 @@ export default function ProductReviews({
       setReviews((prev) => [res.data!, ...prev]);
       setWriteModalOpen(false);
       showToast(t('আপনার রিভিউটি জমা হয়েছে! অনুমোদনের পর লাইভ হবে।'));
+
+      // 🛠️ ফিক্স: অপটিমিস্টিক আপডেটে নতুন রিভিউটা লোকাল স্টেটে ঢুকে গেলেও
+      // verifiedMap-এ নিজের এন্ট্রি না থাকলে (প্রথমবার রিভিউ দিলে) ব্যাজ
+      // দেখাত না — যদিও প্রোফাইল আসলে সম্পূর্ণ। এখানে নিজের আইডির জন্য
+      // আলাদা করে ব্যাচ-চেক করে verifiedMap মার্জ করে দেওয়া হচ্ছে।
+      if (currentUser?.id) {
+        fetchProfileCompletionMap(supabase, [currentUser.id]).then((m) => {
+          setVerifiedMap((prev) => ({ ...prev, ...m }));
+        });
+      }
     } catch (err: any) {
       setSubmitting(false);
       setErrorMessage(err?.message || t('তথ্য জমা দেওয়া সম্ভব হয়নি, আবার চেষ্টা করুন'));
