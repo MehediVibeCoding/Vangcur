@@ -111,7 +111,7 @@ export async function updateMyProfile(
   // ক্যারেক্টারই টিকে থাকে, বাকি সব ইনজেকশন-প্রবণ ক্যারেক্টার বাদ পড়ে যায়)
   const cleanName = sanitizePlainName(payload.name || '');
   const cleanPhone = sanitizePhoneInput(payload.phone || '');
-  const cleanAddress = sanitizeAddressInput(payload.address || '');
+  const cleanAddress = sanitizeAddressInput(payload.address || '').trim();
   const cleanDistrict = (payload.district || '').trim();
 
   // 🛡️ ধাপ ২: sanitize করার পরও ফরম্যাট/দৈর্ঘ্য সঠিক কিনা কড়াভাবে ভ্যালিডেট
