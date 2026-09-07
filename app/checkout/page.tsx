@@ -54,6 +54,7 @@ import {
 import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
 import { useT } from '@/lib/i18n/useT';
+import { fetchMyProfile } from '@/lib/profileData';
 import type { CartItem } from '@/types';
 
 const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
@@ -452,21 +453,35 @@ export default function CheckoutPage() {
 
         (async () => {
           try {
-            const { data: pastOrders } = await supabase
-              .from('orders')
-              .select('customer_name, customer_phone, customer_district, customer_address, customer_email, shipping')
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false })
-              .limit(1);
+            // 🆕 প্রথমে "Complete Your Profile"-এ সেভ করা তথ্য (এটাই ইউজারের
+            // সবচেয়ে সাম্প্রতিক/ইচ্ছাকৃতভাবে সেট করা ডিফল্ট ঠিকানা)
+            const profile = await fetchMyProfile(supabase, user.id);
+            if (profile) {
+              if (profile.name) setName((prev) => prev || profile.name);
+              if (profile.phone) setPhone((prev) => prev || profile.phone);
+              if (profile.district) setDist((prev) => prev || profile.district);
+              if (profile.address) setAddr((prev) => prev || profile.address);
+              if (profile.email) setEmail((prev) => prev || profile.email);
+            }
 
-            if (pastOrders && pastOrders.length > 0) {
-              const last = pastOrders[0];
-              setName((prev) => prev || last.customer_name || user.name || '');
-              setPhone((prev) => prev || last.customer_phone || user.phone || '');
-              setDist((prev) => prev || last.customer_district || '');
-              setAddr((prev) => prev || last.customer_address || '');
-              setEmail((prev) => prev || last.customer_email || user.email || '');
-              if (last.shipping) setSelectedShip((prev) => prev || last.shipping);
+            // প্রোফাইলে ঠিকানা/জেলা সেট করা না থাকলে সর্বশেষ অর্ডার থেকে fallback
+            if (!profile?.address || !profile?.district) {
+              const { data: pastOrders } = await supabase
+                .from('orders')
+                .select('customer_name, customer_phone, customer_district, customer_address, customer_email, shipping')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+              if (pastOrders && pastOrders.length > 0) {
+                const last = pastOrders[0];
+                setName((prev) => prev || last.customer_name || user.name || '');
+                setPhone((prev) => prev || last.customer_phone || user.phone || '');
+                setDist((prev) => prev || last.customer_district || '');
+                setAddr((prev) => prev || last.customer_address || '');
+                setEmail((prev) => prev || last.customer_email || user.email || '');
+                if (last.shipping) setSelectedShip((prev) => prev || last.shipping);
+              }
             }
           } catch {
             // ignore

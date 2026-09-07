@@ -26,7 +26,7 @@ function getInitials(name?: string): string {
 
 function getColorClass(name?: string, isAdmin?: boolean): string {
   if (isAdmin) {
-    return 'bg-gradient-to-br from-brand-primary to-brand-light text-white ring-2 ring-brand-light/40';
+    return 'bg-white ring-2 ring-brand-light/50';
   }
   const str = (name || 'user').trim().toLowerCase();
   let hash = 0;
@@ -51,6 +51,24 @@ export default function UserAvatar({
     md: 'h-9 w-9 text-[12px]',
     lg: 'h-11 w-11 text-[14px]',
   }[size];
+
+  // 🆕 অ্যাডমিন/Vangcur টিমের জন্য ইনিশিয়ালের বদলে আসল লোগো (গোল করে ক্রপ করা) দেখানো হয়
+  if (isAdmin) {
+    return (
+      <div
+        title={name}
+        aria-label={name}
+        className={`flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full shadow-sm ${sizeClasses} ${colorClass} ${className}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/vangcur-team-avatar.png"
+          alt="Vangcur Team"
+          className="h-full w-full object-cover"
+        />
+      </div>
+    );
+  }
 
   return (
     <div

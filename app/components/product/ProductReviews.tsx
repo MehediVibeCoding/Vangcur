@@ -9,6 +9,8 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { uploadReviewImageToCloudinary } from '@/lib/cloudinaryUpload';
 import UserAvatar from './UserAvatar';
+import { VerifiedCustomerBadge } from './VerifiedBadges';
+import { fetchProfileCompletionMap } from '@/lib/profileData';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { ReviewGallerySkeleton } from '@/app/components/ui/Skeletons';
 import {
@@ -119,6 +121,8 @@ export default function ProductReviews({
   const [isAdmin, setIsAdmin] = useState(false);
   const [likedList, setLikedList] = useState<string[]>([]);
   const [activeCardIdx, setActiveCardIdx] = useState(0);
+  // 🆕 রিভিউকারীদের প্রোফাইল-সম্পূর্ণতার ম্যাপ (userId -> সবুজ ব্যাজ দেখাবে কিনা)
+  const [verifiedMap, setVerifiedMap] = useState<Record<string, boolean>>({});
 
   // Write Review Modal State
   const [writeModalOpen, setWriteModalOpen] = useState(false);
@@ -159,6 +163,9 @@ export default function ProductReviews({
     setReviews(data);
     setIsAdmin(adminStatus);
     setLikedList(getLikedReviews());
+
+    // 🆕 এই প্রোডাক্টের রিভিউকারীদের প্রোফাইল-সম্পূর্ণতা একবারে ব্যাচ-চেক
+    fetchProfileCompletionMap(supabase, data.map((r) => r.user_id)).then(setVerifiedMap);
 
     if (currentUser?.id) {
       const rejected = data.find((r) => r.user_id === currentUser.id && r.is_rejected);
@@ -738,8 +745,9 @@ export default function ProductReviews({
                           <div className="flex min-w-0 items-center gap-2">
                             <UserAvatar name={item.userName} size="sm" />
                             <div className="min-w-0 text-left">
-                              <div className="truncate font-body text-xs font-bold text-white drop-shadow-md">
-                                {item.userName}
+                              <div className="flex items-center gap-1 truncate font-body text-xs font-bold text-white drop-shadow-md">
+                                <span className="truncate">{item.userName}</span>
+                                {item.userId && verifiedMap[item.userId] && <VerifiedCustomerBadge />}
                               </div>
                               <div className="flex items-center gap-1 font-body text-[10px] text-white/80 drop-shadow-sm">
                                 <span>{dateStr}</span>
@@ -785,8 +793,9 @@ export default function ProductReviews({
                           <div className="flex min-w-0 items-center gap-2">
                             <UserAvatar name={item.userName} size="sm" />
                             <div className="min-w-0 text-left">
-                              <div className="truncate font-body text-xs font-bold text-ink">
-                                {item.userName}
+                              <div className="flex items-center gap-1 truncate font-body text-xs font-bold text-ink">
+                                <span className="truncate">{item.userName}</span>
+                                {item.userId && verifiedMap[item.userId] && <VerifiedCustomerBadge />}
                               </div>
                               <div className="flex items-center gap-1 font-body text-[10px] text-muted">
                                 <span>{dateStr}</span>

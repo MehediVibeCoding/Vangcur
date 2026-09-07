@@ -111,6 +111,7 @@ Vangcur প্ল্যাটফর্মের ডাটাবেজ মডে�
 | `name` | `TEXT` | `NULL` | গ্রাহকের পূর্ণ নাম। |
 | `email` | `TEXT` | `NULL` | ইমেইল ঠিকানা। |
 | `phone` | `TEXT` | `NULL` | মোবাইল নম্বর। |
+| `address` | `TEXT` | `NULL` | ডেলিভারি ঠিকানা (Complete Your Profile ফিচার থেকে সংরক্ষিত)। |
 | `avatar` | `TEXT` | `NULL` | প্রোফাইল ছবি ইউআরএল। |
 | `role` | `TEXT` | `DEFAULT 'customer'` | ইউজার রোল (`customer`, `moderator`, `admin`, `super_admin`)। |
 | `is_admin` | `BOOLEAN` | `DEFAULT FALSE` | এডমিন প্রিভিলেজ ফ্ল্যাগ। |

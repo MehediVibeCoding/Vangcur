@@ -14,6 +14,8 @@ import {
   submitProductAnswer,
   checkIsUserAdmin,
 } from '@/lib/productQnaData';
+import { fetchProfileCompletionMap } from '@/lib/profileData';
+import { TeamVerifiedBadge, VerifiedCustomerBadge } from './VerifiedBadges';
 import type { ProductQuestion, ProductQuestionAnswer } from '@/types';
 
 interface ProductQnAProps {
@@ -55,19 +57,29 @@ function TrashIcon() {
   );
 }
 
-function CheckBadgeIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-    </svg>
-  );
-}
-
 // 🆕 এখন প্রতিটা প্রশ্নে দুইটা ফিক্সড স্লটের (adminAnswer/authorReply) বদলে
 // পুরো একটা "থ্রেড" (সময় অনুযায়ী সাজানো একাধিক উত্তর) রাখা হচ্ছে —
 // এতে admin আর customer বারবার আদান-প্রদান (একাধিক রাউন্ড) করতে পারবে।
 interface QuestionWithThread extends Omit<ProductQuestion, 'answers'> {
   answers: ProductQuestionAnswer[];
+}
+
+// 🛠️ বাগ ফিক্স: আগে রিপ্লাই মডাল সবসময় থ্রেডের মূল/প্রথম প্রশ্নটাই দেখাতো, যেটার
+// আসলে উত্তর দেওয়া হচ্ছে সেটা না। এই ফাংশন থ্রেডের সঠিক "সর্বশেষ প্রাসঙ্গিক মেসেজ"
+// বের করে — কাস্টমার ফলো-আপ দিলে টিমের সর্বশেষ উত্তর, আর টিম উত্তর দিলে কাস্টমারের
+// সর্বশেষ মেসেজ (বা কোনো উত্তর না থাকলে মূল প্রশ্ন)।
+function getReplyPreview(
+  q: QuestionWithThread,
+  isFollowUp: boolean,
+): { name: string; text: string; isAdminMsg: boolean } {
+  if (isFollowUp) {
+    const lastAdmin = [...q.answers].reverse().find((a) => a.is_admin);
+    if (lastAdmin) return { name: lastAdmin.author_name, text: lastAdmin.answer, isAdminMsg: true };
+    return { name: q.user_name, text: q.question, isAdminMsg: false };
+  }
+  const lastCustomer = [...q.answers].reverse().find((a) => !a.is_admin);
+  if (lastCustomer) return { name: lastCustomer.author_name, text: lastCustomer.answer, isAdminMsg: false };
+  return { name: q.user_name, text: q.question, isAdminMsg: false };
 }
 
 export default function ProductQnA({ productId, productName }: ProductQnAProps) {
@@ -78,6 +90,8 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
   const [questions, setQuestions] = useState<QuestionWithThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  // 🆕 কাস্টমার-প্রোফাইল-সম্পূর্ণতার ম্যাপ (userId -> সবুজ ব্যাজ দেখাবে কিনা)
+  const [verifiedMap, setVerifiedMap] = useState<Record<string, boolean>>({});
 
   // Ask Modal
   const [askModalOpen, setAskModalOpen] = useState(false);
@@ -120,6 +134,13 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           answers: ((answersData || []).filter((a) => a.question_id === q.id)) as ProductQuestionAnswer[],
         }));
         setQuestions(mapped);
+
+        // 🆕 প্রশ্নকর্তা ও (নন-অ্যাডমিন) উত্তরদাতাদের প্রোফাইল-সম্পূর্ণতা একবারে ব্যাচ-চেক
+        const customerIds = [
+          ...mapped.map((q) => q.user_id),
+          ...mapped.flatMap((q) => q.answers.filter((a) => !a.is_admin).map((a) => a.user_id)),
+        ];
+        fetchProfileCompletionMap(supabase, customerIds).then(setVerifiedMap);
       } else {
         setQuestions([]);
       }
@@ -185,7 +206,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
     setSubmittingR(true);
 
     const authorName = isAdmin
-      ? 'Vangcur টিম'
+      ? 'Vangcur Team'
       : (currentUser?.name || replyTarget.question.user_name || 'প্রশ্নকর্তা');
 
     const res = await submitProductAnswer(supabase, {
@@ -330,7 +351,10 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   <UserAvatar name={q.user_name} size="md" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-1">
-                      <span className="font-body text-[13px] font-bold text-ink">{q.user_name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-body text-[13px] font-bold text-ink">{q.user_name}</span>
+                        {q.user_id && verifiedMap[q.user_id] && <VerifiedCustomerBadge />}
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="font-body text-[11px] text-muted">{dateStr}</span>
                         {canDeleteQuestion && (
@@ -357,18 +381,16 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                       a.is_admin ? (
                         <div
                           key={a.id}
-                          className="flex items-start gap-3 rounded-[12px] border border-[#BAE0FD] bg-[#F0F9FF] p-3.5 sm:ml-9"
+                          className="flex items-start gap-3 rounded-[14px] border border-[#BAE0FD] bg-[#EFF8FF] p-3.5 sm:ml-9"
                         >
                           <UserAvatar name={a.author_name} size="sm" isAdmin />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-1">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1.5">
                                 <span className="font-body text-[12.5px] font-bold text-ink">
                                   {a.author_name}
                                 </span>
-                                <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary px-2 py-0.5 font-body text-[10px] font-bold text-white shadow-xs">
-                                  <CheckBadgeIcon /> Vangcur টিম
-                                </span>
+                                <TeamVerifiedBadge />
                               </div>
 
                               {isAdmin && (
@@ -398,6 +420,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                                 <span className="font-body text-[12px] font-bold text-ink">
                                   {a.author_name}
                                 </span>
+                                {a.user_id && verifiedMap[a.user_id] && <VerifiedCustomerBadge />}
                                 <span className="rounded-full bg-surface-muted px-2 py-0.5 font-body text-[9.5px] font-semibold text-muted">
                                   {t('প্রশ্নকর্তার মন্তব্য')}
                                 </span>
@@ -428,7 +451,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   <div className="mt-3 flex justify-end pt-1 sm:ml-9">
                     <button
                       onClick={() => openReplyModal(q, false)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-brand-light/50 bg-brand-bg/40 px-3 py-1 font-body text-xs font-bold text-brand-primary hover:bg-brand-bg"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-light px-3.5 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-brand hover:bg-brand-light-hover"
                     >
                       <ReplyCurveIcon /> {adminCount > 0 ? t('আরেকটি উত্তর দিন (Admin)') : t('উত্তর দিন (Admin)')}
                     </button>
@@ -440,9 +463,9 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                   <div className="mt-2.5 flex justify-end sm:ml-9">
                     <button
                       onClick={() => openReplyModal(q, true)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border-base bg-white px-3 py-1 font-body text-xs font-semibold text-brand-primary shadow-xs hover:border-brand-light"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-brand-light bg-white px-3.5 py-1.5 font-body text-xs font-bold text-brand-light shadow-xs transition-brand hover:bg-brand-bg"
                     >
-                      <ReplyCurveIcon /> {t('ফলো-আপ মন্তব্য দিন')}
+                      <ReplyCurveIcon /> {t('উত্তরে রিপ্লাই দিন')}
                     </button>
                   </div>
                 )}
@@ -533,7 +556,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           <div className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3">
             <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-body text-base font-bold text-ink">
-                <ReplyCurveIcon className="text-brand-primary" /> 
+                <ReplyCurveIcon className="text-brand-light" /> 
                 {isAdmin ? t('Vangcur টিমের উত্তর') : t('আপনার ফলো-আপ মন্তব্য')}
               </h3>
               <button
@@ -544,8 +567,25 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               </button>
             </div>
 
-            <div className="mb-3 rounded-lg bg-surface-muted p-3 font-body text-xs text-ink/80">
-              <strong>{replyTarget.question.user_name}:</strong> &quot;{replyTarget.question.question}&quot;
+            <div className="mb-3 rounded-xl border border-border-base bg-surface-muted/70 p-3">
+              <div className="mb-1.5 flex items-center gap-1.5 font-body text-[10.5px] font-bold uppercase tracking-wide text-muted">
+                <ReplyCurveIcon className="text-muted" />
+                {t('আপনি যেটির উত্তরে লিখছেন')}
+              </div>
+              {(() => {
+                const preview = getReplyPreview(replyTarget.question, replyTarget.isFollowUp);
+                return (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-body text-xs font-bold text-ink">{preview.name}</span>
+                      {preview.isAdminMsg && <TeamVerifiedBadge />}
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 font-body text-xs leading-relaxed text-ink/75">
+                      &quot;{preview.text}&quot;
+                    </p>
+                  </>
+                );
+              })()}
             </div>
 
             <form onSubmit={handleReplySubmit} className="flex flex-col gap-3.5">
@@ -576,7 +616,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               <button
                 type="submit"
                 disabled={submittingR || replyText.trim().length < 5}
-                className="mt-1 w-full rounded-full bg-brand-primary py-3 font-body text-sm font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover disabled:opacity-50"
+                className="mt-1 w-full rounded-full bg-brand-light py-3 font-body text-sm font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover disabled:opacity-50"
               >
                 {submittingR ? t('প্রকাশ হচ্ছে...') : t('প্রকাশ করুন')}
               </button>

@@ -244,10 +244,29 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
     let lon = 90.412;
     try {
       let userDistrict: string | null = null;
-      const orders = JSON.parse(localStorage.getItem('vc_orders') || '[]');
-      if (orders.length) {
-        const latest = orders[orders.length - 1];
-        userDistrict = latest.district || latest.customer_district || latest.customer?.district || null;
+
+      // 🆕 সবচেয়ে আগে "Complete Your Profile"-এ সেভ করা জেলা চেক করা হয় — এটাই
+      // সবচেয়ে নির্ভরযোগ্য উৎস, কারণ অর্ডার করার দরকার নেই, ইউজার নিজেই একবার
+      // সেট করে রাখলেই পাওয়া যায়।
+      if (currentUser?.id) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('district')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+          if (profile?.district) userDistrict = profile.district;
+        } catch {
+          // profiles টেবিল অ্যাক্সেস না থাকলে নিচের fallback-এ চলে যাবে
+        }
+      }
+
+      if (!userDistrict) {
+        const orders = JSON.parse(localStorage.getItem('vc_orders') || '[]');
+        if (orders.length) {
+          const latest = orders[orders.length - 1];
+          userDistrict = latest.district || latest.customer_district || latest.customer?.district || null;
+        }
       }
       if (!userDistrict && currentUser?.id) {
         try {

@@ -30,6 +30,7 @@ import {
 import {
   getTier, tierIconSVG, crownSVG,
 } from '@/lib/membershipData';
+import { fetchMyProfile, isProfileComplete } from '@/lib/profileData';
 import Footer from '@/app/components/layout/Footer';
 import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
@@ -38,6 +39,7 @@ import type { Order, DraftOrder, StockNotification } from '@/types';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const MembershipModal = dynamic(() => import('@/app/components/modals/MembershipModal'), { ssr: false });
+const CompleteProfileModal = dynamic(() => import('@/app/components/account/CompleteProfileModal'), { ssr: false });
 
 const STATE_BG: Record<string, string> = {
   dawn: 'bg-gradient-to-b from-[#3d2145] via-[#7c4a6b] to-[#e8935f]',
@@ -195,6 +197,8 @@ export default function AccountClient() {
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [membershipOpen, setMembershipOpen] = useState(false);
+  const [completeProfileOpen, setCompleteProfileOpen] = useState(false);
+  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
 
   const [now, setNow] = useState(() => new Date());
   const [isRaining, setIsRaining] = useState(false);
@@ -231,6 +235,20 @@ export default function AccountClient() {
     if (!currentUser) return;
     fetchIsRaining(supabase, currentUser).then(setIsRaining);
   }, [currentUser, supabase]);
+
+  // 🆕 প্রোফাইল সম্পূর্ণ কিনা (ফোন + ঠিকানা) চেক — অসম্পূর্ণ হলে ব্যানার দেখানো হবে
+  useEffect(() => {
+    if (!currentUser?.id) {
+      setProfileComplete(null);
+      return;
+    }
+    let cancelled = false;
+    fetchMyProfile(supabase, currentUser.id).then((p) => {
+      if (cancelled) return;
+      setProfileComplete(p ? isProfileComplete(p) : false);
+    });
+    return () => { cancelled = true; };
+  }, [currentUser?.id, supabase]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -530,6 +548,26 @@ export default function AccountClient() {
                 {formatLiveTimeDate(now)}
               </div>
             </div>
+
+            {/* 🆕 প্রোফাইল অসম্পূর্ণ থাকলে ব্যানার — সম্পূর্ণ করলে ভেরিফিকেশন ব্যাজ পাওয়া যাবে */}
+            {profileComplete === false && (
+              <div className="mb-6 flex flex-col items-start gap-3 rounded-[18px] border border-brand-light/40 bg-brand-bg/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="font-body text-[13.5px] font-bold text-ink">
+                    {t('আপনার প্রোফাইল সম্পূর্ণ করুন')}
+                  </div>
+                  <p className="mt-0.5 font-body text-[12px] text-muted">
+                    {t('নাম, ফোন, জেলা ও ঠিকানা যোগ করে ভেরিফিকেশন ব্যাজ পান এবং পরের অর্ডারে অটো-ফিল সুবিধা নিন।')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCompleteProfileOpen(true)}
+                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-5 font-body text-xs font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover"
+                >
+                  {t('এখনই সম্পূর্ণ করুন')}
+                </button>
+              </div>
+            )}
 
             {/* ২-কলাম ড্যাশবোর্ড গ্রিড */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
@@ -1101,7 +1139,13 @@ export default function AccountClient() {
       )}
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      
+
+      <CompleteProfileModal
+        isOpen={completeProfileOpen}
+        onClose={() => setCompleteProfileOpen(false)}
+        onSaved={() => setProfileComplete(true)}
+      />
+
       <MembershipModal
         isOpen={membershipOpen}
         onClose={() => setMembershipOpen(false)}
