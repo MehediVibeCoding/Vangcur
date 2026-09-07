@@ -447,6 +447,7 @@ export default function CheckoutPage() {
     if (!draftLoaded) {
       const user = useAuthStore.getState().currentUser;
       if (user?.id) {
+        const userId = user.id; // TS closure-narrowing fix: capture as plain string before the nested async fn
         if (user.name) setName(user.name);
         if (user.email) setEmail(user.email);
         if (user.phone) setPhone(user.phone);
@@ -455,7 +456,7 @@ export default function CheckoutPage() {
           try {
             // 🆕 প্রথমে "Complete Your Profile"-এ সেভ করা তথ্য (এটাই ইউজারের
             // সবচেয়ে সাম্প্রতিক/ইচ্ছাকৃতভাবে সেট করা ডিফল্ট ঠিকানা)
-            const profile = await fetchMyProfile(supabase, user.id);
+            const profile = await fetchMyProfile(supabase, userId);
             if (profile) {
               if (profile.name) setName((prev) => prev || profile.name);
               if (profile.phone) setPhone((prev) => prev || profile.phone);
@@ -469,7 +470,7 @@ export default function CheckoutPage() {
               const { data: pastOrders } = await supabase
                 .from('orders')
                 .select('customer_name, customer_phone, customer_district, customer_address, customer_email, shipping')
-                .eq('user_id', user.id)
+                .eq('user_id', userId)
                 .order('created_at', { ascending: false })
                 .limit(1);
 
