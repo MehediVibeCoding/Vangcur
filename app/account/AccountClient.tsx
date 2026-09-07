@@ -419,7 +419,7 @@ export default function AccountClient() {
                 </svg>
               </div>
               <span className="font-body text-[13px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
-                {lang === 'en' ? 'Back to Home' : 'ব্যাক টু হোম'}
+                {lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
               </span>
             </Link>
 
