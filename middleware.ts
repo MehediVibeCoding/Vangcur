@@ -69,6 +69,34 @@ export async function middleware(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
+  // 🛡️ HSTS — সবসময় HTTPS-এ পরিচালিত হওয়া নিশ্চিত করে (প্রোটোকল-ডাউনগ্রেড প্রতিরোধ)
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=63072000; includeSubDomains; preload'
+  );
+
+  // 🛡️ Content-Security-Policy — শুধুমাত্র প্রয়োজনীয় ও পরিচিত থার্ড-পার্টি ডোমেইন
+  // (Supabase, Cloudinary, Google Fonts/GTM, Cloudflare Turnstile) থেকে রিসোর্স
+  // লোড হতে দেয়; বাকি সব উৎস ব্লক করে দেয় (XSS/ডেটা-এক্সফিল্ট্রেশন প্রতিরোধে)।
+  // দ্রষ্টব্য: script-src ও style-src-এ 'unsafe-inline' রাখা হয়েছে কারণ থিম-ফ্লিকার
+  // গার্ড ও GTM বুটস্ট্র্যাপ ইনলাইন স্ক্রিপ্ট ব্যবহার করে — আরও কড়া করতে চাইলে
+  // nonce-ভিত্তিক CSP-তে যেতে হবে (আলাদা কাজ হিসেবে পরে করা যেতে পারে)।
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://www.googletagmanager.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://www.googletagmanager.com",
+    "frame-src https://challenges.cloudflare.com https://www.googletagmanager.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    'upgrade-insecure-requests',
+  ].join('; ');
+  response.headers.set('Content-Security-Policy', csp);
+
   return response;
 }
 
