@@ -158,6 +158,15 @@ export async function updateMyProfile(
 
 // 🆕 একাধিক ইউজারের প্রোফাইল-সম্পূর্ণতা একবারে চেক করার জন্য (Q&A/Review-এ ব্যাজ
 // দেখানোর সময় ব্যবহৃত হয়) — একটার বদলে ব্যাচ-কোয়েরি, তাই N+1 কোয়েরি সমস্যা হয় না।
+//
+// 🛡️ নিরাপত্তা নোট: এই ফাংশনটা আগে সরাসরি profiles টেবিল থেকে phone/address/
+// district raw কলাম SELECT করার চেষ্টা করত (RLS-এর উপর ভরসা করে অন্যের ডেটা
+// ব্লক হবে ধরে নিয়ে) — এটা RLS ঠিক থাকলে ফিচারটাকেই অকেজো করে দিত (অন্যের সারি
+// ব্লকড থাকায় কখনো true পাওয়া যেত না), আর RLS কখনো শিথিল হলে সরাসরি ফোন/ঠিকানা
+// পাবলিকলি লিক করত। তাই এখন raw কলাম না টেনে ডাটাবেজের একটা SECURITY DEFINER
+// RPC ফাংশন (get_profile_completion_status) কল করা হয়, যেটা শুধু true/false
+// রিটার্ন করে — ফোন/ঠিকানা কখনোই ব্রাউজারে আসে না। এই RPC ফাংশনটা Supabase-এ
+// আলাদাভাবে বসাতে হবে (দেখুন: supabase/get_profile_completion_status.sql)।
 export async function fetchProfileCompletionMap(
   supabase: SupabaseClient,
   userIds: (string | null | undefined)[],
@@ -166,20 +175,13 @@ export async function fetchProfileCompletionMap(
   if (ids.length === 0) return {};
 
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, phone, address, district')
-      .in('id', ids);
+    const { data, error } = await supabase.rpc('get_profile_completion_status', { user_ids: ids });
 
     if (error || !data) return {};
 
     const map: Record<string, boolean> = {};
-    data.forEach((row) => {
-      map[row.id] = isProfileComplete({
-        phone: row.phone || '',
-        address: row.address || '',
-        district: row.district || '',
-      });
+    (data as { id: string; complete: boolean }[]).forEach((row) => {
+      map[row.id] = !!row.complete;
     });
     return map;
   } catch (e) {
