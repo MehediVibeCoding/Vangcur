@@ -44,6 +44,11 @@ function HeartIcon({ filled }: { filled: boolean }) {
   );
 }
 
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined' && !!window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 // ────────────────────────────────────────────────────────────────────────
 // উইশলিস্টে "লাভ" (হার্ট) ক্লিক করলে প্রোডাক্ট কার্ডের হার্ট আইকন থেকেই
 // ৫-৬টা ছোট হার্ট ছড়িয়ে/ভেসে উঠে ফেড-আউট হয়ে যায় — Navbar পর্যন্ত উড়ে
@@ -121,6 +126,14 @@ function CartIcon() {
   );
 }
 
+function CartCheckIcon() {
+  return (
+    <svg width="50%" height="50%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12.5l5 5L20 6" />
+    </svg>
+  );
+}
+
 function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?: boolean }) {
   const [broken, setBroken] = useState(false);
   const isUrl = typeof imgVal === 'string' && (imgVal.startsWith('http://') || imgVal.startsWith('https://'));
@@ -158,6 +171,9 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const [burst, setBurst] = useState<{ id: number; particles: HeartParticle[] } | null>(null);
   const burstSeedRef = useRef(0);
   const burstTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [cartPop, setCartPop] = useState<number | null>(null);
+  const cartPopSeedRef = useRef(0);
+  const cartPopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setWished(rawWished);
@@ -165,6 +181,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
 
   useEffect(() => () => {
     if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
+    if (cartPopTimerRef.current) clearTimeout(cartPopTimerRef.current);
   }, []);
 
   const sold = p.stock <= 0;
@@ -178,8 +195,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     e.stopPropagation();
     const added = useWishlistStore.getState().toggleWish(p);
     if (added) {
-      const reducedMotion = typeof window !== 'undefined' && !!window.matchMedia
-        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reducedMotion = prefersReducedMotion();
       if (!reducedMotion) {
         const seed = ++burstSeedRef.current;
         if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
@@ -201,6 +217,14 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
       showToast(t('কার্টে যোগ হয়েছে'));
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(QUICK_CART_EVENT, { detail: { id: p.id } }));
+      }
+      const seed = ++cartPopSeedRef.current;
+      if (cartPopTimerRef.current) clearTimeout(cartPopTimerRef.current);
+      if (!prefersReducedMotion()) {
+        setCartPop(seed);
+        cartPopTimerRef.current = setTimeout(() => {
+          setCartPop((prev) => (prev === seed ? null : prev));
+        }, 900);
       }
     } else if (res.reason === 'stock') {
       showToast(t('স্টক শেষ!'));
@@ -314,15 +338,59 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
             ) : (
               <>
                 {/* Frosted Glass Cart Button */}
-                <button
-                  type="button"
-                  className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-all duration-150 hover:bg-white/30 hover:border-white/70 active:scale-90 sm:h-9 lg:h-10"
-                  title={t('কার্টে যোগ করুন')}
-                  aria-label={t('কার্টে যোগ করুন')}
-                  onClick={handleAddToCartDirect}
-                >
-                  <CartIcon />
-                </button>
+                <div className="relative shrink-0">
+                  <motion.button
+                    type="button"
+                    className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-colors duration-150 hover:bg-white/30 hover:border-white/70 sm:h-9 lg:h-10"
+                    title={t('কার্টে যোগ করুন')}
+                    aria-label={t('কার্টে যোগ করুন')}
+                    onClick={handleAddToCartDirect}
+                    animate={cartPop ? { scale: [1, 0.8, 1.18, 0.95, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+                    whileTap={{ scale: 0.85 }}
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      {cartPop ? (
+                        <motion.span
+                          key="check"
+                          initial={{ opacity: 0, scale: 0.4, rotate: -35 }}
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                          className="flex h-full w-full items-center justify-center text-emerald-300"
+                        >
+                          <CartCheckIcon />
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="cart"
+                          initial={{ opacity: 0, scale: 0.6 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.25 }}
+                          className="flex h-full w-full items-center justify-center"
+                        >
+                          <CartIcon />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {cartPop && (
+                      <motion.span
+                        key={cartPop}
+                        initial={{ opacity: 0, y: 0, scale: 0.7 }}
+                        animate={{ opacity: [0, 1, 1, 0], y: -22, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.75, ease: [0.22, 0.7, 0.2, 1], times: [0, 0.2, 0.65, 1] }}
+                        className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white shadow-sh1"
+                      >
+                        +1
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Refined Crystal Liquid Glass Button (Based on Image 3 with Fresh Ice-Sky Tint) */}
                 <button
