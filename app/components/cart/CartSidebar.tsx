@@ -454,15 +454,18 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           ) : (
             <AnimatePresence mode="wait">
               <motion.div key={isOpen ? 'cart-items-open' : 'cart-items-closed'} className="space-y-3.5">
-                {cart.map((item, i) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i, 8) * 0.04, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-                    className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
-                  >
-                  <CartItemThumb emoji={item.emoji} />
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {cart.map((item, i) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.92, x: -26, transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] } }}
+                      transition={{ delay: Math.min(i, 8) * 0.04, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                      className="flex items-start gap-3.5 pb-3.5 border-b border-ink/10"
+                    >
+                    <CartItemThumb emoji={item.emoji} />
 
                   <div className="min-w-0 flex-1">
                     <div className="line-clamp-1 font-body text-[13.5px] font-bold text-ink">
@@ -525,7 +528,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </motion.button>
                   </div>
                   </motion.div>
-                ))}
+                  ))}
+                </AnimatePresence>
 
               <div className="pt-0.5">
                 {appliedCoupon && (
@@ -535,12 +539,23 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                   </div>
                 )}
 
+                <AnimatePresence mode="wait" initial={false}>
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs animate-section-reveal">
+                  <motion.div
+                    key="coupon-applied"
+                    initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.94 }}
+                    transition={{ duration: 0.32, ease: [0.34, 1.56, 0.64, 1] }}
+                    className="flex items-center justify-between rounded-[12px] border border-emerald-300/80 bg-emerald-50/80 px-3.5 py-2.5 shadow-xs">
                     <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
+                      <motion.span
+                        initial={{ scale: 0, rotate: -35 }}
+                        animate={{ scale: [0, 1.25, 1], rotate: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white shadow-xs">
                         ✓
-                      </span>
+                      </motion.span>
                       <div>
                         <div className="font-body text-[12.5px] font-bold text-emerald-800">
                           {appliedCoupon.code}
@@ -560,9 +575,15 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     >
                       ✕
                     </button>
-                  </div>
+                  </motion.div>
                 ) : (
-                  <div>
+                  <motion.div
+                    key="coupon-form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <div className="mb-2 flex items-center gap-1.5 font-body text-[12px] font-bold text-ink">
                       <CouponSvgIcon />
                       <span>{lang === 'en' ? 'Insert coupon' : 'কুপন কোড'}</span>
@@ -599,11 +620,19 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         </button>
                       </div>
                       {couponError && (
-                        <p className="pl-1 font-body text-[11px] font-semibold text-red-500">{couponError}</p>
+                        <motion.p
+                          initial={{ opacity: 0, x: -4 }}
+                          animate={{ opacity: 1, x: [0, -4, 4, -3, 3, 0] }}
+                          transition={{ duration: 0.35 }}
+                          className="pl-1 font-body text-[11px] font-semibold text-red-500"
+                        >
+                          {couponError}
+                        </motion.p>
                       )}
                     </form>
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
               </motion.div>
             </AnimatePresence>
