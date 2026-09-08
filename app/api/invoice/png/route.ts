@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
       email: DEFAULT_FOOTER.contact.email,
     };
 
-    const html = renderInvoiceHtmlDocument({
+    const html = await renderInvoiceHtmlDocument({
       order,
       contact,
       assetBaseUrl: req.nextUrl.origin,
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     // scale 3x রাখা হয়েছে যাতে পুরনো html2canvas আউটপুটের মতোই sharp/retina
     // কোয়ালিটির ছবি পাওয়া যায়।
     await page.setViewport({ width: 480, height: 800, deviceScaleFactor: 3 });
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: 'load' });
 
     // ফন্ট (Google Fonts) সম্পূর্ণ লোড না হওয়া পর্যন্ত অপেক্ষা — নাহলে
     // প্রথম ফ্রেমে fallback ফন্ট দিয়ে বাংলা টেক্সট আঁকা হয়ে যেতে পারে।

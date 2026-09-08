@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+import 'server-only';
 import type { Order } from '@/types';
 import { InvoiceCardBody, INVOICE_FIXED_WIDTH, type InvoiceContact } from './InvoiceCardBody';
 import { buildInvoiceViewModel } from './invoiceViewModel';
@@ -12,13 +12,19 @@ export const INVOICE_CARD_ELEMENT_ID = 'vc-invoice-capture-card';
  * ব্রাউজার থেকে ভিন্ন) CSS/font/text-shaping ইঞ্জিনের কোনো limitation আর
  * প্রভাব ফেলে না — যা দেখা যায়, ঠিক তাই ডাউনলোড হয়।
  */
-export function renderInvoiceHtmlDocument(params: {
+export async function renderInvoiceHtmlDocument(params: {
   order: Order;
   contact: InvoiceContact;
   assetBaseUrl: string;
-}): string {
+}): Promise<string> {
   const { order, contact, assetBaseUrl } = params;
   const { ds, advancePaid, balanceDue, isFreeShipping, dueMsg } = buildInvoiceViewModel(order);
+
+  // ডাইনামিক ইম্পোর্ট ইচ্ছাকৃত: 'react-dom/server' স্ট্যাটিকভাবে ইম্পোর্ট করলে
+  // Next.js-এর বিল্ড-টাইম RSC চেকার এটাকে ব্লক করে (এমনকি Route Handler-এর
+  // ভেতর থেকে ব্যবহার করলেও) — dynamic import() দিয়ে সেই স্ট্যাটিক-অ্যানালাইসিস
+  // এড়ানো যায়। দেখুন: https://github.com/vercel/next.js/discussions/69244
+  const { renderToStaticMarkup } = await import('react-dom/server');
 
   const cardMarkup = renderToStaticMarkup(
     <InvoiceCardBody

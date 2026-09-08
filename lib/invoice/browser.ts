@@ -18,7 +18,6 @@ export async function launchInvoiceBrowser(): Promise<Browser> {
       args: chromium.args,
       executablePath: await chromium.executablePath(),
       headless: true,
-      defaultViewport: chromium.defaultViewport,
     });
   }
 
