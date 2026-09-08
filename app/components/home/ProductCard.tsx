@@ -320,7 +320,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
               <>
                 <span className="text-[10px] text-white/50 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
                 {showDiscBadge && (
-                  <span className="text-[10px] font-bold text-[#FF9142] sm:text-xs">-{discPct}%</span>
+                  <span className="text-[10px] font-bold text-success sm:text-xs">-{discPct}%</span>
                 )}
               </>
             )}
