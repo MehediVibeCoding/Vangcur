@@ -11,6 +11,14 @@
     min-height: 100vh;
     overflow-x: hidden;
     max-width: 100%;
+    /* Chrome/Android-এর নিজস্ব edge-swipe "back/forward" preview animation বন্ধ —
+       এটাই ছিল সেই কালো ফ্ল্যাশ/screen-tear/flicker-এর আসল উৎস, যেটা প্রতিবার
+       ভিন্ন ভিন্ন স্টাইলে দেখাচ্ছিল (গতি, cached snapshot ইত্যাদির উপর নির্ভর করে)।
+       এটা বন্ধ করলে edge swipe সরাসরি একটা সাধারণ back ইভেন্ট (popstate) হিসেবে
+       ট্রিগার হয় — হার্ডওয়্যার ব্যাক বাটনের মতোই — আর সেটা এখন সম্পূর্ণ আমাদের
+       নিজের PageTransition crossfade দিয়ে হ্যান্ডল হয়, তাই বাম-ডান দুই দিকেই
+       প্রতিবার ঠিক একই রকম, consistent দেখায়। */
+    overscroll-behavior-x: none;
   }
   @supports (overflow-x: clip) {
     html, body {
