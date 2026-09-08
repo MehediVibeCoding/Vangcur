@@ -562,6 +562,43 @@ export default function Navbar({
     };
   }, []);
 
+  // ডেস্কটপ সার্চ বক্স হোভার ডিটেকশন — এলিমেন্টের নিজের mouseenter/mouseleave এর বদলে
+  // আসল মাউস মুভমেন্ট ইভেন্টের উপর ভিত্তি করে সম্পূর্ণ কন্টেইনমেন্ট চেক করা হয়। এতে করে
+  // বক্সটি বড়/ছোট হওয়ার সময় (CSS transition) ব্রাউজারের নিজস্ব হোভার রি-হিট-টেস্ট এর
+  // কারণে যে flicker loop (বড় → ছোট → বড় ...) তৈরি হতো, সেটা আর হবে না — কারণ স্টেট শুধু
+  // প্রকৃত মাউস নড়াচড়ায় আপডেট হয়, অ্যানিমেশন ফ্রেমে নয়। কার্সার সম্পূর্ণ বক্সের ভেতরে
+  // থাকলেই কেবল এক্সপ্যান্ড হবে, সামান্য বাইরে গেলেই কোলাপ্স হয়ে যাবে।
+  useEffect(() => {
+    function onWindowMouseMove(e: MouseEvent) {
+      const box = desktopSearchBoxRef.current;
+      if (!box) return;
+      const rect = box.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const fullyInside = (
+        e.clientX >= rect.left && e.clientX <= rect.right
+        && e.clientY >= rect.top && e.clientY <= rect.bottom
+      );
+      setDesktopSearchHovered((prev) => {
+        if (fullyInside === prev) return prev;
+        if (fullyInside) {
+          initSearchData();
+          router.prefetch('/search');
+        }
+        return fullyInside;
+      });
+    }
+    // মাউস পুরো ব্রাউজার উইন্ডো/ভিউপোর্ট ছেড়ে চলে গেলেও বক্সটি নিশ্চিতভাবে ছোট হয়ে যাবে
+    function onDocumentLeave() {
+      setDesktopSearchHovered(false);
+    }
+    window.addEventListener('mousemove', onWindowMouseMove);
+    document.documentElement.addEventListener('mouseleave', onDocumentLeave);
+    return () => {
+      window.removeEventListener('mousemove', onWindowMouseMove);
+      document.documentElement.removeEventListener('mouseleave', onDocumentLeave);
+    };
+  }, [initSearchData, router]);
+
   useEffect(() => {
     if (mobileSearchOpen) return undefined;
     if (desktopSearchExpanded || !searchQuery) return undefined;
@@ -787,12 +824,6 @@ export default function Navbar({
               >
                 <div
                   ref={desktopSearchBoxRef}
-                  onMouseEnter={() => {
-                    setDesktopSearchHovered(true);
-                    initSearchData();
-                    router.prefetch('/search');
-                  }}
-                  onMouseLeave={() => setDesktopSearchHovered(false)}
                   style={desktopSearchExpanded && desktopSearchGeo ? { left: desktopSearchGeo.left, width: desktopSearchGeo.width } : undefined}
                   className={`absolute left-0 top-0 h-full w-full rounded-full transition-[left,width] duration-300 ease-out ${desktopSearchExpanded ? 'z-[1000]' : ''}`}
                   onClick={(e) => e.stopPropagation()}
