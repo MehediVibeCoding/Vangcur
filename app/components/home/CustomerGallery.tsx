@@ -403,7 +403,7 @@ export default function CustomerGallery() {
                   key={r.id}
                   className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[360px] w-[220px] min-[400px]:w-[235px] sm:h-[420px] sm:w-[270px] md:h-[460px] md:w-[295px] shrink-0 overflow-hidden rounded-[24px] transition-all duration-[500ms] ease-[cubic-bezier(0.22,1,0.36,1)] [-webkit-tap-highlight-color:transparent] ${
                     isActive
-                      ? 'border border-white/90 shadow-[0_8px_25px_rgba(0,0,0,0.10)] ring-1 ring-white/80 cursor-zoom-in'
+                      ? 'border border-white/90 shadow-sh1 ring-1 ring-white/80 cursor-zoom-in'
                       : 'cursor-pointer hover:opacity-80'
                   }`}
                   style={{

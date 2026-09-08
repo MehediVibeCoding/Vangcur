@@ -16,7 +16,6 @@ const WishlistDrawer = dynamic(() => import('./cart/WishlistDrawer'), { ssr: fal
 const TrackOrderModal = dynamic(() => import('./cart/TrackOrderModal'), { ssr: false });
 const FloatContactButtons = dynamic(() => import('./layout/FloatContactButtons'), { ssr: false });
 const BackToTopButton = dynamic(() => import('./layout/BackToTopButton'), { ssr: false });
-const WishlistFlyOverlay = dynamic(() => import('./cart/WishlistFlyOverlay'), { ssr: false });
 const RareOverlays = dynamic(() => import('./RareOverlays'), { ssr: false });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -218,7 +217,6 @@ export default function GlobalOverlays() {
               <BackToTopButton />
             </>
           )}
-          <WishlistFlyOverlay />
           <RareOverlays />
         </>
       )}

@@ -696,7 +696,7 @@ export default function ProductReviews({
                     }}
                     className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[380px] w-[230px] min-[400px]:w-[245px] sm:h-[420px] sm:w-[270px] md:h-[450px] md:w-[290px] shrink-0 select-none overflow-hidden rounded-[24px] transition-all duration-[500ms] ease-[cubic-bezier(0.22,1,0.36,1)] [-webkit-tap-highlight-color:transparent] ${
                       isActive
-                        ? 'border border-white/85 shadow-[0_4px_22px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.03)] ring-1 ring-black/[0.03] cursor-zoom-in'
+                        ? 'border border-white/85 shadow-sh1 ring-1 ring-black/[0.03] cursor-zoom-in'
                         : 'cursor-pointer opacity-70 hover:opacity-90'
                     }`}
                     style={{

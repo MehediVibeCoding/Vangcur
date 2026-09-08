@@ -794,7 +794,7 @@ export default function Navbar({
                   {lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
                 </span>
                 <span className="min-[420px]:hidden font-body text-[12px] font-extrabold text-ink transition-colors duration-brand group-hover:text-brand-light">
-                  {lang === 'en' ? 'Home' : 'হোম'}
+                  {lang === 'en' ? 'Back' : 'ফিরে যান'}
                 </span>
               </Link>
             ) : (

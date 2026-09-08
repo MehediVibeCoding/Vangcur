@@ -5,7 +5,6 @@ export const OPEN_OFFER_PAGE_EVENT = 'vc:openOfferPage';
 export const OPEN_CART_EVENT = 'vc:openCart';
 export const OPEN_WISHLIST_EVENT = 'vc:openWishlist';
 
-export const WISHLIST_FLY_EVENT = 'vc:wishlistFly';
 export const WISHLIST_NAV_HIT_EVENT = 'vc:wishlistNavHit';
 
 export const OPEN_WAIT_OVERLAY_EVENT = 'vc:openWaitOverlay';
