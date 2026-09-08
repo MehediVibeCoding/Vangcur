@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useT } from '@/lib/i18n/useT';
@@ -128,6 +129,7 @@ export default function ProductReviews({
   const [writeModalOpen, setWriteModalOpen] = useState(false);
   const [ratingInput, setRatingInput] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
+  const [ratingPop, setRatingPop] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -945,16 +947,30 @@ export default function ProductReviews({
                     const isHovered = hoverRating >= star;
                     const isSelected = !hoverRating && ratingInput >= star;
                     return (
-                      <button
+                      <motion.button
                         type="button"
                         key={star}
-                        onClick={() => setRatingInput(star)}
+                        onClick={() => {
+                          setRatingInput(star);
+                          setRatingPop((n) => n + 1);
+                        }}
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
-                        className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                        whileHover={{ scale: 1.22 }}
+                        whileTap={{ scale: 0.8 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 16 }}
+                        className="p-1 focus:outline-none"
                       >
-                        <StarIcon filled={isHovered || isSelected} className="h-7 w-7" />
-                      </button>
+                        <motion.span
+                          key={isSelected ? `filled-${ratingPop}-${star}` : `star-${star}`}
+                          initial={isSelected ? { scale: 0.3, rotate: -20 } : false}
+                          animate={isSelected ? { scale: [0.3, 1.35, 1], rotate: 0 } : { scale: 1 }}
+                          transition={{ duration: 0.35, delay: isSelected ? star * 0.035 : 0, ease: [0.34, 1.56, 0.64, 1] }}
+                          className="block"
+                        >
+                          <StarIcon filled={isHovered || isSelected} className="h-7 w-7" />
+                        </motion.span>
+                      </motion.button>
                     );
                   })}
                   <span className="ml-2 font-body text-xs font-bold text-gold">
