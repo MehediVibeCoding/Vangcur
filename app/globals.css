@@ -40,7 +40,7 @@
   }
   input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: none !important;
-    box-shadow: 0 0 0 2px #44A7FC !important;
+    box-shadow: 0 0 0 1px #44A7FC !important;
     border-color: #44A7FC !important;
   }
 
@@ -553,6 +553,81 @@ body,
 .dark .bg-surface-muted\/50 { background-color: rgba(24, 35, 57, 0.50); }
 .dark .bg-surface-muted\/60 { background-color: rgba(24, 35, 57, 0.60); }
 .dark .bg-surface-muted\/70 { background-color: rgba(24, 35, 57, 0.70); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   🩹 স্ট্যাটাস-কালার টিন্ট ফিক্স (এরর/সাকসেস/ওয়ার্নিং/ইনফো ব্যাজ, ইনপুট, চিপ)
+   এগুলো আগে হালকা bg-*-50/100 রেখেই দিত, ফলে dark mode-এ text-ink সাদা হয়ে
+   গেলেও ব্যাকগ্রাউন্ড হালকা থেকে যেত — টাইপ করা লেখা/আইকন দেখা যেত না।
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* লাল — এরর ইনপুট/ব্যানার */
+.dark .bg-red-50 { background-color: rgba(127, 29, 29, 0.28); }
+.dark .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.20); }
+.dark .bg-red-50\/50 { background-color: rgba(127, 29, 29, 0.24); }
+.dark .bg-red-50\/60 { background-color: rgba(127, 29, 29, 0.28); }
+.dark .bg-red-100 { background-color: rgba(127, 29, 29, 0.34); }
+.dark .bg-\[\#FEF2F2\] { background-color: rgba(127, 29, 29, 0.28); }
+.dark .focus\:bg-\[\#FEF2F2\]:focus { background-color: rgba(127, 29, 29, 0.28); }
+.dark .border-\[\#FCA5A5\] { border-color: rgba(248, 113, 113, 0.45); }
+.dark .border-red-200 { border-color: rgba(248, 113, 113, 0.35); }
+.dark .border-red-200\/80 { border-color: rgba(248, 113, 113, 0.30); }
+.dark .border-red-300 { border-color: rgba(248, 113, 113, 0.40); }
+.dark .text-red-200 { color: #FCA5A5; }
+.dark .text-red-600 { color: #F87171; }
+.dark .text-red-800 { color: #FCA5A5; }
+
+/* সবুজ — সাকসেস/কনফার্মেশন */
+.dark .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.30); }
+.dark .bg-emerald-50\/70 { background-color: rgba(6, 78, 59, 0.22); }
+.dark .bg-emerald-50\/80 { background-color: rgba(6, 78, 59, 0.26); }
+.dark .bg-emerald-50\/90 { background-color: rgba(6, 78, 59, 0.30); }
+.dark .bg-emerald-50\/95 { background-color: rgba(6, 78, 59, 0.34); }
+.dark .bg-emerald-100 { background-color: rgba(6, 78, 59, 0.36); }
+.dark .bg-emerald-200 { background-color: rgba(6, 78, 59, 0.42); }
+.dark .border-emerald-200 { border-color: rgba(52, 211, 153, 0.35); }
+.dark .border-emerald-200\/80 { border-color: rgba(52, 211, 153, 0.30); }
+.dark .border-emerald-300 { border-color: rgba(52, 211, 153, 0.40); }
+.dark .border-emerald-300\/80 { border-color: rgba(52, 211, 153, 0.35); }
+.dark .text-emerald-600 { color: #6EE7B7; }
+.dark .text-emerald-700 { color: #6EE7B7; }
+.dark .text-emerald-800 { color: #86EFAC; }
+.dark .text-emerald-900 { color: #A7F3D0; }
+.dark .text-emerald-950 { color: #D1FAE5; }
+
+/* অ্যাম্বার — ওয়ার্নিং/অফার হাইলাইট */
+.dark .bg-amber-50 { background-color: rgba(120, 53, 15, 0.30); }
+.dark .bg-amber-50\/60 { background-color: rgba(120, 53, 15, 0.20); }
+.dark .bg-amber-50\/90 { background-color: rgba(120, 53, 15, 0.30); }
+.dark .bg-amber-50\/95 { background-color: rgba(120, 53, 15, 0.34); }
+.dark .bg-amber-100 { background-color: rgba(120, 53, 15, 0.36); }
+.dark .bg-amber-100\/80 { background-color: rgba(120, 53, 15, 0.30); }
+.dark .bg-\[\#FEF3C7\] { background-color: rgba(120, 53, 15, 0.34); }
+.dark .border-amber-200\/80 { border-color: rgba(251, 191, 36, 0.30); }
+.dark .border-amber-300 { border-color: rgba(251, 191, 36, 0.40); }
+.dark .border-amber-300\/80 { border-color: rgba(251, 191, 36, 0.35); }
+.dark .text-amber-600 { color: #FCD34D; }
+.dark .text-amber-700 { color: #FCD34D; }
+.dark .text-amber-800 { color: #FDE68A; }
+.dark .text-amber-800\/90 { color: rgba(253, 230, 138, 0.90); }
+.dark .text-amber-900 { color: #FEF3C7; }
+.dark .text-amber-900\/90 { color: rgba(254, 243, 199, 0.90); }
+.dark .text-amber-950 { color: #FFFBEB; }
+
+/* নীল/স্কাই — ইনফো ব্যানার */
+.dark .bg-blue-50 { background-color: rgba(12, 74, 110, 0.30); }
+.dark .bg-sky-50 { background-color: rgba(12, 74, 110, 0.30); }
+.dark .bg-sky-50\/95 { background-color: rgba(12, 74, 110, 0.34); }
+.dark .border-sky-100 { border-color: rgba(56, 189, 248, 0.30); }
+.dark .border-sky-200\/80 { border-color: rgba(56, 189, 248, 0.30); }
+.dark .border-sky-300\/80 { border-color: rgba(56, 189, 248, 0.35); }
+.dark .text-blue-800 { color: #93C5FD; }
+.dark .text-sky-800 { color: #7DD3FC; }
+.dark .text-sky-950 { color: #E0F2FE; }
+
+/* গোলাপি/রোজ — বিশেষ অফার ব্যাজ */
+.dark .bg-rose-50\/95 { background-color: rgba(76, 5, 25, 0.34); }
+.dark .border-rose-300\/80 { border-color: rgba(251, 113, 133, 0.35); }
+.dark .text-rose-950 { color: #FFE4E6; }
 
 /* ডার্ক মোডে ইনপুট অটোফিল ফিক্স */
 .dark input:-webkit-autofill,
