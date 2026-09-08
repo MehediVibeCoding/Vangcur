@@ -3,6 +3,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import { motion } from 'motion/react';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
@@ -87,6 +88,72 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
   );
 }
 
+function CheckMini() {
+  return (
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12.5l5 5L20 6" />
+    </svg>
+  );
+}
+
+const TIMELINE_STEPS: OrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered'];
+
+function OrderStatusTimeline({ status, lang }: { status: OrderStatus; lang: 'en' | 'bn' }) {
+  const idx = TIMELINE_STEPS.indexOf(status);
+  if (idx === -1) return null; // বাতিল/rejected অর্ডারে লিনিয়ার টাইমলাইন প্রযোজ্য না
+
+  const fillPct = (idx / (TIMELINE_STEPS.length - 1)) * 100;
+  const labels = lang === 'en' ? ORDER_STATUS_LABEL_EN : ORDER_STATUS_LABEL_BN;
+
+  return (
+    <div className="mb-3.5 px-0.5">
+      <div className="relative flex items-start justify-between">
+        <div className="absolute left-[10px] right-[10px] top-[9px] h-[3px] overflow-hidden rounded-full bg-ink/10">
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-brand-light"
+            initial={{ width: '0%' }}
+            animate={{ width: `${fillPct}%` }}
+            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+          />
+        </div>
+
+        {TIMELINE_STEPS.map((step, i) => {
+          const done = i < idx;
+          const active = i === idx;
+          return (
+            <div key={step} className="relative z-10 flex flex-1 flex-col items-center gap-1">
+              <motion.span
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: i * 0.08, duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+                className={`relative flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                  done
+                    ? 'border-emerald-500 bg-emerald-500'
+                    : active
+                      ? 'border-brand-light bg-brand-light'
+                      : 'border-ink/15 bg-white'
+                }`}
+              >
+                {done && <CheckMini />}
+                {active && (
+                  <motion.span
+                    className="absolute inset-0 rounded-full bg-brand-light/50"
+                    animate={{ scale: [1, 1.8], opacity: [0.55, 0] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}
+                  />
+                )}
+              </motion.span>
+              <span className={`font-body text-[9.5px] font-bold ${active ? 'text-brand-light' : done ? 'text-emerald-600' : 'text-muted/60'}`}>
+                {labels[step]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface OrderCardProps {
   order: Order;
   onInvoice?: (orderId: string | number) => void;
@@ -149,6 +216,8 @@ export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps)
           <span className="font-semibold text-ink/80">{o.customer?.name || '-'}</span>
         </div>
       </div>
+
+      <OrderStatusTimeline status={o.status} lang={lang} />
 
       {/* Ordered Items List */}
       <div className="space-y-3">
