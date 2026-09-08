@@ -188,7 +188,7 @@ export default function GlobalOverlays() {
       {/* 🌟 ইউনিভার্সাল ডায়নামিক টোস্ট রেন্ডারার */}
       <div
         aria-live="polite"
-        className={`pointer-events-none fixed bottom-7 left-1/2 z-[1300] flex -translate-x-1/2 items-center gap-2.5 rounded-full border px-4 py-2.5 shadow-sh2 backdrop-blur-md transition-all duration-300 ease-out max-w-[92vw] sm:max-w-md ${
+        className={`pointer-events-none fixed bottom-7 left-1/2 z-[1300] flex -translate-x-1/2 items-center gap-2.5 rounded-full border px-4 py-2.5 shadow-sh2 backdrop-blur-md transition-all duration-300 ease-out max-w-[95vw] sm:max-w-xl ${
           toast && toast.visible
             ? 'translate-y-0 opacity-100'
             : 'translate-y-4 opacity-0 pointer-events-none'
