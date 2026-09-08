@@ -218,6 +218,13 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     };
   }, [isOpen, supabase]);
 
+  // QUICK_CART_EVENT ডিসপ্যাচ করার আগেই caller (ProductCard/ProductDetailClient/
+  // WishlistDrawer/AccountClient) নিজে addToCart() কল করে ফেলে এবং নিজের
+  // "কার্টে যোগ হয়েছে" toast-ও দেখিয়ে দেয় — এই ইভেন্টটা শুধু সাইডবারের product
+  // ক্যাশ (prodsRef, updateQty-এর স্টক চেকের জন্য দরকার) রিফ্রেশ রাখতে ব্যবহার হয়।
+  // আগে এখানে addToCart() আবার কল হতো, ফলে প্রতিটা অ্যাড-টু-কার্টে পণ্যটা দুইবার
+  // যোগ হয়ে যেত এবং স্টক ঠিক শেষ হয়ে গেলে দ্বিতীয় (ডুপ্লিকেট) কলটা ব্যর্থ হয়ে
+  // "স্টক শেষ!" টোস্টও একসাথে দেখাত।
   useEffect(() => {
     const onQuickCart = async (e: Event) => {
       const id = (e as CustomEvent).detail?.id;
@@ -236,14 +243,10 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           }
         }
       }
-
-      const res = useCartStore.getState().addToCart(prodsRef.current, id, 1);
-      if (res.ok) showToast(t('কার্টে যোগ হয়েছে'));
-      else if (res.reason === 'stock') showToast(t('স্টক শেষ!'));
     };
     window.addEventListener(QUICK_CART_EVENT, onQuickCart);
     return () => window.removeEventListener(QUICK_CART_EVENT, onQuickCart);
-  }, [t, supabase]);
+  }, [supabase]);
 
   useEffect(() => {
     if (isOpen) lockBody();
