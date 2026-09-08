@@ -3,7 +3,6 @@ import Script from 'next/script';
 import './globals.css';
 import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
-import PageTransition from './components/layout/PageTransition';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -104,7 +103,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           aria-hidden="true"
           className="fixed inset-0 -z-10 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white dark:from-[#090D16] dark:via-[#0F172A] dark:to-[#0B0F19]"
         />
-        <PageTransition>{children}</PageTransition>
+        {children}
         <GlobalOverlays />
       </body>
     </html>
