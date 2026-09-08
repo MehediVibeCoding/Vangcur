@@ -44,12 +44,14 @@
     border-color: #44A7FC !important;
   }
 
-  /* বাটন ও লিংকের জন্য সেফ কীবোর্ড অ্যাক্সেসিবিলিটি রিং */
+  /* বাটন ও লিংকের জন্য সেফ কীবোর্ড অ্যাক্সেসিবিলিটি রিং — জেনেরিক আউটলাইনের
+     বদলে ব্র্যান্ডের সাথে মানানসই নরম গ্লো, যাতে কীবোর্ড আর মাউসে খোলা/ক্লিক
+     করার লুক প্রায় একই রকম লাগে, কিন্তু ফোকাস ইন্ডিকেটরও থেকে যায় */
   button:focus-visible,
   a:focus-visible,
   [role='button']:focus-visible {
-    outline: 2px solid #44A7FC;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(68, 167, 252, 0.30), 0 0 0 1.5px rgba(68, 167, 252, 0.95);
     border-radius: inherit;
   }
 }
