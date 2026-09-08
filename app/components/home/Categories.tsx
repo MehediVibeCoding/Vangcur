@@ -137,7 +137,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
       <div className="relative px-8 sm:px-[38px] md:px-[44px]">
         <button
           ref={prevBtnRef}
-          className="absolute left-0 top-1/2 z-[5] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-base font-bold leading-none text-ink shadow-sh1 transition-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute left-0 top-1/2 z-[5] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-base font-bold leading-none text-brand-light shadow-sh1 transition-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(-1, 'prev')}
           aria-label="Previous Category"
         >
@@ -165,7 +165,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
 
         <button
           ref={nextBtnRef}
-          className="absolute right-0 top-1/2 z-[5] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-base font-bold leading-none text-ink shadow-sh1 transition-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
+          className="absolute right-0 top-1/2 z-[5] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border-2 border-border-base bg-white text-base font-bold leading-none text-brand-light shadow-sh1 transition-brand hover:border-brand-light hover:bg-brand-light hover:text-white md:h-9 md:w-9 md:text-xl"
           onClick={() => slide(1, 'next')}
           aria-label="Next Category"
         >
