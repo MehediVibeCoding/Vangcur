@@ -4,7 +4,7 @@ export default function SearchLoading() {
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
       {/* ================= সার্চ হেডার (হোম আইকন + সার্চ বার) ================= */}
       <div className="mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px]">
+        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh1 backdrop-blur-[8px]">
           <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-2.5 px-3 sm:gap-3 sm:px-5">
             <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-brand-bg/60" />
             <div className="h-11 flex-1 animate-pulse rounded-full bg-brand-bg/25" />

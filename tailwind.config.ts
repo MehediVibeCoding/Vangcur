@@ -44,6 +44,8 @@ const config: Config = {
         body: ['var(--font-dm-sans)', "'Noto Sans Bengali'", 'var(--font-bengali)', 'sans-serif'],
       },
       boxShadow: {
+        '2xs': '0 1px 2px rgba(0,0,0,.04)',
+        xs: '0 1px 3px rgba(0,0,0,.05)',
         sh1: '0 1px 4px rgba(0,0,0,.07)',
         sh2: '0 4px 18px rgba(0,0,0,.10)',
         sh3: '0 8px 36px rgba(0,0,0,.13)',

@@ -3,7 +3,7 @@ export default function OffersLoading() {
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white">
       {/* ================= Navbar Skeleton ================= */}
       <div className="mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px]">
+        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh1 backdrop-blur-[8px]">
           <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
             <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
               {/* হোম বাটন পিল */}

@@ -4,7 +4,7 @@ export default function HomeLoading() {
     <div className="min-h-screen bg-transparent">
       {/* ================= Navbar Skeleton ================= */}
       <div className="mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh2 backdrop-blur-[8px]">
+        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh1 backdrop-blur-[8px]">
           <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
             <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
               {/* লোগো — Image (140x49) এর h-7/md:h-8 রেশিও অনুযায়ী */}
@@ -44,7 +44,7 @@ export default function HomeLoading() {
 
       {/* ================= TrustStrip Skeleton (আগে বাদ পড়েছিল) ================= */}
       <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
-        <div className="grid grid-cols-3 gap-x-2 gap-y-3 rounded-2xl border border-white/60 bg-white/80 px-4 py-3 shadow-sh2 backdrop-blur-[8px] md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
+        <div className="grid grid-cols-3 gap-x-2 gap-y-3 rounded-2xl border border-white/60 bg-white/80 px-4 py-3 shadow-sh1 backdrop-blur-[8px] md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className={`flex items-center gap-2 ${i > 3 ? 'hidden md:flex' : ''}`}>
               <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-brand-bg/50 md:h-10 md:w-10" />

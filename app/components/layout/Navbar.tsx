@@ -761,7 +761,10 @@ export default function Navbar({
                 </span>
               </Link>
             ) : (
-              <Link className="flex shrink-0 items-center no-underline" href="/" prefetch={true}>
+              /* ইচ্ছাকৃতভাবে <a> ট্যাগ (Next.js Link নয়): লোগোতে ক্লিক করলে SPA নেভিগেশন না করে
+                 পুরো ওয়েবসাইট রিফ্রেশ/রিলোড হবে, এমনকি হোম পেজে থাকা অবস্থায়ও */
+              // eslint-disable-next-line @next/next/no-html-link-for-pages
+              <a className="flex shrink-0 items-center no-underline" href="/">
                 <span className="flex shrink-0 items-center">
                   <Image
                     src="/vangcur-logo.png"
@@ -774,7 +777,7 @@ export default function Navbar({
                     draggable={false}
                   />
                 </span>
-              </Link>
+              </a>
             )}
 
             <div className="flex items-center gap-2 md:gap-3">
