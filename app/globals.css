@@ -631,6 +631,153 @@ body,
 .dark .border-rose-300\/80 { border-color: rgba(251, 113, 133, 0.35); }
 .dark .text-rose-950 { color: #FFE4E6; }
 
+/* ══════════════════════════════════════════════════════════════════════
+   🩹 পেজ-ওয়াইড গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড ফিক্স
+   পুরো সাইটের প্রায় প্রতিটি পেজ/মোডাল/কার্ড `dark:` ভ্যারিয়েন্ট ছাড়াই
+   হার্ডকোড করা হালকা from-/via-/to- গ্রেডিয়েন্ট স্টপ ব্যবহার করছিল, তাই
+   ডার্ক মোড অন থাকলেও পুরো ব্যাকগ্রাউন্ড হালকা নীল/সাদা থেকে যাচ্ছিল —
+   এটাই মূল কারণ কেন ডার্ক মোডে সবকিছু লাইট মোডের মতো দেখাচ্ছিল।
+   ══════════════════════════════════════════════════════════════════════ */
+.dark .from-brand-bg,
+.dark .from-brand-bg\/25,
+.dark .from-brand-bg\/35,
+.dark .from-brand-bg\/40,
+.dark .from-brand-bg\/45,
+.dark .from-brand-bg\/50 {
+  --tw-gradient-from: #0F172A var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(15 23 42 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .from-white\/95 {
+  --tw-gradient-from: #131D31 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(19 29 49 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .from-\[\#E0F2FE\]\/90 {
+  --tw-gradient-from: rgba(12, 74, 110, 0.35) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(12 74 110 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .from-\[\#EFF6FF\] {
+  --tw-gradient-from: #182339 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(24 35 57 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .from-\[\#F0F7FF\] {
+  --tw-gradient-from: #182339 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(24 35 57 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .from-\[\#F0F8FF\]\/95 {
+  --tw-gradient-from: rgba(12, 74, 110, 0.30) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(12 74 110 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .via-\[\#DCEBFD\],
+.dark .via-\[\#DCEBFD\]\/45,
+.dark .via-\[\#DCEBFD\]\/50,
+.dark .via-\[\#DCEBFD\]\/55 {
+  --tw-gradient-stops: var(--tw-gradient-from), #182339 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.dark .via-\[\#F3F8FE\]\/95 {
+  --tw-gradient-stops: var(--tw-gradient-from), #182339 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.dark .via-\[\#EFF6FE\]\/75 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(12, 74, 110, 0.30) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.dark .via-\[\#E0F2FE\]\/95 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(12, 74, 110, 0.35) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.dark .via-white {
+  --tw-gradient-stops: var(--tw-gradient-from), #131D31 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+
+.dark .to-white,
+.dark .to-white\/90,
+.dark .to-white\/95 {
+  --tw-gradient-to: #0B111E var(--tw-gradient-to-position);
+}
+.dark .to-\[\#DCEBFD\]\/80 {
+  --tw-gradient-to: #182339 var(--tw-gradient-to-position);
+}
+.dark .to-\[\#F0F8FF\]\/95,
+.dark .to-\[\#F0F9FF\]\/95 {
+  --tw-gradient-to: rgba(12, 74, 110, 0.30) var(--tw-gradient-to-position);
+}
+.dark .to-surface-muted {
+  --tw-gradient-to: #182339 var(--tw-gradient-to-position);
+}
+
+/* "মেঘলা" ডিফল্ট অ্যাভাটার গ্রেডিয়েন্ট (সাদা → হালকা ধূসর) */
+.dark .from-\[\#94A3B8\] {
+  --tw-gradient-from: #475569 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(71 85 105 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.dark .via-\[\#E2E8F0\] {
+  --tw-gradient-stops: var(--tw-gradient-from), #64748B var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.dark .to-\[\#FFFFFF\] {
+  --tw-gradient-to: #94A3B8 var(--tw-gradient-to-position);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   🩹 সলিড হালকা ব্যাকগ্রাউন্ড/বর্ডার ফিক্স (কার্ড, নোটিশ বক্স, ব্যাজ)
+   ══════════════════════════════════════════════════════════════════════ */
+.dark .bg-\[\#D3E7FC\] { background-color: #0F172A; }
+.dark .bg-\[\#EFF6FE\] { background-color: #131D31; }
+.dark .bg-\[\#EFF8FF\] { background-color: rgba(12, 74, 110, 0.30); }
+.dark .bg-\[\#F0F9FF\] { background-color: rgba(12, 74, 110, 0.30); }
+.dark .bg-\[\#F8FAFC\] { background-color: #182339; }
+.dark .bg-\[\#FFF7ED\] { background-color: rgba(120, 53, 15, 0.30); }
+.dark .border-\[\#BAE0FD\] { border-color: rgba(56, 189, 248, 0.35); }
+.dark .border-\[\#FDE0B0\] { border-color: rgba(251, 191, 36, 0.35); }
+.dark .border-brand-bg { border-color: rgba(195, 222, 252, 0.25); }
+
+/* ফুটারের "wave" SVG-তে সরাসরি fill অ্যাট্রিবিউট বসানো ছিল, ক্লাস দিয়ে না —
+   তাই এভাবে সিলেক্টর দিয়েই ওভাররাইড করতে হচ্ছে */
+.dark footer svg path[fill="#D3E7FC"] { fill: #0F172A; }
+
+/* এই পেল ব্যাজ/বাটনের সাথে জোড়া লাগানো টেক্সট রঙ */
+.dark .text-\[\#0284C7\] { color: #7DD3FC; }
+.dark .text-\[\#0062E3\] { color: #93C5FD; }
+.dark .text-\[\#B91C1C\] { color: #FCA5A5; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   🩹 মিউটেড/ইঙ্ক অপাসিটি ভ্যারিয়েন্ট (placeholder, সেকেন্ডারি আইকন, পাতলা বর্ডার)
+   ══════════════════════════════════════════════════════════════════════ */
+.dark .text-muted\/35 { color: rgba(148, 163, 184, 0.45); }
+.dark .text-muted\/40 { color: rgba(148, 163, 184, 0.50); }
+.dark .text-muted\/50 { color: rgba(148, 163, 184, 0.60); }
+.dark .text-muted\/60 { color: rgba(148, 163, 184, 0.70); }
+.dark .text-muted\/70 { color: rgba(148, 163, 184, 0.80); }
+
+.dark .border-ink { border-color: #22324D; }
+.dark .border-ink\/10 { border-color: rgba(248, 250, 252, 0.10); }
+.dark .border-ink\/15 { border-color: rgba(248, 250, 252, 0.14); }
+.dark .border-ink\/20 { border-color: rgba(248, 250, 252, 0.18); }
+.dark .border-ink\/25 { border-color: rgba(248, 250, 252, 0.22); }
+.dark .hover\:border-ink:hover { border-color: #F8FAFC; }
+
+/* ব্র্যান্ড প্রাইমারি (গাঢ় নেভি ব্লু) ডার্ক ব্যাকগ্রাউন্ডে প্রায় অদৃশ্য হয়ে
+   যাচ্ছিল — কনট্রাস্টের জন্য হালকা করে দেওয়া হলো */
+.dark .text-brand-primary { color: #60A5FA; }
+
+/* ইনফো/সাকসেস — অতি হালকা টিন্ট ব্যাজ, ডার্ক বিজি-তে আগে প্রায় দেখাই যেত না */
+.dark .bg-info\/10 { background-color: rgba(30, 64, 175, 0.28); }
+.dark .bg-info\/20 { background-color: rgba(30, 64, 175, 0.34); }
+.dark .bg-info\/50 { background-color: rgba(30, 64, 175, 0.50); }
+.dark .border-info\/40 { border-color: rgba(96, 165, 250, 0.40); }
+.dark .bg-success\/10 { background-color: rgba(6, 78, 59, 0.30); }
+.dark .border-success\/30 { border-color: rgba(52, 211, 153, 0.35); }
+.dark .border-success\/40 { border-color: rgba(52, 211, 153, 0.40); }
+.dark .border-success\/50 { border-color: rgba(52, 211, 153, 0.50); }
+
+/* সাদা রিং হাইলাইট (মোডাল/টোস্ট কার্ডের ধারে হালকা গ্লো) */
+.dark .ring-white\/70 { --tw-ring-color: rgba(255, 255, 255, 0.12); }
+.dark .ring-white\/80 { --tw-ring-color: rgba(255, 255, 255, 0.12); }
+
 /* ডার্ক মোডে ইনপুট অটোফিল ফিক্স */
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover,
