@@ -106,7 +106,7 @@ export default function FloatContactButtons() {
       onMouseLeave={handleLeave}
     >
       <div
-        className={`absolute bottom-0 right-[68px] flex flex-col items-end gap-2.5 transition-all duration-brand ease-brand ${
+        className={`absolute bottom-0 right-[68px] flex flex-col items-end gap-2 transition-all duration-brand ease-brand ${
           open ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-4 opacity-0'
         }`}
       >
@@ -117,10 +117,10 @@ export default function FloatContactButtons() {
           title={t('WhatsApp এ মেসেজ করুন')}
           className="flex shrink-0 items-center rounded-full shadow-sh3 transition-transform duration-brand ease-brand hover:scale-105"
         >
-          <span className="z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366]">
-            <WhatsAppIcon />
+          <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366]">
+            <WhatsAppIcon size={14} />
           </span>
-          <span className="-ml-4 whitespace-nowrap rounded-full border border-border-base/70 bg-white/95 py-2 pl-6 pr-4 font-body text-[13px] font-normal tracking-wide text-ink">
+          <span className="-ml-2.5 whitespace-nowrap rounded-full border border-border-base/70 bg-white/95 py-1 pl-4 pr-3 font-body text-[10.5px] font-normal tracking-wide text-ink">
             WhatsApp
           </span>
         </a>
@@ -131,10 +131,10 @@ export default function FloatContactButtons() {
           title={t('Messenger এ মেসেজ করুন')}
           className="flex shrink-0 items-center rounded-full shadow-sh3 transition-transform duration-brand ease-brand hover:scale-105"
         >
-          <span className="z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0084FF]">
-            <MessengerIcon size={16} />
+          <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0084FF]">
+            <MessengerIcon size={13} />
           </span>
-          <span className="-ml-3 whitespace-nowrap rounded-full border border-border-base/70 bg-white/95 py-1.5 pl-5 pr-3.5 font-body text-[11.5px] font-normal tracking-wide text-ink">
+          <span className="-ml-2.5 whitespace-nowrap rounded-full border border-border-base/70 bg-white/95 py-1 pl-4 pr-3 font-body text-[10.5px] font-normal tracking-wide text-ink">
             Messenger
           </span>
         </a>
