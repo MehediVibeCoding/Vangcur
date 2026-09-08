@@ -810,3 +810,37 @@ body,
 .theme-toggle-icon {
   transition: transform 0.45s cubic-bezier(.4,0,.2,1), opacity 0.3s ease;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   🩹 hover:/focus:/disabled: প্রিফিক্স-যুক্ত ক্লাস ফিক্স
+   জরুরি নোট: `hover:bg-white` আর `bg-white` সম্পূর্ণ আলাদা CSS সিলেক্টর।
+   উপরে `.dark .bg-white` ওভাররাইড করলেও `.dark .hover\:bg-white:hover`
+   আলাদাভাবে না লিখলে সেটা কাজ করে না। এই কারণেই সার্চ বক্স/চেকআউট ইনপুট/FAQ
+   কার্ডে হোভার বা ফোকাস করলেই সাদা হয়ে ভিতরের লেখা অদৃশ্য হয়ে যাচ্ছিল।
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* সার্চ বক্স (নেভবার + চেকআউট ইনপুট) — ফোকাস করলে সাদা হয়ে টাইপ করা লেখা
+   অদৃশ্য হয়ে যাচ্ছিল */
+.dark .focus\:bg-white:focus { background-color: #182339; }
+
+/* FAQ কার্ড হোভার, সার্চ ক্লিয়ার বাটন, প্রোডাক্ট কোয়ান্টিটি +/- বাটন,
+   অ্যাকাউন্ট রিমুভ বাটন — হোভার করলেই সাদা হয়ে আইকন/লেখা অদৃশ্য হয়ে যাচ্ছিল */
+.dark .hover\:bg-white:hover { background-color: #182339; }
+
+/* ডিলিট/রিমুভ আইকন বাটনের হালকা লাল হোভার ব্যাকগ্রাউন্ড */
+.dark .hover\:bg-red-50:hover { background-color: rgba(127, 29, 29, 0.28); }
+
+/* ডিজেবলড ইনপুট/বাটন */
+.dark .disabled\:bg-surface-muted:disabled { background-color: #182339; }
+.dark .disabled\:text-muted:disabled { color: #94A3B8; }
+
+/* হালকা ব্র্যান্ড-বিজি চিপ/পিল বাটনের হোভার স্টেট */
+.dark .hover\:bg-brand-bg:hover { background-color: #0F172A; }
+.dark .hover\:bg-brand-bg\/10:hover { background-color: rgba(15, 23, 42, 0.10); }
+.dark .hover\:bg-brand-bg\/35:hover { background-color: rgba(15, 23, 42, 0.35); }
+.dark .hover\:bg-brand-bg\/40:hover { background-color: rgba(15, 23, 42, 0.40); }
+.dark .hover\:bg-brand-bg\/55:hover { background-color: rgba(15, 23, 42, 0.55); }
+
+/* ফুটারের "চলতি অফারসমূহ" লিংক হোভার — গাঢ় ব্রাউনিশ অ্যাম্বার ডার্ক বিজিতে
+   পড়া যাচ্ছিল না */
+.dark .hover\:text-amber-800:hover { color: #FDE68A; }
