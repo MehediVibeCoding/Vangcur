@@ -151,7 +151,7 @@ export function InvoiceCardBody({
           }}
         >
           <span>
-            Order: <strong style={{ color: '#0058C7' }}>{order.orderNum}</strong>
+            Order: <strong style={{ color: '#44A7FC' }}>{order.orderNum}</strong>
           </span>
           {ds ? (
             <>
