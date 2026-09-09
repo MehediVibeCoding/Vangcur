@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -17,7 +17,7 @@ import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
-  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_COMPLETE_PROFILE_EVENT,
+  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
@@ -187,6 +187,7 @@ function IconLogoutWarning() {
 export default function AccountClient() {
   const { t, lang } = useT();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setLanguage = useLanguageStore((s) => s.setLanguage);
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
@@ -220,6 +221,15 @@ export default function AccountClient() {
     return () => clearInterval(timer);
   }, []);
 
+  // 🆕 "Legendary/tier" নোটিফিকেশন থেকে সরাসরি এসেছে কিনা — এলে মেম্বারশিপ মডাল
+  // নিজে থেকে খুলে দেওয়া হয় (আগে শুধু /account-এ ল্যান্ড করত, মডাল খুলতো না)
+  useEffect(() => {
+    if (searchParams.get('open') === 'membership') {
+      setMembershipOpen(true);
+      router.replace('/account', { scroll: false });
+    }
+  }, [searchParams, router]);
+
   useEffect(() => {
     if (!cardRef.current) return undefined;
     const measure = () => setCardWidth(cardRef.current?.clientWidth || 320);
@@ -232,14 +242,6 @@ export default function AccountClient() {
     if (!currentUser) return;
     fetchIsRaining(supabase, currentUser).then(setIsRaining);
   }, [currentUser, supabase]);
-
-  // 🆕 নোটিফিকেশন বেল থেকে "প্রোফাইল সম্পূর্ণ করুন" আইটেমে ক্লিক করলে সরাসরি
-  // এই মডেলটা খুলবে
-  useEffect(() => {
-    const handler = () => setCompleteProfileOpen(true);
-    window.addEventListener(OPEN_COMPLETE_PROFILE_EVENT, handler);
-    return () => window.removeEventListener(OPEN_COMPLETE_PROFILE_EVENT, handler);
-  }, []);
 
   // 🆕 প্রোফাইল সম্পূর্ণ কিনা (ফোন + ঠিকানা) চেক — অসম্পূর্ণ হলে ব্যানার দেখানো হবে
   useEffect(() => {

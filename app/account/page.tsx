@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import AccountClient from './AccountClient';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
@@ -14,5 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function AccountPage() {
-  return <AccountClient />;
+  return (
+    <Suspense fallback={null}>
+      <AccountClient />
+    </Suspense>
+  );
 }

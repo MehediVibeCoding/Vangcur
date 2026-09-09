@@ -3,12 +3,11 @@ import { fetchProductById, productHref } from './productData';
 import { getStockNotifications } from './accountData';
 import { MEMBERSHIP_TIERS, getTier } from './membershipData';
 import { getTierSpinReward } from './accountData';
-import { isProfileComplete, type MyProfileData } from './profileData';
 import type { Order, DraftOrder } from '@/types';
 
 export interface NotificationItem {
   id: string;
-  type: 'offer' | 'stock' | 'draft' | 'review' | 'tier' | 'code' | 'profile-incomplete' | 'profile-verified';
+  type: 'offer' | 'stock' | 'draft' | 'review' | 'tier' | 'code';
   title: string;
   subtitle?: string;
   href: string;
@@ -130,15 +129,36 @@ export function buildDraftOrderNotifications(drafts: DraftOrder[], lang: 'bn' | 
   });
 }
 
+const REVIEW_DISMISSED_KEY = 'vc_review_dismissed_ids';
+
+function getDismissedReviewIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(REVIEW_DISMISSED_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function dismissReviewNotification(orderId: string | number): void {
+  try {
+    const ids = getDismissedReviewIds();
+    if (!ids.includes(String(orderId))) {
+      ids.push(String(orderId));
+      localStorage.setItem(REVIEW_DISMISSED_KEY, JSON.stringify(ids));
+    }
+  } catch {
+    // storage unavailable
+  }
+}
+
 /**
- * ডেলিভারড অর্ডারে রিভিউ দেওয়ার অনুরোধ। এটা কতদিন দেখানো হবে/কখন মুছে যাবে
- * সেই লজিক এখন lib/notificationStore.ts-এ কেন্দ্রীভূত — এখানে শুধু "ডেলিভারড
- * হওয়া প্রতিটা অর্ডারের জন্য একটা করে সম্ভাব্য নোটিফিকেশন" রিটার্ন করা হয়,
- * নিজে থেকে কোনো dismiss/seen ট্র্যাকিং করে না।
+ * ডেলিভারড অর্ডারে রিভিউ দেওয়ার অনুরোধ — একবার নোটিফিকেশনে ক্লিক করে
+ * দেখলে/dismiss করলে সেটা আর দেখাবে না (dismissReviewNotification দিয়ে)।
  */
 export function buildReviewRequestNotifications(orders: Order[], lang: 'bn' | 'en'): NotificationItem[] {
+  const dismissed = getDismissedReviewIds();
   return orders
-    .filter((o) => o.status === 'delivered')
+    .filter((o) => o.status === 'delivered' && !dismissed.includes(String(o.id)))
     .slice(0, 5)
     .map((o) => {
       const first = o.items?.[0];
@@ -153,16 +173,35 @@ export function buildReviewRequestNotifications(orders: Order[], lang: 'bn' | 'e
     });
 }
 
+const LAST_NOTIFIED_TIER_KEY = 'vc_last_notified_tier';
+
+export function getLastNotifiedTier(): string {
+  try {
+    return localStorage.getItem(LAST_NOTIFIED_TIER_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function setLastNotifiedTier(tierKey: string): void {
+  try {
+    localStorage.setItem(LAST_NOTIFIED_TIER_KEY, tierKey);
+  } catch {
+    // storage unavailable
+  }
+}
+
 /**
- * মেম্বারশিপ লেভেল আপ — কারেন্ট টায়ার অনুযায়ী "কনগ্র্যাচুলেশন" নোটিফিকেশন।
- * এই আইডি (tier:key) সারাজীবনে একবারই notificationStore-এ তৈরি হবে (ওয়ান-টাইম
- * লেজার দিয়ে), তাই এখানে বারবার গার্ড রাখার দরকার নেই — শুধু "বর্তমান টায়ার
- * কী" সেটাই বলে দিলেই যথেষ্ট।
+ * মেম্বারশিপ লেভেল আপ — অর্ডার কনফার্ম/সাকসেস হয়ে নতুন টায়ারে উঠলে একবার
+ * জানানো হবে, একবার নোটিফিকেশন প্যানেল খুললেই এই টায়ারটা মার্ক-সিন হয়ে
+ * ভবিষ্যতে আর দেখাবে না (setLastNotifiedTier দিয়ে)।
  */
 export function buildTierUpgradeNotification(completedOrders: number, lang: 'bn' | 'en'): NotificationItem | null {
   const tier = getTier(completedOrders);
   const tierIndex = MEMBERSHIP_TIERS.findIndex((t) => t.key === tier.key);
   if (tierIndex <= 0) return null; // 'regular' (ডিফল্ট) নিয়ে নোটিফাই করার দরকার নেই
+
+  if (getLastNotifiedTier() === tier.key) return null;
 
   const tierName = lang === 'en' ? tier.en : tier.bn;
   return {
@@ -170,38 +209,9 @@ export function buildTierUpgradeNotification(completedOrders: number, lang: 'bn'
     type: 'tier',
     title: lang === 'en' ? `You've reached ${tierName}!` : `আপনি এখন ${tierName}!`,
     subtitle: lang === 'en' ? 'Congratulations on the upgrade' : 'মেম্বারশিপ লেভেল আপ হয়েছে, অভিনন্দন',
-    href: '/account',
+    // 🆕 শুধু /account-এ ল্যান্ড না করে সরাসরি মেম্বারশিপ মডাল খুলে দেওয়ার জন্য
+    href: '/account?open=membership',
   };
-}
-
-/**
- * প্রোফাইল সম্পূর্ণ/অসম্পূর্ণ — অসম্পূর্ণ থাকলে "সেটআপ করুন" (যতক্ষণ না
- * ম্যানুয়ালি ডিলিট করা হয় বা প্রোফাইল সম্পূর্ণ হয়, ততক্ষণ থাকবে), সম্পূর্ণ
- * হয়ে গেলে একবারই "কংগ্র্যাচুলেশন ভেরিফায়েড" (ওয়ান-টাইম লেজার + ২৪ঘণ্টা
- * পড়ার-পর-মেয়াদ, notificationStore-এ সামলানো হয়)।
- */
-export function buildProfileNotifications(
-  profile: Pick<MyProfileData, 'phone' | 'address' | 'district'> | null,
-  lang: 'bn' | 'en',
-): NotificationItem[] {
-  if (!profile) return [];
-  const complete = isProfileComplete(profile);
-  if (!complete) {
-    return [{
-      id: 'profile-incomplete:setup',
-      type: 'profile-incomplete',
-      title: lang === 'en' ? 'Complete your profile' : 'আপনার প্রোফাইল সম্পূর্ণ করুন',
-      subtitle: lang === 'en' ? 'Get a verified badge & faster checkout' : 'ভেরিফাইড ব্যাজ পান ও দ্রুত চেকআউট করুন',
-      href: '/account',
-    }];
-  }
-  return [{
-    id: 'profile-verified:done',
-    type: 'profile-verified',
-    title: lang === 'en' ? 'Profile verified!' : 'প্রোফাইল ভেরিফাইড হয়েছে!',
-    subtitle: lang === 'en' ? 'Congratulations — you got the verified badge' : 'অভিনন্দন — আপনি ভেরিফাইড ব্যাজ পেয়েছেন',
-    href: '/account',
-  }];
 }
 
 /**
@@ -225,15 +235,52 @@ export function buildSecretCodeNotifications(lang: 'bn' | 'en'): NotificationIte
   return items;
 }
 
+const DISMISSED_NOTIF_KEY = 'vc_notif_dismissed_ids';
+const DISMISSED_NOTIF_MAX = 200; // অসীম বৃদ্ধি ঠেকাতে সর্বোচ্চ কতগুলো id রাখা হবে
+
 /**
- * ড্রাফট অর্ডারের আইডি থেকে notification-এর id বানানো/পার্স করার হেল্পার,
- * যাতে NotificationBell ক্লিক করার সময় সহজে আসল DraftOrder-টা খুঁজে পায়।
+ * ব্যবহারকারী কোনো নোটিফিকেশন সোয়াইপ/ক্লিক করে মুছে ফেললে তার id এখানে জমা
+ * থাকে, পরের বার loadNotifications() কল হলে এই id-গুলো লিস্ট থেকে বাদ যাবে।
  */
-export function draftNotificationId(draftId: string): string {
-  return `draft:${draftId}`;
+export function getDismissedNotifIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(DISMISSED_NOTIF_KEY) || '[]');
+  } catch {
+    return [];
+  }
 }
 
-export function parseDraftIdFromNotificationId(notifId: string): string | null {
-  if (!notifId.startsWith('draft:')) return null;
-  return notifId.slice('draft:'.length) || null;
+export function dismissNotification(id: string): void {
+  try {
+    const ids = getDismissedNotifIds();
+    if (!ids.includes(id)) {
+      ids.push(id);
+      const trimmed = ids.slice(-DISMISSED_NOTIF_MAX);
+      localStorage.setItem(DISMISSED_NOTIF_KEY, JSON.stringify(trimmed));
+    }
+  } catch {
+    // storage unavailable
+  }
 }
+
+const SEEN_SIG_KEY = 'vc_notif_seen_sig';
+
+export function buildNotifSignature(items: NotificationItem[]): string {
+  return items.map((i) => i.id).sort().join('|');
+}
+
+export function getNotifSeenSignature(): string {
+  try {
+    return localStorage.getItem(SEEN_SIG_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function setNotifSeenSignature(sig: string): void {
+  try {
+    localStorage.setItem(SEEN_SIG_KEY, sig);
+  } catch {
+    // storage unavailable — নীরবে উপেক্ষা করা হচ্ছে
+  }
+        }
