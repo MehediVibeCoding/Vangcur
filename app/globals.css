@@ -318,18 +318,12 @@ input[type='search']::-webkit-search-results-decoration {
   display: none;
 }
 
-/* 🌟 সার্বজনীন ফ্রস্টেড গ্লাস ব্লার ইঞ্জিন (Desktop Chrome/Edge/Firefox + Safari + Mobile) */
-.search-dropdown-glass {
-  -webkit-backdrop-filter: blur(18px) !important;
-  backdrop-filter: blur(18px) !important;
-}
-
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .navbar-glass {
     background-color: rgba(255, 255, 255, 0.94) !important;
   }
   .search-dropdown-glass {
-    background-color: rgba(255, 255, 255, 0.96) !important;
+    background-color: rgba(255, 255, 255, 0.98) !important;
   }
 }
 
@@ -339,8 +333,9 @@ input[type='search']::-webkit-search-results-decoration {
     backdrop-filter: blur(20px) !important;
   }
   .search-dropdown-glass {
-    -webkit-backdrop-filter: blur(20px) !important;
-    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+    backdrop-filter: blur(22px) !important;
+    background-color: rgba(255, 255, 255, 0.985) !important;
   }
 }
 
@@ -468,10 +463,8 @@ body,
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 .dark .search-dropdown-glass {
-  background-color: rgba(19, 29, 49, 0.88) !important;
+  background-color: rgba(19, 29, 49, 0.94) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  backdrop-filter: blur(18px) !important;
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .dark .navbar-glass { background-color: rgba(19, 29, 49, 0.97) !important; }
