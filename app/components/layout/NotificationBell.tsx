@@ -127,7 +127,7 @@ function NotificationRow({
   const rightReveal = Math.max(0, Math.min(1, -dragX / DELETE_THRESHOLD));
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden bg-white">
       {isMobile && (
         <div className="absolute inset-0 flex items-center justify-between bg-red-50 px-5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white transition-opacity" style={{ opacity: leftReveal }}>
@@ -166,7 +166,7 @@ function NotificationRow({
             }
             onNavigate(item);
           }}
-          className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-muted/70"
+          className="group flex items-center gap-3 bg-white px-4 py-3 transition-colors hover:bg-surface-muted/70"
         >
           <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tileColorForType(item.type)}`}>
             {iconForType(item.type)}
@@ -335,24 +335,21 @@ export default function NotificationBell({ className = '' }: { className?: strin
       <AnimatePresence>
         {open && (
           <>
-            {/* ব্যাকড্রপ লেয়ার */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[950] bg-ink/40 backdrop-blur-[2px]"
+            {/* স্বচ্ছ ব্যাকড্রপ (ক্লিক করলে বন্ধ হবে কিন্তু স্ক্রিন ডার্ক বা ব্লার করবে না) */}
+            <div
+              className="fixed inset-0 z-[940] bg-transparent"
               onClick={() => setOpen(false)}
             />
 
-            {/* ড্রপডাউন কন্টেইনার (ন্যাভবারের নিচে সুনির্দিষ্ট গ্যাপ সহ) */}
+            {/* ১০০% সলিড ড্রপডাউন প্যানেল (জিরো ট্রান্সপারেন্সি ও কোনো ওভারল্যাপ ছাড়া) */}
             <motion.div
               initial={{ opacity: 0, y: 8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ type: 'spring', bounce: 0, duration: 0.26 }}
-              className="fixed inset-x-3 top-[84px] z-[960] max-h-[75vh] overflow-hidden rounded-[24px] border border-white/80 bg-white/95 shadow-sh3 backdrop-blur-md sm:absolute sm:inset-x-auto sm:top-[calc(100%+20px)] sm:right-0 sm:w-[360px] sm:rounded-[22px]"
+              className="fixed inset-x-3 top-[84px] z-[960] max-h-[75vh] overflow-hidden rounded-[24px] border border-border-base bg-white shadow-sh3 sm:absolute sm:inset-x-auto sm:top-[calc(100%+20px)] sm:right-0 sm:w-[360px] sm:rounded-[22px]"
             >
-              <div className="flex items-center justify-between border-b border-border-base/70 px-4 py-3">
+              <div className="flex items-center justify-between border-b border-border-base bg-white px-4 py-3">
                 <span className="font-body text-[14px] font-extrabold text-ink">
                   {lang === 'en' ? 'Notifications' : 'নোটিফিকেশন'}
                 </span>
@@ -361,16 +358,16 @@ export default function NotificationBell({ className = '' }: { className?: strin
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border-base/70 bg-surface-muted/80 text-muted shadow-2xs transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500 sm:hidden cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border-base/70 bg-surface-muted text-muted shadow-2xs transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500 sm:hidden cursor-pointer"
                   aria-label="close"
                 >
                   <IconCloseX />
                 </motion.button>
               </div>
 
-              <div className="max-h-[calc(75vh-52px)] overflow-y-auto sm:max-h-[420px] sleek-scrollbar">
+              <div className="max-h-[calc(75vh-52px)] overflow-y-auto bg-white sm:max-h-[420px] sleek-scrollbar">
                 {items.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 bg-white px-4 py-10 text-center">
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted">
                       <IconBell className="h-5 w-5" />
                     </span>
@@ -379,7 +376,7 @@ export default function NotificationBell({ className = '' }: { className?: strin
                     </p>
                   </div>
                 ) : (
-                  <div className="flex flex-col divide-y divide-border-base/60">
+                  <div className="flex flex-col divide-y divide-border-base/70 bg-white">
                     <AnimatePresence initial={false}>
                       {items.map((item) => (
                         <NotificationRow
