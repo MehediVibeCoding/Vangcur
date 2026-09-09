@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { useT } from '@/lib/i18n/useT';
 import { showToast } from '@/lib/toast';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
+import { PROFILE_UPDATED_EVENT } from '@/lib/uiEvents';
 import useHistoryModal from '@/lib/useHistoryModal';
 import {
   fetchMyProfile, updateMyProfile, isProfileComplete, type MyProfileData,
@@ -94,6 +95,7 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
     }
 
     showToast(t('✅ আপনার প্রোফাইল সম্পূর্ণ হয়েছে!'));
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT));
     onSaved?.();
     onClose();
   };

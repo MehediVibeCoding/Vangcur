@@ -17,7 +17,7 @@ import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logout } from '@/lib/authData';
 import {
-  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
+  OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT, OPEN_COMPLETE_PROFILE_EVENT,
 } from '@/lib/uiEvents';
 import {
   computeCelestialState, fetchIsRaining, formatLiveTimeDate, getGreeting,
@@ -232,6 +232,14 @@ export default function AccountClient() {
     if (!currentUser) return;
     fetchIsRaining(supabase, currentUser).then(setIsRaining);
   }, [currentUser, supabase]);
+
+  // 🆕 নোটিফিকেশন বেল থেকে "প্রোফাইল সম্পূর্ণ করুন" আইটেমে ক্লিক করলে সরাসরি
+  // এই মডেলটা খুলবে
+  useEffect(() => {
+    const handler = () => setCompleteProfileOpen(true);
+    window.addEventListener(OPEN_COMPLETE_PROFILE_EVENT, handler);
+    return () => window.removeEventListener(OPEN_COMPLETE_PROFILE_EVENT, handler);
+  }, []);
 
   // 🆕 প্রোফাইল সম্পূর্ণ কিনা (ফোন + ঠিকানা) চেক — অসম্পূর্ণ হলে ব্যানার দেখানো হবে
   useEffect(() => {
