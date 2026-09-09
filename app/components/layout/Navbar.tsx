@@ -285,7 +285,7 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`search-dropdown-reveal search-dropdown-glass ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[16px] border border-white/75 bg-white/85 shadow-sh2 backdrop-blur-[16px]` }
+      className={`search-dropdown-reveal ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[16px] border border-border-base bg-white shadow-sh2`}
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
