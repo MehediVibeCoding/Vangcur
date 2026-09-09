@@ -153,8 +153,8 @@ type TimelineStep = 'pending' | 'confirmed' | 'shipped' | 'delivered';
 const STEP_COLORS: Record<TimelineStep, { dot: string; ring: string; text: string }> = {
   pending: { dot: 'bg-amber-500', ring: 'ring-amber-300/50', text: 'text-amber-600' },
   confirmed: { dot: 'bg-emerald-500', ring: 'ring-emerald-300/50', text: 'text-emerald-600' },
-  shipped: { dot: 'bg-sky-500', ring: 'ring-sky-300/50', text: 'text-sky-600' },
-  delivered: { dot: 'bg-blue-600', ring: 'ring-blue-300/50', text: 'text-blue-600' },
+  shipped: { dot: 'bg-violet-500', ring: 'ring-violet-300/50', text: 'text-violet-600' },
+  delivered: { dot: 'bg-sky-500', ring: 'ring-sky-300/50', text: 'text-sky-600' },
 };
 
 const STEP_ICONS: Record<TimelineStep, () => React.JSX.Element> = {
