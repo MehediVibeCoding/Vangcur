@@ -123,7 +123,7 @@ export default function AccountOrdersClient() {
           <>
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <h1 className="font-body text-xl font-extrabold text-ink">
-                📦 {t('আমার অর্ডার সমূহ')}
+                {t('আমার অর্ডার সমূহ')}
               </h1>
               {!loading && orders.length > 0 && (
                 <div className="flex gap-2 font-body text-[11.5px] font-bold text-muted">
@@ -194,4 +194,4 @@ export default function AccountOrdersClient() {
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   );
-}
+         }
