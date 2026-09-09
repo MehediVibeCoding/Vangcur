@@ -151,13 +151,15 @@ export default function BulkOrderModal() {
         <div className="relative flex max-h-[90vh] w-full max-w-[430px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 text-center shadow-sh3 transition-all duration-300 ease-brand animate-section-reveal">
           
           <HeaderDecor />
-          <button
+          <motion.button
             onClick={close}
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 480, damping: 28 }}
             className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
             aria-label="Close"
           >
             ✕
-          </button>
+          </motion.button>
 
           <div className="relative z-10 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-sm">
             <BulkShieldIcon />

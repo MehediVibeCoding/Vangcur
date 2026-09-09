@@ -72,6 +72,8 @@ interface CheckoutErrors {
   eL4?: string;
 }
 
+const MotionLink = motion.create(Link);
+
 const checkoutStepVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 24 : -24 }),
   center: { opacity: 1, x: 0 },
@@ -1010,7 +1012,7 @@ export default function CheckoutPage() {
                 </h2>
               </div>
               {step === 1 ? (
-                <Link
+                <MotionLink
                   href="/"
                   prefetch={true}
                   aria-label={t('বন্ধ করুন')}
@@ -1023,19 +1025,23 @@ export default function CheckoutPage() {
                       // ignore
                     }
                   }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45 no-underline"
                 >
                   <IconClose />
-                </Link>
+                </MotionLink>
               ) : (
-                <button
+                <motion.button
                   onClick={() => goBack(step - 1)}
                   aria-label={t('আগের ধাপে যান')}
                   title={t('আগের ধাপে যান')}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45"
                 >
                   <IconArrowLeft />
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
@@ -1118,14 +1124,16 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                     </div>
-                    <button
+                    <motion.button
                       type="button"
                       onClick={handleRemoveCoupon}
+                      whileTap={{ scale: 0.92 }}
+                      transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                       className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
                       title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
                     >
                       ✕
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               )}

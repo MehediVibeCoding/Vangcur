@@ -121,12 +121,14 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
                 </span>
                 {t('আপনার প্রোফাইল সম্পূর্ণ করুন')}
               </h3>
-              <button
+              <motion.button
                 onClick={onClose}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
               >
                 ✕
-              </button>
+              </motion.button>
             </div>
 
             {loading ? (

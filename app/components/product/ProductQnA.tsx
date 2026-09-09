@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useT } from '@/lib/i18n/useT';
@@ -508,12 +509,14 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                 </span>
                 {t('প্রশ্ন করুন')}
               </h3>
-              <button
+              <motion.button
                 onClick={() => setAskModalOpen(false)}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
               >
                 ✕
-              </button>
+              </motion.button>
             </div>
 
             <form onSubmit={handleQuestionSubmit} className="flex flex-col gap-3.5">
@@ -577,12 +580,14 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
                 <ReplyCurveIcon className="text-brand-light" /> 
                 {isAdmin ? t('Vangcur টিমের উত্তর') : t('আপনার ফলো-আপ মন্তব্য')}
               </h3>
-              <button
+              <motion.button
                 onClick={() => setReplyTarget(null)}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
               >
                 ✕
-              </button>
+              </motion.button>
             </div>
 
             <div className="mb-3 rounded-xl border border-border-base bg-surface-muted/70 p-3">

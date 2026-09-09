@@ -221,7 +221,8 @@ export default function StockNotifyModal() {
             <HeaderDecor />
             
             <motion.button
-              whileTap={{ scale: 0.88 }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 480, damping: 28 }}
               onClick={close}
               className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
               aria-label={t('বন্ধ করুন')}

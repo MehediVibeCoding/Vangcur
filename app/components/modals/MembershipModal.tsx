@@ -265,7 +265,8 @@ export default function MembershipModal({
                   </div>
                 </div>
                 <motion.button
-                  whileTap={{ scale: 0.88 }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                   onClick={close}
                   className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none"
                   aria-label={t('বন্ধ করুন')}

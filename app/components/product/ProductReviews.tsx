@@ -931,12 +931,14 @@ export default function ProductReviews({
                 </span>
                 {t('আপনার রিভিউ যুক্ত করুন')}
               </h3>
-              <button
+              <motion.button
                 onClick={() => setWriteModalOpen(false)}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink"
               >
                 ✕
-              </button>
+              </motion.button>
             </div>
 
             <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
@@ -1014,13 +1016,15 @@ export default function ProductReviews({
                         <div key={i} className="relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={url} alt="Preview" className="h-16 w-16 rounded-lg border border-border-base object-cover shadow-sm" />
-                          <button
+                          <motion.button
                             type="button"
                             onClick={() => handleRemoveFile(i)}
+                            whileTap={{ scale: 0.92 }}
+                            transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                             className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow"
                           >
                             ✕
-                          </button>
+                          </motion.button>
                         </div>
                       ))}
                     </div>
@@ -1152,13 +1156,15 @@ export default function ProductReviews({
                 <span>Reset (1x)</span>
               </button>
             )}
-            <button
+            <motion.button
               onClick={closeLightbox}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white hover:text-ink active:scale-95"
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 480, damping: 28 }}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white hover:text-ink"
               aria-label={t('বন্ধ করুন')}
             >
               ✕
-            </button>
+            </motion.button>
           </div>
 
           {/* জুম ও প্যান কন্টেইনার */}

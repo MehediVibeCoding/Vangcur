@@ -367,13 +367,15 @@ export default function QuickOrderModal() {
                   : `${totalCount}টি প্রোডাক্ট নির্বাচিত`}
               </p>
             </div>
-            <button
+            <motion.button
               onClick={() => setOpen(false)}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 480, damping: 28 }}
               className="flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-brand hover:bg-white hover:text-ink focus-visible:outline-none"
               aria-label="Close"
             >
               ✕
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -480,14 +482,16 @@ export default function QuickOrderModal() {
                     </div>
                   </div>
                 </div>
-                <button
+                <motion.button
                   type="button"
                   onClick={handleRemoveCoupon}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                   className="rounded-full bg-emerald-100 p-1 text-xs font-bold text-emerald-700 hover:bg-emerald-200 transition-colors"
                   title={lang === 'en' ? 'Remove coupon' : 'কুপন মুছুন'}
                 >
                   ✕
-                </button>
+                </motion.button>
               </div>
             ) : (
               <div>

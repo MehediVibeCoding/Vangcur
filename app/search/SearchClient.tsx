@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -73,14 +74,16 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
               className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none focus:outline-none focus:ring-0 focus-visible:outline-none transition-colors duration-200 focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
             />
             {value && (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => { setValue(''); onQueryChange(''); }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                 aria-label={t('মুছুন')}
                 className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors duration-brand hover:bg-brand-light hover:text-white"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-              </button>
+              </motion.button>
             )}
           </div>
         </div>

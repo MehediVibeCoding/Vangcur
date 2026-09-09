@@ -199,14 +199,16 @@ function SearchDefaultPanel({
                 >
                   {term}
                 </button>
-                <button
+                <motion.button
                   type="button"
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                   className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-light"
                   onClick={(e) => { e.stopPropagation(); onRemoveRecent(term); }}
                   aria-label={t('মুছুন')}
                 >
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                </button>
+                </motion.button>
               </span>
             ))}
           </div>
@@ -851,15 +853,17 @@ export default function Navbar({
                     className={`${desktopSearchInputClass} h-full ${searchQuery ? 'pr-9' : ''}`}
                   />
                   {searchQuery && (
-                    <button
+                    <motion.button
                       type="button"
                       onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                      whileTap={{ scale: 0.92 }}
+                      transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                       className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
                       title={t('মুছুন')}
                       aria-label={t('মুছুন')}
                     >
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                    </button>
+                    </motion.button>
                   )}
                   {showDropdown && (
                     <SearchDropdown
@@ -1004,14 +1008,16 @@ export default function Navbar({
                   className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
                 />
                 {searchQuery && (
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                     className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
                     onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                     title={t('মুছুন')}
                     aria-label={t('মুছুন')}
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </div>

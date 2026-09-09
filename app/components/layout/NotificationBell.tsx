@@ -217,13 +217,15 @@ export default function NotificationBell({ className = '' }: { className?: strin
                 <span className="font-body text-[14px] font-extrabold text-ink">
                   {lang === 'en' ? 'Notifications' : 'নোটিফিকেশন'}
                 </span>
-                <button
+                <motion.button
                   onClick={() => setOpen(false)}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                   className="flex h-7 w-7 items-center justify-center rounded-full text-muted hover:bg-surface-muted hover:text-ink sm:hidden"
                   aria-label="close"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                </button>
+                </motion.button>
               </div>
 
               <div className="max-h-[calc(70vh-52px)] overflow-y-auto sm:max-h-[420px]">

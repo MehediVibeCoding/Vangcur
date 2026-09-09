@@ -500,7 +500,8 @@ export default function LoginModal({
             <div className={`relative overflow-hidden px-7 pt-8 text-center ${mode === 'forgot' && forgotSubmitted ? 'pb-3' : 'pb-5'}`}>
               <HeaderDecor />
               <motion.button
-                whileTap={{ scale: 0.88 }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
                 onClick={onClose}
                 title={t('বন্ধ করুন')}
                 className="absolute right-3.5 top-3.5 z-[1] flex h-[32px] w-[32px] items-center justify-center rounded-full border border-white/60 bg-white/80 text-ink/60 shadow-sh1 backdrop-blur-[8px] transition-colors hover:bg-white hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50"
