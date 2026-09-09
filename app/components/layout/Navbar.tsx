@@ -148,7 +148,7 @@ function matchCategoryList(cats: Category[], q: string): Category[] {
 function highlightMatch(text: string, q: string) {
   const idx = text.toLowerCase().indexOf(q.toLowerCase());
   if (idx === -1) return text.length > 45 ? text.slice(0, 45) + '...' : text;
-  const before = text.slice(idx, idx + q.length);
+  const before = text.slice(0, idx);
   const match = text.slice(idx, idx + q.length);
   const after = text.slice(idx + q.length);
   const truncBefore = before.length > 20 ? '...' + before.slice(-20) : before;
@@ -203,7 +203,7 @@ function SearchDefaultPanel({
                   type="button"
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                  className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-light cursor-pointer"
+                  className="flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-brand-light"
                   onClick={(e) => { e.stopPropagation(); onRemoveRecent(term); }}
                   aria-label={t('মুছুন')}
                 >
@@ -246,7 +246,7 @@ function SearchDefaultPanel({
               <button
                 type="button"
                 key={c.id}
-                className="flex flex-col items-center gap-1.5 rounded-[12px] p-1.5 text-center transition-colors hover:bg-surface-muted cursor-pointer"
+                className="flex flex-col items-center gap-1.5 rounded-[12px] p-1.5 text-center transition-colors hover:bg-surface-muted"
                 onClick={() => onGoToCat(c.id)}
               >
                 <CategoryIcon icon={c.icon} />
@@ -285,7 +285,7 @@ function SearchDropdown({
   const catName = (catId: string) => (catResults.find((c) => c.id === catId) || {}).name || catId;
   return (
     <div
-      className={`search-dropdown-reveal ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[16px] border border-border-base bg-white shadow-sh2`}
+      className={`search-dropdown-reveal search-dropdown-glass ${positioned ? `absolute z-[1100] ${wide ? '-left-5 -right-5' : 'left-0 right-0'}` : 'relative z-[1100] w-full'} ${tall ? 'max-h-[55vh]' : 'max-h-[420px]'} flex flex-col overflow-hidden rounded-[14px] border border-white/60 bg-white/95 shadow-sh1 backdrop-blur-[8px]`}
       style={positioned ? { top: 'calc(100% + 14px)' } : undefined}
     >
       {isDefaultView ? (
@@ -353,7 +353,7 @@ function SearchDropdown({
           </div>
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-brand-light-hover cursor-pointer"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-brand-light-hover"
               onClick={onGoToSearch}
             >
               <SearchIcon />
@@ -564,6 +564,12 @@ export default function Navbar({
     };
   }, []);
 
+  // ডেস্কটপ সার্চ বক্স হোভার ডিটেকশন — এলিমেন্টের নিজের mouseenter/mouseleave এর বদলে
+  // আসল মাউস মুভমেন্ট ইভেন্টের উপর ভিত্তি করে সম্পূর্ণ কন্টেইনমেন্ট চেক করা হয়। এতে করে
+  // বক্সটি বড়/ছোট হওয়ার সময় (CSS transition) ব্রাউজারের নিজস্ব হোভার রি-হিট-টেস্ট এর
+  // কারণে যে flicker loop (বড় → ছোট → বড় ...) তৈরি হতো, সেটা আর হবে না — কারণ স্টেট শুধু
+  // প্রকৃত মাউস নড়াচড়ায় আপডেট হয়, অ্যানিমেশন ফ্রেমে নয়। কার্সার সম্পূর্ণ বক্সের ভেতরে
+  // থাকলেই কেবল এক্সপ্যান্ড হবে, সামান্য বাইরে গেলেই কোলাপ্স হয়ে যাবে।
   useEffect(() => {
     function onWindowMouseMove(e: MouseEvent) {
       const box = desktopSearchBoxRef.current;
@@ -583,6 +589,7 @@ export default function Navbar({
         return fullyInside;
       });
     }
+    // মাউস পুরো ব্রাউজার উইন্ডো/ভিউপোর্ট ছেড়ে চলে গেলেও বক্সটি নিশ্চিতভাবে ছোট হয়ে যাবে
     function onDocumentLeave() {
       setDesktopSearchHovered(false);
     }
@@ -778,7 +785,7 @@ export default function Navbar({
                 onClick={handleBackToHome}
                 aria-label={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
                 title={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
-                className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5 cursor-pointer"
+                className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -793,8 +800,10 @@ export default function Navbar({
                 </span>
               </Link>
             ) : (
+              /* ইচ্ছাকৃতভাবে <a> ট্যাগ (Next.js Link নয়): লোগোতে ক্লিক করলে SPA নেভিগেশন না করে
+                 পুরো ওয়েবসাইট রিফ্রেশ/রিলোড হবে, এমনকি হোম পেজে থাকা অবস্থায়ও */
               // eslint-disable-next-line @next/next/no-html-link-for-pages
-              <a className="flex shrink-0 items-center no-underline cursor-pointer" href="/">
+              <a className="flex shrink-0 items-center no-underline" href="/">
                 <span className="flex shrink-0 items-center">
                   <Image
                     src="/vangcur-logo.png"
@@ -849,7 +858,7 @@ export default function Navbar({
                       onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                       whileTap={{ scale: 0.92 }}
                       transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white cursor-pointer"
+                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
                       title={t('মুছুন')}
                       aria-label={t('মুছুন')}
                     >
@@ -880,7 +889,7 @@ export default function Navbar({
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light cursor-pointer"
+                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   onClick={onWishClick}
                   title="Wishlist"
                 >
@@ -891,7 +900,7 @@ export default function Navbar({
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light cursor-pointer"
+                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   ref={cartBtnRef}
                   onClick={onCartClick}
                   title={t('কার্ট')}
@@ -904,10 +913,14 @@ export default function Navbar({
                 </motion.button>
 
                 {currentUser ? (
+                  // 🛠️ ফিক্স: আগে showHomeButton true থাকলে (মানে হোম পেজ ছাড়া
+                  // বাকি সব পেজে) শুধু অ্যাভাটার (initials) দেখাত, নাম দেখাত না।
+                  // এখন সবখানেই (হোম পেজের মতোই) অ্যাভাটার + নাম একসাথে দেখাবে —
+                  // "ফিরে যান" বাটন দেখানো না-দেখানোর সাথে এর কোনো সম্পর্ক নেই।
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface-muted p-1 pr-3 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base cursor-pointer"
+                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface-muted p-1 pr-3 font-body text-[13px] font-semibold text-ink transition-colors hover:bg-border-base"
                     onClick={handleAccountClick}
                     title={currentUser.name || t('আমার অ্যাকাউন্ট')}
                   >
@@ -920,7 +933,7 @@ export default function Navbar({
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                    className="flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-3.5 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 max-[400px]:text-[12px] md:px-[18px] cursor-pointer"
+                    className="flex h-9 shrink-0 items-center justify-center rounded-full bg-brand-light px-3.5 font-body text-[13px] font-semibold text-white shadow-sh1 transition-all hover:bg-brand-light-hover hover:shadow-sh2 max-[400px]:px-2.5 max-[400px]:text-[12px] md:px-[18px]"
                     onClick={onLoginClick}
                   >
                     {t('লগইন করুন')}
@@ -930,7 +943,7 @@ export default function Navbar({
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                  className="hidden min-[401px]:flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light cursor-pointer"
+                  className="hidden min-[401px]:flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
                   onClick={handleTrackClick}
                   title={t('অর্ডার ট্র্যাক করুন')}
                 >
@@ -942,7 +955,7 @@ export default function Navbar({
 
                 <button
                   ref={mobileSearchToggleRef}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light md:hidden cursor-pointer"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light md:hidden"
                   onClick={(e) => {
                     e.stopPropagation();
                     initSearchData();
@@ -998,7 +1011,7 @@ export default function Navbar({
                   <motion.button
                     whileTap={{ scale: 0.92 }}
                     transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white cursor-pointer"
+                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
                     onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
                     title={t('মুছুন')}
                     aria-label={t('মুছুন')}
