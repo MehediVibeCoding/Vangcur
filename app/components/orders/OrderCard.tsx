@@ -149,12 +149,12 @@ const TIMELINE_STEPS: OrderStatus[] = ['pending', 'confirmed', 'shipped', 'deliv
 
 type TimelineStep = 'pending' | 'confirmed' | 'shipped' | 'delivered';
 
-// প্রতিটা ধাপের নিজস্ব রঙ — আগে-পরে সবগুলো সবুজ হয়ে যেত, এখন প্রতিটা স্ট্যাটাসের রঙ আলাদা থাকে
-const STEP_COLORS: Record<TimelineStep, { dot: string; ring: string; text: string }> = {
-  pending: { dot: 'bg-amber-500', ring: 'ring-amber-300/50', text: 'text-amber-600' },
-  confirmed: { dot: 'bg-emerald-500', ring: 'ring-emerald-300/50', text: 'text-emerald-600' },
-  shipped: { dot: 'bg-violet-500', ring: 'ring-violet-300/50', text: 'text-violet-600' },
-  delivered: { dot: 'bg-sky-500', ring: 'ring-sky-300/50', text: 'text-sky-600' },
+// প্রতিটা ধাপের নিজস্ব পেস্টাল (হালকা) রঙ — গাঢ় স্যাচুরেটেড কালারের বদলে চোখে আরাম দেয় এমন সফট টোন
+const STEP_COLORS: Record<TimelineStep, { bg: string; border: string; icon: string; ring: string; text: string }> = {
+  pending: { bg: 'bg-amber-200', border: 'border-amber-300', icon: 'text-amber-700', ring: 'ring-amber-200/70', text: 'text-amber-600' },
+  confirmed: { bg: 'bg-emerald-200', border: 'border-emerald-300', icon: 'text-emerald-700', ring: 'ring-emerald-200/70', text: 'text-emerald-600' },
+  shipped: { bg: 'bg-violet-200', border: 'border-violet-300', icon: 'text-violet-700', ring: 'ring-violet-200/70', text: 'text-violet-600' },
+  delivered: { bg: 'bg-sky-200', border: 'border-sky-300', icon: 'text-sky-700', ring: 'ring-sky-200/70', text: 'text-sky-600' },
 };
 
 const STEP_ICONS: Record<TimelineStep, () => React.JSX.Element> = {
@@ -163,6 +163,14 @@ const STEP_ICONS: Record<TimelineStep, () => React.JSX.Element> = {
   shipped: TruckStepIcon,
   delivered: DeliveredStepIcon,
 };
+
+// প্রতিটা সেগমেন্ট আগের ধাপের রঙ দিয়ে শুরু হয়ে পরের ধাপের রঙে গিয়ে মিশে যায় (ব্লেন্ড) —
+// যেমন পেন্ডিং→কনফার্মড সেগমেন্টে হলুদ থেকে শুরু হয়ে ধীরে ধীরে সবুজে মিশে যাবে, পুরোটা এক রঙ হয়ে যাবে না
+const SEGMENT_GRADIENTS = [
+  'bg-gradient-to-r from-amber-200 to-emerald-200', // পেন্ডিং → কনফার্মড
+  'bg-gradient-to-r from-emerald-200 to-violet-200', // কনফার্মড → শিপড
+  'bg-gradient-to-r from-violet-200 to-sky-200', // শিপড → ডেলিভার্ড
+];
 
 function OrderStatusTimeline({ status, lang }: { status: OrderStatus; lang: 'en' | 'bn' }) {
   const idx = TIMELINE_STEPS.indexOf(status);
@@ -173,15 +181,15 @@ function OrderStatusTimeline({ status, lang }: { status: OrderStatus; lang: 'en'
   return (
     <div className="mb-3.5 px-0.5">
       <div className="relative flex items-start justify-between">
-        {/* কানেক্টিং লাইন — প্রতিটা সেগমেন্ট যে ধাপে ঢুকছে, সেই ধাপেরই রঙে ভরে যায় */}
+        {/* কানেক্টিং লাইন — প্রতিটা সেগমেন্ট আগের রঙ থেকে পরের রঙে ব্লেন্ড হয়ে যায় */}
         <div className="absolute left-[10px] right-[10px] top-[9px] flex h-[3px] gap-[3px]">
-          {TIMELINE_STEPS.slice(1).map((step, segI) => {
+          {SEGMENT_GRADIENTS.map((gradientClass, segI) => {
             const reached = idx > segI;
             return (
-              <div key={step} className="h-full flex-1 overflow-hidden rounded-full bg-ink/10">
+              <div key={segI} className="h-full flex-1 overflow-hidden rounded-full bg-ink/10">
                 {reached && (
                   <motion.div
-                    className={`h-full rounded-full ${STEP_COLORS[step as TimelineStep].dot}`}
+                    className={`h-full rounded-full ${gradientClass}`}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     style={{ transformOrigin: 'left' }}
@@ -205,7 +213,7 @@ function OrderStatusTimeline({ status, lang }: { status: OrderStatus; lang: 'en'
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: i * 0.08, duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
                 className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                  reached ? `${colors.dot} border-transparent text-white` : 'border-ink/15 bg-white text-ink/25'
+                  reached ? `${colors.bg} ${colors.border} ${colors.icon}` : 'border-ink/15 bg-white text-ink/25'
                 } ${isCurrent ? `ring-4 ${colors.ring}` : ''}`}
               >
                 <Icon />
@@ -262,19 +270,20 @@ export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps)
   return (
     <div className="rounded-2xl border border-border-base p-4">
       {/* Top Header Row: অর্ডার নং + (টাইমলাইন থাকলে) তারিখ ও নাম, নয়তো স্ট্যাটাস ব্যাজ */}
-      <div className="flex items-start justify-between gap-3 pb-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-2.5">
         <span className="font-body text-[15px] font-extrabold text-ink tracking-tight">
           {o.orderNum}
         </span>
         {hasTimeline ? (
-          <div className="flex flex-col items-end gap-0.5 font-body text-[11px] text-muted">
-            <span className="inline-flex items-center gap-1">
-              <CalendarMetaIcon />
-              {dateStr}
-            </span>
+          <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-0.5 font-body text-[11px] text-muted">
             <span className="inline-flex items-center gap-1 font-semibold text-ink/80">
               <UserMetaIcon />
               {o.customer?.name || '-'}
+            </span>
+            <span className="text-ink/15">|</span>
+            <span className="inline-flex items-center gap-1">
+              <CalendarMetaIcon />
+              {dateStr}
             </span>
           </div>
         ) : (
