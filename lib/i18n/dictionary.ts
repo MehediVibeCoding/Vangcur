@@ -349,7 +349,7 @@ export const staticDictionary: Record<string, string> = {
   // Complete Your Profile feature
   'এডিট': 'Edit',
   'সেটআপ': 'Setup',
-  '🛡️ ভেরিফাইড ব্যাজ পেতে প্রোফাইল সম্পূর্ণ করুন': '🛡️ Complete your profile to get a verified badge',
+  'ভেরিফাইড ব্যাজ পেতে প্রোফাইল সম্পূর্ণ করুন': 'Complete your profile to get a verified badge',
   'প্রোফাইল সম্পূর্ণ করলে যা পাবেন': 'What you get for completing your profile',
   'একটি সবুজ ভেরিফাইড ব্যাজ, যা আপনার প্রশ্ন ও রিভিউয়ের পাশে সবাই দেখতে পাবে — আর পরের যেকোনো অর্ডারে আপনার তথ্য নিজে থেকেই পূরণ হয়ে যাবে, তাই বারবার টাইপ করতে হবে না।': "A green verified badge that everyone will see next to your questions and reviews — plus your details will fill in automatically on future orders, so you won't have to type them again.",
 };
