@@ -100,7 +100,6 @@ function IconTrashSmall({ className = '' }: { className?: string }) {
 }
 
 function IconCloseX({ className = '' }: { className?: string }) {
-  // প্রিমিয়াম-লুকিং ক্লোজ বাটন — সাধারণ পাতলা X-এর বদলে সফট রাউন্ড-ক্যাপ স্ট্রোক + সাবটল ব্যাকগ্রাউন্ড রিং
   return (
     <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6L6 18M6 6l12 12" />
@@ -108,11 +107,6 @@ function IconCloseX({ className = '' }: { className?: string }) {
   );
 }
 
-/**
- * প্রতিটা নোটিফিকেশন রো — মোবাইলে ডানে/বামে সোয়াইপ করে ডিলিট করা যায় (উভয়
- * দিকেই যেদিকে টানা হয়, উল্টো পাশে ডাস্টবিন আইকন উন্মুক্ত হয়), ডেস্কটপে
- * সোয়াইপ নেই — বদলে হোভারে একটা ডাস্টবিন আইকন বাটন দেখা যায়।
- */
 function NotificationRow({
   item,
   isMobile,
@@ -134,7 +128,6 @@ function NotificationRow({
 
   return (
     <div className="relative overflow-hidden">
-      {/* সোয়াইপে উন্মুক্ত হওয়া ব্যাকগ্রাউন্ড — ডানে টানলে বাম পাশে, বামে টানলে ডান পাশে */}
       {isMobile && (
         <div className="absolute inset-0 flex items-center justify-between bg-red-50 px-5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white transition-opacity" style={{ opacity: leftReveal }}>
@@ -168,7 +161,6 @@ function NotificationRow({
           href={item.href}
           onClick={(e) => {
             if (Math.abs(dragX) > 6) {
-              // ড্র্যাগ শেষে অ্যাক্সিডেন্টাল ক্লিক/নেভিগেশন ঠেকানো
               e.preventDefault();
               return;
             }
@@ -196,7 +188,7 @@ function NotificationRow({
                 e.stopPropagation();
                 onDismiss(item.id);
               }}
-              className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 sm:flex"
+              className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 sm:flex cursor-pointer"
             >
               <IconTrashSmall className="h-3.5 w-3.5" />
             </button>
@@ -240,7 +232,6 @@ export default function NotificationBell({ className = '' }: { className?: strin
   const [isMobile, setIsMobile] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // ডেস্কটপ বনাম মোবাইল — সোয়াইপ শুধু ছোট স্ক্রিনে (Tailwind sm ব্রেকপয়েন্টের নিচে)
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 639px)');
     const update = () => setIsMobile(mq.matches);
@@ -333,7 +324,7 @@ export default function NotificationBell({ className = '' }: { className?: strin
         transition={{ type: 'spring', stiffness: 500, damping: 24 }}
         onClick={handleToggle}
         title={lang === 'en' ? 'Notifications' : 'নোটিফিকেশন'}
-        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light"
+        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-ink transition-colors hover:bg-surface-muted hover:text-brand-light cursor-pointer"
       >
         <IconBell />
         {hasUnread && (
@@ -344,20 +335,22 @@ export default function NotificationBell({ className = '' }: { className?: strin
       <AnimatePresence>
         {open && (
           <>
-            {/* মোবাইলে হালকা ব্যাকড্রপ, ডেস্কটপে ড্রপডাউন হিসেবেই থাকবে */}
+            {/* ব্যাকড্রপ লেয়ার */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[950] bg-ink/40 backdrop-blur-[2px] sm:hidden"
+              className="fixed inset-0 z-[950] bg-ink/40 backdrop-blur-[2px]"
               onClick={() => setOpen(false)}
             />
+
+            {/* ড্রপডাউন কন্টেইনার (ন্যাভবারের নিচে সুনির্দিষ্ট গ্যাপ সহ) */}
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.97 }}
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.97 }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-              className="fixed inset-x-3 bottom-3 z-[960] max-h-[70vh] overflow-hidden rounded-[24px] border border-white/70 bg-white/95 shadow-sh3 backdrop-blur-md sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-[calc(100%+10px)] sm:w-[360px] sm:rounded-[20px]"
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.26 }}
+              className="fixed inset-x-3 top-[84px] z-[960] max-h-[75vh] overflow-hidden rounded-[24px] border border-white/80 bg-white/95 shadow-sh3 backdrop-blur-md sm:absolute sm:inset-x-auto sm:top-[calc(100%+20px)] sm:right-0 sm:w-[360px] sm:rounded-[22px]"
             >
               <div className="flex items-center justify-between border-b border-border-base/70 px-4 py-3">
                 <span className="font-body text-[14px] font-extrabold text-ink">
@@ -368,14 +361,14 @@ export default function NotificationBell({ className = '' }: { className?: strin
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.88 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border-base/70 bg-surface-muted/80 text-muted shadow-2xs transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500 sm:hidden"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-border-base/70 bg-surface-muted/80 text-muted shadow-2xs transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-500 sm:hidden cursor-pointer"
                   aria-label="close"
                 >
                   <IconCloseX />
                 </motion.button>
               </div>
 
-              <div className="max-h-[calc(70vh-52px)] overflow-y-auto sm:max-h-[420px]">
+              <div className="max-h-[calc(75vh-52px)] overflow-y-auto sm:max-h-[420px] sleek-scrollbar">
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted">
