@@ -31,6 +31,8 @@ import {
 import { fetchMyProfile, isProfileComplete } from '@/lib/profileData';
 import { VerifiedCustomerBadge } from '@/app/components/product/VerifiedBadges';
 import Footer from '@/app/components/layout/Footer';
+import NotificationBell from '@/app/components/layout/NotificationBell';
+import AccountNavTabs, { type AccountNavTabItem } from '@/app/components/account/AccountNavTabs';
 import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { CompactOrderListSkeleton } from '@/app/components/ui/Skeletons';
@@ -423,52 +425,81 @@ export default function AccountClient() {
               </span>
             </Link>
 
-            {/* অ্যাকশন আইকনসমূহ: Wishlist, Cart, Membership, Track Order */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <button
-                className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT))}
-                title="Wishlist"
-              >
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                </svg>
-                <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${wishQty > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{wishQty}</span>
-              </button>
+            {/* অ্যাকশন আইকনসমূহ: Wishlist, Cart, Membership, Track Order + নোটিফিকেশন */}
+            {(() => {
+              const navTabs: AccountNavTabItem[] = [
+                {
+                  id: 'wishlist',
+                  label: t('উইশলিস্ট'),
+                  badge: wishQty,
+                  icon: (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                    </svg>
+                  ),
+                  onSelect: () => window.dispatchEvent(new CustomEvent(OPEN_WISHLIST_EVENT)),
+                },
+                {
+                  id: 'cart',
+                  label: t('কার্ট'),
+                  badge: cartQty,
+                  icon: (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                      <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                    </svg>
+                  ),
+                  onSelect: () => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT)),
+                },
+                {
+                  id: 'membership',
+                  label: currentTier ? (lang === 'en' ? currentTier.en : currentTier.bn) : t('মেম্বারশিপ'),
+                  icon: <IconCrownNavbar />,
+                  onSelect: () => setMembershipOpen(true),
+                },
+                {
+                  id: 'track-order',
+                  label: t('অর্ডার ট্র্যাক করুন'),
+                  icon: (
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
+                      <line x1="8" y1="12" x2="16" y2="12" />
+                    </svg>
+                  ),
+                  onSelect: () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT)),
+                },
+              ];
 
-              <button
-                className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_CART_EVENT))}
-                title={t('কার্ট')}
-              >
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                </svg>
-                <span className={`absolute right-[3px] top-[3px] h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white ${cartQty > 0 ? 'flex animate-badge-hot-glow' : 'hidden'}`}>{cartQty}</span>
-              </button>
+              return (
+                <>
+                  {/* ডেস্কটপ: লেবেলযুক্ত ট্যাব-সুইচ + ডান পাশে নোটিফিকেশন বেল */}
+                  <div className="hidden items-center gap-2 md:flex">
+                    <AccountNavTabs tabs={navTabs} />
+                    <NotificationBell />
+                  </div>
 
-              {/* মেম্বারশিপ বাটন (০ms ল্যাগে ইনস্ট্যান্ট ডিরেক্ট স্টেট লিঙ্ক) */}
-              <button
-                onClick={() => setMembershipOpen(true)}
-                title={t('মেম্বারশিপ')}
-                className="flex items-center justify-center gap-1.5 rounded-full border border-brand-light/35 bg-brand-bg/40 px-3 py-1.5 font-body text-xs font-bold text-brand-light shadow-2xs transition-all duration-brand hover:bg-brand-light hover:text-white active:scale-95"
-              >
-                <IconCrownNavbar />
-                <span className="hidden min-[480px]:inline">{currentTier ? (lang === 'en' ? currentTier.en : currentTier.bn) : t('মেম্বারশিপ')}</span>
-              </button>
-
-              <button
-                className="flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
-                onClick={() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT))}
-                title={t('অর্ডার ট্র্যাক করুন')}
-              >
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </button>
-            </div>
+                  {/* মোবাইল: আগের মতোই শুধু আইকন, একদম ডানে নোটিফিকেশন বেল */}
+                  <div className="flex items-center gap-1.5 md:hidden">
+                    {navTabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        className="relative flex items-center justify-center rounded-[9px] p-2 text-ink transition-brand duration-brand hover:bg-surface-muted hover:text-brand-light"
+                        onClick={tab.onSelect}
+                        title={tab.label}
+                      >
+                        <span className="[&_svg]:!h-5 [&_svg]:!w-5">{tab.icon}</span>
+                        {!!tab.badge && tab.badge > 0 && (
+                          <span className="absolute right-[3px] top-[3px] flex h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white animate-badge-hot-glow">
+                            {tab.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                    <NotificationBell />
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </nav>
       </div>
