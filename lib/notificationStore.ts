@@ -27,11 +27,11 @@ const READ_TTL_MS = 24 * 60 * 60 * 1000; // ২৪ ঘণ্টা
 const MAX_DISMISSED_LEDGER = 300; // মেমরি/স্টোরেজ বাড়তে না দেওয়ার জন্য সিলিং
 
 const LIVE_CONDITION_TYPES = new Set<NotificationItem['type']>([
-  'offer', 'draft', 'profile-incomplete', 'code',
+  'offer', 'draft', 'code',
 ]);
 
 const ONE_TIME_TYPES = new Set<NotificationItem['type']>([
-  'review', 'tier', 'profile-verified',
+  'review', 'tier',
 ]);
 
 interface StoredEntry {
