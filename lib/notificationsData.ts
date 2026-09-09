@@ -1,11 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchProductById, productHref } from './productData';
 import { getStockNotifications } from './accountData';
-import type { Order } from '@/types';
+import { MEMBERSHIP_TIERS, getTier } from './membershipData';
+import { getTierSpinReward } from './accountData';
+import type { Order, DraftOrder } from '@/types';
 
 export interface NotificationItem {
   id: string;
-  type: 'offer' | 'stock' | 'order';
+  type: 'offer' | 'stock' | 'draft' | 'review' | 'tier' | 'code';
   title: string;
   subtitle?: string;
   href: string;
@@ -108,19 +110,128 @@ export async function fetchStockBackNotifications(
 }
 
 /**
- * পেন্ডিং অর্ডার — অ্যাডমিন এখনো কনফার্ম করেননি এমন অর্ডারসমূহ।
+ * ড্রাফট অর্ডার — কেউ অর্ডার শুরু করে শেষ না করে রেখে দিয়েছে ("Pending" মানে
+ * এখানে অসম্পূর্ণ/ড্রাফট অর্ডার, কনফার্ম করা অর্ডারের স্ট্যাটাস নয়)।
  */
-export function buildPendingOrderNotifications(orders: Order[], lang: 'bn' | 'en'): NotificationItem[] {
+export function buildDraftOrderNotifications(drafts: DraftOrder[], lang: 'bn' | 'en'): NotificationItem[] {
+  return drafts.slice(0, 5).map((d) => {
+    const first = d.items?.[0];
+    const extra = (d.items?.length || 0) - 1;
+    const namePart = first ? first.name : (lang === 'en' ? 'Your order' : 'আপনার অর্ডার');
+    const suffix = extra > 0 ? (lang === 'en' ? ` +${extra} more` : ` +আরও ${extra}টি`) : '';
+    return {
+      id: `draft:${d.id}`,
+      type: 'draft' as const,
+      title: `${namePart}${suffix}`,
+      subtitle: lang === 'en' ? 'Draft order — continue checkout' : 'অসম্পূর্ণ অর্ডার — চালিয়ে যান',
+      href: '/account',
+    };
+  });
+}
+
+const REVIEW_DISMISSED_KEY = 'vc_review_dismissed_ids';
+
+function getDismissedReviewIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(REVIEW_DISMISSED_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function dismissReviewNotification(orderId: string | number): void {
+  try {
+    const ids = getDismissedReviewIds();
+    if (!ids.includes(String(orderId))) {
+      ids.push(String(orderId));
+      localStorage.setItem(REVIEW_DISMISSED_KEY, JSON.stringify(ids));
+    }
+  } catch {
+    // storage unavailable
+  }
+}
+
+/**
+ * ডেলিভারড অর্ডারে রিভিউ দেওয়ার অনুরোধ — একবার নোটিফিকেশনে ক্লিক করে
+ * দেখলে/dismiss করলে সেটা আর দেখাবে না (dismissReviewNotification দিয়ে)।
+ */
+export function buildReviewRequestNotifications(orders: Order[], lang: 'bn' | 'en'): NotificationItem[] {
+  const dismissed = getDismissedReviewIds();
   return orders
-    .filter((o) => o.status === 'pending')
+    .filter((o) => o.status === 'delivered' && !dismissed.includes(String(o.id)))
     .slice(0, 5)
-    .map((o) => ({
-      id: `order:${o.id}`,
-      type: 'order' as const,
-      title: lang === 'en' ? `Order #${o.orderNum} is pending` : `অর্ডার #${o.orderNum} পেন্ডিং আছে`,
-      subtitle: lang === 'en' ? 'Tap to view order details' : 'অর্ডারের বিস্তারিত দেখতে ট্যাপ করুন',
-      href: '/account/orders',
-    }));
+    .map((o) => {
+      const first = o.items?.[0];
+      const name = first ? first.name : (lang === 'en' ? 'Your product' : 'আপনার প্রোডাক্ট');
+      return {
+        id: `review:${o.id}`,
+        type: 'review' as const,
+        title: lang === 'en' ? `${name} was delivered!` : `${name} ডেলিভারড হয়েছে!`,
+        subtitle: lang === 'en' ? 'Leave a review for it' : 'একটা রিভিউ দিয়ে যান',
+        href: '/account/orders',
+      };
+    });
+}
+
+const LAST_NOTIFIED_TIER_KEY = 'vc_last_notified_tier';
+
+export function getLastNotifiedTier(): string {
+  try {
+    return localStorage.getItem(LAST_NOTIFIED_TIER_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function setLastNotifiedTier(tierKey: string): void {
+  try {
+    localStorage.setItem(LAST_NOTIFIED_TIER_KEY, tierKey);
+  } catch {
+    // storage unavailable
+  }
+}
+
+/**
+ * মেম্বারশিপ লেভেল আপ — অর্ডার কনফার্ম/সাকসেস হয়ে নতুন টায়ারে উঠলে একবার
+ * জানানো হবে, একবার নোটিফিকেশন প্যানেল খুললেই এই টায়ারটা মার্ক-সিন হয়ে
+ * ভবিষ্যতে আর দেখাবে না (setLastNotifiedTier দিয়ে)।
+ */
+export function buildTierUpgradeNotification(completedOrders: number, lang: 'bn' | 'en'): NotificationItem | null {
+  const tier = getTier(completedOrders);
+  const tierIndex = MEMBERSHIP_TIERS.findIndex((t) => t.key === tier.key);
+  if (tierIndex <= 0) return null; // 'regular' (ডিফল্ট) নিয়ে নোটিফাই করার দরকার নেই
+
+  if (getLastNotifiedTier() === tier.key) return null;
+
+  const tierName = lang === 'en' ? tier.en : tier.bn;
+  return {
+    id: `tier:${tier.key}`,
+    type: 'tier',
+    title: lang === 'en' ? `You've reached ${tierName}!` : `আপনি এখন ${tierName}!`,
+    subtitle: lang === 'en' ? 'Congratulations on the upgrade' : 'মেম্বারশিপ লেভেল আপ হয়েছে, অভিনন্দন',
+    href: '/account',
+  };
+}
+
+/**
+ * স্পিন-হুইল থেকে পাওয়া গোপন ডিসকাউন্ট কোড, যেটা এক্সপায়ার হয়ে যাওয়ার
+ * আগেই ইউজারকে জানানো দরকার।
+ */
+export function buildSecretCodeNotifications(lang: 'bn' | 'en'): NotificationItem[] {
+  const items: NotificationItem[] = [];
+  for (const tier of MEMBERSHIP_TIERS) {
+    const reward = getTierSpinReward(tier.key);
+    if (!reward) continue;
+    const hoursLeft = Math.max(1, Math.ceil((reward.expiresAt - Date.now()) / (60 * 60 * 1000)));
+    items.push({
+      id: `code:${tier.key}:${reward.code}`,
+      type: 'code',
+      title: lang === 'en' ? `Code ${reward.code} is waiting` : `কোড ${reward.code} অপেক্ষা করছে`,
+      subtitle: lang === 'en' ? `Expires in ~${hoursLeft}h — use it before checkout` : `প্রায় ${hoursLeft} ঘণ্টা পর এক্সপায়ার হবে — চেকআউটে ব্যবহার করুন`,
+      href: '/account',
+    });
+  }
+  return items;
 }
 
 const SEEN_SIG_KEY = 'vc_notif_seen_sig';
@@ -143,4 +254,4 @@ export function setNotifSeenSignature(sig: string): void {
   } catch {
     // storage unavailable — নীরবে উপেক্ষা করা হচ্ছে
   }
-  }
+        }
