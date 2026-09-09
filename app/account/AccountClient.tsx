@@ -100,6 +100,16 @@ function IconEmptyBox({ className = '' }: { className?: string }) {
   );
 }
 
+function IconCalendarSmall({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2.5" />
+      <path d="M3 10h18" />
+      <path d="M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
 function ItemThumb({ imgVal }: { imgVal?: string }) {
   const isUrl = typeof imgVal === 'string' && imgVal.startsWith('http');
   if (isUrl) {
@@ -752,8 +762,9 @@ export default function AccountClient() {
                       </div>
                       <div className="truncate font-body text-[12px] text-white/80">{currentUser.email || '-'}</div>
                       {createdStr && (
-                        <div className="mt-0.5 font-body text-[10.5px] text-white/70">
-                          📅 {t('অ্যাকাউন্ট তৈরি:')} {createdStr}
+                        <div className="mt-0.5 flex items-center gap-1 font-body text-[10.5px] text-white/70">
+                          <IconCalendarSmall />
+                          {t('অ্যাকাউন্ট তৈরি:')} {createdStr}
                         </div>
                       )}
                     </div>
@@ -764,7 +775,7 @@ export default function AccountClient() {
                     {profileComplete === false && (
                       <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold text-amber-200">
                         <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-amber-300 text-[9px] font-black text-amber-950">!</span>
-                        <span className="truncate">{t('🛡️ ভেরিফাইড ব্যাজ পেতে প্রোফাইল সম্পূর্ণ করুন')}</span>
+                        <span className="truncate">{t('ভেরিফাইড ব্যাজ পেতে প্রোফাইল সম্পূর্ণ করুন')}</span>
                       </div>
                     )}
                     <div className="flex gap-2 border-t border-white/[0.16] pt-3">
@@ -894,8 +905,9 @@ export default function AccountClient() {
 
                         return (
                           <div key={draft.id} className="rounded-[16px] border border-border-base bg-white/90 p-3 shadow-xs">
-                            <div className="font-body text-[10.5px] text-muted">
-                              📅 {dateStr} · {items.length} {t('আইটেম')}
+                            <div className="flex items-center gap-1 font-body text-[10.5px] text-muted">
+                              <IconCalendarSmall />
+                              {dateStr} · {items.length} {t('আইটেম')}
                             </div>
                             <div className="mt-1.5 flex items-center gap-2.5">
                               {firstItem ? <ItemThumb imgVal={(firstItem.imgs || [])[0]} /> : <ItemThumb />}
