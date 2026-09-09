@@ -10,13 +10,18 @@ import { useT } from '@/lib/i18n/useT';
 import {
   fetchLiveOfferNotification,
   fetchStockBackNotifications,
-  buildPendingOrderNotifications,
+  buildDraftOrderNotifications,
+  buildReviewRequestNotifications,
+  dismissReviewNotification,
+  buildTierUpgradeNotification,
+  buildSecretCodeNotifications,
+  setLastNotifiedTier,
   buildNotifSignature,
   getNotifSeenSignature,
   setNotifSeenSignature,
   type NotificationItem,
 } from '@/lib/notificationsData';
-import { fetchMyOrders } from '@/lib/accountData';
+import { fetchMyOrders, fetchDrafts, orderStats } from '@/lib/accountData';
 
 function IconBell({ className = '' }: { className?: string }) {
   return (
@@ -46,11 +51,36 @@ function IconStockBox({ className = '' }: { className?: string }) {
   );
 }
 
-function IconOrderClock({ className = '' }: { className?: string }) {
+function IconDraftEdit({ className = '' }: { className?: string }) {
   return (
     <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" />
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function IconStar({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M12 2l2.9 6.26 6.9.6-5.2 4.6 1.6 6.74L12 16.9l-6.2 3.3 1.6-6.74-5.2-4.6 6.9-.6L12 2z" />
+    </svg>
+  );
+}
+
+function IconCrown({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8l4 4 5-7 5 7 4-4-2 11H5L3 8z" />
+    </svg>
+  );
+}
+
+function IconTicket({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8z" />
+      <line x1="12" y1="6" x2="12" y2="18" strokeDasharray="2 2" />
     </svg>
   );
 }
@@ -58,13 +88,19 @@ function IconOrderClock({ className = '' }: { className?: string }) {
 function iconForType(type: NotificationItem['type']) {
   if (type === 'offer') return <IconOfferTag className="h-4 w-4" />;
   if (type === 'stock') return <IconStockBox className="h-4 w-4" />;
-  return <IconOrderClock className="h-4 w-4" />;
+  if (type === 'draft') return <IconDraftEdit className="h-4 w-4" />;
+  if (type === 'review') return <IconStar className="h-4 w-4" />;
+  if (type === 'tier') return <IconCrown className="h-4 w-4" />;
+  return <IconTicket className="h-4 w-4" />;
 }
 
 function tileColorForType(type: NotificationItem['type']) {
   if (type === 'offer') return 'bg-red-50 text-red-500';
   if (type === 'stock') return 'bg-emerald-50 text-emerald-600';
-  return 'bg-amber-50 text-amber-600';
+  if (type === 'draft') return 'bg-amber-50 text-amber-600';
+  if (type === 'review') return 'bg-yellow-50 text-yellow-500';
+  if (type === 'tier') return 'bg-purple-50 text-purple-600';
+  return 'bg-blue-50 text-blue-600';
 }
 
 export default function NotificationBell({ className = '' }: { className?: string }) {
@@ -78,13 +114,25 @@ export default function NotificationBell({ className = '' }: { className?: strin
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const loadNotifications = useCallback(async () => {
-    const [offer, stock, orders] = await Promise.all([
+    const [offer, stock, orders, drafts] = await Promise.all([
       fetchLiveOfferNotification(supabase, lang),
       fetchStockBackNotifications(supabase, lang),
       currentUser ? fetchMyOrders(supabase, currentUser) : Promise.resolve([]),
+      currentUser ? fetchDrafts(supabase, currentUser) : Promise.resolve([]),
     ]);
-    const pendingOrders = buildPendingOrderNotifications(orders, lang);
-    const next = [...(offer ? [offer] : []), ...stock, ...pendingOrders];
+    const draftNotifs = buildDraftOrderNotifications(drafts, lang);
+    const reviewNotifs = buildReviewRequestNotifications(orders, lang);
+    const tierNotif = buildTierUpgradeNotification(orderStats(orders).completed, lang);
+    const codeNotifs = buildSecretCodeNotifications(lang);
+
+    const next = [
+      ...(offer ? [offer] : []),
+      ...(tierNotif ? [tierNotif] : []),
+      ...stock,
+      ...draftNotifs,
+      ...reviewNotifs,
+      ...codeNotifs,
+    ];
     setItems(next);
     const sig = buildNotifSignature(next);
     setHasUnread(next.length > 0 && sig !== getNotifSeenSignature());
@@ -116,6 +164,19 @@ export default function NotificationBell({ className = '' }: { className?: strin
     if (next) {
       setHasUnread(false);
       setNotifSeenSignature(buildNotifSignature(items));
+      const tierItem = items.find((i) => i.type === 'tier');
+      if (tierItem) {
+        const tierKey = tierItem.id.split(':')[1];
+        if (tierKey) setLastNotifiedTier(tierKey);
+      }
+    }
+  };
+
+  const handleItemClick = (item: NotificationItem) => {
+    setOpen(false);
+    if (item.type === 'review') {
+      const orderId = item.id.split(':')[1];
+      if (orderId) dismissReviewNotification(orderId);
     }
   };
 
@@ -181,7 +242,7 @@ export default function NotificationBell({ className = '' }: { className?: strin
                       <Link
                         key={item.id}
                         href={item.href}
-                        onClick={() => setOpen(false)}
+                        onClick={() => handleItemClick(item)}
                         className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-muted/70"
                       >
                         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tileColorForType(item.type)}`}>
@@ -207,4 +268,4 @@ export default function NotificationBell({ className = '' }: { className?: strin
       </AnimatePresence>
     </div>
   );
-                                 }
+}
