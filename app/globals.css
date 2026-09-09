@@ -11,13 +11,6 @@
     min-height: 100vh;
     overflow-x: hidden;
     max-width: 100%;
-    /* Chrome/Android-এর নিজস্ব edge-swipe "back/forward" preview animation বন্ধ —
-       এটাই ছিল সেই কালো ফ্ল্যাশ/screen-tear/flicker-এর আসল উৎস, যেটা প্রতিবার
-       ভিন্ন ভিন্ন স্টাইলে দেখাচ্ছিল (গতি, cached snapshot ইত্যাদির উপর নির্ভর করে)।
-       এটা বন্ধ করলে edge swipe সরাসরি একটা সাধারণ back ইভেন্ট (popstate) হিসেবে
-       ট্রিগার হয় — হার্ডওয়্যার ব্যাক বাটনের মতোই — আর সেটা এখন সম্পূর্ণ আমাদের
-       নিজের PageTransition crossfade দিয়ে হ্যান্ডল হয়, তাই বাম-ডান দুই দিকেই
-       প্রতিবার ঠিক একই রকম, consistent দেখায়। */
     overscroll-behavior-x: none;
   }
   @supports (overflow-x: clip) {
@@ -38,7 +31,6 @@
     -webkit-touch-callout: none;
   }
 
-  /* মাউস/টাচে শার্প চারকোনা আউটলাইন বন্ধ, কিন্তু কীবোর্ড অ্যাক্সেসিবিলিটির জন্য আধুনিক স্কাই-ব্লু রিং */
   input, textarea, select {
     outline: none !important;
     -webkit-appearance: none;
@@ -52,9 +44,6 @@
     border-color: #44A7FC !important;
   }
 
-  /* বাটন ও লিংকের জন্য সেফ কীবোর্ড অ্যাক্সেসিবিলিটি রিং — জেনেরিক আউটলাইনের
-     বদলে ব্র্যান্ডের সাথে মানানসই নরম গ্লো, যাতে কীবোর্ড আর মাউসে খোলা/ক্লিক
-     করার লুক প্রায় একই রকম লাগে, কিন্তু ফোকাস ইন্ডিকেটরও থেকে যায় */
   button:focus-visible,
   a:focus-visible,
   [role='button']:focus-visible {
@@ -219,7 +208,6 @@
    ✨ প্রিমিয়াম ইন্টারঅ্যাকশন ফাউন্ডেশন (Global Animation Setup)
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ১. Reduced-motion সাপোর্ট */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -229,7 +217,6 @@
   }
 }
 
-/* ২. Ambient Shimmer Sheen */
 .shimmer-sheen {
   position: relative;
   overflow: hidden;
@@ -255,7 +242,6 @@
   .shimmer-sheen::after { animation: none; display: none; }
 }
 
-/* ২ক. One-shot Shimmer */
 .shimmer-sheen-oneshot {
   position: relative;
   overflow: hidden;
@@ -281,7 +267,6 @@
   .shimmer-sheen-oneshot.shimmer-sheen-play::after { animation: none; display: none; }
 }
 
-/* ৩. Card Hover Glow (ডেস্কটপ অনলি) */
 @media (hover: hover) and (pointer: fine) {
   .card-hover-glow {
     transition: box-shadow 250ms cubic-bezier(.4,0,.2,1), transform 250ms cubic-bezier(.4,0,.2,1);
@@ -292,7 +277,6 @@
   }
 }
 
-/* ৪. Skeleton ↔ Content ক্রসফেড */
 .skeleton-fade-out {
   animation: fadeOutSoft 220ms ease forwards;
 }
@@ -334,12 +318,18 @@ input[type='search']::-webkit-search-results-decoration {
   display: none;
 }
 
+/* 🌟 সার্বজনীন ফ্রস্টেড গ্লাস ব্লার ইঞ্জিন (Desktop Chrome/Edge/Firefox + Safari + Mobile) */
+.search-dropdown-glass {
+  -webkit-backdrop-filter: blur(18px) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .navbar-glass {
     background-color: rgba(255, 255, 255, 0.94) !important;
   }
   .search-dropdown-glass {
-    background-color: rgba(255, 255, 255, 0.98) !important;
+    background-color: rgba(255, 255, 255, 0.96) !important;
   }
 }
 
@@ -349,9 +339,8 @@ input[type='search']::-webkit-search-results-decoration {
     backdrop-filter: blur(20px) !important;
   }
   .search-dropdown-glass {
-    -webkit-backdrop-filter: blur(22px) !important;
-    backdrop-filter: blur(22px) !important;
-    background-color: rgba(255, 255, 255, 0.985) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
   }
 }
 
@@ -463,7 +452,6 @@ html.dark {
   color: #F8FAFC;
 }
 
-/* মসৃণ থিম-ট্রানজিশন (ফ্লিকার-ফ্রি ফিল) */
 html,
 body,
 .navbar-glass,
@@ -475,21 +463,21 @@ body,
   transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
 
-/* ফ্রস্টেড গ্লাস ন্যাভবার ও সার্চ ড্রপডাউন — ডার্ক ভ্যারিয়েন্ট */
 .dark .navbar-glass {
   background-color: rgba(19, 29, 49, 0.82) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 .dark .search-dropdown-glass {
-  background-color: rgba(19, 29, 49, 0.94) !important;
+  background-color: rgba(19, 29, 49, 0.88) !important;
   border-color: rgba(255, 255, 255, 0.08) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  backdrop-filter: blur(18px) !important;
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .dark .navbar-glass { background-color: rgba(19, 29, 49, 0.97) !important; }
   .dark .search-dropdown-glass { background-color: rgba(19, 29, 49, 0.98) !important; }
 }
 
-/* বেস (নন-অপাসিটি) টোকেন ওভাররাইড */
 .dark .bg-white { background-color: #131D31; }
 .dark .text-ink { color: #F8FAFC; }
 .dark .text-muted { color: #94A3B8; }
@@ -503,7 +491,6 @@ body,
 .dark .hover\:bg-surface-muted:hover { background-color: #182339; }
 .dark .hover\:bg-border-base:hover { background-color: #22324D; }
 
-/* bg-white/N — সাদা ফ্রস্টেড কার্ড → ডার্ক ফ্রস্টেড কার্ড */
 .dark .bg-white\/15 { background-color: rgba(19, 29, 49, 0.15); }
 .dark .bg-white\/20 { background-color: rgba(19, 29, 49, 0.20); }
 .dark .bg-white\/25 { background-color: rgba(19, 29, 49, 0.25); }
@@ -520,7 +507,6 @@ body,
 .dark .bg-white\/90 { background-color: rgba(19, 29, 49, 0.90); }
 .dark .bg-white\/95 { background-color: rgba(19, 29, 49, 0.95); }
 
-/* border-white/N — হালকা হেয়ারলাইন বর্ডার */
 .dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.10); }
 .dark .border-white\/25 { border-color: rgba(255, 255, 255, 0.10); }
 .dark .border-white\/30 { border-color: rgba(255, 255, 255, 0.10); }
@@ -532,7 +518,6 @@ body,
 .dark .border-white\/85 { border-color: rgba(255, 255, 255, 0.10); }
 .dark .border-white\/90 { border-color: rgba(255, 255, 255, 0.10); }
 
-/* bg-brand-bg/N — হালকা নীল টিন্ট → ডার্ক নেভি টিন্ট */
 .dark .bg-brand-bg\/10 { background-color: rgba(15, 23, 42, 0.10); }
 .dark .bg-brand-bg\/20 { background-color: rgba(15, 23, 42, 0.20); }
 .dark .bg-brand-bg\/25 { background-color: rgba(15, 23, 42, 0.25); }
@@ -544,7 +529,6 @@ body,
 .dark .bg-brand-bg\/60 { background-color: rgba(15, 23, 42, 0.60); }
 .dark .bg-brand-bg\/70 { background-color: rgba(15, 23, 42, 0.70); }
 
-/* text-ink/N — সেকেন্ডারি টেক্সট অপাসিটি */
 .dark .text-ink\/10 { color: rgba(248, 250, 252, 0.10); }
 .dark .text-ink\/60 { color: rgba(248, 250, 252, 0.60); }
 .dark .text-ink\/75 { color: rgba(248, 250, 252, 0.75); }
@@ -552,25 +536,17 @@ body,
 .dark .text-ink\/85 { color: rgba(248, 250, 252, 0.85); }
 .dark .text-ink\/90 { color: rgba(248, 250, 252, 0.90); }
 
-/* border-border-base/N — সফট বর্ডার */
 .dark .border-border-base\/50 { border-color: rgba(34, 50, 77, 0.70); }
 .dark .border-border-base\/60 { border-color: rgba(34, 50, 77, 0.70); }
 .dark .border-border-base\/70 { border-color: rgba(34, 50, 77, 0.70); }
 .dark .border-border-base\/80 { border-color: rgba(34, 50, 77, 0.70); }
 
-/* bg-surface-muted/N */
 .dark .bg-surface-muted\/40 { background-color: rgba(24, 35, 57, 0.40); }
 .dark .bg-surface-muted\/50 { background-color: rgba(24, 35, 57, 0.50); }
 .dark .bg-surface-muted\/60 { background-color: rgba(24, 35, 57, 0.60); }
 .dark .bg-surface-muted\/70 { background-color: rgba(24, 35, 57, 0.70); }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 স্ট্যাটাস-কালার টিন্ট ফিক্স (এরর/সাকসেস/ওয়ার্নিং/ইনফো ব্যাজ, ইনপুট, চিপ)
-   এগুলো আগে হালকা bg-*-50/100 রেখেই দিত, ফলে dark mode-এ text-ink সাদা হয়ে
-   গেলেও ব্যাকগ্রাউন্ড হালকা থেকে যেত — টাইপ করা লেখা/আইকন দেখা যেত না।
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* লাল — এরর ইনপুট/ব্যানার */
+/* স্ট্যাটাস-কালার টিন্ট */
 .dark .bg-red-50 { background-color: rgba(127, 29, 29, 0.28); }
 .dark .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.20); }
 .dark .bg-red-50\/50 { background-color: rgba(127, 29, 29, 0.24); }
@@ -586,7 +562,6 @@ body,
 .dark .text-red-600 { color: #F87171; }
 .dark .text-red-800 { color: #FCA5A5; }
 
-/* সবুজ — সাকসেস/কনফার্মেশন */
 .dark .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.30); }
 .dark .bg-emerald-50\/70 { background-color: rgba(6, 78, 59, 0.22); }
 .dark .bg-emerald-50\/80 { background-color: rgba(6, 78, 59, 0.26); }
@@ -604,7 +579,6 @@ body,
 .dark .text-emerald-900 { color: #A7F3D0; }
 .dark .text-emerald-950 { color: #D1FAE5; }
 
-/* অ্যাম্বার — ওয়ার্নিং/অফার হাইলাইট */
 .dark .bg-amber-50 { background-color: rgba(120, 53, 15, 0.30); }
 .dark .bg-amber-50\/60 { background-color: rgba(120, 53, 15, 0.20); }
 .dark .bg-amber-50\/90 { background-color: rgba(120, 53, 15, 0.30); }
@@ -623,7 +597,6 @@ body,
 .dark .text-amber-900\/90 { color: rgba(254, 243, 199, 0.90); }
 .dark .text-amber-950 { color: #FFFBEB; }
 
-/* নীল/স্কাই — ইনফো ব্যানার */
 .dark .bg-blue-50 { background-color: rgba(12, 74, 110, 0.30); }
 .dark .bg-sky-50 { background-color: rgba(12, 74, 110, 0.30); }
 .dark .bg-sky-50\/95 { background-color: rgba(12, 74, 110, 0.34); }
@@ -634,18 +607,10 @@ body,
 .dark .text-sky-800 { color: #7DD3FC; }
 .dark .text-sky-950 { color: #E0F2FE; }
 
-/* গোলাপি/রোজ — বিশেষ অফার ব্যাজ */
 .dark .bg-rose-50\/95 { background-color: rgba(76, 5, 25, 0.34); }
 .dark .border-rose-300\/80 { border-color: rgba(251, 113, 133, 0.35); }
 .dark .text-rose-950 { color: #FFE4E6; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 পেজ-ওয়াইড গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড ফিক্স
-   পুরো সাইটের প্রায় প্রতিটি পেজ/মোডাল/কার্ড `dark:` ভ্যারিয়েন্ট ছাড়াই
-   হার্ডকোড করা হালকা from-/via-/to- গ্রেডিয়েন্ট স্টপ ব্যবহার করছিল, তাই
-   ডার্ক মোড অন থাকলেও পুরো ব্যাকগ্রাউন্ড হালকা নীল/সাদা থেকে যাচ্ছিল —
-   এটাই মূল কারণ কেন ডার্ক মোডে সবকিছু লাইট মোডের মতো দেখাচ্ছিল।
-   ══════════════════════════════════════════════════════════════════════ */
 .dark .from-brand-bg,
 .dark .from-brand-bg\/25,
 .dark .from-brand-bg\/35,
@@ -717,7 +682,6 @@ body,
   --tw-gradient-to: #182339 var(--tw-gradient-to-position);
 }
 
-/* "মেঘলা" ডিফল্ট অ্যাভাটার গ্রেডিয়েন্ট (সাদা → হালকা ধূসর) */
 .dark .from-\[\#94A3B8\] {
   --tw-gradient-from: #475569 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(71 85 105 / 0) var(--tw-gradient-to-position);
@@ -730,9 +694,6 @@ body,
   --tw-gradient-to: #94A3B8 var(--tw-gradient-to-position);
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 সলিড হালকা ব্যাকগ্রাউন্ড/বর্ডার ফিক্স (কার্ড, নোটিশ বক্স, ব্যাজ)
-   ══════════════════════════════════════════════════════════════════════ */
 .dark .bg-\[\#D3E7FC\] { background-color: #0F172A; }
 .dark .bg-\[\#EFF6FE\] { background-color: #131D31; }
 .dark .bg-\[\#EFF8FF\] { background-color: rgba(12, 74, 110, 0.30); }
@@ -743,18 +704,12 @@ body,
 .dark .border-\[\#FDE0B0\] { border-color: rgba(251, 191, 36, 0.35); }
 .dark .border-brand-bg { border-color: rgba(195, 222, 252, 0.25); }
 
-/* ফুটারের "wave" SVG-তে সরাসরি fill অ্যাট্রিবিউট বসানো ছিল, ক্লাস দিয়ে না —
-   তাই এভাবে সিলেক্টর দিয়েই ওভাররাইড করতে হচ্ছে */
 .dark footer svg path[fill="#D3E7FC"] { fill: #0F172A; }
 
-/* এই পেল ব্যাজ/বাটনের সাথে জোড়া লাগানো টেক্সট রঙ */
 .dark .text-\[\#0284C7\] { color: #7DD3FC; }
 .dark .text-\[\#0062E3\] { color: #93C5FD; }
 .dark .text-\[\#B91C1C\] { color: #FCA5A5; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 মিউটেড/ইঙ্ক অপাসিটি ভ্যারিয়েন্ট (placeholder, সেকেন্ডারি আইকন, পাতলা বর্ডার)
-   ══════════════════════════════════════════════════════════════════════ */
 .dark .text-muted\/35 { color: rgba(148, 163, 184, 0.45); }
 .dark .text-muted\/40 { color: rgba(148, 163, 184, 0.50); }
 .dark .text-muted\/50 { color: rgba(148, 163, 184, 0.60); }
@@ -768,11 +723,8 @@ body,
 .dark .border-ink\/25 { border-color: rgba(248, 250, 252, 0.22); }
 .dark .hover\:border-ink:hover { border-color: #F8FAFC; }
 
-/* ব্র্যান্ড প্রাইমারি (গাঢ় নেভি ব্লু) ডার্ক ব্যাকগ্রাউন্ডে প্রায় অদৃশ্য হয়ে
-   যাচ্ছিল — কনট্রাস্টের জন্য হালকা করে দেওয়া হলো */
 .dark .text-brand-primary { color: #60A5FA; }
 
-/* ইনফো/সাকসেস — অতি হালকা টিন্ট ব্যাজ, ডার্ক বিজি-তে আগে প্রায় দেখাই যেত না */
 .dark .bg-info\/10 { background-color: rgba(30, 64, 175, 0.28); }
 .dark .bg-info\/20 { background-color: rgba(30, 64, 175, 0.34); }
 .dark .bg-info\/50 { background-color: rgba(30, 64, 175, 0.50); }
@@ -782,11 +734,9 @@ body,
 .dark .border-success\/40 { border-color: rgba(52, 211, 153, 0.40); }
 .dark .border-success\/50 { border-color: rgba(52, 211, 153, 0.50); }
 
-/* সাদা রিং হাইলাইট (মোডাল/টোস্ট কার্ডের ধারে হালকা গ্লো) */
 .dark .ring-white\/70 { --tw-ring-color: rgba(255, 255, 255, 0.12); }
 .dark .ring-white\/80 { --tw-ring-color: rgba(255, 255, 255, 0.12); }
 
-/* ডার্ক মোডে ইনপুট অটোফিল ফিক্স */
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover,
 .dark input:-webkit-autofill:focus,
@@ -797,7 +747,6 @@ body,
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* ডার্ক মোড স্ক্রলবার */
 .dark ::-webkit-scrollbar-thumb {
   background-color: rgba(68, 167, 252, 0.45);
 }
@@ -814,41 +763,20 @@ body,
   background-color: rgba(68, 167, 252, 0.75);
 }
 
-/* থিম টগল বাটনের আইকন-সুইচ অ্যানিমেশন */
 .theme-toggle-icon {
   transition: transform 0.45s cubic-bezier(.4,0,.2,1), opacity 0.3s ease;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 hover:/focus:/disabled: প্রিফিক্স-যুক্ত ক্লাস ফিক্স
-   জরুরি নোট: `hover:bg-white` আর `bg-white` সম্পূর্ণ আলাদা CSS সিলেক্টর।
-   উপরে `.dark .bg-white` ওভাররাইড করলেও `.dark .hover\:bg-white:hover`
-   আলাদাভাবে না লিখলে সেটা কাজ করে না। এই কারণেই সার্চ বক্স/চেকআউট ইনপুট/FAQ
-   কার্ডে হোভার বা ফোকাস করলেই সাদা হয়ে ভিতরের লেখা অদৃশ্য হয়ে যাচ্ছিল।
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* সার্চ বক্স (নেভবার + চেকআউট ইনপুট) — ফোকাস করলে সাদা হয়ে টাইপ করা লেখা
-   অদৃশ্য হয়ে যাচ্ছিল */
 .dark .focus\:bg-white:focus { background-color: #182339; }
-
-/* FAQ কার্ড হোভার, সার্চ ক্লিয়ার বাটন, প্রোডাক্ট কোয়ান্টিটি +/- বাটন,
-   অ্যাকাউন্ট রিমুভ বাটন — হোভার করলেই সাদা হয়ে আইকন/লেখা অদৃশ্য হয়ে যাচ্ছিল */
 .dark .hover\:bg-white:hover { background-color: #182339; }
-
-/* ডিলিট/রিমুভ আইকন বাটনের হালকা লাল হোভার ব্যাকগ্রাউন্ড */
 .dark .hover\:bg-red-50:hover { background-color: rgba(127, 29, 29, 0.28); }
-
-/* ডিজেবলড ইনপুট/বাটন */
 .dark .disabled\:bg-surface-muted:disabled { background-color: #182339; }
 .dark .disabled\:text-muted:disabled { color: #94A3B8; }
 
-/* হালকা ব্র্যান্ড-বিজি চিপ/পিল বাটনের হোভার স্টেট */
 .dark .hover\:bg-brand-bg:hover { background-color: #0F172A; }
 .dark .hover\:bg-brand-bg\/10:hover { background-color: rgba(15, 23, 42, 0.10); }
 .dark .hover\:bg-brand-bg\/35:hover { background-color: rgba(15, 23, 42, 0.35); }
 .dark .hover\:bg-brand-bg\/40:hover { background-color: rgba(15, 23, 42, 0.40); }
 .dark .hover\:bg-brand-bg\/55:hover { background-color: rgba(15, 23, 42, 0.55); }
 
-/* ফুটারের "চলতি অফারসমূহ" লিংক হোভার — গাঢ় ব্রাউনিশ অ্যাম্বার ডার্ক বিজিতে
-   পড়া যাচ্ছিল না */
 .dark .hover\:text-amber-800:hover { color: #FDE68A; }
