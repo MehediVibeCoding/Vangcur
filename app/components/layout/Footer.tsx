@@ -195,26 +195,36 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট ব্লেন্ডেড ওয়েভ আর্কিটেকচার */}
+      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট ৩-লেয়ার ব্লেন্ডেড ওয়েভ আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
-        {/* 🌊 ১. টপ মাল্টি-লেয়ার স্কাই ব্লেন্ডার ওভারলে (ছবির মাথার উপর নিখুঁত ব্লেন্ডিং) */}
+        
+        {/* 🌊 ১. শীর্ষভাগে ৩টি স্বতন্ত্র স্পষ্ট পানির ঢেউয়ের লেয়ার (Top 3-Layer Cascading Waves Overlay) */}
         <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
-          <div className="h-12 sm:h-20 md:h-28 w-full bg-gradient-to-b from-white/95 via-white/40 to-transparent dark:from-[#0B111E]/95 dark:via-[#0B111E]/40 dark:to-transparent" />
+          <div className="h-6 sm:h-10 md:h-14 w-full bg-gradient-to-b from-white/95 via-white/50 to-transparent dark:from-[#0B111E]/95 dark:via-[#0B111E]/50 dark:to-transparent" />
           <svg
-            viewBox="0 0 1440 90"
+            viewBox="0 0 1440 180"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="absolute top-0 left-0 w-full h-8 sm:h-12 md:h-16"
+            className="absolute top-0 left-0 w-full h-14 sm:h-24 md:h-32 lg:h-36"
             preserveAspectRatio="none"
           >
+            {/* পেছনের হালকা ঢেউ (Layer 1 - Soft Background Ripple) */}
             <path
-              d="M0,0 L1440,0 L1440,25 C1320,55 1160,10 980,45 C780,85 580,20 360,65 C200,98 80,40 0,60 Z"
+              d="M0,0 L1440,0 L1440,55 C1280,110 1140,40 940,85 C740,130 520,35 320,95 C180,135 60,70 0,90 Z"
               fill="#D3E7FC"
-              fillOpacity="0.5"
+              fillOpacity="0.38"
             />
+            {/* মাঝের ভারসাম্যপূর্ণ ঢেউ (Layer 2 - Middle Fluid Wave) */}
             <path
-              d="M0,0 L1440,0 L1440,10 C1280,38 1120,5 920,28 C720,52 520,12 300,42 C160,60 60,22 0,30 Z"
+              d="M0,0 L1440,0 L1440,35 C1320,80 1160,25 980,65 C780,105 580,15 360,65 C200,100 80,45 0,60 Z"
               fill="#D3E7FC"
+              fillOpacity="0.70"
+            />
+            {/* সামনের স্পষ্ট প্রধান ঢেউ (Layer 3 - Crisp Foreground Water Wave) */}
+            <path
+              d="M0,0 L1440,0 L1440,20 C1260,55 1100,10 920,40 C720,70 540,10 340,45 C180,70 70,25 0,35 Z"
+              fill="#D3E7FC"
+              fillOpacity="0.98"
             />
           </svg>
         </div>
