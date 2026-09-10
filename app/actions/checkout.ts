@@ -1,6 +1,7 @@
 'use server';
 
 import { after } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/serviceClient';
 import {
@@ -20,7 +21,6 @@ import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 const MAX_ITEMS = 30;
 const MAX_QTY_PER_ITEM = 50;
 const GENERIC_RETRY_MSG = 'একটু পরে আবার চেষ্টা করুন';
-const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 function fail(error: string): ActionResponse<CreateOrderResult> {
   return { ok: false, error };
@@ -84,7 +84,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const cleanItems: { id: string; qty: number }[] = Object.entries(mergedMap).map(([id, qty]) => ({ id, qty }));
   const targetProductIds = cleanItems.map((item) => item.id);
 
-  let service;
+  let service: SupabaseClient;
   try {
     service = createServiceClient();
   } catch (e) {
@@ -100,20 +100,17 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     const { data: userData } = await cookieClient.auth.getUser();
     if (userData?.user) {
       currentUserId = userData.user.id;
-      const verifiedUserEmail = (userData.user.email || '').toLowerCase().trim();
-      
-      if (verifiedUserEmail === MODERATOR_EMAIL.toLowerCase()) {
-        isPrivilegedUser = true;
-      } else {
-        const { data: profile } = await service
-          .from('profiles')
-          .select('is_admin, role')
-          .eq('id', userData.user.id)
-          .maybeSingle();
 
-        if (profile?.is_admin === true || ['admin', 'super_admin', 'moderator'].includes(profile?.role)) {
-          isPrivilegedUser = true;
-        }
+      // প্রোফাইল টেবিল থেকে অ্যাডমিন/মডারেটর রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
+      // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে)
+      const { data: profile } = await service
+        .from('profiles')
+        .select('is_admin, role')
+        .eq('id', userData.user.id)
+        .maybeSingle();
+
+      if (profile?.is_admin === true || ['admin', 'super_admin', 'moderator'].includes(profile?.role)) {
+        isPrivilegedUser = true;
       }
     }
   } catch {
@@ -124,21 +121,27 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     try {
       const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
       if (phoneRlErr) {
-        logWarn('[checkout] phone rate limit error:', phoneRlErr.message);
-      } else if (phoneOk === false) {
+        // 🛡️ fail-closed: RPC এরর হলে চুপচাপ চালিয়ে না দিয়ে অর্ডার আটকানো হবে
+        logError('[checkout] phone rate limit RPC error — fail-closed:', phoneRlErr.message);
+        return fail(GENERIC_RETRY_MSG);
+      }
+      if (phoneOk === false) {
         return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
       }
 
       if (fingerprintId) {
         const { data: fpOk, error: fpErr } = await service.rpc('check_and_set_fingerprint_limit', { p_fingerprint_id: fingerprintId });
         if (fpErr) {
-          logWarn('[checkout] fingerprint rate limit error:', fpErr.message);
-        } else if (fpOk === false) {
+          logError('[checkout] fingerprint rate limit RPC error — fail-closed:', fpErr.message);
+          return fail(GENERIC_RETRY_MSG);
+        }
+        if (fpOk === false) {
           return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
       }
     } catch (e) {
-      logWarn('[checkout] rate limit exception:', e);
+      logError('[checkout] rate limit exception — fail-closed:', e);
+      return fail(GENERIC_RETRY_MSG);
     }
   }
 
@@ -232,14 +235,29 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const advancePaidAmount = advanceBreakdown.totalAdvance;
 
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
+  let stockDecremented = false;
   try {
     const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
     if (stockErr && stockErr.message?.includes('INSUFFICIENT_STOCK')) {
       return fail(t('দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই'));
     }
+    if (!stockErr) stockDecremented = true;
   } catch (e) {
     logWarn('[checkout] stock decrement skipped:', e);
   }
+
+  // 🛡️ স্টক কমার পর অর্ডার ইনসার্ট ফেইল করলে stock আটকে না থেকে ফেরত
+  // দেওয়ার জন্য — নিচে ব্যর্থ হলে এই ফাংশনটাকে কল করা হবে (ইতিমধ্যে DB-তে
+  // থাকা restore_product_stock RPC, একই p_items ফরম্যাট নেয়)
+  async function revertStockIfNeeded() {
+    if (!stockDecremented) return;
+    try {
+      await service.rpc('restore_product_stock', { p_items: stockItems });
+    } catch (e) {
+      logError('[checkout] stock restore after failed order insert also failed:', e);
+    }
+  }
+
 
   let orderNum = `#VC-${Date.now().toString(36).toUpperCase()}`;
   try {
@@ -312,7 +330,8 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
 
   if (insResult.error || !insResult.data) {
     logError('[checkout] order insert failed:', insResult.error?.message, '| Code:', insResult.error?.code);
-    
+    await revertStockIfNeeded();
+
     if (insResult.error?.code === '23505') {
       return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
     }

@@ -2,12 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
 import { useCartStore, cartTotal } from './store/cartStore';
-import { useAuthStore } from './store/authStore';
 import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
 import { suppressHistoryCleanup } from './useHistoryModal';
-
-const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 
 function getTimeoutSignal(ms: number): AbortSignal | undefined {
   if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
@@ -256,10 +253,6 @@ export const STOCK_NOTIFY_EVENT = 'vc:stockNotify';
 export function hasExceededLocalOrderLimit(): boolean {
   if (typeof window === 'undefined') return false;
   try {
-    const user = useAuthStore.getState().currentUser;
-    if (user?.email && user.email.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase()) {
-      return false;
-    }
     const raw = localStorage.getItem('vc_order_timestamps');
     if (!raw) return false;
     const timestamps: number[] = JSON.parse(raw);
@@ -300,13 +293,12 @@ export function startQuickOrder(
   }
 
   const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
-  const isMod = useAuthStore.getState().currentUser?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
   const currentCart = useCartStore.getState().cart;
 
   // ১. যদি কার্টে আগে থেকে কোনো পণ্য না থাকে (০ আইটেম) — একক পণ্যের কুইক অর্ডার সরাসরি /checkout-এ নিয়ে যাবে
   if (!currentCart || currentCart.length === 0) {
     const singleProductTotal = prod.price * safeQty;
-    if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
+    if (singleProductTotal > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: singleProductTotal } }));
       }
@@ -344,7 +336,7 @@ export function startQuickOrder(
   const updatedCart = useCartStore.getState().cart;
   const newCartTotal = cartTotal(updatedCart);
 
-  if (newCartTotal > MAX_ONLINE_ORDER_TOTAL && !isMod) {
+  if (newCartTotal > MAX_ONLINE_ORDER_TOTAL) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(OPEN_BULK_ORDER_EVENT, { detail: { total: newCartTotal } }));
     }

@@ -1,6 +1,32 @@
 // [REPLACE] ফাইলের পাথ: lib/checkoutData.ts
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+/**
+ * 🛡️ ক্লায়েন্ট-সাইড (ব্রাউজার) থেকে বর্তমান লগইন-করা ইউজার অ্যাডমিন/মডারেটর
+ * কিনা যাচাই — শুধুমাত্র DB-ভিত্তিক (profiles.is_admin / role), কোনো
+ * হার্ডকোডেড ইমেইল ব্যবহার করা হয় না। RLS-এ নিজের প্রোফাইল row নিজে
+ * পড়ার অনুমতি already আছে (profiles_select_policy), তাই এই কলটা নিরাপদে
+ * ব্রাউজার থেকেই করা যায়।
+ */
+export async function checkIsPrivilegedClient(
+  supabase: SupabaseClient,
+  userId?: string | null,
+): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin, role')
+      .eq('id', userId)
+      .maybeSingle();
+    if (!profile) return false;
+    return profile.is_admin === true || ['admin', 'super_admin', 'moderator'].includes(profile.role);
+  } catch {
+    return false;
+  }
+}
+
+
 export const DISTRICTS = [
   'ঢাকা', 'চট্টগ্রাম', 'রাজশাহী', 'খুলনা', 'বরিশাল', 'সিলেট', 'রংপুর', 'ময়মনসিংহ', 'কুমিল্লা', 'ফেনী',
   'নোয়াখালী', 'লক্ষ্মীপুর', 'চাঁদপুর', 'ব্রাহ্মণবাড়িয়া', 'কিশোরগঞ্জ', 'নরসিংদী', 'নারায়ণগঞ্জ', 'মুন্সীগঞ্জ',

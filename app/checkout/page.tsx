@@ -45,6 +45,7 @@ import {
   fetchShipConfig,
   calculateAdvancePayment,
   MAX_ONLINE_ORDER_TOTAL,
+  checkIsPrivilegedClient,
   type ShipConfig,
 } from '@/lib/checkoutData';
 import {
@@ -57,7 +58,6 @@ import { useT } from '@/lib/i18n/useT';
 import { fetchMyProfile } from '@/lib/profileData';
 import type { CartItem } from '@/types';
 
-const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
 const MAX_COUPON_LEN = 25;
 const MAX_EMAIL_LEN = 254;
 
@@ -722,9 +722,9 @@ export default function CheckoutPage() {
       return;
     }
 
-    // 🛡️ শুধুমাত্র প্রকৃত লগইন সেশন থেকে আসা অথেন্টিকেটেড ইমেইল যাচাই হবে
+    // 🛡️ শুধুমাত্র DB-ভিত্তিক অ্যাডমিন/মডারেটর যাচাই (আগে হার্ডকোডেড ইমেইল ছিল)
     const user = useAuthStore.getState().currentUser;
-    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+    const isMod = await checkIsPrivilegedClient(supabase, user?.id);
 
     if (isDirectQuickOrder && couponInput.trim() && !appliedCoupon) {
       setStep1BtnStatus('verifying');
@@ -834,9 +834,9 @@ export default function CheckoutPage() {
   const submitOrderNow = useCallback(async () => {
     if (confirmLockRef.current) return;
 
-    // 🛡️ শুধুমাত্র প্রকৃত লগইন সেশন থেকে আসা অথেন্টিকেটেড ইমেইল যাচাই হবে
+    // 🛡️ শুধুমাত্র DB-ভিত্তিক অ্যাডমিন/মডারেটর যাচাই (আগে হার্ডকোডেড ইমেইল ছিল)
     const user = useAuthStore.getState().currentUser;
-    const isMod = user?.email?.toLowerCase().trim() === MODERATOR_EMAIL.toLowerCase();
+    const isMod = await checkIsPrivilegedClient(supabase, user?.id);
 
     if (!isMod && total > MAX_ONLINE_ORDER_TOTAL) {
       if (typeof window !== 'undefined') {

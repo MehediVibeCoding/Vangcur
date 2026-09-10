@@ -103,8 +103,11 @@ export default function AccountOrdersClient() {
       <div className="mx-auto w-full max-w-[760px] px-5 pb-16 pt-6">
         {!currentUser ? (
           <div className="mx-auto my-10 max-w-[400px] rounded-[28px] border border-white/80 bg-white/85 p-8 text-center shadow-sh2 backdrop-blur-md animate-section-reveal">
-            <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light text-2xl shadow-xs">
-              🔒
+            <div className="mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light shadow-xs">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="4" y="11" width="16" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
             </div>
             <h1 className="mb-1.5 font-body text-[17px] font-bold text-ink">{t('অর্ডার দেখতে লগইন করুন')}</h1>
             <p className="mb-5 font-body text-[13px] leading-relaxed text-muted">
@@ -161,7 +164,11 @@ export default function AccountOrdersClient() {
               <SkeletonTransition isReady={!loading} skeleton={<OrderListSkeleton />}>
                 {orders.length === 0 ? (
                   <div className="py-12 text-center">
-                    <div className="mx-auto mb-3 text-[42px]">📦</div>
+                    <svg className="mx-auto mb-3 text-border-base" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.5 7.3 12 3 3.5 7.3 12 11.6l8.5-4.3Z" />
+                      <path d="M3.5 7.3v9.4L12 21l8.5-4.3V7.3" />
+                      <path d="M12 11.6V21" />
+                    </svg>
                     <div className="mb-1 font-body text-sm font-bold text-ink">{t('এখনো কোনো অর্ডার নেই')}</div>
                     <div className="mb-5 font-body text-xs text-muted">{t('অর্ডার করলে এখানে দেখাবে')}</div>
                     <Link
@@ -173,7 +180,10 @@ export default function AccountOrdersClient() {
                   </div>
                 ) : filteredOrders.length === 0 ? (
                   <div className="py-10 text-center">
-                    <div className="mb-2 text-3xl">🔍</div>
+                    <svg className="mx-auto mb-2 text-border-base" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="m21 21-4.3-4.3" />
+                    </svg>
                     <div className="font-body text-sm font-bold text-ink">{t('এই নম্বরে কোনো অর্ডার পাওয়া যায়নি')}</div>
                   </div>
                 ) : (

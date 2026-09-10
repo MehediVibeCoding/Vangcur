@@ -8,8 +8,6 @@ const MAX_REVIEW_LEN = 500;
 const MAX_UNVERIFIED_REVIEWS_PER_DAY = 2;
 const LIKED_REVIEWS_KEY = 'vc_liked_reviews';
 
-const MODERATOR_EMAIL = 'mehedivibecoding@gmail.com';
-
 /**
  * 🛡️ ক্লাউডিনারি ইমেজ হোয়াইটলিস্টিং ও সিকিউরিটি স্যানিটাইজার
  * শুধুমাত্র আমাদের অনুমোদিত ক্লাউড নেম ও https://res.cloudinary.com/ ডোমেইনের ইমেজ ইউআরএল গ্রহণ করা হবে।
@@ -53,13 +51,9 @@ export async function checkIsReviewAdminOrMod(
       return false;
     }
 
-    // ১. মডারেটরের নির্দিষ্ট জিমেইল যাচাই (শুধুমাত্র সার্ভার-ভেরিফায়েড অথেন্টিকেটেড ইমেইল)
-    const verifiedEmail = (user.email || '').toLowerCase().trim();
-    if (verifiedEmail === MODERATOR_EMAIL.toLowerCase()) {
-      return true;
-    }
-
-    // ২. প্রোফাইল টেবিল থেকে অ্যাডমিন বা অনুমোদিত রোল যাচাই
+    // প্রোফাইল টেবিল থেকে অ্যাডমিন বা অনুমোদিত রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
+    // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে —
+    // এখন সবাই একই DB role চেকের মধ্য দিয়ে যায়)
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('is_admin, role')
