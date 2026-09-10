@@ -195,15 +195,10 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* 🌊 মোবাইল ও ডেস্কটপের জন্য আলাদা নিখুঁত ক্লিপ-পাথ ভেক্টর ডেফিনিশন */}
+      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
       <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
         <defs>
-          {/* মোবাইল উপযোগী স্লিম ও মৃদু কার্ভ (Shallow & Slim for tall 1000x1775) */}
-          <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.016 C 0.18,0.028 0.35,0.006 0.55,0.006 C 0.72,0.006 0.88,0.025 1,0.014 L 1,1 L 0,1 Z" />
-          </clipPath>
-          {/* ডেস্কটপ উপযোগী স্বাভাবিক সুন্দর কার্ভ (Standard for 2000x1333) */}
-          <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
+          <clipPath id="footer-top-wave-clip" clipPathUnits="objectBoundingBox">
             <path d="M 0,0.038 C 0.18,0.068 0.35,0.015 0.55,0.015 C 0.72,0.015 0.88,0.065 1,0.035 L 1,1 L 0,1 Z" />
           </clipPath>
         </defs>
@@ -212,70 +207,37 @@ export default function Footer() {
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* 🌊 ১. শীর্ষভাগে ৩টি মৃদু পানির ঢেউয়ের অ্যাকসেন্ট লেয়ার (3-Layer Top Water Ripple Accents) */}
-        <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
-          <svg
-            viewBox="0 0 1440 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-8 sm:h-14 md:h-20"
-            preserveAspectRatio="none"
-          >
-            {/* Layer 1 - Light background wave ripple */}
-            <path
-              d="M0,0 L1440,0 L1440,25 C1260,50 1100,10 920,35 C720,60 540,10 340,38 C180,58 70,20 0,30 Z"
-              fill="#D3E7FC"
-              fillOpacity="0.25"
-            />
-            {/* Layer 2 - Middle fluid wave ripple */}
-            <path
-              d="M0,0 L1440,0 L1440,16 C1280,36 1120,6 940,24 C740,42 560,8 360,28 C200,44 80,16 0,22 Z"
-              fill="#D3E7FC"
-              fillOpacity="0.45"
-            />
-            {/* Layer 3 - Subtle edge contour line */}
-            <path
-              d="M0,0 L1440,0 L1440,8 C1300,22 1140,2 960,16 C760,28 580,4 380,18 C220,30 90,8 0,14 Z"
-              fill="#D3E7FC"
-              fillOpacity="0.65"
-            />
-          </svg>
-        </div>
-
-        {/* মোবাইল ইমেজ (স্লিম মোবাইল ক্লিপ-পাথ সহ) */}
+        {/* ছবির র্যাপার — শীর্ষভাগে আসল বডি ব্যাকগ্রাউন্ড স্বয়ংক্রিয়ভাবে প্রকাশ পাবে */}
         <div
-          className="relative aspect-[1000/1775] w-full md:hidden"
+          className="relative w-full"
           style={{
-            clipPath: 'url(#footer-top-wave-clip-mobile)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
+            clipPath: 'url(#footer-top-wave-clip)',
+            WebkitClipPath: 'url(#footer-top-wave-clip)',
           }}
         >
-          <Image
-            src="/footer-illustration-mobile.webp"
-            alt="Vangcur Gadgets Lifestyle"
-            fill
-            sizes="100vw"
-            className="object-cover object-bottom"
-            priority={false}
-          />
-        </div>
+          {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
+          <div className="relative aspect-[1000/1775] w-full md:hidden">
+            <Image
+              src="/footer-illustration-mobile.webp"
+              alt="Vangcur Gadgets Lifestyle"
+              fill
+              sizes="100vw"
+              className="object-cover object-bottom"
+              priority={false}
+            />
+          </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া ডেস্কটপ ক্লিপ-পাথ সহ) */}
-        <div
-          className="relative hidden aspect-[2000/1333] w-full md:block"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-desktop)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-desktop)',
-          }}
-        >
-          <Image
-            src="/footer-illustration-desktop.webp"
-            alt="Vangcur Gadgets Lifestyle"
-            fill
-            sizes="100vw"
-            className="object-cover object-bottom"
-            priority={false}
-          />
+          {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
+          <div className="relative hidden aspect-[2000/1333] w-full md:block">
+            <Image
+              src="/footer-illustration-desktop.webp"
+              alt="Vangcur Gadgets Lifestyle"
+              fill
+              sizes="100vw"
+              className="object-cover object-bottom"
+              priority={false}
+            />
+          </div>
         </div>
 
         {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
