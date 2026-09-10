@@ -176,6 +176,27 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
+      
+      {/* ছবির উপরে ভেক্টর ওয়েভ লেয়ার */}
+      <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+        <svg
+          viewBox="0 0 1440 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-8 sm:h-11 md:h-14"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+            fillOpacity="0.4"
+          />
+          <path
+            d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+          />
+        </svg>
+      </div>
 
       {/* ইলাস্ট্রেশন ছবি — মোবাইল ও ডেস্কটপে আলাদা ছবি, যাতে কাউকে জোর করে ক্রপ/স্ট্রেচ না হতে হয় */}
       <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
@@ -203,61 +224,22 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌤️ উপরের ফেড — আগে এটা ছবির বাইরে আলাদা একটা ব্লক ছিল, ফ্ল্যাট #D3E7FC
-            রঙে, তাই ছবির নিজস্ব আকাশের রঙ যেখান থেকে শুরু হতো সেখানে একটা হার্ড/কাটা
-            রেখা দেখাত। এখন এটা ছবির উপরেই overlay হিসেবে বসানো (absolute, top-0),
-            আর ফ্ল্যাট রঙের বদলে গ্র্যাডিয়েন্ট (পেজ ব্যাকগ্রাউন্ড রঙ থেকে সম্পূর্ণ
-            ট্রান্সপারেন্টে ধীরে ধীরে মিলিয়ে যাওয়া) ব্যবহার করা হয়েছে — তাই ছবির
-            আকাশ যেই শেডেরই হোক না কেন (হালকা বা গাঢ় নীল), গ্র্যাডিয়েন্ট ট্রান্সপারেন্ট
-            হয়ে যাওয়ার পর নিচে ছবির আসল রঙ স্বাভাবিকভাবে দেখা যায়, হঠাৎ কাটা রেখা
-            থাকে না। স্টপ-কালার ডার্ক মোডে বদলায় (globals.css-এর
-            `.dark footer .footer-fade-stop` নিয়ম অনুযায়ী), তাই ডার্ক মোডেও পেজের
-            ব্যাকগ্রাউন্ডের সাথে ঠিকভাবে মেলে। */}
-        <div className="absolute inset-x-0 top-0 z-10 h-[9%] w-full overflow-hidden leading-none">
-          <svg
-            viewBox="0 0 1440 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-full w-full"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="footerTopFade" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" className="footer-fade-stop" stopColor="#FFFFFF" stopOpacity="1" />
-                <stop offset="100%" className="footer-fade-stop" stopColor="#FFFFFF" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M0,0 C320,83.3 680,100 1020,33.3 C1180,3.3 1340,16.7 1440,50 L1440,100 L0,100 Z"
-              fill="url(#footerTopFade)"
-              opacity="0.5"
-            />
-            <path
-              d="M0,33.3 C360,100 720,33.3 1080,80 C1240,100 1360,66.7 1440,41.7 L1440,100 L0,100 Z"
-              fill="url(#footerTopFade)"
-            />
-          </svg>
-        </div>
-
         {/* 🌊 নিচের ঢেউ — ইচ্ছাকৃতভাবে ছবির ভেতরে বেক না করে কোডে (SVG) বসানো, ঠিক
-            পুরনো ছবিতে বেক করা যেই ডেউ ছিল তার exact শেপ (পিক্সেল ধরে মেপে বসানো),
-            আর একই #D3E7FC রঙে। উচ্চতা এখন fixed পিক্সেলের বদলে ছবির নিজের উচ্চতার
-            শতাংশ (%) হিসেবে বসানো, তাই ছবি যত লম্বা/চওড়া হোক (মোবাইল বা ডেস্কটপ,
-            ভবিষ্যতে ছবি বদলালেও), ডেউটা সবসময় একই অনুপাতে প্রমিনেন্ট দেখাবে — নতুন
-            লম্বা ছবিগুলোতে আগে যেমন অনেক পাতলা/ছোট দেখাচ্ছিল, আর হবে না। এই রঙ
-            ডার্ক মোডে already অটোমেটিক গাঢ় নেভিতে বদলে যায় (globals.css-এর
+            উপরের ঢেউয়ের মতোই একই #D3E7FC রঙে। এর ফলে দুটো লাভ: (১) ভবিষ্যতে
+            ছবি বদলালেও কাটআউট হাতে আঁকা লাগবে না, এমনিতেই বসে যাবে, (২) ডার্ক
+            মোডে এই রঙ already অটোমেটিক গাঢ় নেভিতে বদলে যায় (globals.css-এর
             `.dark footer svg path[fill="#D3E7FC"]` নিয়ম অনুযায়ী) — তাই ছবির
             নিচের অংশ আর ফুটার কন্টেন্টের মাঝের সিমটা ডার্ক মোডেও আর বোঝা যাবে না। */}
-        <div className="absolute inset-x-0 bottom-0 z-10 h-[14%] w-full overflow-hidden leading-none">
+        <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none">
           <svg
             viewBox="0 0 1440 100"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="h-full w-full"
+            className="w-full h-10 sm:h-16 md:h-20"
             preserveAspectRatio="none"
           >
             <path
-              d="M0.0,43.43 C20.0,38.7 80.0,20.6 120.0,15.1 C160.0,9.6 200.0,9.6 240.0,10.4 C280.0,11.2 320.0,14.8 360.0,19.9 C400.0,25.0 440.0,33.0 480.0,41.1 C520.0,49.1 560.0,60.1 600.0,68.1 C640.0,76.2 680.0,85.4 720.0,89.4 C760.0,93.3 800.0,93.3 840.0,91.7 C880.0,90.1 920.0,84.4 960.0,79.9 C1000.0,75.4 1040.0,69.0 1080.0,64.6 C1120.0,60.3 1160.0,55.2 1200.0,54.0 C1240.0,52.8 1280.0,51.7 1320.0,57.6 C1360.0,63.5 1420.0,84.1 1440.0,89.4 L1440,100 L0,100 Z"
+              d="M0,60 C220,15 460,85 760,50 C1040,18 1260,72 1440,35 L1440,100 L0,100 Z"
               fill="#D3E7FC"
             />
           </svg>
