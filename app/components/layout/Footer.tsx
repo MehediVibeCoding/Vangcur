@@ -198,16 +198,52 @@ export default function Footer() {
         </svg>
       </div>
 
-      {/* ইলাস্ট্রেশন ছবি */}
-      <div className="relative aspect-[1536/606] w-full select-none pointer-events-none bg-[#D3E7FC]">
-        <Image
-          src="/footer-illustration.webp"
-          alt="Vangcur Gadgets Lifestyle"
-          fill
-          sizes="100vw"
-          className="object-cover object-bottom"
-          priority={false}
-        />
+      {/* ইলাস্ট্রেশন ছবি — মোবাইল ও ডেস্কটপে আলাদা ছবি, যাতে কাউকে জোর করে ক্রপ/স্ট্রেচ না হতে হয় */}
+      <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
+        {/* মোবাইল (লম্বা কম্পোজিশন) — md ব্রেকপয়েন্টের নিচে দেখাবে */}
+        <div className="relative aspect-[1000/1775] w-full md:hidden">
+          <Image
+            src="/footer-illustration-mobile.webp"
+            alt="Vangcur Gadgets Lifestyle"
+            fill
+            sizes="100vw"
+            className="object-cover object-bottom"
+            priority={false}
+          />
+        </div>
+
+        {/* ডেস্কটপ (চওড়া কম্পোজিশন) — md ব্রেকপয়েন্ট থেকে দেখাবে */}
+        <div className="relative hidden aspect-[2000/1333] w-full md:block">
+          <Image
+            src="/footer-illustration-desktop.webp"
+            alt="Vangcur Gadgets Lifestyle"
+            fill
+            sizes="100vw"
+            className="object-cover object-bottom"
+            priority={false}
+          />
+        </div>
+
+        {/* 🌊 নিচের ঢেউ — ইচ্ছাকৃতভাবে ছবির ভেতরে বেক না করে কোডে (SVG) বসানো, ঠিক
+            উপরের ঢেউয়ের মতোই একই #D3E7FC রঙে। এর ফলে দুটো লাভ: (১) ভবিষ্যতে
+            ছবি বদলালেও কাটআউট হাতে আঁকা লাগবে না, এমনিতেই বসে যাবে, (২) ডার্ক
+            মোডে এই রঙ already অটোমেটিক গাঢ় নেভিতে বদলে যায় (globals.css-এর
+            `.dark footer svg path[fill="#D3E7FC"]` নিয়ম অনুযায়ী) — তাই ছবির
+            নিচের অংশ আর ফুটার কন্টেন্টের মাঝের সিমটা ডার্ক মোডেও আর বোঝা যাবে না। */}
+        <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none">
+          <svg
+            viewBox="0 0 1440 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full h-10 sm:h-16 md:h-20"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,60 C220,15 460,85 760,50 C1040,18 1260,72 1440,35 L1440,100 L0,100 Z"
+              fill="#D3E7FC"
+            />
+          </svg>
+        </div>
       </div>
 
       {/* ফুটার কনটেন্ট গ্রিড */}
