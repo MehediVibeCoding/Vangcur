@@ -5,7 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import {
-  DEFAULT_FOOTER, fetchFooterSettings, subscribeFooterSettings,
+  DEFAULT_FOOTER,
+  fetchFooterSettings,
+  subscribeFooterSettings,
 } from '@/lib/footerData';
 import { sanitizeHref } from '@/lib/security';
 import { useT } from '@/lib/i18n/useT';
@@ -22,18 +24,27 @@ function computeLogo(raw: FooterLogo | null | undefined): FooterLogo {
   };
 }
 
-function computeContact(raw: (Partial<FooterContact> & { phone?: string; wa?: string; email?: string; fb?: string; addr?: string }) | null | undefined): FooterContact {
+function computeContact(
+  raw: (Partial<FooterContact> & { phone?: string; wa?: string; email?: string; fb?: string; addr?: string }) | null | undefined
+): FooterContact {
   const c = { ...DEFAULT_FOOTER.contact };
   if (!raw) return c;
-  if (raw.phone) { c.phoneLabel = raw.phone; c.phoneHref = sanitizeHref('tel:' + raw.phone.replace(/\D/g, '')); }
-  if (raw.wa) { c.waHref = sanitizeHref('https://wa.me/' + ('88' + raw.wa.replace(/^88/, '').replace(/\D/g, ''))); }
+  if (raw.phone) {
+    c.phoneLabel = raw.phone;
+    c.phoneHref = sanitizeHref('tel:' + raw.phone.replace(/\D/g, ''));
+  }
+  if (raw.wa) {
+    c.waHref = sanitizeHref('https://wa.me/' + ('88' + raw.wa.replace(/^88/, '').replace(/\D/g, '')));
+  }
   if (raw.email) c.email = raw.email;
   if (raw.fb) c.fb = sanitizeHref(raw.fb);
   if (raw.addr) c.addr = raw.addr;
   return c;
 }
 
-function computeFooterExtras(raw: { desc?: string; copy?: string; fb?: string; ig?: string; tk?: string; yt?: string; wa?: string } | null | undefined): FooterExtras {
+function computeFooterExtras(
+  raw: { desc?: string; copy?: string; fb?: string; ig?: string; tk?: string; yt?: string; wa?: string } | null | undefined
+): FooterExtras {
   const social = { ...DEFAULT_FOOTER.social };
   let desc = DEFAULT_FOOTER.desc;
   let copy = DEFAULT_FOOTER.copy;
@@ -140,14 +151,19 @@ function UsersGroupIcon() {
   );
 }
 
-const colLinkClass = 'block bg-transparent border-0 p-0 text-left font-body text-[13.5px] font-medium text-slate-700 no-underline transition-colors hover:text-brand-light cursor-pointer leading-snug';
+const colLinkClass =
+  'block bg-transparent border-0 p-0 text-left font-body text-[13.5px] font-medium text-slate-700 no-underline transition-colors hover:text-brand-light cursor-pointer leading-snug';
 
 export default function Footer() {
   const { t, lang } = useT();
   const supabase = useMemo(() => createClient(), []);
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
   const [contact, setContact] = useState<FooterContact>(DEFAULT_FOOTER.contact);
-  const [extras, setExtras] = useState<FooterExtras>({ desc: DEFAULT_FOOTER.desc, copy: DEFAULT_FOOTER.copy, social: DEFAULT_FOOTER.social });
+  const [extras, setExtras] = useState<FooterExtras>({
+    desc: DEFAULT_FOOTER.desc,
+    copy: DEFAULT_FOOTER.copy,
+    social: DEFAULT_FOOTER.social,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -166,7 +182,10 @@ export default function Footer() {
       if (key === 'vc_contact') setContact(computeContact(val as Partial<FooterContact>));
     });
 
-    return () => { cancelled = true; supabase.removeChannel(channel); };
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
   }, [supabase]);
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -176,31 +195,31 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      
-      {/* ছবির উপরে ভেক্টর ওয়েভ লেয়ার */}
-      <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
-        <svg
-          viewBox="0 0 1440 60"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-8 sm:h-11 md:h-14"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
-            fill="#D3E7FC"
-            fillOpacity="0.4"
-          />
-          <path
-            d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
-            fill="#D3E7FC"
-          />
-        </svg>
-      </div>
-
-      {/* ইলাস্ট্রেশন ছবি — মোবাইল ও ডেস্কটপে আলাদা ছবি, যাতে কাউকে জোর করে ক্রপ/স্ট্রেচ না হতে হয় */}
+      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট ব্লেন্ডেড ওয়েভ আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
-        {/* মোবাইল (লম্বা কম্পোজিশন) — md ব্রেকপয়েন্টের নিচে দেখাবে */}
+        {/* 🌊 ১. টপ মাল্টি-লেয়ার স্কাই ব্লেন্ডার ওভারলে (ছবির মাথার উপর নিখুঁত ব্লেন্ডিং) */}
+        <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
+          <div className="h-12 sm:h-20 md:h-28 w-full bg-gradient-to-b from-white/95 via-white/40 to-transparent dark:from-[#0B111E]/95 dark:via-[#0B111E]/40 dark:to-transparent" />
+          <svg
+            viewBox="0 0 1440 90"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute top-0 left-0 w-full h-8 sm:h-12 md:h-16"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,0 L1440,0 L1440,25 C1320,55 1160,10 980,45 C780,85 580,20 360,65 C200,98 80,40 0,60 Z"
+              fill="#D3E7FC"
+              fillOpacity="0.5"
+            />
+            <path
+              d="M0,0 L1440,0 L1440,10 C1280,38 1120,5 920,28 C720,52 520,12 300,42 C160,60 60,22 0,30 Z"
+              fill="#D3E7FC"
+            />
+          </svg>
+        </div>
+
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
         <div className="relative aspect-[1000/1775] w-full md:hidden">
           <Image
             src="/footer-illustration-mobile.webp"
@@ -212,7 +231,7 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ (চওড়া কম্পোজিশন) — md ব্রেকপয়েন্ট থেকে দেখাবে */}
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
         <div className="relative hidden aspect-[2000/1333] w-full md:block">
           <Image
             src="/footer-illustration-desktop.webp"
@@ -224,22 +243,17 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 নিচের ঢেউ — ইচ্ছাকৃতভাবে ছবির ভেতরে বেক না করে কোডে (SVG) বসানো, ঠিক
-            উপরের ঢেউয়ের মতোই একই #D3E7FC রঙে। এর ফলে দুটো লাভ: (১) ভবিষ্যতে
-            ছবি বদলালেও কাটআউট হাতে আঁকা লাগবে না, এমনিতেই বসে যাবে, (২) ডার্ক
-            মোডে এই রঙ already অটোমেটিক গাঢ় নেভিতে বদলে যায় (globals.css-এর
-            `.dark footer svg path[fill="#D3E7FC"]` নিয়ম অনুযায়ী) — তাই ছবির
-            নিচের অংশ আর ফুটার কন্টেন্টের মাঝের সিমটা ডার্ক মোডেও আর বোঝা যাবে না। */}
-        <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none">
+        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
+        <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
           <svg
-            viewBox="0 0 1440 100"
+            viewBox="0 0 1440 160"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-10 sm:h-16 md:h-20"
+            className="w-full h-12 sm:h-20 md:h-28"
             preserveAspectRatio="none"
           >
             <path
-              d="M0,60 C220,15 460,85 760,50 C1040,18 1260,72 1440,35 L1440,100 L0,100 Z"
+              d="M0,110 C120,85 180,75 280,75 C420,75 580,142 760,142 C960,142 1120,88 1260,88 C1340,88 1390,96 1440,105 L1440,160 L0,160 Z"
               fill="#D3E7FC"
             />
           </svg>
@@ -247,9 +261,8 @@ export default function Footer() {
       </div>
 
       {/* ফুটার কনটেন্ট গ্রিড */}
-      <div className="bg-[#D3E7FC] px-5 pb-8 pt-8 md:px-10 lg:px-16">
+      <div className="bg-[#D3E7FC] px-5 pb-8 pt-6 md:px-10 lg:px-16">
         <div className="mx-auto grid max-w-[1300px] grid-cols-2 gap-x-6 gap-y-9 sm:gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
-          
           {/* কলাম ১: লোগো, ট্যাগলাইন ও সোশ্যাল আইকনসমূহ */}
           <div className="col-span-2 sm:col-span-1 flex flex-col items-center sm:items-start text-center sm:text-left">
             <Link href="/" prefetch={true} className="mb-2 inline-block">
@@ -359,16 +372,32 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* কলাম ৩: কুইক লিঙ্কস — /offers পেজে ডিরেক্ট ০ms প্রি-ফেচ লিঙ্ক সহ */}
+          {/* কলাম ৩: কুইক লিঙ্কস */}
           <div>
             <h3 className="mb-4 font-body text-[13px] font-extrabold uppercase tracking-wider text-brand-light">
               {t('কুইক লিঙ্কস')}
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
-              <li><button className={colLinkClass} onClick={scrollTop}>{t('হোম')}</button></li>
-              <li><button className={colLinkClass} onClick={scrollToCategories}>{t('ক্যাটাগরি')}</button></li>
-              <li><Link href="/account" prefetch={true} className={colLinkClass}>{t('মাই প্রোফাইল')}</Link></li>
-              <li><Link href="/track-order" prefetch={true} className={colLinkClass}>{t('ট্র্যাক অর্ডার')}</Link></li>
+              <li>
+                <button className={colLinkClass} onClick={scrollTop}>
+                  {t('হোম')}
+                </button>
+              </li>
+              <li>
+                <button className={colLinkClass} onClick={scrollToCategories}>
+                  {t('ক্যাটাগরি')}
+                </button>
+              </li>
+              <li>
+                <Link href="/account" prefetch={true} className={colLinkClass}>
+                  {t('মাই প্রোফাইল')}
+                </Link>
+              </li>
+              <li>
+                <Link href="/track-order" prefetch={true} className={colLinkClass}>
+                  {t('ট্র্যাক অর্ডার')}
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/offers"
@@ -422,7 +451,6 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-
         </div>
 
         {/* বটম কপিরাইট বার */}
