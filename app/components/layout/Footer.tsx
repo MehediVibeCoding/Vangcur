@@ -195,46 +195,49 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট বডি-ওভারলে কাটআউট আর্কিটেকচার */}
-      <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
+      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="footer-top-wave-clip" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.038 C 0.18,0.068 0.35,0.015 0.55,0.015 C 0.72,0.015 0.88,0.065 1,0.035 L 1,1 L 0,1 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
+      <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* 🌊 ১. শীর্ষভাগে পেজ বডি কাটআউট ঢেউ (Top Body Cutout Wave Overlay) */}
-        <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none text-white dark:text-[#0B111E]">
-          <svg
-            viewBox="0 0 1440 140"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-12 sm:h-18 md:h-24 lg:h-28"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0,0 L1440,0 L1440,50 C1300,85 1160,25 960,25 C760,25 600,95 400,95 C220,95 100,45 0,60 Z"
+        {/* ছবির র্যাপার — শীর্ষভাগে আসল বডি ব্যাকগ্রাউন্ড স্বয়ংক্রিয়ভাবে প্রকাশ পাবে */}
+        <div
+          className="relative w-full"
+          style={{
+            clipPath: 'url(#footer-top-wave-clip)',
+            WebkitClipPath: 'url(#footer-top-wave-clip)',
+          }}
+        >
+          {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
+          <div className="relative aspect-[1000/1775] w-full md:hidden">
+            <Image
+              src="/footer-illustration-mobile.webp"
+              alt="Vangcur Gadgets Lifestyle"
+              fill
+              sizes="100vw"
+              className="object-cover object-bottom"
+              priority={false}
             />
-          </svg>
-        </div>
+          </div>
 
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
-        <div className="relative aspect-[1000/1775] w-full md:hidden">
-          <Image
-            src="/footer-illustration-mobile.webp"
-            alt="Vangcur Gadgets Lifestyle"
-            fill
-            sizes="100vw"
-            className="object-cover object-bottom"
-            priority={false}
-          />
-        </div>
-
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
-        <div className="relative hidden aspect-[2000/1333] w-full md:block">
-          <Image
-            src="/footer-illustration-desktop.webp"
-            alt="Vangcur Gadgets Lifestyle"
-            fill
-            sizes="100vw"
-            className="object-cover object-bottom"
-            priority={false}
-          />
+          {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
+          <div className="relative hidden aspect-[2000/1333] w-full md:block">
+            <Image
+              src="/footer-illustration-desktop.webp"
+              alt="Vangcur Gadgets Lifestyle"
+              fill
+              sizes="100vw"
+              className="object-cover object-bottom"
+              priority={false}
+            />
+          </div>
         </div>
 
         {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
