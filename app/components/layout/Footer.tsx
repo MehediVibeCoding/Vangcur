@@ -195,36 +195,46 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট ৩-লেয়ার ব্লেন্ডেড ওয়েভ আর্কিটেকচার */}
+      {/* ১. ছবির মাথার উপরে (বাইরে) অরিজিনাল ভেক্টর ওয়েভ লেয়ার */}
+      <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
+        <svg
+          viewBox="0 0 1440 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-8 sm:h-11 md:h-14"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+            fillOpacity="0.4"
+          />
+          <path
+            d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
+            fill="#D3E7FC"
+          />
+        </svg>
+      </div>
+
+      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট ওভারলে আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
-        
-        {/* 🌊 ১. শীর্ষভাগে ৩টি স্বতন্ত্র স্পষ্ট পানির ঢেউয়ের লেয়ার (Top 3-Layer Cascading Waves Overlay) */}
+        {/* ২. ছবির উপরে সরাসরি ওভারলে (ডুপ্লিকেট ওয়েভ লেয়ার) */}
         <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
-          <div className="h-6 sm:h-10 md:h-14 w-full bg-gradient-to-b from-white/95 via-white/50 to-transparent dark:from-[#0B111E]/95 dark:via-[#0B111E]/50 dark:to-transparent" />
           <svg
-            viewBox="0 0 1440 180"
+            viewBox="0 0 1440 60"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="absolute top-0 left-0 w-full h-14 sm:h-24 md:h-32 lg:h-36"
+            className="w-full h-8 sm:h-11 md:h-14"
             preserveAspectRatio="none"
           >
-            {/* পেছনের হালকা ঢেউ (Layer 1 - Soft Background Ripple) */}
             <path
-              d="M0,0 L1440,0 L1440,55 C1280,110 1140,40 940,85 C740,130 520,35 320,95 C180,135 60,70 0,90 Z"
+              d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
               fill="#D3E7FC"
-              fillOpacity="0.38"
+              fillOpacity="0.4"
             />
-            {/* মাঝের ভারসাম্যপূর্ণ ঢেউ (Layer 2 - Middle Fluid Wave) */}
             <path
-              d="M0,0 L1440,0 L1440,35 C1320,80 1160,25 980,65 C780,105 580,15 360,65 C200,100 80,45 0,60 Z"
+              d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
               fill="#D3E7FC"
-              fillOpacity="0.70"
-            />
-            {/* সামনের স্পষ্ট প্রধান ঢেউ (Layer 3 - Crisp Foreground Water Wave) */}
-            <path
-              d="M0,0 L1440,0 L1440,20 C1260,55 1100,10 920,40 C720,70 540,10 340,45 C180,70 70,25 0,35 Z"
-              fill="#D3E7FC"
-              fillOpacity="0.98"
             />
           </svg>
         </div>
@@ -253,7 +263,7 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
+        {/* ৩. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
         <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
           <svg
             viewBox="0 0 1440 160"
