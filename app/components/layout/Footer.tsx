@@ -195,46 +195,20 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* ১. ছবির মাথার উপরে (বাইরে) অরিজিনাল ভেক্টর ওয়েভ লেয়ার */}
-      <div className="w-full overflow-hidden leading-none pointer-events-none -mb-[1px]">
-        <svg
-          viewBox="0 0 1440 60"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-8 sm:h-11 md:h-14"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
-            fill="#D3E7FC"
-            fillOpacity="0.4"
-          />
-          <path
-            d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
-            fill="#D3E7FC"
-          />
-        </svg>
-      </div>
-
-      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট ওভারলে আর্কিটেকচার */}
+      {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট বডি-ওভারলে কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-[#D3E7FC]">
-        {/* ২. ছবির উপরে সরাসরি ওভারলে (ডুপ্লিকেট ওয়েভ লেয়ার) */}
-        <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
+        
+        {/* 🌊 ১. শীর্ষভাগে পেজ বডি কাটআউট ঢেউ (Top Body Cutout Wave Overlay) */}
+        <div className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none text-white dark:text-[#0B111E]">
           <svg
-            viewBox="0 0 1440 60"
-            fill="none"
+            viewBox="0 0 1440 140"
+            fill="currentColor"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-8 sm:h-11 md:h-14"
+            className="w-full h-12 sm:h-18 md:h-24 lg:h-28"
             preserveAspectRatio="none"
           >
             <path
-              d="M0,0 C320,50 680,60 1020,20 C1180,2 1340,10 1440,30 L1440,60 L0,60 Z"
-              fill="#D3E7FC"
-              fillOpacity="0.4"
-            />
-            <path
-              d="M0,20 C360,65 720,20 1080,48 C1240,60 1360,40 1440,25 L1440,60 L0,60 Z"
-              fill="#D3E7FC"
+              d="M0,0 L1440,0 L1440,50 C1300,85 1160,25 960,25 C760,25 600,95 400,95 C220,95 100,45 0,60 Z"
             />
           </svg>
         </div>
@@ -263,7 +237,7 @@ export default function Footer() {
           />
         </div>
 
-        {/* ৩. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
+        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
         <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
           <svg
             viewBox="0 0 1440 160"
