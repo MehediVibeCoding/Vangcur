@@ -194,9 +194,10 @@ export async function submitProductReview(
 
   // এডমিন বা অথরাইজড মডারেটর কি না যাচাই
   const isPrivileged = await checkIsReviewAdminOrMod(supabase, payload.userId);
+  let isVerified = false;
 
   if (!isPrivileged) {
-    const isVerified = await checkIsVerifiedBuyer(supabase, payload.productId, payload.userId);
+    isVerified = await checkIsVerifiedBuyer(supabase, payload.productId, payload.userId);
     if (!isVerified) {
       const limitCheck = await checkUnverifiedReviewDailyLimit(supabase, payload.userId);
       if (!limitCheck.allowed) {
@@ -220,7 +221,7 @@ export async function submitProductReview(
         review_text: text,
         image_url: sanitizedImageUrl,
         like_count: 0,
-        is_verified_buyer: isPrivileged,
+        is_verified_buyer: isVerified || isPrivileged,
         is_approved: isPrivileged, // মডারেটর রিভিউ দিলে সাথে সাথে লাইভ হবে
         is_rejected: false,
       })
@@ -228,6 +229,9 @@ export async function submitProductReview(
       .single();
 
     if (error) {
+      if (error.code === 'P0001') {
+        return { ok: false, limitExceeded: true, error: error.message };
+      }
       if (error.code === '23505') {
         return { ok: false, error: 'আপনি ইতিমধ্যে এই প্রোডাক্টটিতে একটি রিভিউ দিয়েছেন।' };
       }
