@@ -1,11 +1,22 @@
+// ফাইলের পাথ: app/sitemap.ts [REPLACE]
+// পরিবর্তন: guide_pages টেবিল থেকে পাবলিশড গাইড পেজগুলো fetch করে sitemap-এ যোগ করা হয়েছে (guideRoutes)।
 import type { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { fetchCustomProducts, productHref } from '@/lib/productData';
 import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
+import { fetchAllPublishedGuideSlugs } from '@/lib/guidePageData';
 
 const SITE_URL = 'https://vangcur.com';
 
 export const revalidate = 3600;
+
+const GUIDE_TYPE_PRIORITY: Record<string, number> = {
+  pillar: 0.85,
+  comparison: 0.75,
+  design_ideas: 0.7,
+  installation_guide: 0.65,
+  app_remote_guide: 0.65,
+};
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,16 +24,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let products: { id: string | number; name: string }[] = [];
   let categories: { id: string; name: string }[] = [];
+  let guidePages: { slug: string; updated_at: string; page_type: string }[] = [];
 
   if (supabaseUrl && supabaseKey) {
     try {
       const supabase = createClient(supabaseUrl, supabaseKey);
-      const [prods, cats] = await Promise.all([
+      const [prods, cats, guides] = await Promise.all([
         fetchCustomProducts(supabase),
         fetchCategories(supabase),
+        fetchAllPublishedGuideSlugs(supabase),
       ]);
       products = prods;
       categories = cats.filter((c) => c.id !== 'all');
+      guidePages = guides;
     } catch {
       // Database fallback
     }
@@ -93,5 +107,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  const guideRoutes: MetadataRoute.Sitemap = guidePages.map((g) => ({
+    url: `${SITE_URL}/guides/${g.slug}`,
+    lastModified: new Date(g.updated_at),
+    changeFrequency: 'monthly',
+    priority: GUIDE_TYPE_PRIORITY[g.page_type] ?? 0.7,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...guideRoutes];
 }

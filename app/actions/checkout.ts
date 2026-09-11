@@ -1,6 +1,7 @@
 'use server';
 
 import { after } from 'next/server';
+import { headers } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/serviceClient';
@@ -138,6 +139,27 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         if (fpOk === false) {
           return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
+      }
+
+      // 🛡️ IP-ভিত্তিক ব্যাকস্টপ — fingerprintId খালি/অ্যাডব্লকার দিয়ে ব্লকড হলেও
+      // (বা সরাসরি server action কল করে বাইপাস করার চেষ্টা হলেও), ভিজিটরের real IP
+      // ইউজার নিজে বদলাতে পারে না, তাই এটা একটা স্বাধীন নিরাপত্তা স্তর
+      try {
+        const hdrs = await headers();
+        const forwardedFor = hdrs.get('x-forwarded-for');
+        const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (hdrs.get('x-real-ip') || '');
+
+        const { data: ipOk, error: ipErr } = await service.rpc('check_and_set_ip_limit', { p_ip: clientIp });
+        if (ipErr) {
+          logError('[checkout] ip rate limit RPC error — fail-closed:', ipErr.message);
+          return fail(GENERIC_RETRY_MSG);
+        }
+        if (ipOk === false) {
+          return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
+        }
+      } catch (e) {
+        logError('[checkout] ip rate limit exception — fail-closed:', e);
+        return fail(GENERIC_RETRY_MSG);
       }
     } catch (e) {
       logError('[checkout] rate limit exception — fail-closed:', e);

@@ -846,6 +846,22 @@ export default function CheckoutPage() {
     confirmLockRef.current = true;
     setSubmitting(true);
 
+    // 🛠️ ফিক্স: আগে fingerprintIdRef শুধু mount-এ (fire-and-forget) সেট হতো —
+    // ইউজার ফর্ম দ্রুত সাবমিট করলে (বা autofill থাকলে) প্রমিজ রিজলভ হওয়ার আগেই
+    // খালি ভ্যালু পাঠিয়ে দিত, ফলে ডিভাইস-লিমিট চেকটাই স্কিপ হয়ে যেত। এখন সাবমিটের
+    // ঠিক আগে (সর্বোচ্চ ২.৫ সেকেন্ড অপেক্ষা করে) ভ্যালু নিশ্চিত করা হচ্ছে।
+    if (!fingerprintIdRef.current) {
+      try {
+        fingerprintIdRef.current = await Promise.race([
+          getFingerprintId(),
+          new Promise<string>((resolve) => setTimeout(() => resolve(''), 2500)),
+        ]);
+      } catch {
+        // ফিঙ্গারপ্রিন্ট সত্যিই না পাওয়া গেলেও চেকআউট আটকানো হবে না —
+        // সার্ভার-সাইড IP-ভিত্তিক ব্যাকস্টপ থাকায় এটা এখন নিরাপদ
+      }
+    }
+
     try {
       const result = await createOrder({
         name: name.trim(),

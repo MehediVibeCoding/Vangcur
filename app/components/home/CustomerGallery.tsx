@@ -48,6 +48,35 @@ function setCachedReviews(items: Review[]) {
   }
 }
 
+// 🛠️ ফিক্স: sessionStorage-এর ক্যাশ শুধু বর্তমান ট্যাব/সেশনের জন্য বাঁচে (~১০ মিনিট
+// TTL অথবা ট্যাব বন্ধ হওয়া পর্যন্ত)। এতদিন "liked" স্ট্যাটাস শুধু ওই ক্যাশেই রাখা
+// হতো — নতুন সেশনে (নতুন ট্যাব/ব্রাউজার রিস্টার্ট/TTL শেষ) ফ্রেশ DB ফেচ হলে liked
+// সবসময় false দিয়ে শুরু হতো, ফলে ইউজারের কাছে মনে হতো লাইক "মুছে" যাচ্ছে। রিভিউ
+// গ্যালারির মতোই এখানে localStorage-ভিত্তিক স্থায়ী liked-লিস্ট রাখা হলো, যা নতুন
+// সেশনেও টিকে থাকবে।
+const LIKED_GALLERY_KEY = 'vc_liked_gallery';
+
+function getLikedGalleryIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LIKED_GALLERY_KEY) || '[]');
+    return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markGalleryLiked(id: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const liked = getLikedGalleryIds();
+    liked.add(id);
+    localStorage.setItem(LIKED_GALLERY_KEY, JSON.stringify(Array.from(liked)));
+  } catch {
+    // ignore
+  }
+}
+
 function CameraPhotoIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -135,7 +164,9 @@ export default function CustomerGallery() {
 
     const cached = getCachedReviews();
     if (cached && cached.length > 0) {
-      setReviews(cached);
+      const likedIds = getLikedGalleryIds();
+      const withLiked = cached.map((r) => ({ ...r, liked: r.liked || likedIds.has(String(r.id)) }));
+      setReviews(withLiked);
       setActiveIdx(0);
       setLoaded(true);
       return;
@@ -150,7 +181,8 @@ export default function CustomerGallery() {
           .limit(30);
 
         if (!cancelled && !error && data && data.length > 0) {
-          const mapped = (data as Review[]).map((r) => ({ ...r, liked: false }));
+          const likedIds = getLikedGalleryIds();
+          const mapped = (data as Review[]).map((r) => ({ ...r, liked: likedIds.has(String(r.id)) }));
           setReviews(mapped);
           setCachedReviews(mapped);
           setActiveIdx(0);
@@ -276,6 +308,8 @@ export default function CustomerGallery() {
     e.stopPropagation();
     if (review.liked) return;
     const newCount = (parseInt(String(review.like_count), 10) || 0) + 1;
+
+    markGalleryLiked(String(review.id));
 
     setReviews((prev) => {
       const updated = prev.map((r) => (
