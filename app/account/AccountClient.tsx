@@ -414,10 +414,6 @@ export default function AccountClient() {
     router.push('/checkout');
   };
 
-  const openInvoice = (orderId: string | number) => {
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
-  };
-
   const currentTier = getTier(stats.completed);
 
   return (
@@ -1066,7 +1062,7 @@ export default function AccountClient() {
                     ) : (
                       <div className="flex flex-col gap-4">
                         {orders.slice(0, 5).map((o) => (
-                          <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                          <OrderCard key={o.id} order={o} />
                         ))}
                       </div>
                     )}

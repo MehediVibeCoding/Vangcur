@@ -38,22 +38,27 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
   const advance = Number(order.advancePaid ?? 200);
   const dueCod = Math.max(0, (order.total || 0) - advance);
 
-  const message = `🛍️ <b>নতুন অর্ডার এসেছে!</b>\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `📦 <b>অর্ডার নং:</b> ${order.orderNum}\n` +
-    `👤 <b>কাস্টমার:</b> ${order.name}\n` +
-    `📞 <b>ফোন:</b> <code>${order.phone}</code>\n` +
-    `📍 <b>ঠিকানা:</b> ${order.district ? `${order.district}, ` : ''}${order.address}\n` +
-    `${order.email ? `✉️ <b>ইমেইল:</b> ${order.email}\n` : ''}` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🛒 <b>পণ্যসমূহ:</b>\n${itemsText}\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🚚 <b>শিপিং চার্জ:</b> ৳${order.shippingCost.toLocaleString('en-US')}\n` +
-    `💰 <b>সর্বমোট বিল:</b> ৳${order.total.toLocaleString('en-US')}\n` +
-    `💳 <b>বিকাশ তথ্য:</b> ${paymentInfo}\n` +
-    `✅ <b>অগ্রিম প্রদেয়:</b> ৳${advance.toLocaleString('en-US')}\n` +
-    `💵 <b>বাকি বিল (COD):</b> ৳${dueCod.toLocaleString('en-US')}\n` +
-    `━━━━━━━━━━━━━━━━━━━━`;
+  // 🧾 ক্লিন, প্রফেশনাল টেক্সট ফরম্যাট — কোনো ইমোজি ছাড়া, শুধু বোল্ড লেবেল,
+  // কোড-ব্লক (ফোন/TxnID) ও ডিভাইডার লাইন দিয়ে সাজানো, যাতে মেসেজটা পরিষ্কার
+  // ও প্রফেশনাল দেখায়।
+  const DIVIDER = '─────────────────────';
+
+  const message = `<b>নতুন অর্ডার এসেছে</b>\n` +
+    `${DIVIDER}\n` +
+    `<b>অর্ডার নং:</b> ${order.orderNum}\n` +
+    `<b>কাস্টমার:</b> ${order.name}\n` +
+    `<b>ফোন:</b> <code>${order.phone}</code>\n` +
+    `<b>ঠিকানা:</b> ${order.district ? `${order.district}, ` : ''}${order.address}\n` +
+    `${order.email ? `<b>ইমেইল:</b> ${order.email}\n` : ''}` +
+    `${DIVIDER}\n` +
+    `<b>পণ্যসমূহ:</b>\n${itemsText}\n` +
+    `${DIVIDER}\n` +
+    `<b>শিপিং চার্জ:</b> ৳${order.shippingCost.toLocaleString('en-US')}\n` +
+    `<b>সর্বমোট বিল:</b> ৳${order.total.toLocaleString('en-US')}\n` +
+    `<b>বিকাশ তথ্য:</b> ${paymentInfo}\n` +
+    `<b>অগ্রিম প্রদেয়:</b> ৳${advance.toLocaleString('en-US')}\n` +
+    `<b>বাকি বিল (COD):</b> ৳${dueCod.toLocaleString('en-US')}\n` +
+    `${DIVIDER}`;
 
   try {
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {

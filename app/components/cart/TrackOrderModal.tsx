@@ -126,7 +126,12 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     const fetched: Order[] = [];
     results.forEach((res) => {
       if (res.status === 'fulfilled' && res.value) {
-        fetched.push(mapSupabaseOrderRow(res.value as Record<string, unknown>));
+        const mapped = mapSupabaseOrderRow(res.value as Record<string, unknown>);
+        // 🚫 বাতিল/রিজেক্টেড অর্ডার ট্র্যাকিং লিস্টে দেখানো হয় না — এডমিন
+        // থেকে কনফার্ম করা চলমান অর্ডারই শুধু গ্রাহক ট্র্যাক করতে পারবেন।
+        if (mapped.status !== 'cancelled' && mapped.status !== 'rejected') {
+          fetched.push(mapped);
+        }
       }
     });
 
@@ -163,12 +168,14 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     return String(o.orderNum).toLowerCase().includes(q);
   });
 
-  const openInvoice = (orderId: string | number) => {
+  const openInvoice = (_orderId: string | number) => {
     onClose();
-    // মডাল বন্ধ হওয়ার effect cleanup যেন নিচের router.push()-কে
-    // deferred history.back() দিয়ে উল্টে না দেয়।
+    // মডাল বন্ধ হওয়ার effect cleanup যেন নিচের OrderCard-এর নিজস্ব
+    // router.push()-কে (যেটা এখন এই কলব্যাকের বাইরে ঘটে) deferred
+    // history.back() দিয়ে উল্টে না দেয়। এখানে আমরা নিজেরা আর push
+    // করছি না — সেটা করলে ইনভয়েস পেজে দুটো ডুপ্লিকেট হিস্ট্রি এন্ট্রি
+    // জমত, যেটার কারণে "ফিরে যান" চাপলে লুপে আটকে যাওয়ার বাগ হতো।
     suppressHistoryCleanup();
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}&from=track`);
   };
 
   const handleOpenLogin = () => {

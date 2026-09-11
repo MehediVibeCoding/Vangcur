@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -27,7 +26,6 @@ const MAX_ORDER_QUERY_LEN = 20;
 
 export default function AccountOrdersClient() {
   const { t, lang } = useT();
-  const router = useRouter();
   const supabase = useRef(createClient()).current;
 
   const cartQty = useCartStore((s) => cartCount(s.cart));
@@ -81,10 +79,6 @@ export default function AccountOrdersClient() {
     if (!q) return orders;
     return orders.filter((o) => String(o.orderNum).toLowerCase().includes(q));
   }, [orders, query]);
-
-  const openInvoice = (orderId: string | number) => {
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}`);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
@@ -189,7 +183,7 @@ export default function AccountOrdersClient() {
                 ) : (
                   <div className="flex flex-col gap-4">
                     {filteredOrders.map((o) => (
-                      <OrderCard key={o.id} order={o} onInvoice={openInvoice} />
+                      <OrderCard key={o.id} order={o} />
                     ))}
                   </div>
                 )}

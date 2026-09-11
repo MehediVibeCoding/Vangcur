@@ -98,7 +98,12 @@ export default function TrackOrderClient() {
       const fetched: Order[] = [];
       results.forEach((res) => {
         if (res.status === 'fulfilled' && res.value) {
-          fetched.push(mapSupabaseOrderRow(res.value as Record<string, unknown>));
+          const mapped = mapSupabaseOrderRow(res.value as Record<string, unknown>);
+          // 🚫 বাতিল/রিজেক্টেড অর্ডার ট্র্যাকিং লিস্টে দেখানো হয় না — এডমিন
+          // থেকে কনফার্ম করা চলমান অর্ডারই শুধু গ্রাহক ট্র্যাক করতে পারবেন।
+          if (mapped.status !== 'cancelled' && mapped.status !== 'rejected') {
+            fetched.push(mapped);
+          }
         }
       });
 
@@ -110,10 +115,6 @@ export default function TrackOrderClient() {
       setLoading(false);
     })();
   }, [currentUser, router, supabase]);
-
-  const openInvoice = (orderId: string | number) => {
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(orderId))}&from=track`);
-  };
 
   const handleOpenLogin = () => {
     setLoginOpen(true);
@@ -175,7 +176,7 @@ export default function TrackOrderClient() {
               <div className="space-y-4">
                 <div className="space-y-3.5">
                   {orders.map((o) => (
-                    <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
+                    <OrderCard key={o.id} order={o} from="track" />
                   ))}
                 </div>
 

@@ -5,17 +5,47 @@ import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
+const SITE_URL = 'https://vangcur.com';
+
 export async function generateMetadata(): Promise<Metadata> {
   const lang = await getServerLang();
+  const title = 'Vangcur';
+  const description = lang === 'en'
+    ? 'Vangcur — Gadgets, RGB Lights, Crystal Items & Accessories'
+    : 'ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ';
+
   return {
-    title: 'Vangcur',
-    description: lang === 'en'
-      ? 'Vangcur — Gadgets, RGB Lights, Crystal Items & Accessories'
-      : 'ভাঙচুর — গ্যাজেট, RGB লাইট, ক্রিস্টাল আইটেম ও অ্যাক্সেসরিজ',
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: title,
+      template: '%s | Vangcur',
+    },
+    description,
     icons: {
       icon: '/vangcur-logo.png',
       shortcut: '/vangcur-logo.png',
       apple: '/vangcur-logo.png',
+    },
+    // 🔗 মেসেঞ্জার/ফেসবুক/হোয়াটসঅ্যাপে vangcur.com শেয়ার করলে যাতে
+    // স্বয়ংক্রিয়ভাবে প্রিভিউ কার্ড (লোগো + টাইটেল + বিবরণ) ফুটে ওঠে —
+    // এটাই সাইটের ডিফল্ট/ফলব্যাক OG ট্যাগ। প্রোডাক্ট/অফার/ক্যাটাগরি পেজগুলো
+    // নিজেদের generateMetadata()-এ নিজস্ব openGraph/twitter দিয়ে এটা ওভাররাইড
+    // করে (product/[slug]/page.tsx, offers/page.tsx, category/[slug]/page.tsx),
+    // তাই এখানকার ডিফল্ট মূলত হোমপেজ ও বাকি সাধারণ পেজগুলোর জন্য প্রযোজ্য হবে।
+    openGraph: {
+      type: 'website',
+      url: SITE_URL,
+      title,
+      description,
+      siteName: 'Vangcur',
+      images: [{ url: '/vangcur-logo.png', width: 991, height: 365, alt: 'Vangcur' }],
+      locale: lang === 'en' ? 'en_US' : 'bn_BD',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/vangcur-logo.png'],
     },
   };
 }

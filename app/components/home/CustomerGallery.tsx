@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
+import { prefersReducedMotion, makeHeartBurst, BurstHeart, type HeartParticle } from '@/lib/wishHeartBurst';
 
 interface Review {
   id: number | string;
@@ -88,7 +89,17 @@ export default function CustomerGallery() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [beatId, setBeatId] = useState<number | string | null>(null);
+  // 💖 প্রোডাক্ট কার্ডের সাথে একদম সেম হার্ট-বার্স্ট এনিমেশন (@/lib/wishHeartBurst) —
+  // reviewId ধরে-ধরে আলাদা burst ট্র্যাক করা হয়, যাতে একসাথে একাধিক কার্ড দৃশ্যমান
+  // থাকলেও (carousel-এ ±2 অফসেট পর্যন্ত) প্রতিটার এনিমেশন স্বাধীনভাবে চলে।
+  const [bursts, setBursts] = useState<Record<string, { id: number; particles: HeartParticle[] }>>({});
+  const burstSeedRef = useRef(0);
+  const burstTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => () => {
+    burstTimersRef.current.forEach((timer) => clearTimeout(timer));
+    burstTimersRef.current.clear();
+  }, []);
 
   // 🔍 Interactive Lightbox Zoom & Pan State
   const [zoomImageUrl, setZoomImageUrl] = useState<string | null>(null);
@@ -274,8 +285,23 @@ export default function CustomerGallery() {
       return updated;
     });
 
-    setBeatId(review.id);
-    setTimeout(() => setBeatId((cur) => (cur === review.id ? null : cur)), 400);
+    if (!prefersReducedMotion()) {
+      const key = String(review.id);
+      const seed = ++burstSeedRef.current;
+      const existingTimer = burstTimersRef.current.get(key);
+      if (existingTimer) clearTimeout(existingTimer);
+      setBursts((prev) => ({ ...prev, [key]: { id: seed, particles: makeHeartBurst(seed) } }));
+      const timer = setTimeout(() => {
+        setBursts((prev) => {
+          if (prev[key]?.id !== seed) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        burstTimersRef.current.delete(key);
+      }, 850);
+      burstTimersRef.current.set(key, timer);
+    }
 
     if (review.id) {
       (async () => {
@@ -538,16 +564,34 @@ export default function CustomerGallery() {
                             {likeCount}
                           </span>
                         )}
-                        <button
-                          type="button"
-                          className={`flex h-[36px] w-[36px] items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-md shadow-md transition-transform duration-200 [-webkit-tap-highlight-color:transparent] hover:bg-black/65 active:scale-90 ${
-                            beatId === r.id ? 'animate-heartbeat' : ''
-                          }`}
-                          onClick={(e) => handleHeart(e, r)}
-                          aria-label={t('লাইক')}
-                        >
-                          <HeartIcon filled={r.liked} />
-                        </button>
+                        <div className="relative h-[36px] w-[36px]">
+                          <button
+                            type="button"
+                            className="flex h-full w-full items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-md shadow-md transition-transform duration-200 [-webkit-tap-highlight-color:transparent] hover:bg-black/65 active:scale-90"
+                            onClick={(e) => handleHeart(e, r)}
+                            aria-label={t('লাইক')}
+                          >
+                            <motion.span
+                              key={bursts[String(r.id)] ? `pop-${bursts[String(r.id)].id}` : 'idle'}
+                              initial={bursts[String(r.id)] ? { scale: 1 } : false}
+                              animate={bursts[String(r.id)] ? { scale: [1, 1.35, 0.92, 1.05, 1] } : { scale: 1 }}
+                              transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+                              className="flex h-full w-full items-center justify-center"
+                            >
+                              <HeartIcon filled={r.liked} />
+                            </motion.span>
+                          </button>
+
+                          <AnimatePresence>
+                            {bursts[String(r.id)] && (
+                              <div className="pointer-events-none absolute inset-0">
+                                {bursts[String(r.id)].particles.map((pt) => (
+                                  <BurstHeart key={pt.id} p={pt} />
+                                ))}
+                              </div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -45,6 +45,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       locale: lang === 'en' ? 'en_US' : 'bn_BD',
       siteName: 'Vangcur',
+      images: [{ url: '/vangcur-logo.png', width: 991, height: 365, alt: 'Vangcur' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/vangcur-logo.png'],
     },
   };
 }

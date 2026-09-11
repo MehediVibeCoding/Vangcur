@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
@@ -71,8 +70,6 @@ interface CheckoutErrors {
   eTxn?: string;
   eL4?: string;
 }
-
-const MotionLink = motion.create(Link);
 
 const checkoutStepVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 24 : -24 }),
@@ -1012,9 +1009,8 @@ export default function CheckoutPage() {
                 </h2>
               </div>
               {step === 1 ? (
-                <MotionLink
-                  href="/"
-                  prefetch={true}
+                <motion.button
+                  type="button"
                   aria-label={t('বন্ধ করুন')}
                   title={t('বন্ধ করুন')}
                   onClick={() => {
@@ -1024,13 +1020,20 @@ export default function CheckoutPage() {
                     } catch {
                       // ignore
                     }
+                    // 🔁 এখানে ইচ্ছাকৃতভাবে router.replace('/') ব্যবহার করা হচ্ছে —
+                    // চেকআউটে যে পথ (অ্যাকাউন্ট/হোম/ড্রাফট-রিকভারি, যেখান থেকেই)
+                    // দিয়েই আসা হোক না কেন, ক্রস বাটন সবসময় ১০০% নিশ্চিতভাবে
+                    // হোমপেজে (/) নিয়ে যাবে, এবং চেকআউট এন্ট্রিটা হিস্ট্রি
+                    // স্ট্যাক থেকে replace হয়ে যাবে বলে হোম থেকে ফিজিক্যাল ব্যাক
+                    // চাপলে আবার চেকআউটে ফিরে আসার কোনো সুযোগ থাকবে না।
+                    router.replace('/');
                   }}
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45 no-underline"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45"
                 >
                   <IconClose />
-                </MotionLink>
+                </motion.button>
               ) : (
                 <motion.button
                   onClick={() => goBack(step - 1)}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useT } from '@/lib/i18n/useT';
@@ -9,6 +9,7 @@ import { showToast } from '@/lib/toast';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { uploadReviewImageToCloudinary } from '@/lib/cloudinaryUpload';
+import { prefersReducedMotion, makeHeartBurst, BurstHeart, type HeartParticle } from '@/lib/wishHeartBurst';
 import UserAvatar from './UserAvatar';
 import { VerifiedCustomerBadge } from './VerifiedBadges';
 import { fetchProfileCompletionMap } from '@/lib/profileData';
@@ -122,6 +123,15 @@ export default function ProductReviews({
   const [isAdmin, setIsAdmin] = useState(false);
   const [likedList, setLikedList] = useState<string[]>([]);
   const [activeCardIdx, setActiveCardIdx] = useState(0);
+  // 💖 প্রোডাক্ট কার্ডের সাথে একদম সেম হার্ট-বার্স্ট এনিমেশন (@/lib/wishHeartBurst)
+  const [likeBursts, setLikeBursts] = useState<Record<string, { id: number; particles: HeartParticle[] }>>({});
+  const likeBurstSeedRef = useRef(0);
+  const likeBurstTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => () => {
+    likeBurstTimersRef.current.forEach((timer) => clearTimeout(timer));
+    likeBurstTimersRef.current.clear();
+  }, []);
   // 🆕 রিভিউকারীদের প্রোফাইল-সম্পূর্ণতার ম্যাপ (userId -> সবুজ ব্যাজ দেখাবে কিনা)
   const [verifiedMap, setVerifiedMap] = useState<Record<string, boolean>>({});
 
@@ -287,6 +297,23 @@ export default function ProductReviews({
     setReviews((prev) => prev.map((r) => (
       String(r.id) === idStr ? { ...r, like_count: (r.like_count || 0) + 1 } : r
     )));
+
+    if (!prefersReducedMotion()) {
+      const seed = ++likeBurstSeedRef.current;
+      const existingTimer = likeBurstTimersRef.current.get(idStr);
+      if (existingTimer) clearTimeout(existingTimer);
+      setLikeBursts((prev) => ({ ...prev, [idStr]: { id: seed, particles: makeHeartBurst(seed) } }));
+      const timer = setTimeout(() => {
+        setLikeBursts((prev) => {
+          if (prev[idStr]?.id !== seed) return prev;
+          const next = { ...prev };
+          delete next[idStr];
+          return next;
+        });
+        likeBurstTimersRef.current.delete(idStr);
+      }, 850);
+      likeBurstTimersRef.current.set(idStr, timer);
+    }
 
     await toggleReviewLike(supabase, reviewId);
   };
@@ -583,6 +610,34 @@ export default function ProductReviews({
     setIsPanning(false);
   };
 
+  // 💖 লাইক বাটনের আইকন + বার্স্ট পার্টিকল একসাথে — লাইটবক্স ও গ্রিড দুই ভিউয়ের
+  // বাটনেই একই এনিমেশন দেখাতে রিইউজ করা হচ্ছে।
+  const AnimatedLikeHeart = ({ reviewId, filled }: { reviewId: number | string; filled: boolean }) => {
+    const burst = likeBursts[String(reviewId)];
+    return (
+      <span className="relative inline-flex h-4 w-4 items-center justify-center">
+        <motion.span
+          key={burst ? `pop-${burst.id}` : 'idle'}
+          initial={burst ? { scale: 1 } : false}
+          animate={burst ? { scale: [1, 1.35, 0.92, 1.05, 1] } : { scale: 1 }}
+          transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+          className="flex items-center justify-center"
+        >
+          <HeartIcon filled={filled} />
+        </motion.span>
+        <AnimatePresence>
+          {burst && (
+            <div className="pointer-events-none absolute inset-0">
+              {burst.particles.map((pt) => (
+                <BurstHeart key={pt.id} p={pt} />
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
+      </span>
+    );
+  };
+
   return (
     <div className="py-1">
       <div className="mb-5 flex flex-col gap-1">
@@ -773,7 +828,7 @@ export default function ProductReviews({
                             onClick={(e) => handleLikeClick(e, item.reviewId)}
                             className={`flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
                           >
-                            <HeartIcon filled={isLiked} />
+                            <AnimatedLikeHeart reviewId={item.reviewId} filled={isLiked} />
                             <span className="font-body text-[10.5px] font-bold text-white">
                               {item.likeCount || 0}
                             </span>
@@ -821,7 +876,7 @@ export default function ProductReviews({
                             onClick={(e) => handleLikeClick(e, item.reviewId)}
                             className={`flex h-7 items-center gap-1 rounded-full px-2 transition-transform active:scale-90 ${isLiked ? 'bg-red-50 text-[#FF5A6E]' : 'bg-surface-muted text-muted'}`}
                           >
-                            <HeartIcon filled={isLiked} />
+                            <AnimatedLikeHeart reviewId={item.reviewId} filled={isLiked} />
                             <span className="font-body text-[10.5px] font-bold">
                               {item.likeCount || 0}
                             </span>

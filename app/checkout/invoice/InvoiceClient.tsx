@@ -198,13 +198,20 @@ export default function InvoiceClient() {
 
     const from = searchParams.get('from');
 
+    // 🔁 এখানে ইচ্ছাকৃতভাবে router.replace() ব্যবহার করা হচ্ছে, router.push() নয়।
+    // ইনভয়েস পেজে ঢোকার সময় হিস্ট্রি স্ট্যাকে ইতিমধ্যে একটা এন্ট্রি যোগ হয়ে গেছে
+    // (ট্র্যাক-অর্ডার/অ্যাকাউন্ট পেজ থেকে)। এখান থেকে push করে ফিরে গেলে স্ট্যাকে
+    // ওই একই পেজের আরেকটা ডুপ্লিকেট এন্ট্রি জমত, যার ফলে ব্যবহারকারী ফিজিক্যাল
+    // ব্যাক বাটনে চাপ দিলে আবার এই ইনভয়েস পেজেই ফিরে আসতেন (ইনভয়েস ↔ ট্র্যাক-অর্ডার
+    // অসীম লুপ)। replace() বর্তমান (ইনভয়েস) এন্ট্রিটাকেই বদলে দেয়, তাই স্ট্যাক
+    // পরিষ্কার থাকে এবং লুপ তৈরি হয় না।
     if (from === 'account') {
-      router.push('/account/orders');
+      router.replace('/account/orders');
       return;
     }
 
     if (from === 'track') {
-      router.push('/track-order');
+      router.replace('/track-order');
       return;
     }
 

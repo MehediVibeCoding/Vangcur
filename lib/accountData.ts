@@ -376,7 +376,16 @@ function mapOrderRow(o: Record<string, any>): Order {
 export async function fetchMyOrders(supabase: SupabaseClient, currentUser: CurrentUser | null): Promise<Order[]> {
   if (!currentUser) return [];
   try {
-    let q = supabase.from('orders').select('*').order('created_at', { ascending: false });
+    // 🚫 বাতিল (cancelled) ও রিজেক্টেড (rejected) অর্ডার ইচ্ছাকৃতভাবে বাদ —
+    // এগুলো কোনো না কোনো কারণে (যেমন ফেক অর্ডার সন্দেহ) বাতিল হয়েছে, তাই
+    // কাস্টমারের অর্ডার হিস্ট্রি/ট্র্যাকিংয়ে দেখানোর দরকার নেই। শুধু
+    // অ্যাডমিন-কনফার্মড/চলমান অর্ডারগুলোই (pending/confirmed/shipped/delivered)
+    // এখানে দেখানো হবে।
+    let q = supabase
+      .from('orders')
+      .select('*')
+      .not('status', 'in', '(cancelled,rejected)')
+      .order('created_at', { ascending: false });
     if (currentUser.id) q = q.eq('user_id', currentUser.id);
     const { data, error } = await q;
     // 🛡️ আসল এরর হলে এখানেই throw করা হচ্ছে — সত্যিকারের খালি ফলাফল (data = [])
@@ -388,7 +397,9 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
     logWarn('[Vangcur] fetchMyOrders ব্যর্থ হয়েছে:', e);
     try {
       const all: Order[] = JSON.parse(localStorage.getItem('vc_orders') || '[]');
-      return all.filter((o) => o.userId === currentUser?.id || o.custEmail === currentUser?.email);
+      return all
+        .filter((o) => o.userId === currentUser?.id || o.custEmail === currentUser?.email)
+        .filter((o) => o.status !== 'cancelled' && o.status !== 'rejected');
     } catch {
       return [];
     }
