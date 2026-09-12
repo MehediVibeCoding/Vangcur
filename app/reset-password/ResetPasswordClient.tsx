@@ -165,7 +165,7 @@ export default function ResetPasswordClient() {
         <div className={`relative overflow-hidden px-7 text-center ${status === 'done' ? 'pb-2 pt-6' : 'pb-5 pt-8'}`}>
           <HeaderDecor />
           {status !== 'done' && (
-            <h2 className="relative z-[1] font-display text-[21px] font-bold text-ink">{t('নতুন পাসওয়ার্ড সেট করুন')}</h2>
+            <h2 className="relative z-[1] font-body text-[21px] font-extrabold text-ink">{t('নতুন পাসওয়ার্ড সেট করুন')}</h2>
           )}
           {status === 'ready' && (
             <p className="relative z-[1] mt-1.5 font-body text-[13px] text-muted">
@@ -258,4 +258,4 @@ export default function ResetPasswordClient() {
       </div>
     </div>
   );
-}
+        }
