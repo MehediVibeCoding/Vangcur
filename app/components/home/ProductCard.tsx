@@ -329,7 +329,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                 {/* Refined Crystal Liquid Glass Button (Based on Image 3 with Fresh Ice-Sky Tint) */}
                 <motion.button
                   type="button"
-                  className="relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/90 bg-gradient-to-r from-[#F0F8FF]/95 via-[#E0F2FE]/95 to-[#F0F8FF]/95 font-body text-[12px] font-extrabold tracking-wide text-[#0284C7] shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_3px_10px_rgba(0,88,199,0.12)] transition-colors duration-150 hover:border-white hover:text-[#0062E3] hover:shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_4px_14px_rgba(0,88,199,0.18)] sm:h-9 sm:text-[13px] lg:h-10"
+                  className="order-btn-glow relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/90 font-body text-[12px] font-extrabold tracking-wide shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_3px_10px_rgba(0,88,199,0.12)] sm:h-9 sm:text-[13px] lg:h-10"
                   onClick={handleOrderNowDirect}
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 18 }}
