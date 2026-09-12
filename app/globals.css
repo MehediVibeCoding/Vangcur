@@ -292,6 +292,79 @@
   }
 }
 
+/* ৩ক. Order Button — Radial Glow Color System (শুধু কালার, শেপ/সাইজ অপরিবর্তিত)
+   প্যালেট শুধু হালকা ব্লু ফ্যামিলি থেকে: #44A7FC (brand-light) + তার চেয়ে হালকা #C3DEFC
+   (brand-bg) + আরও হালকা #F0F8FF/#E0F2FE — কোনো গাঢ়/vivid নীল (#005EFC, #0058C7,
+   dark navy) নেই, কারণ ওগুলো এই সাইটের আসল ব্র্যান্ড কালার না। */
+.order-btn-glow {
+  --obg-pos-x: 40%;
+  --obg-pos-y: 140%;
+  --obg-spread-x: 130%;
+  --obg-spread-y: 170%;
+  --obg-color-1: #F0F8FF;
+  --obg-color-2: #E0F2FE;
+  --obg-color-3: #C3DEFC;
+  --obg-color-4: #44A7FC;
+  --obg-color-5: #C3DEFC;
+  --obg-stop-1: 37.35%;
+  --obg-stop-2: 61.36%;
+  --obg-stop-3: 78.42%;
+  --obg-stop-4: 93.52%;
+  --obg-stop-5: 100%;
+  color: #0284C7;
+  background: radial-gradient(
+    var(--obg-spread-x) var(--obg-spread-y) at var(--obg-pos-x) var(--obg-pos-y),
+    var(--obg-color-1) var(--obg-stop-1),
+    var(--obg-color-2) var(--obg-stop-2),
+    var(--obg-color-3) var(--obg-stop-3),
+    var(--obg-color-4) var(--obg-stop-4),
+    var(--obg-color-5) var(--obg-stop-5)
+  );
+  transition:
+    --obg-pos-x .75s, --obg-pos-y .75s,
+    --obg-spread-x .75s, --obg-spread-y .75s,
+    --obg-color-1 .75s, --obg-color-2 .75s, --obg-color-3 .75s, --obg-color-4 .75s, --obg-color-5 .75s,
+    --obg-stop-1 .75s, --obg-stop-2 .75s, --obg-stop-3 .75s, --obg-stop-4 .75s, --obg-stop-5 .75s,
+    color .3s ease;
+}
+@property --obg-pos-x { syntax: '<percentage>'; initial-value: 40%; inherits: false; }
+@property --obg-pos-y { syntax: '<percentage>'; initial-value: 140%; inherits: false; }
+@property --obg-spread-x { syntax: '<percentage>'; initial-value: 130%; inherits: false; }
+@property --obg-spread-y { syntax: '<percentage>'; initial-value: 170%; inherits: false; }
+@property --obg-color-1 { syntax: '<color>'; initial-value: #F0F8FF; inherits: false; }
+@property --obg-color-2 { syntax: '<color>'; initial-value: #E0F2FE; inherits: false; }
+@property --obg-color-3 { syntax: '<color>'; initial-value: #C3DEFC; inherits: false; }
+@property --obg-color-4 { syntax: '<color>'; initial-value: #44A7FC; inherits: false; }
+@property --obg-color-5 { syntax: '<color>'; initial-value: #C3DEFC; inherits: false; }
+@property --obg-stop-1 { syntax: '<percentage>'; initial-value: 37.35%; inherits: false; }
+@property --obg-stop-2 { syntax: '<percentage>'; initial-value: 61.36%; inherits: false; }
+@property --obg-stop-3 { syntax: '<percentage>'; initial-value: 78.42%; inherits: false; }
+@property --obg-stop-4 { syntax: '<percentage>'; initial-value: 93.52%; inherits: false; }
+@property --obg-stop-5 { syntax: '<percentage>'; initial-value: 100%; inherits: false; }
+
+.order-btn-glow:hover,
+.order-btn-glow:focus-visible,
+.order-btn-glow:active {
+  --obg-pos-x: 0%;
+  --obg-pos-y: 120%;
+  --obg-spread-x: 110%;
+  --obg-spread-y: 110%;
+  --obg-color-1: #F0F8FF;
+  --obg-color-2: #C3DEFC;
+  --obg-color-3: #44A7FC;
+  --obg-color-4: #C3DEFC;
+  --obg-color-5: #E0F2FE;
+  --obg-stop-1: 0%;
+  --obg-stop-2: 10%;
+  --obg-stop-3: 35.44%;
+  --obg-stop-4: 71.34%;
+  --obg-stop-5: 150%;
+  color: #0062E3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-btn-glow { transition: color .2s ease; }
+}
+
 /* ৪. Skeleton ↔ Content ক্রসফেড */
 .skeleton-fade-out {
   animation: fadeOutSoft 220ms ease forwards;
