@@ -414,24 +414,36 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
 
 /* ────────────────────────────── RELATED LINKS ────────────────────────────── */
 
-function RelatedLinksBlockView({ block, lang }: { block: RelatedLinksBlock; lang: Lang }) {
+function RelatedLinksBlockView({
+  block,
+  lang,
+  hrefMap,
+}: {
+  block: RelatedLinksBlock;
+  lang: Lang;
+  /** targetPageId → রেজলভড URL — resolveRelatedLinkHrefs() থেকে সার্ভারে আগে থেকে আনা */
+  hrefMap?: Record<string, string>;
+}) {
   return (
     <WideContainer className="py-10">
       <BlockHeading text={block.heading} lang={lang} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {block.items.map((item, i) => (
-          <Link
-            key={i}
-            href={item.href}
-            className="flex items-center gap-3 rounded-2xl border border-border-base bg-white/95 p-4 shadow-xs transition-colors hover:border-brand-light/40"
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
-              <GuideIcon name={item.icon} />
-            </div>
-            <span className="font-body text-[13.5px] font-bold text-ink">{t(item.title, lang)}</span>
-            <GuideArrowRightIcon className="ml-auto h-4 w-4 shrink-0 text-muted" />
-          </Link>
-        ))}
+        {block.items.map((item, i) => {
+          const resolvedHref = (item.targetPageId && hrefMap?.[item.targetPageId]) || item.href || '#';
+          return (
+            <Link
+              key={i}
+              href={resolvedHref}
+              className="flex items-center gap-3 rounded-2xl border border-border-base bg-white/95 p-4 shadow-xs transition-colors hover:border-brand-light/40"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
+                <GuideIcon name={item.icon} />
+              </div>
+              <span className="font-body text-[13.5px] font-bold text-ink">{t(item.title, lang)}</span>
+              <GuideArrowRightIcon className="ml-auto h-4 w-4 shrink-0 text-muted" />
+            </Link>
+          );
+        })}
       </div>
     </WideContainer>
   );
@@ -459,13 +471,14 @@ function GalleryBlockView({ block, lang }: { block: GalleryBlock; lang: Lang }) 
 
 /* ────────────────────────────── CTA ────────────────────────────── */
 
-function CtaBlockView({ block, lang }: { block: CtaBlock; lang: Lang }) {
+function CtaBlockView({ block, lang, hrefMap }: { block: CtaBlock; lang: Lang; hrefMap?: Record<string, string> }) {
+  const resolvedHref = (block.targetPageId && hrefMap?.[block.targetPageId]) || block.href || '#';
   return (
     <Container className="py-8">
       <div className="flex flex-col items-center gap-4 rounded-3xl bg-gradient-to-br from-[#F0F7FF] via-white to-white p-8 text-center shadow-sh1 ring-1 ring-brand-light/20">
         <h2 className="font-body text-[19px] font-extrabold text-ink">{t(block.heading, lang)}</h2>
         <Link
-          href={block.href}
+          href={resolvedHref}
           className="shimmer-sheen rounded-full bg-gradient-to-r from-info to-brand-light px-7 py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] active:scale-95"
         >
           {t(block.buttonLabel, lang)}
@@ -481,11 +494,14 @@ export function GuideBlockRenderer({
   block,
   lang,
   productSnapshots,
+  relatedLinkHrefs,
 }: {
   block: GuideBlock;
   lang: Lang;
   /** productRecommendation ব্লকের জন্য সার্ভার থেকে আগে থেকে ফেচ করা প্রোডাক্ট ডাটা, productId → snapshot */
   productSnapshots?: Record<number, ProductSnapshot>;
+  /** relatedLinks/cta ব্লকের targetPageId → রেজলভড URL (resolveRelatedLinkHrefs() থেকে) */
+  relatedLinkHrefs?: Record<string, string>;
 }) {
   switch (block.type) {
     case 'hero':
@@ -515,11 +531,11 @@ export function GuideBlockRenderer({
     case 'faq':
       return <FaqBlockView block={block} lang={lang} />;
     case 'relatedLinks':
-      return <RelatedLinksBlockView block={block} lang={lang} />;
+      return <RelatedLinksBlockView block={block} lang={lang} hrefMap={relatedLinkHrefs} />;
     case 'gallery':
       return <GalleryBlockView block={block} lang={lang} />;
     case 'cta':
-      return <CtaBlockView block={block} lang={lang} />;
+      return <CtaBlockView block={block} lang={lang} hrefMap={relatedLinkHrefs} />;
     default:
       return null;
   }
