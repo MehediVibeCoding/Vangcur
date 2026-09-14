@@ -15,6 +15,7 @@ import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { fetchProductDetail } from '@/lib/productDetailData';
 import { trackProductView } from '@/lib/visitorTracking';
 import { trackViewItem, trackAddToCart } from '@/lib/analytics';
+import { renderLinkedText } from '@/lib/linkedText';
 import {
   DEFAULT_WA_LINK, DEFAULT_MSG_LINK, computeWaLink, computeMsgLink, fetchContactSettings, subscribeContactSettings,
 } from '@/lib/floatButtonsData';
@@ -263,7 +264,7 @@ function FeatureItem({ text }: { text: string }) {
     return (
       <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
         <div className="mt-0.5 shrink-0 text-base leading-none">{pre.trim() || <CheckBadgeIcon />}</div>
-        <div className="text-[14px] leading-[1.6] text-ink"><strong>{title}</strong>{rest}</div>
+        <div className="text-[14px] leading-[1.6] text-ink"><strong>{title}</strong>{renderLinkedText(rest)}</div>
       </div>
     );
   }
@@ -272,7 +273,7 @@ function FeatureItem({ text }: { text: string }) {
     return (
       <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
         <div className="mt-0.5 shrink-0 text-base leading-none">{emojiMatch[1]}</div>
-        <div className="text-[14px] leading-[1.6] text-ink">{emojiMatch[2]}</div>
+        <div className="text-[14px] leading-[1.6] text-ink">{renderLinkedText(emojiMatch[2])}</div>
       </div>
     );
   }
@@ -1110,7 +1111,7 @@ export default function ProductDetailClient({
             {(prod.longDesc || prod.desc) ? (
               (prod.longDesc || prod.desc)!.split('\n\n').map((p, i) => (
                 <p key={i} className="mb-3.5">
-                  {p.split('\n').map((line, j) => (j === 0 ? line : [<br key={j} />, line]))}
+                  {p.split('\n').map((line, j) => (j === 0 ? renderLinkedText(line) : [<br key={j} />, renderLinkedText(line)]))}
                 </p>
               ))
             ) : (
@@ -1162,7 +1163,7 @@ export default function ProductDetailClient({
           {prod.powerInfo && (
             <SpecCalloutBox icon="🔌" title={t('পাওয়ার / কানেকশন তথ্য')} tone="amber">
               {prod.powerInfo.split('\n').filter((l) => l.trim()).map((l, i) => (
-                <div key={i}>{l.trim()}</div>
+                <div key={i}>{renderLinkedText(l.trim())}</div>
               ))}
             </SpecCalloutBox>
           )}
@@ -1170,7 +1171,7 @@ export default function ProductDetailClient({
           {pkg && (
             <SpecCalloutBox icon="📦" title={t('Packaging Content')} tone="blue">
               {pkg.split('\n').filter((l) => l.trim()).map((l, i) => (
-                <div key={i}>{l.trim()}</div>
+                <div key={i}>{renderLinkedText(l.trim())}</div>
               ))}
             </SpecCalloutBox>
           )}
@@ -1185,7 +1186,7 @@ export default function ProductDetailClient({
               {prod.infoBoxes.map((box, i) => (
                 <div key={i} className="rounded-brand border border-border-base bg-white p-4 shadow-sh1">
                   <div className="mb-1.5 text-[14.5px] font-bold text-ink">{box.title}</div>
-                  <div className="text-[14px] leading-[1.7] text-ink/80">{box.body}</div>
+                  <div className="text-[14px] leading-[1.7] text-ink/80">{renderLinkedText(box.body)}</div>
                 </div>
               ))}
             </div>
@@ -1217,7 +1218,7 @@ export default function ProductDetailClient({
                         className="flex w-full items-center justify-between gap-3 p-4 text-left font-body text-[14px] font-bold text-ink transition-colors"
                         onClick={() => toggleFaq(i)}
                       >
-                        <span className="font-semibold">{t(f.q)}</span>
+                        <span className="font-semibold">{renderLinkedText(t(f.q))}</span>
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
                       
@@ -1229,7 +1230,7 @@ export default function ProductDetailClient({
                         <div className="min-h-0 overflow-hidden">
                           <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
                             <div className="border-l-2 border-brand-light/60 pl-3">
-                              {t(f.a)}
+                              {renderLinkedText(t(f.a))}
                             </div>
                           </div>
                         </div>
