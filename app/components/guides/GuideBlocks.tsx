@@ -210,36 +210,51 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
 /* ────────────────────────────── COMPARISON TABLE ────────────────────────────── */
 
 function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock; lang: Lang }) {
+  // 🛠️ ফিক্স: টেবিলটা ডানে-বামে সোয়াইপ করলে "বিষয়" কলামটা sticky left-0 দিয়ে
+  // ফ্রিজ করা থাকে, কিন্তু আগে টেবিলে border-collapse ব্যবহার হতো — position:sticky
+  // আর border-collapse টেবিলে একসাথে থাকলে বিভিন্ন ব্রাউজারে (বিশেষ করে মোবাইল
+  // Chrome/WebView) একটা পরিচিত রেন্ডারিং বাগ আছে: sticky সেলের ব্যাকগ্রাউন্ড ঠিকমতো
+  // পেইন্ট হয় না, ফলে স্ক্রল করে সরে যাওয়া কলামের টেক্সট ফ্রিজ করা কলামের নিচ দিয়ে
+  // "বেয়ে" উঠে এসে একটার উপর আরেকটা লেখা বসে যায় (ঠিক যেমন স্ক্রিনশটে দেখা গেছে)।
+  // border-separate + border-spacing-0 এই বাগ এড়ায়, আর sticky সেলে bg-inherit-এর
+  // বদলে প্রতি রো-এর জন্য স্পষ্ট solid (non-transparent) ব্যাকগ্রাউন্ড কালার বসানো
+  // হলো, যাতে নিচের টেক্সট কখনোই বেয়ে দেখা না যায়। ফ্রিজ করা কলামের ডান পাশে একটা
+  // হালকা শ্যাডো যোগ করা হলো যাতে ব্যবহারকারী বুঝতে পারে ওই কলামটা ফিক্সড।
   return (
     <WideContainer className="py-8">
       <BlockHeading text={block.heading} lang={lang} />
       <div className="overflow-x-auto rounded-2xl border border-border-base shadow-xs">
-        <table className="w-full min-w-[560px] border-collapse font-body text-[13px]">
+        <table className="w-full min-w-[560px] border-separate border-spacing-0 font-body text-[13px]">
           <thead>
-            <tr className="bg-brand-bg/40">
-              <th className="sticky left-0 z-10 bg-brand-bg/60 px-4 py-3 text-left font-bold text-ink">
+            <tr>
+              <th className="sticky left-0 z-10 bg-[#DCEBFD] px-4 py-3 text-left font-bold text-ink shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
                 {lang === 'en' ? 'Feature' : 'বিষয়'}
               </th>
               {block.columnHeaders.map((h, i) => (
-                <th key={i} className="px-4 py-3 text-left font-bold text-ink">
+                <th key={i} className="bg-brand-bg/40 px-4 py-3 text-left font-bold text-ink">
                   {t(h, lang)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {block.rows.map((row, i) => (
-              <tr key={i} className={i % 2 ? 'bg-white' : 'bg-brand-bg/10'}>
-                <td className="sticky left-0 z-10 border-t border-border-base bg-inherit px-4 py-3 font-bold text-ink">
-                  {t(row.label, lang)}
-                </td>
-                {row.values.map((v, j) => (
-                  <td key={j} className="border-t border-border-base px-4 py-3 text-ink/85">
-                    {tl(v, lang)}
+            {block.rows.map((row, i) => {
+              const rowBg = i % 2 ? 'bg-white' : 'bg-[#EFF6FF]';
+              return (
+                <tr key={i}>
+                  <td
+                    className={`sticky left-0 z-10 border-t border-border-base px-4 py-3 font-bold text-ink shadow-[2px_0_4px_rgba(0,0,0,0.06)] ${rowBg}`}
+                  >
+                    {t(row.label, lang)}
                   </td>
-                ))}
-              </tr>
-            ))}
+                  {row.values.map((v, j) => (
+                    <td key={j} className={`border-t border-border-base px-4 py-3 text-ink/85 ${rowBg}`}>
+                      {tl(v, lang)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

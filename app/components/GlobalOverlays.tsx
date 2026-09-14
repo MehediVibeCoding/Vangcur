@@ -10,6 +10,7 @@ import { useThemeStore } from '@/lib/store/themeStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { TOAST_EVENT, type ToastDetail, type ToastType, showToast } from '@/lib/toast';
+import { RESERVED_URL_PREFIXES } from '@/types/guides';
 
 const CartSidebar = dynamic(() => import('./cart/CartSidebar'), { ssr: false });
 const WishlistDrawer = dynamic(() => import('./cart/WishlistDrawer'), { ssr: false });
@@ -167,6 +168,17 @@ export default function GlobalOverlays() {
 
   const hideFloatingBadges = pathname?.startsWith('/checkout') ?? false;
   const isProductPage = pathname?.startsWith('/product/') ?? false;
+  // 🛠️ ফিক্স: প্রোগ্রামেটিক SEO গাইড/টেমপ্লেট পেজগুলো (পিলার, কম্প্যারিজন, ইনস্টল
+  // ইত্যাদি — app/[...segments]/) একটামাত্র root-level catch-all রুট দিয়ে চলে, তাই
+  // পাথনেম দেখে সরাসরি "গাইড পেজ কিনা" বোঝা যায় না — উল্টো যাচাই করা হচ্ছে: পাথটা
+  // "/" না, আর প্রথম সেগমেন্টও types/guides.ts-এর RESERVED_URL_PREFIXES তালিকার
+  // (account, product, checkout, ইত্যাদি — সব বাস্তব static রুট) কোনোটার সাথে না
+  // মিললেই সেটা catch-all-এ পড়া একটা গাইড পেজ (এই একই তালিকা routing conflict
+  // এড়াতে ইতিমধ্যে ব্যবহার হচ্ছে, তাই নতুন কোনো টেমপ্লেট/রুট যোগ হলেও এখানে হাত
+  // দেওয়ার দরকার নেই)। এই পেজগুলোতে ফ্লোটিং কার্ট ব্যাজ ও মেসেঞ্জার/কন্টাক্ট
+  // বাটন লাগবে না (Navbar-এই কার্ট আইকন আছে) — শুধু Back-to-Top থাকবে।
+  const firstSegment = pathname?.split('/').filter(Boolean)[0] ?? '';
+  const isGuidePage = pathname !== '/' && !RESERVED_URL_PREFIXES.includes(firstSegment);
 
   useEffect(() => {
     const onOpenCart = () => setCartOpen(true);
@@ -207,16 +219,12 @@ export default function GlobalOverlays() {
       <WishlistDrawer isOpen={wishOpen} onClose={() => setWishOpen(false)} />
       <TrackOrderModal isOpen={trackOpen} onClose={() => setTrackOpen(false)} />
       
-      {!hideFloatingBadges && <FloatCartBadge />}
+      {!hideFloatingBadges && !isGuidePage && <FloatCartBadge />}
 
       {mounted && (
         <>
-          {!hideFloatingBadges && !isProductPage && (
-            <>
-              <FloatContactButtons />
-              <BackToTopButton />
-            </>
-          )}
+          {!hideFloatingBadges && !isProductPage && !isGuidePage && <FloatContactButtons />}
+          {!hideFloatingBadges && !isProductPage && <BackToTopButton />}
           <RareOverlays />
         </>
       )}
