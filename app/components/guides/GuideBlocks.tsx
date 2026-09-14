@@ -27,6 +27,7 @@ import type {
   ProductRecommendationBlock,
 } from '@/types/guides';
 import { GuideIcon, GuideCheckboxIcon, GuideChevronIcon, GuideArrowRightIcon } from './GuideIcons';
+import { renderLinkedText } from '@/lib/linkedText';
 
 type Lang = 'bn' | 'en';
 
@@ -42,6 +43,10 @@ export interface ProductSnapshot {
 }
 
 const t = (v: LocalizedText, lang: Lang) => v[lang];
+// tl(): t()-এর মতোই, তবে বডি টেক্সট/প্যারাগ্রাফ/আইটেম/উত্তরে ব্যবহার করা হয় — ভেতরে
+// ইনলাইন `[লেখা](url)` মার্কডাউন-লিংক থাকলে সেটাকে renderLinkedText() দিয়ে আসল
+// ক্লিকযোগ্য লিংকে বদলে দেয়। হেডিং/টাইটেলে t() ব্যবহার করাই যথেষ্ট।
+const tl = (v: LocalizedText, lang: Lang) => renderLinkedText(v[lang]);
 
 function Container({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`mx-auto max-w-[880px] px-4 sm:px-5 ${className}`}>{children}</div>;
@@ -122,7 +127,7 @@ function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }
       <BlockHeading text={block.heading} lang={lang} />
       <div className="space-y-3 font-body text-[14.5px] leading-[1.9] text-ink/85">
         {block.paragraphs.map((p, i) => (
-          <p key={i}>{t(p, lang)}</p>
+          <p key={i}>{tl(p, lang)}</p>
         ))}
       </div>
     </Container>
@@ -157,7 +162,7 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
               </div>
             )}
             <h3 className="mb-1.5 font-body text-[15px] font-bold text-ink">{t(card.title, lang)}</h3>
-            <p className="font-body text-[13.5px] leading-[1.75] text-muted">{t(card.description, lang)}</p>
+            <p className="font-body text-[13.5px] leading-[1.75] text-muted">{tl(card.description, lang)}</p>
           </div>
         ))}
       </div>
@@ -197,7 +202,7 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
           </tbody>
         </table>
       </div>
-      {block.note && <p className="mt-3 font-body text-[12px] leading-[1.7] text-muted">{t(block.note, lang)}</p>}
+      {block.note && <p className="mt-3 font-body text-[12px] leading-[1.7] text-muted">{tl(block.note, lang)}</p>}
     </Container>
   );
 }
@@ -230,7 +235,7 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
                 </td>
                 {row.values.map((v, j) => (
                   <td key={j} className="border-t border-border-base px-4 py-3 text-ink/85">
-                    {t(v, lang)}
+                    {tl(v, lang)}
                   </td>
                 ))}
               </tr>
@@ -259,7 +264,7 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
             </div>
             <div className="flex-1 pb-5">
               <h3 className="mb-1 font-body text-[15px] font-bold text-ink">{t(step.title, lang)}</h3>
-              <p className="font-body text-[13.5px] leading-[1.75] text-muted">{t(step.description, lang)}</p>
+              <p className="font-body text-[13.5px] leading-[1.75] text-muted">{tl(step.description, lang)}</p>
               {step.warning && (
                 <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 font-body text-[12.5px] text-amber-800">
                   {t(step.warning, lang)}
@@ -288,7 +293,7 @@ function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang
         {block.items.map((item, i) => (
           <li key={i} className="flex items-start gap-2.5 font-body text-[14px] text-ink/85">
             <GuideCheckboxIcon className="mt-0.5 shrink-0 text-brand-light" />
-            <span>{t(item, lang)}</span>
+            <span>{tl(item, lang)}</span>
           </li>
         ))}
       </ul>
@@ -310,7 +315,7 @@ function ImageTextBlockView({ block, lang }: { block: ImageTextBlock; lang: Lang
           <BlockHeading text={block.heading} lang={lang} />
           <div className="space-y-2.5 font-body text-[14px] leading-[1.85] text-ink/85">
             {block.paragraphs.map((p, i) => (
-              <p key={i}>{t(p, lang)}</p>
+              <p key={i}>{tl(p, lang)}</p>
             ))}
           </div>
         </div>
@@ -346,7 +351,7 @@ function ProductRecommendationBlockView({
         <div className="flex-1">
           <h3 className="font-body text-[15.5px] font-bold text-ink">{title}</h3>
           {block.blurb && (
-            <p className="mt-1 font-body text-[13px] leading-[1.7] text-muted">{t(block.blurb, lang)}</p>
+            <p className="mt-1 font-body text-[13px] leading-[1.7] text-muted">{tl(block.blurb, lang)}</p>
           )}
           <div className="mt-2 font-body text-[16px] font-extrabold text-brand-primary">
             ৳{product.price.toLocaleString('en-US')}
@@ -400,7 +405,7 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
               >
                 <div className="min-h-0 overflow-hidden">
                   <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-[1.8] text-ink/80 sm:px-[18px] sm:pb-[18px]">
-                    <div className="border-l-2 border-brand-light/60 pl-3.5">{t(item.answer, lang)}</div>
+                    <div className="border-l-2 border-brand-light/60 pl-3.5">{tl(item.answer, lang)}</div>
                   </div>
                 </div>
               </div>
