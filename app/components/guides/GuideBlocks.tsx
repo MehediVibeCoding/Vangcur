@@ -1,9 +1,3 @@
-// ফাইলের পাথ: app/components/guides/GuideBlocks.tsx
-// [NEW] প্রতিটা ব্লক-টাইপের জন্য একটা করে রেন্ডারার কম্পোনেন্ট, আর শেষে
-// GuideBlockRenderer — যেটা block.type দেখে সঠিক কম্পোনেন্ট বেছে রেন্ডার করে।
-// এই ফাইলটাই পুরো সিস্টেমের "ডিজাইন সিস্টেম" — নতুন কোনো পেজ বানাতে এই
-// কম্পোনেন্টগুলোর কোনোটাই আর নতুন করে লিখতে হবে না, শুধু ডাটা পাল্টালেই হবে।
-
 'use client';
 
 import { useState } from 'react';
@@ -31,7 +25,6 @@ import { renderLinkedText } from '@/lib/linkedText';
 
 type Lang = 'bn' | 'en';
 
-/** productRecommendation ব্লক রেন্ডার করতে সার্ভার থেকে আগেই ফেচ করে পাঠাতে হবে এই শেপে */
 export interface ProductSnapshot {
   id: number | string;
   name: string;
@@ -43,9 +36,6 @@ export interface ProductSnapshot {
 }
 
 const t = (v: LocalizedText, lang: Lang) => v[lang];
-// tl(): t()-এর মতোই, তবে বডি টেক্সট/প্যারাগ্রাফ/আইটেম/উত্তরে ব্যবহার করা হয় — ভেতরে
-// ইনলাইন `[লেখা](url)` মার্কডাউন-লিংক থাকলে সেটাকে renderLinkedText() দিয়ে আসল
-// ক্লিকযোগ্য লিংকে বদলে দেয়। হেডিং/টাইটেলে t() ব্যবহার করাই যথেষ্ট।
 const tl = (v: LocalizedText, lang: Lang) => renderLinkedText(v[lang]);
 
 function Container({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -56,19 +46,36 @@ function WideContainer({ children, className = '' }: { children: React.ReactNode
   return <div className={`mx-auto max-w-[1100px] px-4 sm:px-5 ${className}`}>{children}</div>;
 }
 
-// AGENTS.md-এর নো-ইমোজি পলিসি অনুযায়ী — গাইড পেজের প্রতিটা সেকশন-হেডিং-এ
-// raw ইমোজির বদলে এই ব্র্যান্ড-কালার আইকন-সার্কেল বসে, ঠিক প্রোডাক্ট পেজের
-// SectionHeading কম্পোনেন্টের মতোই। icon key guide-content-parser.ts-এর
-// inferHeadingIcon()-এ heading-এর টেক্সট দেখে অটোমেটিক ঠিক হয়ে যায় —
-// কনটেন্ট লেখার সময় আলাদা করে কিছু করা লাগে না।
+function getHeadingIcon(icon?: string, headingText?: string): string {
+  if (icon && icon !== 'spark') return icon;
+  if (!headingText) return icon || 'spark';
+  const lower = headingText.toLowerCase();
+  if (/পার্থক্য|তুলনা|vs|ভার্সাস|compare|difference/i.test(lower)) return 'scale';
+  if (/neon gas|আসল কথা|গ্যাস|bulb|বাল্ব|কেন|কীভাবে|জানুন|idea/i.test(lower)) return 'bulb';
+  if (/কখন কোনটা|বেছে নেবেন|পছন্দ|choose|choice|which|target/i.test(lower)) return 'target';
+  if (/কোথায় পড়ে|কোথায়|স্থান|অবস্থান|where|pin|ক্যাটাগরি/i.test(lower)) return 'pin';
+  if (/উচিত না|ভুল|সতর্ক|সাবধান|warning|mistake|avoid|never/i.test(lower)) return 'warning';
+  if (/চেকলিস্ট|চেক|তালিকা|checklist|check/i.test(lower)) return 'clipboard';
+  if (/প্রসেস|পদ্ধতি|ধাপ|স্টেপ|process|step|install|লাগাবেন/i.test(lower)) return 'wrench';
+  if (/দাম|খরচ|বাজেট|price|cost|budget|টাকা/i.test(lower)) return 'wallet';
+  if (/প্রশ্ন|faq|question|জিজ্ঞাসা/i.test(lower)) return 'question';
+  if (/রিমোট|অ্যাপ|remote|app|control/i.test(lower)) return 'remote';
+  if (/কালার|রং|color|colour|rgb|ডিজাইন|design/i.test(lower)) return 'palette';
+  if (/প্রকার|ধরন|লেয়ার|layers|type/i.test(lower)) return 'layers';
+  if (/বক্স|প্যাকেজ|box|package/i.test(lower)) return 'box';
+  return icon || 'spark';
+}
+
 function BlockHeading({ text, lang, icon }: { text?: LocalizedText; lang: Lang; icon?: string }) {
   if (!text) return null;
+  const rawText = t(text, lang);
+  const resolvedIcon = getHeadingIcon(icon, text.bn + ' ' + text.en);
   return (
     <div className="mb-4 flex items-center gap-3">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
-        <GuideIcon name={icon} className="h-[15px] w-[15px]" />
+        <GuideIcon name={resolvedIcon} className="h-[15px] w-[15px]" />
       </div>
-      <h2 className="font-body text-[19px] font-extrabold text-ink sm:text-[22px]">{t(text, lang)}</h2>
+      <h2 className="font-body text-[19px] font-extrabold text-ink sm:text-[22px]">{rawText}</h2>
     </div>
   );
 }
@@ -102,8 +109,6 @@ function ImageOrPlaceholder({
   );
 }
 
-/* ────────────────────────────── HERO ────────────────────────────── */
-
 function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
   return (
     <section className="border-b border-border-base bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white">
@@ -129,8 +134,6 @@ function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
   );
 }
 
-/* ────────────────────────────── RICH TEXT ────────────────────────────── */
-
 function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }) {
   return (
     <Container className="py-8">
@@ -143,8 +146,6 @@ function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }
     </Container>
   );
 }
-
-/* ────────────────────────────── CARD GRID ────────────────────────────── */
 
 function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }) {
   const colsClass =
@@ -163,15 +164,17 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
             key={i}
             className="rounded-2xl border border-border-base bg-white/95 p-5 shadow-xs transition-colors hover:border-brand-light/40"
           >
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
-              <GuideIcon name={card.icon} />
-            </div>
+            {card.icon && card.icon !== 'spark' && (
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
+                <GuideIcon name={card.icon} />
+              </div>
+            )}
             {card.tag && (
               <div className="mb-1 font-body text-[11px] font-bold uppercase tracking-wide text-brand-light">
                 {t(card.tag, lang)}
               </div>
             )}
-            <h3 className="mb-1.5 font-body text-[15px] font-bold text-ink">{t(card.title, lang)}</h3>
+            <h3 className="mb-1.5 font-body text-[15px] font-bold text-ink">{tl(card.title, lang)}</h3>
             <p className="font-body text-[13.5px] leading-[1.75] text-muted">{tl(card.description, lang)}</p>
           </div>
         ))}
@@ -180,19 +183,17 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
   );
 }
 
-/* ────────────────────────────── PRICE TABLE ────────────────────────────── */
-
 function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: Lang }) {
   return (
     <Container className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
-      <div className="overflow-hidden rounded-2xl border border-border-base shadow-xs">
-        <table className="w-full border-collapse font-body text-[13.5px]">
+      <div className="sleek-scrollbar overflow-x-auto rounded-2xl border border-border-base shadow-xs">
+        <table className="w-full min-w-[500px] border-collapse font-body text-[13.5px]">
           <thead>
             <tr className="bg-brand-bg/40 text-left">
-              <th className="px-4 py-3 font-bold text-ink">{lang === 'en' ? 'Type' : 'ধরন'}</th>
-              <th className="px-4 py-3 font-bold text-ink">{lang === 'en' ? 'Unit' : 'ইউনিট'}</th>
-              <th className="px-4 py-3 text-right font-bold text-ink">
+              <th className="px-4 py-3 font-bold text-ink whitespace-nowrap">{lang === 'en' ? 'Type' : 'ধরন'}</th>
+              <th className="px-4 py-3 font-bold text-ink whitespace-nowrap">{lang === 'en' ? 'Unit' : 'ইউনিট'}</th>
+              <th className="px-4 py-3 text-right font-bold text-ink whitespace-nowrap">
                 {lang === 'en' ? 'Price Range (BDT)' : 'দামের রেঞ্জ (BDT)'}
               </th>
             </tr>
@@ -200,11 +201,11 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
           <tbody>
             {block.rows.map((row, i) => (
               <tr key={i} className={i % 2 ? 'bg-white' : 'bg-brand-bg/10'}>
-                <td className="border-t border-border-base px-4 py-3 text-ink">{t(row.label, lang)}</td>
-                <td className="border-t border-border-base px-4 py-3 text-muted">
+                <td className="border-t border-border-base px-4 py-3 font-medium text-ink">{t(row.label, lang)}</td>
+                <td className="border-t border-border-base px-4 py-3 text-muted whitespace-nowrap">
                   {row.unit ? t(row.unit, lang) : '—'}
                 </td>
-                <td className="border-t border-border-base px-4 py-3 text-right font-bold text-brand-primary">
+                <td className="border-t border-border-base px-4 py-3 text-right font-extrabold text-brand-light whitespace-nowrap">
                   {row.priceRangeBdt}
                 </td>
               </tr>
@@ -217,19 +218,7 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
   );
 }
 
-/* ────────────────────────────── COMPARISON TABLE ────────────────────────────── */
-
 function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock; lang: Lang }) {
-  // 🛠️ ফিক্স: টেবিলটা ডানে-বামে সোয়াইপ করলে "বিষয়" কলামটা sticky left-0 দিয়ে
-  // ফ্রিজ করা থাকে, কিন্তু আগে টেবিলে border-collapse ব্যবহার হতো — position:sticky
-  // আর border-collapse টেবিলে একসাথে থাকলে বিভিন্ন ব্রাউজারে (বিশেষ করে মোবাইল
-  // Chrome/WebView) একটা পরিচিত রেন্ডারিং বাগ আছে: sticky সেলের ব্যাকগ্রাউন্ড ঠিকমতো
-  // পেইন্ট হয় না, ফলে স্ক্রল করে সরে যাওয়া কলামের টেক্সট ফ্রিজ করা কলামের নিচ দিয়ে
-  // "বেয়ে" উঠে এসে একটার উপর আরেকটা লেখা বসে যায় (ঠিক যেমন স্ক্রিনশটে দেখা গেছে)।
-  // border-separate + border-spacing-0 এই বাগ এড়ায়, আর sticky সেলে bg-inherit-এর
-  // বদলে প্রতি রো-এর জন্য স্পষ্ট solid (non-transparent) ব্যাকগ্রাউন্ড কালার বসানো
-  // হলো, যাতে নিচের টেক্সট কখনোই বেয়ে দেখা না যায়। ফ্রিজ করা কলামের ডান পাশে একটা
-  // হালকা শ্যাডো যোগ করা হলো যাতে ব্যবহারকারী বুঝতে পারে ওই কলামটা ফিক্সড।
   return (
     <WideContainer className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
@@ -272,27 +261,25 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
   );
 }
 
-/* ────────────────────────────── STEPS ────────────────────────────── */
-
 function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
   return (
     <Container className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
-      <div className="space-y-5">
+      <div className="space-y-4">
         {block.steps.map((step, i) => (
-          <div key={i} className="flex gap-4">
-            <div className="flex shrink-0 flex-col items-center">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light font-body text-[14px] font-bold text-white shadow-sh2">
-                {i + 1}
-              </div>
-              {i < block.steps.length - 1 && <div className="mt-1 w-px flex-1 bg-border-base" />}
-            </div>
-            <div className="flex-1 pb-5">
-              <h3 className="mb-1 font-body text-[15px] font-bold text-ink">{t(step.title, lang)}</h3>
+          <div
+            key={i}
+            className="flex items-start gap-3.5 rounded-2xl border border-border-base/80 bg-white/90 p-4 sm:p-5 shadow-2xs"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-bg/60 font-body text-xs font-extrabold text-brand-light mt-0.5">
+              {i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1 font-body text-[15px] font-bold text-ink">{tl(step.title, lang)}</h3>
               <p className="font-body text-[13.5px] leading-[1.75] text-muted">{tl(step.description, lang)}</p>
               {step.warning && (
                 <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 font-body text-[12.5px] text-amber-800">
-                  {t(step.warning, lang)}
+                  {tl(step.warning, lang)}
                 </div>
               )}
               {step.image?.url && (
@@ -307,8 +294,6 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
     </Container>
   );
 }
-
-/* ────────────────────────────── CHECKLIST ────────────────────────────── */
 
 function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang }) {
   return (
@@ -325,8 +310,6 @@ function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang
     </Container>
   );
 }
-
-/* ────────────────────────────── IMAGE + TEXT SPLIT ────────────────────────────── */
 
 function ImageTextBlockView({ block, lang }: { block: ImageTextBlock; lang: Lang }) {
   const imageFirst = block.imageSide === 'left';
@@ -348,8 +331,6 @@ function ImageTextBlockView({ block, lang }: { block: ImageTextBlock; lang: Lang
     </WideContainer>
   );
 }
-
-/* ────────────────────────────── PRODUCT RECOMMENDATION ────────────────────────────── */
 
 function ProductRecommendationBlockView({
   block,
@@ -378,7 +359,7 @@ function ProductRecommendationBlockView({
           {block.blurb && (
             <p className="mt-1 font-body text-[13px] leading-[1.7] text-muted">{tl(block.blurb, lang)}</p>
           )}
-          <div className="mt-2 font-body text-[16px] font-extrabold text-brand-primary">
+          <div className="mt-2 font-body text-[16px] font-extrabold text-brand-light">
             ৳{product.price.toLocaleString('en-US')}
           </div>
         </div>
@@ -390,8 +371,6 @@ function ProductRecommendationBlockView({
     </Container>
   );
 }
-
-/* ────────────────────────────── FAQ ────────────────────────────── */
 
 function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -442,8 +421,6 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
   );
 }
 
-/* ────────────────────────────── RELATED LINKS ────────────────────────────── */
-
 function RelatedLinksBlockView({
   block,
   lang,
@@ -451,7 +428,6 @@ function RelatedLinksBlockView({
 }: {
   block: RelatedLinksBlock;
   lang: Lang;
-  /** targetPageId → রেজলভড URL — resolveRelatedLinkHrefs() থেকে সার্ভারে আগে থেকে আনা */
   hrefMap?: Record<string, string>;
 }) {
   return (
@@ -479,8 +455,6 @@ function RelatedLinksBlockView({
   );
 }
 
-/* ────────────────────────────── GALLERY ────────────────────────────── */
-
 function GalleryBlockView({ block, lang }: { block: GalleryBlock; lang: Lang }) {
   return (
     <WideContainer className="py-8">
@@ -499,8 +473,6 @@ function GalleryBlockView({ block, lang }: { block: GalleryBlock; lang: Lang }) 
   );
 }
 
-/* ────────────────────────────── CTA ────────────────────────────── */
-
 function CtaBlockView({ block, lang, hrefMap }: { block: CtaBlock; lang: Lang; hrefMap?: Record<string, string> }) {
   const resolvedHref = (block.targetPageId && hrefMap?.[block.targetPageId]) || block.href || '#';
   return (
@@ -518,8 +490,6 @@ function CtaBlockView({ block, lang, hrefMap }: { block: CtaBlock; lang: Lang; h
   );
 }
 
-/* ────────────────────────────── MASTER RENDERER ────────────────────────────── */
-
 export function GuideBlockRenderer({
   block,
   lang,
@@ -528,9 +498,7 @@ export function GuideBlockRenderer({
 }: {
   block: GuideBlock;
   lang: Lang;
-  /** productRecommendation ব্লকের জন্য সার্ভার থেকে আগে থেকে ফেচ করা প্রোডাক্ট ডাটা, productId → snapshot */
   productSnapshots?: Record<number, ProductSnapshot>;
-  /** relatedLinks/cta ব্লকের targetPageId → রেজলভড URL (resolveRelatedLinkHrefs() থেকে) */
   relatedLinkHrefs?: Record<string, string>;
 }) {
   switch (block.type) {
