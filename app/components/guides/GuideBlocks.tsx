@@ -73,7 +73,7 @@ function BlockHeading({ text, lang, icon }: { text?: LocalizedText; lang: Lang; 
   return (
     <div className="mb-4 flex items-center gap-3">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
-        <GuideIcon name={resolvedIcon} className="h-[15px] w-[15px]" />
+        <GuideIcon name={resolvedIcon} className="h-[17px] w-[17px]" />
       </div>
       <h2 className="font-body text-[19px] font-extrabold text-ink sm:text-[22px]">{rawText}</h2>
     </div>
@@ -186,7 +186,7 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
 function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'wallet'} />
       <div className="sleek-scrollbar overflow-x-auto rounded-2xl border border-border-base shadow-xs">
         <table className="w-full min-w-[500px] border-collapse font-body text-[14px]">
           <thead>
@@ -221,7 +221,7 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
 function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock; lang: Lang }) {
   return (
     <WideContainer className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'scale'} />
       <div className="overflow-x-auto rounded-2xl border border-border-base shadow-xs">
         <table className="w-full min-w-[560px] border-separate border-spacing-0 font-body text-[14px]">
           <thead>
@@ -264,7 +264,7 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
 function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'wrench'} />
       <div className="space-y-4">
         {block.steps.map((step, i) => (
           <div
@@ -298,7 +298,7 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
 function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'clipboard'} />
       <ul className="space-y-3">
         {block.items.map((item, i) => (
           <li key={i} className="flex items-start gap-2.5 font-body text-[15px] leading-[1.75] text-ink/85">
@@ -377,7 +377,7 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
 
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'question'} />
       <div className="space-y-3">
         {block.items.map((item, i) => {
           const open = openIndex === i;
@@ -432,7 +432,7 @@ function RelatedLinksBlockView({
 }) {
   return (
     <WideContainer className="py-10">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'linkChain'} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {block.items.map((item, i) => {
           const resolvedHref = (item.targetPageId && hrefMap?.[item.targetPageId]) || item.href || '#';
@@ -458,7 +458,7 @@ function RelatedLinksBlockView({
 function GalleryBlockView({ block, lang }: { block: GalleryBlock; lang: Lang }) {
   return (
     <WideContainer className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'camera'} />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {block.items.map((item, i) => (
           <div key={i} className="overflow-hidden rounded-2xl border border-border-base bg-white shadow-xs">
