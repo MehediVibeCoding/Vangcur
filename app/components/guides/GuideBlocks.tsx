@@ -56,10 +56,20 @@ function WideContainer({ children, className = '' }: { children: React.ReactNode
   return <div className={`mx-auto max-w-[1100px] px-4 sm:px-5 ${className}`}>{children}</div>;
 }
 
-function BlockHeading({ text, lang }: { text?: LocalizedText; lang: Lang }) {
+// AGENTS.md-এর নো-ইমোজি পলিসি অনুযায়ী — গাইড পেজের প্রতিটা সেকশন-হেডিং-এ
+// raw ইমোজির বদলে এই ব্র্যান্ড-কালার আইকন-সার্কেল বসে, ঠিক প্রোডাক্ট পেজের
+// SectionHeading কম্পোনেন্টের মতোই। icon key guide-content-parser.ts-এর
+// inferHeadingIcon()-এ heading-এর টেক্সট দেখে অটোমেটিক ঠিক হয়ে যায় —
+// কনটেন্ট লেখার সময় আলাদা করে কিছু করা লাগে না।
+function BlockHeading({ text, lang, icon }: { text?: LocalizedText; lang: Lang; icon?: string }) {
   if (!text) return null;
   return (
-    <h2 className="mb-4 font-body text-[21px] font-extrabold text-ink sm:text-[24px]">{t(text, lang)}</h2>
+    <div className="mb-4 flex items-center gap-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
+        <GuideIcon name={icon} className="h-[15px] w-[15px]" />
+      </div>
+      <h2 className="font-body text-[19px] font-extrabold text-ink sm:text-[22px]">{t(text, lang)}</h2>
+    </div>
   );
 }
 
@@ -97,7 +107,7 @@ function ImageOrPlaceholder({
 function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
   return (
     <section className="border-b border-border-base bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white">
-      <WideContainer className="grid gap-8 py-10 sm:py-14 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+      <WideContainer className="grid gap-8 pt-6 pb-10 sm:pt-10 sm:pb-14 md:grid-cols-[1.1fr_0.9fr] md:items-center">
         <div>
           {block.eyebrow && (
             <div className="mb-3 inline-flex items-center rounded-full border border-brand-light/35 bg-white/90 px-3.5 py-1 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light shadow-2xs">
@@ -124,7 +134,7 @@ function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
 function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="space-y-3 font-body text-[14.5px] leading-[1.9] text-ink/85">
         {block.paragraphs.map((p, i) => (
           <p key={i}>{tl(p, lang)}</p>
@@ -146,7 +156,7 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
 
   return (
     <WideContainer className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className={`grid grid-cols-1 gap-4 ${colsClass}`}>
         {block.cards.map((card, i) => (
           <div
@@ -175,7 +185,7 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
 function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="overflow-hidden rounded-2xl border border-border-base shadow-xs">
         <table className="w-full border-collapse font-body text-[13.5px]">
           <thead>
@@ -222,7 +232,7 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
   // হালকা শ্যাডো যোগ করা হলো যাতে ব্যবহারকারী বুঝতে পারে ওই কলামটা ফিক্সড।
   return (
     <WideContainer className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="overflow-x-auto rounded-2xl border border-border-base shadow-xs">
         <table className="w-full min-w-[560px] border-separate border-spacing-0 font-body text-[13px]">
           <thead>
@@ -267,7 +277,7 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
 function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="space-y-5">
         {block.steps.map((step, i) => (
           <div key={i} className="flex gap-4">
@@ -303,7 +313,7 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
 function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang }) {
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <ul className="space-y-2.5">
         {block.items.map((item, i) => (
           <li key={i} className="flex items-start gap-2.5 font-body text-[14px] text-ink/85">
@@ -327,7 +337,7 @@ function ImageTextBlockView({ block, lang }: { block: ImageTextBlock; lang: Lang
           <ImageOrPlaceholder image={block.image} lang={lang} aspect="aspect-[4/3]" />
         </div>
         <div className={imageFirst ? 'sm:order-2' : 'sm:order-1'}>
-          <BlockHeading text={block.heading} lang={lang} />
+          <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
           <div className="space-y-2.5 font-body text-[14px] leading-[1.85] text-ink/85">
             {block.paragraphs.map((p, i) => (
               <p key={i}>{tl(p, lang)}</p>
@@ -355,7 +365,7 @@ function ProductRecommendationBlockView({
 
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <Link
         href={product.href}
         className="flex flex-col gap-4 overflow-hidden rounded-2xl border border-brand-light/30 bg-gradient-to-br from-[#F0F7FF] via-white to-white p-4 shadow-sh1 transition-transform hover:scale-[1.01] sm:flex-row sm:items-center"
@@ -388,7 +398,7 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
 
   return (
     <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="space-y-3">
         {block.items.map((item, i) => {
           const open = openIndex === i;
@@ -446,7 +456,7 @@ function RelatedLinksBlockView({
 }) {
   return (
     <WideContainer className="py-10">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {block.items.map((item, i) => {
           const resolvedHref = (item.targetPageId && hrefMap?.[item.targetPageId]) || item.href || '#';
@@ -474,7 +484,7 @@ function RelatedLinksBlockView({
 function GalleryBlockView({ block, lang }: { block: GalleryBlock; lang: Lang }) {
   return (
     <WideContainer className="py-8">
-      <BlockHeading text={block.heading} lang={lang} />
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {block.items.map((item, i) => (
           <div key={i} className="overflow-hidden rounded-2xl border border-border-base bg-white shadow-xs">

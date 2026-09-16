@@ -171,6 +171,182 @@ const SparkIcon = (p: IconProps) =>
     p
   );
 
+// ── [NEW] গাইড পেজের ### সেকশন-হেডিং-এ ইমোজির বদলে বসানোর জন্য বাড়তি আইকন
+// (guide-content-parser.ts-এর inferHeadingIcon() এই key-গুলোই রিটার্ন করে) ──
+
+const LayersIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 3.5 20.5 8 12 12.5 3.5 8 12 3.5Z" />
+      <path d="M3.5 13l8.5 4.5 8.5-4.5" />
+    </>,
+    p
+  );
+
+const TargetIcon = (p: IconProps) =>
+  base(
+    <>
+      <circle cx="12" cy="12" r="8.3" />
+      <circle cx="12" cy="12" r="4" />
+    </>,
+    p
+  );
+
+const QuestionIcon = (p: IconProps) =>
+  base(
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.2 9.6a2.8 2.8 0 1 1 3.9 2.6c-1 .5-1.1 1.1-1.1 2" />
+      <circle cx="12" cy="17.1" r="0.9" fill="currentColor" stroke="none" />
+    </>,
+    p
+  );
+
+const BookIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 6.2c-1.8-1.4-4.1-2-6.6-2A1.9 1.9 0 0 0 3.5 6v11a1 1 0 0 0 1.4.9c2-1.1 4-1.3 6.5.1" />
+      <path d="M12 6.2c1.8-1.4 4.1-2 6.6-2A1.9 1.9 0 0 1 20.5 6v11a1 1 0 0 1-1.4.9c-2-1.1-4-1.3-6.5.1" />
+      <path d="M12 6.2v12.7" />
+    </>,
+    p
+  );
+
+const ScaleIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 3v18M6 6.5h12" />
+      <path d="M3 15a3 3 0 0 0 6 0L6 6.5 3 15Z" />
+      <path d="M15 15a3 3 0 0 0 6 0L18 6.5 15 15Z" />
+    </>,
+    p
+  );
+
+const BulbIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.2 1 2.1h5c0-.9.4-1.65 1-2.1A6 6 0 0 0 12 3Z" />
+      <path d="M9.5 18.5h5M10.3 21h3.4" />
+    </>,
+    p
+  );
+
+const PinIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 21s-7-6.3-7-11.6A7 7 0 0 1 19 9.4C19 14.7 12 21 12 21Z" />
+      <circle cx="12" cy="9.4" r="2.3" />
+    </>,
+    p
+  );
+
+const ClipboardIcon = (p: IconProps) =>
+  base(
+    <>
+      <rect x="5.5" y="4" width="13" height="17" rx="1.6" />
+      <path d="M9 3.5h6a.6.6 0 0 1 .6.6v1.4a.6.6 0 0 1-.6.6H9a.6.6 0 0 1-.6-.6V4.1a.6.6 0 0 1 .6-.6Z" />
+      <path d="M8.7 11h6.6M8.7 14.6h6.6" />
+    </>,
+    p
+  );
+
+const BoxIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M3.5 8 12 4l8.5 4-8.5 4-8.5-4Z" />
+      <path d="M3.5 8v8.3L12 20l8.5-3.7V8" />
+      <path d="M12 12v8" />
+    </>,
+    p
+  );
+
+const WarningIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 3.4 21.3 20H2.7L12 3.4Z" />
+      <path d="M12 9.8v4" />
+      <circle cx="12" cy="16.7" r="0.9" fill="currentColor" stroke="none" />
+    </>,
+    p
+  );
+
+const CloudIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M7 18a4.4 4.4 0 0 1-.4-8.8A6 6 0 0 1 18.4 11 3.9 3.9 0 0 1 18 18.8H7Z" />
+      <path d="M9 21.3l-1 2M13 21.3l-1 2" />
+    </>,
+    p
+  );
+
+const ScissorsIcon = (p: IconProps) =>
+  base(
+    <>
+      <circle cx="6.2" cy="6.2" r="2.3" />
+      <circle cx="6.2" cy="17.8" r="2.3" />
+      <path d="M8 7.6 20 19M8 16.4 20 5" />
+    </>,
+    p
+  );
+
+const UnlockIcon = (p: IconProps) =>
+  base(
+    <>
+      <rect x="4.5" y="11" width="13" height="9.5" rx="1.8" />
+      <path d="M7.5 11V7a5 5 0 0 1 9-3" />
+    </>,
+    p
+  );
+
+const LinkChainIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M9.7 14.3 14.3 9.7" />
+      <path d="M7.1 16.9a3.5 3.5 0 0 1 0-4.9l2-2a3.5 3.5 0 0 1 4.9 0" />
+      <path d="M16.9 7.1a3.5 3.5 0 0 1 0 4.9l-2 2a3.5 3.5 0 0 1-4.9 0" />
+    </>,
+    p
+  );
+
+const PaletteIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M12 3a9 9 0 1 0 0 18c1 0 1.6-.6 1.6-1.4 0-.7-.4-1-.4-1.7 0-.9.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5Z" />
+      <circle cx="8" cy="11" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="11.5" cy="8" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="9.6" r="1.1" fill="currentColor" stroke="none" />
+    </>,
+    p
+  );
+
+const SlidersIcon = (p: IconProps) =>
+  base(
+    <>
+      <path d="M5 5v6M5 15v4M12 5v3M12 12v7M19 5v9M19 18v1" />
+      <path d="M3 11h4M10 8h4M17 14h4" />
+    </>,
+    p
+  );
+
+const RemoteIcon = (p: IconProps) =>
+  base(
+    <>
+      <rect x="8" y="2.5" width="8" height="19" rx="3" />
+      <circle cx="12" cy="7" r="1.3" />
+      <path d="M9.5 11.5h5M9.5 15h5" />
+    </>,
+    p
+  );
+
+const CompassIcon = (p: IconProps) =>
+  base(
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M15.2 8.8 13 13l-4.2 2.2L11 11l4.2-2.2Z" />
+    </>,
+    p
+  );
+
 /** cardGrid/checklist ব্লকে ব্যবহারযোগ্য সব আইকন — অ্যাডমিন এডিটরে এই key-গুলোই ড্রপডাউনে দেখানো হবে */
 export const GUIDE_ICON_REGISTRY: Record<string, (p: IconProps) => React.JSX.Element> = {
   bedroom: BedroomIcon,
@@ -188,6 +364,24 @@ export const GUIDE_ICON_REGISTRY: Record<string, (p: IconProps) => React.JSX.Ele
   arrowRight: ArrowRightIcon,
   chevronDown: ChevronDownIcon,
   spark: SparkIcon,
+  layers: LayersIcon,
+  target: TargetIcon,
+  question: QuestionIcon,
+  book: BookIcon,
+  scale: ScaleIcon,
+  bulb: BulbIcon,
+  pin: PinIcon,
+  clipboard: ClipboardIcon,
+  box: BoxIcon,
+  warning: WarningIcon,
+  cloud: CloudIcon,
+  scissors: ScissorsIcon,
+  unlock: UnlockIcon,
+  linkChain: LinkChainIcon,
+  palette: PaletteIcon,
+  sliders: SlidersIcon,
+  remote: RemoteIcon,
+  compass: CompassIcon,
 };
 
 export function GuideIcon({

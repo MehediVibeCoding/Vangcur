@@ -155,6 +155,26 @@ function CheckBadgeIcon({ className = '' }: { className?: string }) {
   );
 }
 
+function PlugIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 3v5M15 3v5" />
+      <path d="M6.5 8h11v3.5a5.5 5.5 0 0 1-11 0V8Z" />
+      <path d="M12 16.5V21" />
+    </svg>
+  );
+}
+
+function BoxIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 8 12 4l8.5 4-8.5 4-8.5-4Z" />
+      <path d="M3.5 8v8.3L12 20l8.5-3.7V8" />
+      <path d="M12 12v8" />
+    </svg>
+  );
+}
+
 function ArrowIcon({ className = '', dir = 'left' }: { className?: string; dir?: 'left' | 'right' }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
@@ -311,14 +331,14 @@ const TABS = [
   { id: 'ppSecReviews', label: 'রিভিউ' },
 ];
 
-function SpecCalloutBox({ icon, title, children, tone }: { icon: string; title: string; children: ReactNode; tone: 'amber' | 'blue' }) {
+function SpecCalloutBox({ icon, title, children, tone }: { icon: ReactNode; title: string; children: ReactNode; tone: 'amber' | 'blue' }) {
   const toneClasses = tone === 'amber'
     ? 'border-[#FDE0B0] bg-[#FFF7ED]'
     : 'border-[#BAE0FD] bg-[#F0F9FF]';
   return (
     <div className={`mt-4 rounded-brand border p-4 ${toneClasses}`}>
       <div className="mb-2 flex items-center gap-2 text-[14px] font-bold text-ink">
-        <span>{icon}</span>{title}
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/70 text-ink/70">{icon}</span>{title}
       </div>
       <div className="text-[14px] leading-[1.7] text-ink/80">{children}</div>
     </div>
@@ -1161,7 +1181,7 @@ export default function ProductDetailClient({
           </div>
 
           {prod.powerInfo && (
-            <SpecCalloutBox icon="🔌" title={t('পাওয়ার / কানেকশন তথ্য')} tone="amber">
+            <SpecCalloutBox icon={<PlugIcon />} title={t('পাওয়ার / কানেকশন তথ্য')} tone="amber">
               {prod.powerInfo.split('\n').filter((l) => l.trim()).map((l, i) => (
                 <div key={i}>{renderLinkedText(l.trim())}</div>
               ))}
@@ -1169,7 +1189,7 @@ export default function ProductDetailClient({
           )}
 
           {pkg && (
-            <SpecCalloutBox icon="📦" title={t('Packaging Content')} tone="blue">
+            <SpecCalloutBox icon={<BoxIcon />} title={t('Packaging Content')} tone="blue">
               {pkg.split('\n').filter((l) => l.trim()).map((l, i) => (
                 <div key={i}>{renderLinkedText(l.trim())}</div>
               ))}
@@ -1186,7 +1206,7 @@ export default function ProductDetailClient({
               {prod.infoBoxes.map((box, i) => (
                 <div key={i} className="rounded-brand border border-border-base bg-white p-4 shadow-sh1">
                   <div className="mb-1.5 text-[14.5px] font-bold text-ink">{box.title}</div>
-                  <div className="text-[14px] leading-[1.7] text-ink/80">{renderLinkedText(box.body)}</div>
+                  <div className="whitespace-pre-line text-[14px] leading-[1.8] text-ink/80">{renderLinkedText(box.body)}</div>
                 </div>
               ))}
             </div>
