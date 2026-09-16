@@ -157,20 +157,20 @@ function CheckBadgeIcon({ className = '' }: { className?: string }) {
 
 function PlugIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 3v5M15 3v5" />
-      <path d="M6.5 8h11v3.5a5.5 5.5 0 0 1-11 0V8Z" />
-      <path d="M12 16.5V21" />
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 2v6M15 2v6" />
+      <path d="M6 8h12v4a6 6 0 0 1-12 0V8z" />
+      <line x1="12" y1="18" x2="12" y2="22" />
     </svg>
   );
 }
 
 function BoxIcon({ className = '' }: { className?: string }) {
   return (
-    <svg className={className} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3.5 8 12 4l8.5 4-8.5 4-8.5-4Z" />
-      <path d="M3.5 8v8.3L12 20l8.5-3.7V8" />
-      <path d="M12 12v8" />
+    <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="m3.3 7 8.7 5 8.7-5" />
+      <line x1="12" y1="22" x2="12" y2="12" />
     </svg>
   );
 }
@@ -284,7 +284,7 @@ function FeatureItem({ text }: { text: string }) {
     return (
       <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
         <div className="mt-0.5 shrink-0 text-base leading-none">{pre.trim() || <CheckBadgeIcon />}</div>
-        <div className="text-[14px] leading-[1.6] text-ink"><strong>{title}</strong>{renderLinkedText(rest)}</div>
+        <div className="font-body text-[15px] leading-[1.75] text-ink"><strong>{title}</strong>{renderLinkedText(rest)}</div>
       </div>
     );
   }
@@ -293,14 +293,14 @@ function FeatureItem({ text }: { text: string }) {
     return (
       <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
         <div className="mt-0.5 shrink-0 text-base leading-none">{emojiMatch[1]}</div>
-        <div className="text-[14px] leading-[1.6] text-ink">{renderLinkedText(emojiMatch[2])}</div>
+        <div className="font-body text-[15px] leading-[1.75] text-ink">{renderLinkedText(emojiMatch[2])}</div>
       </div>
     );
   }
   return (
     <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
       <div className="mt-0.5 shrink-0"><CheckBadgeIcon /></div>
-      <div className="text-[14px] leading-[1.6] text-ink">{text}</div>
+      <div className="font-body text-[15px] leading-[1.75] text-ink">{text}</div>
     </div>
   );
 }
@@ -331,16 +331,47 @@ const TABS = [
   { id: 'ppSecReviews', label: 'রিভিউ' },
 ];
 
-function SpecCalloutBox({ icon, title, children, tone }: { icon: ReactNode; title: string; children: ReactNode; tone: 'amber' | 'blue' }) {
-  const toneClasses = tone === 'amber'
-    ? 'border-[#FDE0B0] bg-[#FFF7ED]'
-    : 'border-[#BAE0FD] bg-[#F0F9FF]';
+function SpecCalloutBox({
+  icon,
+  title,
+  children,
+  tone,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+  tone: 'amber' | 'blue';
+}) {
+  const isAmber = tone === 'amber';
   return (
-    <div className={`mt-4 rounded-brand border p-4 ${toneClasses}`}>
-      <div className="mb-2 flex items-center gap-2 text-[14px] font-bold text-ink">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/70 text-ink/70">{icon}</span>{title}
+    <div
+      className={`mt-5 rounded-[18px] border p-4 sm:p-5 shadow-xs transition-all duration-brand ${
+        isAmber
+          ? 'border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-white to-amber-50/40 text-amber-950'
+          : 'border-brand-light/35 bg-gradient-to-br from-[#F0F7FF] via-white to-[#EFF6FE]/75 text-ink'
+      }`}
+    >
+      <div className="mb-3 flex items-center gap-2.5">
+        <span
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full shadow-2xs ${
+            isAmber
+              ? 'border border-amber-300/90 bg-amber-100 text-amber-700'
+              : 'border border-brand-light/40 bg-brand-bg/50 text-brand-light'
+          }`}
+        >
+          {icon}
+        </span>
+        <span
+          className={`font-body text-[14.5px] font-extrabold ${
+            isAmber ? 'text-amber-950' : 'text-ink'
+          }`}
+        >
+          {title}
+        </span>
       </div>
-      <div className="text-[14px] leading-[1.7] text-ink/80">{children}</div>
+      <div className="font-body text-[14.5px] leading-[1.85] text-ink/85 space-y-1">
+        {children}
+      </div>
     </div>
   );
 }
@@ -519,7 +550,6 @@ export default function ProductDetailClient({
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [supabase]);
 
-  // স্টিকি বার স্ক্রল চেকার: বিবরণ/ফিচারস বারটি যখন স্ক্রিনের ঠিক শীর্ষে হিট করবে (tabsTop <= 2), তখনই বটম বার আসবে
   useEffect(() => {
     let raf = 0;
     const checkSticky = () => {
@@ -637,7 +667,6 @@ export default function ProductDetailClient({
     if (!prod) return;
     const added = useWishlistStore.getState().toggleWish(prod);
     if (added) {
-      // Navbar-এর wishlist আইকনে জিগল + লিকুইড-ফিল ফিডব্যাক (উড়ন্ত হার্ট ছাড়াই)
       window.dispatchEvent(new CustomEvent(WISHLIST_NAV_HIT_EVENT));
       if (!prefersReducedMotion()) {
         const seed = ++wishBurstSeedRef.current;
@@ -1127,7 +1156,7 @@ export default function ProductDetailClient({
           <SectionHeading icon={<SolidDocIcon />}>
             {t('প্রোডাক্টের')} <span className="text-brand-light">{t('বিস্তারিত বিবরণ')}</span>
           </SectionHeading>
-          <div className="text-[15px] leading-[1.85] text-ink/80">
+          <div className="font-body text-[16px] leading-[1.9] text-ink/85">
             {(prod.longDesc || prod.desc) ? (
               (prod.longDesc || prod.desc)!.split('\n\n').map((p, i) => (
                 <p key={i} className="mb-3.5">
@@ -1149,7 +1178,7 @@ export default function ProductDetailClient({
               {features.map((f, i) => <FeatureItem key={i} text={f} />)}
             </div>
           ) : (
-            <div className="text-[13px] text-muted">{t('এই প্রোডাক্টের features এখনো যোগ হয়নি।')}</div>
+            <div className="font-body text-[13.5px] text-muted">{t('এই প্রোডাক্টের features এখনো যোগ হয়নি।')}</div>
           )}
         </div>
 
@@ -1161,8 +1190,8 @@ export default function ProductDetailClient({
             <table className="w-full border-collapse text-[14px]">
               <thead>
                 <tr className="border-b border-border-base/80 bg-surface-muted/60">
-                  <th className="w-[38%] px-4 py-3 text-left font-body text-[13px] font-bold text-ink">{t('বিবরণ')}</th>
-                  <th className="px-4 py-3 text-left font-body text-[13px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
+                  <th className="w-[38%] px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{t('বিবরণ')}</th>
+                  <th className="px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1171,8 +1200,8 @@ export default function ProductDetailClient({
                 ) : (
                   techRows.map(([k, v]) => (
                     <tr key={k} className="border-b border-border-base/50 last:border-b-0 transition-colors hover:bg-brand-bg/10">
-                      <td className="px-4 py-3 font-body text-[13.5px] font-semibold text-ink/90">{k}</td>
-                      <td className="px-4 py-3 font-body text-[13.5px] font-medium text-ink/75">{v}</td>
+                      <td className="px-4 py-3 font-body text-[14.5px] font-semibold text-ink/90">{k}</td>
+                      <td className="px-4 py-3 font-body text-[14.5px] font-medium text-ink/80">{v}</td>
                     </tr>
                   ))
                 )}
@@ -1205,13 +1234,13 @@ export default function ProductDetailClient({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {prod.infoBoxes.map((box, i) => (
                 <div key={i} className="rounded-brand border border-border-base bg-white p-4 shadow-sh1">
-                  <div className="mb-1.5 text-[14.5px] font-bold text-ink">{box.title}</div>
-                  <div className="whitespace-pre-line text-[14px] leading-[1.8] text-ink/80">{renderLinkedText(box.body)}</div>
+                  <div className="mb-2 text-[15.5px] font-bold text-ink">{box.title}</div>
+                  <div className="whitespace-pre-line font-body text-[15px] leading-[1.85] text-ink/85">{renderLinkedText(box.body)}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-[13px] text-muted">{t('এই প্রোডাক্টের জন্য অতিরিক্ত তথ্য এখনো যোগ হয়নি।')}</div>
+            <div className="font-body text-[13.5px] text-muted">{t('এই প্রোডাক্টের জন্য অতিরিক্ত তথ্য এখনো যোগ হয়নি।')}</div>
           )}
         </div>
 
@@ -1235,10 +1264,10 @@ export default function ProductDetailClient({
                     >
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between gap-3 p-4 text-left font-body text-[14px] font-bold text-ink transition-colors"
+                        className="flex w-full items-center justify-between gap-3 p-4 text-left font-body text-[15px] font-bold text-ink transition-colors"
                         onClick={() => toggleFaq(i)}
                       >
-                        <span className="font-semibold">{renderLinkedText(t(f.q))}</span>
+                        <span className="font-bold leading-snug">{renderLinkedText(t(f.q))}</span>
                         <ChevronIcon className={`shrink-0 transition-transform duration-brand ${isOpen ? 'rotate-180 text-brand-light' : 'text-muted'}`} />
                       </button>
                       
@@ -1248,7 +1277,7 @@ export default function ProductDetailClient({
                         }`}
                       >
                         <div className="min-h-0 overflow-hidden">
-                          <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-relaxed text-ink/80">
+                          <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[15px] leading-[1.85] text-ink/85">
                             <div className="border-l-2 border-brand-light/60 pl-3">
                               {renderLinkedText(t(f.a))}
                             </div>
