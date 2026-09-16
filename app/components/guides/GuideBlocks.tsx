@@ -102,7 +102,7 @@ function ImageOrPlaceholder({
     <div
       className={`flex w-full items-center justify-center rounded-2xl border-2 border-dashed border-border-base bg-brand-bg/20 ${aspect}`}
     >
-      <span className="px-4 text-center font-body text-[12px] text-muted">
+      <span className="px-4 text-center font-body text-[12.5px] text-muted">
         {lang === 'en' ? 'Photo to be added' : 'এখানে বাস্তব ছবি যোগ করা হবে'}
       </span>
     </div>
@@ -123,7 +123,7 @@ function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
             {t(block.title, lang)}
           </h1>
           {block.subtitle && (
-            <p className="mt-3 max-w-[560px] font-body text-[14.5px] leading-[1.8] text-muted sm:text-[15px]">
+            <p className="mt-3 max-w-[560px] font-body text-[15.5px] leading-[1.85] text-muted sm:text-[16px]">
               {t(block.subtitle, lang)}
             </p>
           )}
@@ -138,7 +138,7 @@ function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }
   return (
     <Container className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
-      <div className="space-y-3 font-body text-[14.5px] leading-[1.9] text-ink/85">
+      <div className="space-y-3.5 font-body text-[15.5px] leading-[1.9] text-ink/85">
         {block.paragraphs.map((p, i) => (
           <p key={i}>{tl(p, lang)}</p>
         ))}
@@ -174,8 +174,8 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
                 {t(card.tag, lang)}
               </div>
             )}
-            <h3 className="mb-1.5 font-body text-[15px] font-bold text-ink">{tl(card.title, lang)}</h3>
-            <p className="font-body text-[13.5px] leading-[1.75] text-muted">{tl(card.description, lang)}</p>
+            <h3 className="mb-2 font-body text-[15.5px] font-bold text-ink leading-snug">{tl(card.title, lang)}</h3>
+            <p className="font-body text-[14.5px] sm:text-[15px] leading-[1.8] text-muted">{tl(card.description, lang)}</p>
           </div>
         ))}
       </div>
@@ -188,7 +188,7 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
     <Container className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="sleek-scrollbar overflow-x-auto rounded-2xl border border-border-base shadow-xs">
-        <table className="w-full min-w-[500px] border-collapse font-body text-[13.5px]">
+        <table className="w-full min-w-[500px] border-collapse font-body text-[14px]">
           <thead>
             <tr className="bg-brand-bg/40 text-left">
               <th className="px-4 py-3 font-bold text-ink whitespace-nowrap">{lang === 'en' ? 'Type' : 'ধরন'}</th>
@@ -213,7 +213,7 @@ function PriceTableBlockView({ block, lang }: { block: PriceTableBlock; lang: La
           </tbody>
         </table>
       </div>
-      {block.note && <p className="mt-3 font-body text-[12px] leading-[1.7] text-muted">{tl(block.note, lang)}</p>}
+      {block.note && <p className="mt-3 font-body text-[13px] leading-[1.75] text-muted">{tl(block.note, lang)}</p>}
     </Container>
   );
 }
@@ -223,7 +223,7 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
     <WideContainer className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="overflow-x-auto rounded-2xl border border-border-base shadow-xs">
-        <table className="w-full min-w-[560px] border-separate border-spacing-0 font-body text-[13px]">
+        <table className="w-full min-w-[560px] border-separate border-spacing-0 font-body text-[14px]">
           <thead>
             <tr>
               <th className="sticky left-0 z-10 bg-[#DCEBFD] px-4 py-3 text-left font-bold text-ink shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
@@ -275,15 +275,15 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <h3 className="mb-1 font-body text-[15px] font-bold text-ink">{tl(step.title, lang)}</h3>
-              <p className="font-body text-[13.5px] leading-[1.75] text-muted">{tl(step.description, lang)}</p>
+              <h3 className="mb-1.5 font-body text-[15.5px] font-bold text-ink leading-snug">{tl(step.title, lang)}</h3>
+              <p className="font-body text-[14.5px] sm:text-[15px] leading-[1.8] text-muted">{tl(step.description, lang)}</p>
               {step.warning && (
-                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 font-body text-[12.5px] text-amber-800">
+                <div className="mt-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 font-body text-[13.5px] text-amber-800 leading-relaxed">
                   {tl(step.warning, lang)}
                 </div>
               )}
               {step.image?.url && (
-                <div className="mt-3 max-w-[360px]">
+                <div className="mt-3.5 max-w-[360px]">
                   <ImageOrPlaceholder image={step.image} lang={lang} aspect="aspect-[4/3]" />
                 </div>
               )}
@@ -299,9 +299,9 @@ function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang
   return (
     <Container className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
-      <ul className="space-y-2.5">
+      <ul className="space-y-3">
         {block.items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2.5 font-body text-[14px] text-ink/85">
+          <li key={i} className="flex items-start gap-2.5 font-body text-[15px] leading-[1.75] text-ink/85">
             <GuideCheckboxIcon className="mt-0.5 shrink-0 text-brand-light" />
             <span>{tl(item, lang)}</span>
           </li>
@@ -321,7 +321,7 @@ function ImageTextBlockView({ block, lang }: { block: ImageTextBlock; lang: Lang
         </div>
         <div className={imageFirst ? 'sm:order-2' : 'sm:order-1'}>
           <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
-          <div className="space-y-2.5 font-body text-[14px] leading-[1.85] text-ink/85">
+          <div className="space-y-3 font-body text-[15px] sm:text-[15.5px] leading-[1.85] text-ink/85">
             {block.paragraphs.map((p, i) => (
               <p key={i}>{tl(p, lang)}</p>
             ))}
@@ -355,9 +355,9 @@ function ProductRecommendationBlockView({
           <Image src={product.image} alt={title} fill sizes="200px" className="object-contain p-1.5" />
         </div>
         <div className="flex-1">
-          <h3 className="font-body text-[15.5px] font-bold text-ink">{title}</h3>
+          <h3 className="font-body text-[16px] font-bold text-ink">{title}</h3>
           {block.blurb && (
-            <p className="mt-1 font-body text-[13px] leading-[1.7] text-muted">{tl(block.blurb, lang)}</p>
+            <p className="mt-1 font-body text-[13.5px] sm:text-[14px] leading-[1.75] text-muted">{tl(block.blurb, lang)}</p>
           )}
           <div className="mt-2 font-body text-[16px] font-extrabold text-brand-light">
             ৳{product.price.toLocaleString('en-US')}
@@ -393,7 +393,7 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
               <button
                 type="button"
                 onClick={() => setOpenIndex(open ? null : i)}
-                className="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-4 text-left font-body text-[14px] font-bold text-ink sm:p-[17px]"
+                className="flex w-full cursor-pointer select-none items-center justify-between gap-3 p-4 text-left font-body text-[15px] font-bold text-ink sm:p-[17px]"
               >
                 <span className="leading-snug">{t(item.question, lang)}</span>
                 <GuideChevronIcon
@@ -408,7 +408,7 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
                 }`}
               >
                 <div className="min-h-0 overflow-hidden">
-                  <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[13.5px] leading-[1.8] text-ink/80 sm:px-[18px] sm:pb-[18px]">
+                  <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 font-body text-[14.5px] sm:text-[15px] leading-[1.85] text-ink/80 sm:px-[18px] sm:pb-[18px]">
                     <div className="border-l-2 border-brand-light/60 pl-3.5">{tl(item.answer, lang)}</div>
                   </div>
                 </div>
@@ -445,7 +445,7 @@ function RelatedLinksBlockView({
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
                 <GuideIcon name={item.icon} />
               </div>
-              <span className="font-body text-[13.5px] font-bold text-ink">{t(item.title, lang)}</span>
+              <span className="font-body text-[14px] sm:text-[14.5px] font-bold text-ink">{t(item.title, lang)}</span>
               <GuideArrowRightIcon className="ml-auto h-4 w-4 shrink-0 text-muted" />
             </Link>
           );
@@ -464,7 +464,7 @@ function GalleryBlockView({ block, lang }: { block: GalleryBlock; lang: Lang }) 
           <div key={i} className="overflow-hidden rounded-2xl border border-border-base bg-white shadow-xs">
             <ImageOrPlaceholder image={item.image} lang={lang} aspect="aspect-square" sizes="240px" />
             {item.caption && (
-              <div className="p-2.5 font-body text-[12px] leading-snug text-muted">{t(item.caption, lang)}</div>
+              <div className="p-2.5 font-body text-[12.5px] sm:text-[13px] leading-snug text-muted">{t(item.caption, lang)}</div>
             )}
           </div>
         ))}
