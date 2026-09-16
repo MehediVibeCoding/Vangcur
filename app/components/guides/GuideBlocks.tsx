@@ -276,7 +276,14 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
             </span>
             <div className="min-w-0 flex-1">
               <h3 className="mb-1.5 font-body text-[15.5px] font-bold text-ink leading-snug">{tl(step.title, lang)}</h3>
-              <p className="font-body text-[14.5px] sm:text-[15px] leading-[1.8] text-muted">{tl(step.description, lang)}</p>
+              {/* 🛠️ ফিক্স: guide-content-parser.ts-এ numbered লিস্ট থেকে তৈরি step-এর
+                  description সবসময় খালি স্ট্রিং থাকে (শুধু title-ই থাকে)। আগে এখানে
+                  description খালি থাকলেও <p> ট্যাগ রেন্ডার হতো, ফলে প্রতিটা স্টেপের
+                  নিচে একটা অপ্রয়োজনীয় খালি লাইন/স্পেস দেখা যেত। এখন খালি থাকলে
+                  <p> ট্যাগটাই বসে না। */}
+              {tl(step.description, lang) && (
+                <p className="font-body text-[14.5px] sm:text-[15px] leading-[1.8] text-muted">{tl(step.description, lang)}</p>
+              )}
               {step.warning && (
                 <div className="mt-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2 font-body text-[13.5px] text-amber-800 leading-relaxed">
                   {tl(step.warning, lang)}
