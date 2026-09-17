@@ -9,6 +9,7 @@ export const staticDictionary: Record<string, string> = {
   // Navigation & General
   'কুইক লিঙ্কস': 'Quick Links',
   'মাই প্রোফাইল': 'My Profile',
+  'লগইন': 'Login',
   'ট্র্যাক অর্ডার': 'Track Order',
   'হোম': 'Home',
   'ক্যাটাগরি': 'Categories',

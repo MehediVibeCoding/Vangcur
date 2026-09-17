@@ -198,8 +198,11 @@ export default function Footer() {
       {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
       <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
         <defs>
-          <clipPath id="footer-top-wave-clip" clipPathUnits="objectBoundingBox">
+          <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
             <path d="M 0,0.038 C 0.18,0.068 0.35,0.015 0.55,0.015 C 0.72,0.015 0.88,0.065 1,0.035 L 1,1 L 0,1 Z" />
+          </clipPath>
+          <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.02 C 0.25,0.007 0.75,0.007 1,0.02 L 1,1 L 0,1 Z" />
           </clipPath>
         </defs>
       </svg>
@@ -208,46 +211,61 @@ export default function Footer() {
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
         {/* ছবির র্যাপার — শীর্ষভাগে আসল বডি ব্যাকগ্রাউন্ড স্বয়ংক্রিয়ভাবে প্রকাশ পাবে */}
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — নিজস্ব হালকা ক্লিপ-পাথ + সিমলেস-এজ ফিক্স (GPU লেয়ার ফোর্স করে
+            যাতে ক্লিপ-কার্ভ বরাবর কোনো দৃশ্যমান জোড়াতালি/সেলাই রেখা না দেখা যায়) */}
         <div
-          className="relative w-full"
+          className="relative aspect-[1000/1775] w-full overflow-hidden md:hidden"
           style={{
-            clipPath: 'url(#footer-top-wave-clip)',
-            WebkitClipPath: 'url(#footer-top-wave-clip)',
+            clipPath: 'url(#footer-top-wave-clip-mobile)',
+            WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
+            transform: 'translateZ(0)',
+            WebkitBackfaceVisibility: 'hidden',
+            isolation: 'isolate',
           }}
         >
-          {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
-          <div className="relative aspect-[1000/1775] w-full md:hidden">
-            <Image
-              src="/footer-illustration-mobile.webp"
-              alt="Vangcur Gadgets Lifestyle"
-              fill
-              sizes="100vw"
-              className="object-cover object-bottom"
-              priority={false}
-            />
-          </div>
+          <Image
+            src="/footer-illustration-mobile.webp"
+            alt="Vangcur Gadgets Lifestyle"
+            fill
+            sizes="100vw"
+            className="object-cover object-bottom"
+            priority={false}
+          />
+        </div>
 
-          {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
-          <div className="relative hidden aspect-[2000/1333] w-full md:block">
-            <Image
-              src="/footer-illustration-desktop.webp"
-              alt="Vangcur Gadgets Lifestyle"
-              fill
-              sizes="100vw"
-              className="object-cover object-bottom"
-              priority={false}
-            />
-          </div>
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — কার্ভ অপরিবর্তিত, শুধু সিমলেস-এজ ফিক্স যোগ হয়েছে */}
+        <div
+          className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
+          style={{
+            clipPath: 'url(#footer-top-wave-clip-desktop)',
+            WebkitClipPath: 'url(#footer-top-wave-clip-desktop)',
+            transform: 'translateZ(0)',
+            WebkitBackfaceVisibility: 'hidden',
+            isolation: 'isolate',
+          }}
+        >
+          <Image
+            src="/footer-illustration-desktop.webp"
+            alt="Vangcur Gadgets Lifestyle"
+            fill
+            sizes="100vw"
+            className="object-cover object-bottom"
+            priority={false}
+          />
         </div>
 
         {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
-        <div className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none">
+        <div
+          className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none"
+          style={{ transform: 'translate3d(0, 1px, 0)' }}
+        >
           <svg
             viewBox="0 0 1440 160"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-12 sm:h-20 md:h-28"
             preserveAspectRatio="none"
+            shapeRendering="geometricPrecision"
           >
             <path
               d="M0,110 C120,85 180,75 280,75 C420,75 580,142 760,142 C960,142 1120,88 1260,88 C1340,88 1390,96 1440,105 L1440,160 L0,160 Z"
@@ -388,6 +406,11 @@ export default function Footer() {
               <li>
                 <Link href="/account" prefetch={true} className={colLinkClass}>
                   {t('মাই প্রোফাইল')}
+                </Link>
+              </li>
+              <li>
+                <Link href="/account" prefetch={true} className={colLinkClass}>
+                  {t('লগইন')}
                 </Link>
               </li>
               <li>
