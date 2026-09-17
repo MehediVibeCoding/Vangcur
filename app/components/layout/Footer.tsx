@@ -210,11 +210,10 @@ export default function Footer() {
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* ছবির র্যাপার — শীর্ষভাগে আসল বডি ব্যাকগ্রাউন্ড স্বয়ংক্রিয়ভাবে প্রকাশ পাবে */}
         {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — নিজস্ব হালকা ক্লিপ-পাথ + সিমলেস-এজ ফিক্স (GPU লেয়ার ফোর্স করে
             যাতে ক্লিপ-কার্ভ বরাবর কোনো দৃশ্যমান জোড়াতালি/সেলাই রেখা না দেখা যায়) */}
         <div
-          className="relative aspect-[1000/1775] w-full overflow-hidden md:hidden"
+          className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
           style={{
             clipPath: 'url(#footer-top-wave-clip-mobile)',
             WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
