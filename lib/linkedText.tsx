@@ -1,13 +1,25 @@
 // ফাইলের পাথ: lib/linkedText.tsx
 // সব SEO কনটেন্টের ভেতরে (প্রোডাক্ট Description/Features/Extra Info/FAQ,
-// গাইড পেজের RichText/Checklist/CardGrid/FAQ ইত্যাদি) ৩ ধরনের ইনলাইন
+// গাইড পেজের RichText/Checklist/CardGrid/FAQ ইত্যাদি) ৪ ধরনের ইনলাইন
 // মার্কডাউন থাকতে পারে:
-//   ১. `[লেখা](/url)`   — লিংক
-//   ২. `**লেখা**`        — বোল্ড/emphasis (গুরুত্বপূর্ণ কথা হাইলাইট করতে)
-//   ৩. `*লেখা*`          — italic (কম ব্যবহৃত, তবু সাপোর্টেড)
-// renderLinkedText() এই তিনটাই একসাথে পার্স করে আসল React নোডে বদলে দেয়।
-// আগে শুধু লিংক পার্স হতো — **bold** সিনট্যাক্স লেখা থাকলেও raw `**` অক্ষর
-// হিসেবেই সাইটে দেখা যেত (স্ক্রিনশটে যে বাগ রিপোর্ট হয়েছিল, ঠিক এটাই)।
+//   ১. `[লেখা](/url)`         — লিংক
+//   ২. `**[লেখা](/url)**`     — বোল্ড লিংক (CTA-স্টাইল, যেমন "...দেখুন →")
+//   ৩. `**লেখা**`              — বোল্ড/emphasis (গুরুত্বপূর্ণ কথা হাইলাইট করতে)
+//   ৪. `*লেখা*`                — italic (কম ব্যবহৃত, তবু সাপোর্টেড)
+// renderLinkedText() এই চারটাই একসাথে পার্স করে আসল React নোডে বদলে দেয়।
+//
+// [হার্ডেনিং] আগে শুধু প্লেইন `[লেখা](/url)` লিংক আর প্লেইন `**বোল্ড**` টেক্সট
+// আলাদা আলাদাভাবে পার্স হতো — একটা লিংক-স্ক্যান পাস আগে চলত, তারপর বাকি অংশে
+// bold/italic স্ক্যান। সমস্যা হলো `**[লেখা](/url)**` (পুরো লিংকটাই বোল্ড করে
+// লেখা, CTA-লাইনে খুব সাধারণ একটা প্যাটার্ন) লেখা থাকলে লিংক-স্ক্যান শুধু
+// `[লেখা](/url)` অংশটাই ধরত, সামনে-পেছনের `**` দুটো "লিংকের বাইরের প্লেইন
+// টেক্সট" হিসেবে বাকি থেকে যেত — আর সেই এতিম `**` জোড়া (নিজেদের ভেতরে কোনো
+// টেক্সট নেই বলে) bold/italic প্যাটার্নেও ম্যাচ করত না, ফলে raw `**` অক্ষর
+// হিসেবেই লিংকের ঠিক আগে-পরে সাইটে দেখা যেত (স্ক্রিনশটে বারবার রিপোর্ট হওয়া
+// বাগ, ঠিক এটাই)। এখন বোল্ড-লিংক প্যাটার্নটা লিংক-প্যাটার্নের সাথেই একই
+// combined regex-এ, লিংকের চেয়ে বেশি স্পেসিফিক হওয়ায় আগে ট্রাই হয় — পুরো
+// `**[...](...) **` একবারে মিলে গিয়ে বোল্ড-স্টাইল লিংক হিসেবে রেন্ডার হয়,
+// কোনো এতিম `**` থাকে না।
 //
 // এছাড়া AGENTS.md-এর "নো-ইমোজি পলিসি" রেন্ডার-টাইমেও একটা সেফটি-নেট হিসেবে
 // জোরদার করা হয়েছে — raw pictograph/emoji অক্ষর (থাকলে, ভুলে থেকে গেলেও)
@@ -19,7 +31,12 @@
 
 import Link from 'next/link';
 
-const LINK_PATTERN = /\[([^\]\n]+)\]\(([^)\s]+)\)/g;
+// alt ১: বোল্ড-লিংক — `**[লেখা](url)**` (গ্রুপ ১,২)
+// alt ২: প্লেইন লিংক — `[লেখা](url)` (গ্রুপ ৩,৪)
+// দুটো alternative ভিন্ন অক্ষর (`**` বনাম `[`) দিয়ে শুরু হয় বলে regex
+// engine-এর কাছে এটা অস্পষ্ট না — যেটা যেখানে আসলে আছে সেটাই মেলে।
+const LINK_PATTERN =
+  /\*\*\[([^\]\n]+)\]\(([^)\s]+)\)\*\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
 const BOLD_PATTERN = /\*\*([^*\n]+)\*\*/g;
 const ITALIC_PATTERN = /(?:^|[^*])\*([^*\n]+)\*(?!\*)/g;
 // raw ইমোজি/পিকটোগ্রাফ রেঞ্জ — তীরচিহ্ন (U+2190–21FF) ও সাধারণ পাংচুয়েশন এর
@@ -89,14 +106,19 @@ export function renderLinkedText(text: string | undefined | null): React.ReactNo
   let match: RegExpExecArray | null;
 
   while ((match = re.exec(text)) !== null) {
-    const [full, label, href] = match;
+    const isBoldLink = match[1] !== undefined;
+    const label = isBoldLink ? match[1] : match[3];
+    const href = isBoldLink ? match[2] : match[4];
+    const full = match[0];
+
     if (match.index > lastIndex) {
       parts.push(...renderEmphasis(text.slice(lastIndex, match.index), keyRef));
     }
 
     const isInternal = href.startsWith('/');
-    const linkClass =
-      'font-semibold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light';
+    const linkClass = isBoldLink
+      ? 'font-bold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light'
+      : 'font-semibold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light';
     const cleanLabel = stripEmoji(label);
 
     parts.push(

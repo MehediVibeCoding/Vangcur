@@ -46,6 +46,19 @@ function WideContainer({ children, className = '' }: { children: React.ReactNode
   return <div className={`mx-auto max-w-[1100px] px-4 sm:px-5 ${className}`}>{children}</div>;
 }
 
+// 🛠️ ফিক্স: guide-content-parser.ts-এর assembleAroundList() যখন একটা সেকশনের
+// ভূমিকা/উপসংহার বাক্যকে (lead/trail) আলাদা RichText ব্লকে ভাগ করে, তখন মাঝের
+// checklist/steps ব্লকটার নিজের কোনো heading থাকে না (heading আগের lead
+// ব্লকেই বসে থাকে) — কিন্তু প্রতিটা ব্লক স্বাধীনভাবে `py-8` (উপরে+নিচে সমান
+// প্যাডিং) নেওয়ায় lead-এর শেষ আর headless core-এর শুরুর মাঝে দুটো `py-8`
+// যোগ হয়ে একটা অস্বাভাবিক বড়, কোনো heading/কারণ ছাড়া ফাঁকা গ্যাপ তৈরি হতো
+// (স্ক্রিনশটে বারবার রিপোর্ট হওয়া "অতিরিক্ত স্পেস" সমস্যার একটা বড় উৎস)।
+// এখন heading-হীন continuation ব্লকের উপরের প্যাডিং কমিয়ে আনা হলো, যাতে সেটা
+// আগের ব্লকের সাথেই একটা টানা প্রবাহ মনে হয়, আলাদা সেকশন না।
+function sectionPad(hasHeading: boolean): string {
+  return hasHeading ? 'py-8' : 'pt-1 pb-8';
+}
+
 function getHeadingIcon(icon?: string, headingText?: string): string {
   if (icon && icon !== 'spark') return icon;
   if (!headingText) return icon || 'spark';
@@ -136,7 +149,7 @@ function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
 
 function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }) {
   return (
-    <Container className="py-8">
+    <Container className={sectionPad(Boolean(block.heading))}>
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="space-y-3.5 font-body text-[15.5px] leading-[1.9] text-ink/85">
         {block.paragraphs.map((p, i) => (
@@ -164,11 +177,13 @@ function CardGridBlockView({ block, lang }: { block: CardGridBlock; lang: Lang }
             key={i}
             className="rounded-2xl border border-border-base bg-white/95 p-5 shadow-xs transition-colors hover:border-brand-light/40"
           >
-            {card.icon && card.icon !== 'spark' && (
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
-                <GuideIcon name={card.icon} />
-              </div>
-            )}
+            {/* 🛠️ ফিক্স: card.icon (keyword-ভিত্তিক inference) কোনো কোনো টাইটেলে
+                ম্যাচ পেত, কোনোটায় পেত না ('spark' ডিফল্টে পড়লে হাইড হতো) —
+                ফলে একই cardGrid-এর প্রথম কার্ডে কোনো আইকন নেই, পরেরগুলোতে আছে,
+                এই অসামঞ্জস্যপূর্ণ চেহারা দেখা যেত (স্ক্রিনশটে রিপোর্ট হয়েছিল)।
+                সিদ্ধান্ত: এই সাদা লেআউট কার্ডের ভেতরে কোনো হেডিং আইকন থাকবে না,
+                সবসময়ই না — সেকশনের নিজের হেডিং আইকন (উপরে BlockHeading-এ)
+                ইতিমধ্যে আছে, প্রতিটা কার্ডে আলাদা আইকন দরকার নেই। */}
             {card.tag && (
               <div className="mb-1 font-body text-[11px] font-bold uppercase tracking-wide text-brand-light">
                 {t(card.tag, lang)}
@@ -261,9 +276,42 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
   );
 }
 
+// 🛠️ ফিক্স: আগে প্রতিটা numbered step সবসময় একটা বর্ডার-বক্স কার্ড হিসেবে
+// রেন্ডার হতো, description না থাকলেও। ছোট, এক-লাইনের step-এ (যেমন App connect
+// করার ৫টা ধাপ, শুধু title, কোনো image/warning নেই) এই ভারী বক্স-লেআউট
+// দরকারের চেয়ে বেশি স্পেস নেয় আর ফাঁকা/অসম্পূর্ণ দেখায় (স্ক্রিনশটে রিপোর্ট
+// হওয়া "অতিরিক্ত স্পেস" সমস্যা)। এখন block-এর কোনো step-এ image বা warning
+// (সত্যিকারের রিচ কনটেন্ট) না থাকলে পুরো ব্লকটা compact, box-ছাড়া numbered
+// লিস্ট হিসেবে দেখায় — একটা step-এও image/warning থাকলে (ইনস্টলেশন গাইডে
+// ভবিষ্যতে ছবি-সহ ধাপ যোগ হলে যেমন হতে পারে) পুরো ব্লকই আগের রিচ কার্ড-লেআউটে
+// থেকে যায়, যাতে সেই richer content-এর জন্য দরকারি ভিজ্যুয়াল বিভাজন বজায় থাকে।
 function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
+  const isRich = block.steps.some((s) => Boolean(s.image?.url) || Boolean(s.warning));
+
+  if (!isRich) {
+    return (
+      <Container className={sectionPad(Boolean(block.heading))}>
+        <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'wrench'} />
+        <ol className="space-y-2.5">
+          {block.steps.map((step, i) => {
+            const desc = tl(step.description, lang);
+            return (
+              <li key={i} className="flex items-start gap-2.5 font-body text-[15px] leading-[1.75] text-ink/85">
+                <span className="mt-0.5 shrink-0 font-bold text-brand-light">{i + 1}.</span>
+                <span>
+                  <span className="font-bold text-ink">{tl(step.title, lang)}</span>
+                  {desc ? <> — {desc}</> : null}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </Container>
+    );
+  }
+
   return (
-    <Container className="py-8">
+    <Container className={sectionPad(Boolean(block.heading))}>
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'wrench'} />
       <div className="space-y-4">
         {block.steps.map((step, i) => (
@@ -276,11 +324,6 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
             </span>
             <div className="min-w-0 flex-1">
               <h3 className="mb-1.5 font-body text-[15.5px] font-bold text-ink leading-snug">{tl(step.title, lang)}</h3>
-              {/* 🛠️ ফিক্স: guide-content-parser.ts-এ numbered লিস্ট থেকে তৈরি step-এর
-                  description সবসময় খালি স্ট্রিং থাকে (শুধু title-ই থাকে)। আগে এখানে
-                  description খালি থাকলেও <p> ট্যাগ রেন্ডার হতো, ফলে প্রতিটা স্টেপের
-                  নিচে একটা অপ্রয়োজনীয় খালি লাইন/স্পেস দেখা যেত। এখন খালি থাকলে
-                  <p> ট্যাগটাই বসে না। */}
               {tl(step.description, lang) && (
                 <p className="font-body text-[14.5px] sm:text-[15px] leading-[1.8] text-muted">{tl(step.description, lang)}</p>
               )}
@@ -302,14 +345,32 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
   );
 }
 
+// heading-এ সত্যিকারের "checklist" শব্দ না থাকলে (যেমন "কোন কাজে কোনটা ভালো"-
+// জাতীয় use-case ম্যাপিং লিস্ট) এটা আসলে চেক-করার তালিকা না, স্রেফ তথ্যমূলক
+// বুলেট-পয়েন্ট — সেক্ষেত্রে ✅ checkbox আইকন না দেখিয়ে সাধারণ বুলেট দেখানো হয়।
+// block.style (guide-content-parser.ts পার্স-টাইমে সেট করে) থাকলে সেটাই
+// চূড়ান্ত সিদ্ধান্ত; পুরনো ডেটায় (এই ফিল্ড যোগ হওয়ার আগে সেভ করা) style না
+// থাকলে heading টেক্সট দেখে একই হিউরিস্টিক ফলব্যাক হিসেবে চালানো হয়।
+const CHECKLIST_HEADING_PATTERN = /চেকলিস্ট|চেক\s*লিস্ট|check\s*-?\s*list/i;
+
+function isChecklistHeading(text?: LocalizedText): boolean {
+  if (!text) return true; // heading না থাকলে (lead paragraph-এ সরে গেছে) আগের আচরণই নিরাপদ ডিফল্ট
+  return CHECKLIST_HEADING_PATTERN.test(text.bn) || CHECKLIST_HEADING_PATTERN.test(text.en);
+}
+
 function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang }) {
+  const showCheckbox = block.style ? block.style === 'checkbox' : isChecklistHeading(block.heading);
   return (
-    <Container className="py-8">
-      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'clipboard'} />
+    <Container className={sectionPad(Boolean(block.heading))}>
+      <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || (showCheckbox ? 'clipboard' : 'spark')} />
       <ul className="space-y-3">
         {block.items.map((item, i) => (
           <li key={i} className="flex items-start gap-2.5 font-body text-[15px] leading-[1.75] text-ink/85">
-            <GuideCheckboxIcon className="mt-0.5 shrink-0 text-brand-light" />
+            {showCheckbox ? (
+              <GuideCheckboxIcon className="mt-0.5 shrink-0 text-brand-light" />
+            ) : (
+              <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" aria-hidden="true" />
+            )}
             <span>{tl(item, lang)}</span>
           </li>
         ))}
@@ -428,6 +489,11 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
   );
 }
 
+// 🛠️ ফিক্স: আগে প্রতিটা related-link একটা সাদা বর্ডার-বক্স কার্ড হিসেবে দেখানো
+// হতো (FAQ ব্লকের বক্স-লেআউটের সাথে দৃশ্যত গুলিয়ে যেত) — কিন্তু এই সেকশন
+// (যেমন "সংশ্লিষ্ট গাইড ও পেজসমূহ") আসলে একটা সাধারণ নীল-লিংক লিস্ট হওয়ার কথা,
+// কোনো সাদা বক্স/বর্ডার ছাড়া। এখন প্রতিটা আইটেম প্লেইন blue underline link
+// হিসেবে সারিবদ্ধভাবে দেখায়, renderLinkedText-এর লিংক-স্টাইলের সাথে সামঞ্জস্যপূর্ণ।
 function RelatedLinksBlockView({
   block,
   lang,
@@ -438,27 +504,25 @@ function RelatedLinksBlockView({
   hrefMap?: Record<string, string>;
 }) {
   return (
-    <WideContainer className="py-10">
+    <Container className="py-8">
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'linkChain'} />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="space-y-2.5">
         {block.items.map((item, i) => {
           const resolvedHref = (item.targetPageId && hrefMap?.[item.targetPageId]) || item.href || '#';
           return (
-            <Link
-              key={i}
-              href={resolvedHref}
-              className="flex items-center gap-3 rounded-2xl border border-border-base bg-white/95 p-4 shadow-xs transition-colors hover:border-brand-light/40"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-bg/50 text-brand-light">
-                <GuideIcon name={item.icon} />
-              </div>
-              <span className="font-body text-[14px] sm:text-[14.5px] font-bold text-ink">{t(item.title, lang)}</span>
-              <GuideArrowRightIcon className="ml-auto h-4 w-4 shrink-0 text-muted" />
-            </Link>
+            <li key={i}>
+              <Link
+                href={resolvedHref}
+                className="group inline-flex items-center gap-1.5 font-body text-[14.5px] font-semibold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light sm:text-[15px]"
+              >
+                {t(item.title, lang)}
+                <GuideArrowRightIcon className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </li>
           );
         })}
-      </div>
-    </WideContainer>
+      </ul>
+    </Container>
   );
 }
 
