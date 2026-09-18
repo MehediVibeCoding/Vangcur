@@ -4,12 +4,13 @@ export default function ProductLoading() {
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
       {/* ================= Navbar Skeleton (showHomeButton ভ্যারিয়েন্ট) ================= */}
       <div className="mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh1 backdrop-blur-[8px]">
+        <div className="navbar-glass relative rounded-[35px] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px]">
           <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
             <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
-              <div className="flex shrink-0 items-center gap-1.5">
-                <div className="h-[23px] w-[23px] animate-pulse rounded bg-brand-bg/60" />
-                <div className="h-4 w-8 animate-pulse rounded bg-brand-bg/50" />
+              <div className="flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 shadow-xs max-[400px]:pr-2 max-[400px]:pl-1.5 min-[420px]:pr-3.5">
+                <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-brand-light/40" />
+                <div className="hidden h-3.5 w-16 animate-pulse rounded bg-brand-bg/50 min-[420px]:block" />
+                <div className="h-3.5 w-9 animate-pulse rounded bg-brand-bg/50 min-[420px]:hidden" />
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden h-10 animate-pulse rounded-full bg-brand-bg/30 md:block md:w-[240px] lg:w-[300px]" />
@@ -27,11 +28,11 @@ export default function ProductLoading() {
       </div>
 
       {/* ================= মূল গ্রিড: গ্যালারি + ইনফো কলাম ================= */}
-      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-5 md:grid-cols-2 md:px-8 md:pb-10">
+      <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 px-4 pb-6 pt-3.5 md:grid-cols-2 md:px-8 md:pb-10">
         {/* ---------- বাম কলাম: ছবি গ্যালারি ---------- */}
         <div>
-          <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-brand border border-border-base bg-white p-6 shadow-sh1 sm:p-8">
-            <div className="h-full w-full animate-pulse rounded-2xl bg-brand-bg/30" />
+          <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[14px] border border-border-base bg-white shadow-sh1">
+            <div className="h-full w-full animate-pulse bg-brand-bg/30" />
           </div>
           {/* ইমেজ ডট ইন্ডিকেটর */}
           <div className="mt-4 flex justify-center gap-1.5">
@@ -86,8 +87,8 @@ export default function ProductLoading() {
 
           {/* কার্ট + অর্ডার বাটন */}
           <div className="mt-auto flex flex-col gap-2.5">
-            <div className="h-[50px] w-full animate-pulse rounded-[10px] border-[1.5px] border-brand-light/30 bg-brand-bg/25" />
-            <div className="h-[50px] w-full animate-pulse rounded-[10px] bg-brand-light/50" />
+            <div className="h-[50px] w-full animate-pulse rounded-[14px] border-[1.5px] border-brand-light/30 bg-brand-bg/25" />
+            <div className="h-[50px] w-full animate-pulse rounded-[14px] bg-brand-light/50" />
           </div>
         </div>
       </div>

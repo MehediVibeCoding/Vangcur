@@ -1,20 +1,20 @@
-// GitHub পাথ: app/category/[slug]/loading.tsx — পুরো ফাইলটা এটা দিয়ে replace করবে
+// GitHub পাথ: app/category/[slug]/loading.tsx — ক্যাটাগরি পেজ আসলে ClientHome-ই রেন্ডার করে (হোমপেজের মতো Hero+TrustStrip+Categories+ProductGrid) — তাই এই স্কেলেটনও হোমপেজের সাথে হুবহু মিলিয়ে রাখা হয়েছে (আগে এখানে ভুলভাবে breadcrumb/category-header/chips দেখানো হতো, যা আসল পেজে নেই)
 export default function CategoryLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
-      {/* ================= Navbar Skeleton (showHomeButton ভ্যারিয়েন্ট) ================= */}
-      <div className="mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh1 backdrop-blur-[8px]">
+    <div className="min-h-screen bg-transparent">
+      {/* ================= Navbar Skeleton ================= */}
+      <div className="sticky top-[14px] z-[900] mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
+        <div className="navbar-glass relative rounded-[35px] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px]">
           <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
             <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
-              {/* হোম আইকন + "হোম" টেক্সট (লোগোর বদলে) */}
-              <div className="flex shrink-0 items-center gap-1.5">
-                <div className="h-[23px] w-[23px] animate-pulse rounded bg-brand-bg/60" />
-                <div className="h-4 w-8 animate-pulse rounded bg-brand-bg/50" />
-              </div>
+              {/* লোগো — Image (140x49) এর h-7/md:h-8 রেশিও অনুযায়ী */}
+              <div className="h-7 w-20 shrink-0 animate-pulse rounded-md bg-brand-bg/60 max-[400px]:h-6 max-[400px]:w-[68px] md:h-8 md:w-[92px]" />
 
               <div className="flex items-center gap-2 md:gap-3">
+                {/* ডেস্কটপ সার্চ বার — md:w-[240px] lg:w-[300px] */}
                 <div className="hidden h-10 animate-pulse rounded-full bg-brand-bg/30 md:block md:w-[240px] lg:w-[300px]" />
+
+                {/* wishlist, cart, login pill, track-order — একই অর্ডারে */}
                 <div className="flex items-center gap-1.5">
                   <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
                   <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
@@ -28,24 +28,67 @@ export default function CategoryLoading() {
         </div>
       </div>
 
-      {/* ================= Breadcrumb + ক্যাটাগরি হেডার + Sibling চিপস ================= */}
-      <div className="mx-auto max-w-[1300px] px-5 pt-6">
-        <div className="mb-4 h-[13px] w-40 animate-pulse rounded bg-surface-muted" />
-
-        <div className="mb-5 flex items-center gap-3">
-          <div className="h-12 w-12 shrink-0 animate-pulse rounded-full border-[1.5px] border-border-base bg-brand-bg" />
-          <div className="h-7 w-48 animate-pulse rounded-lg bg-brand-bg/60" />
+      {/* ================= Hero Slider Skeleton ================= */}
+      <div className="relative mx-auto max-w-[1300px] bg-transparent px-3.5 pt-3.5 sm:px-5 2xl:max-w-[1560px]">
+        <div className="relative w-full overflow-hidden">
+          <div className="flex gap-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="aspect-[9/16] w-[calc((100%-12px)/2)] min-h-[220px] shrink-0 animate-pulse rounded-[14px] bg-brand-bg/40 shadow-[0_4px_16px_rgba(0,0,0,.08)] sm:min-h-[280px] md:w-[calc((100%-60px)/6)]"
+              />
+            ))}
+          </div>
         </div>
+      </div>
 
-        <div className="mb-7 flex flex-wrap gap-2">
+      {/* ================= TrustStrip Skeleton (আগে বাদ পড়েছিল) ================= */}
+      <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
+        <div className="grid grid-cols-3 gap-x-2 gap-y-0 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sh1 backdrop-blur-[10px] md:grid-cols-5 md:gap-x-4 md:px-7 md:py-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-[30px] w-24 animate-pulse rounded-full border border-border-base bg-white" />
+            <div key={i} className={`flex items-center gap-2 ${i > 3 ? 'hidden md:flex' : ''}`}>
+              <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-brand-bg/50 md:h-10 md:w-10" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="h-2.5 w-4/5 animate-pulse rounded bg-brand-bg/50" />
+                <div className="h-2 w-3/5 animate-pulse rounded bg-surface-muted" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* ================= ProductGrid Skeleton (নিজস্ব হেডার + গ্রিড) ================= */}
-      <div className="mx-auto mb-11 max-w-[1300px] px-5">
+      {/* ================= Categories Carousel Skeleton ================= */}
+      <div className="mx-auto mb-11 min-h-[140px] max-w-[1300px] overflow-hidden px-3.5 sm:px-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="h-[26px] w-36 animate-pulse rounded-md bg-brand-bg/50 sm:h-7" />
+        </div>
+
+        <div className="relative px-8 sm:px-[38px] md:px-[44px]">
+          <div className="absolute left-0 top-1/2 h-8 w-8 -translate-y-1/2 animate-pulse rounded-full border-2 border-border-base bg-white md:h-9 md:w-9" />
+
+          <div className="grid grid-cols-2 gap-2 py-1 md:grid-cols-3 md:gap-3 lg:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div
+                key={i}
+                className={`flex min-h-[58px] items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs md:min-h-[66px] md:gap-3 md:p-3 ${i > 4 ? 'hidden md:flex' : ''}`}
+              >
+                <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-brand-bg/50 md:h-12 md:w-12" />
+                <div className="h-3.5 w-14 animate-pulse rounded bg-surface-muted" />
+              </div>
+            ))}
+          </div>
+
+          <div className="absolute right-0 top-1/2 h-8 w-8 -translate-y-1/2 animate-pulse rounded-full border-2 border-border-base bg-white md:h-9 md:w-9" />
+        </div>
+
+        <div className="mt-3.5 flex justify-center gap-1.5">
+          <div className="h-1.5 w-5 animate-pulse rounded-full bg-brand-bg/50" />
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-bg/40" />
+        </div>
+      </div>
+
+      {/* ================= Product Grid Skeleton ================= */}
+      <div className="mx-auto mb-11 min-h-[400px] max-w-[1300px] px-5 scroll-mt-20 sm:scroll-mt-24">
         <div className="mb-5 flex items-center justify-between">
           <div className="h-6 w-40 animate-pulse rounded-md bg-brand-bg/50" />
           <div className="h-4 w-20 animate-pulse rounded bg-surface-muted" />
@@ -54,7 +97,8 @@ export default function CategoryLoading() {
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)]">
-              <div className="relative aspect-[0.57] animate-pulse overflow-hidden rounded-[15px] bg-brand-bg/30">
+              <div className="relative aspect-[0.57] animate-pulse overflow-hidden rounded-[14px] bg-brand-bg/30">
+                {/* wishlist heart placeholder */}
                 <div className="absolute right-[4.5%] top-[4.5%] h-7 w-7 rounded-full bg-white/30 sm:h-8 sm:w-8" />
                 <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-2 sm:p-3">
                   <div className="h-3 w-4/5 rounded bg-white/60 sm:h-3.5" />
