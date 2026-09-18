@@ -64,7 +64,7 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
             onClick={handleBackToHome}
             aria-label={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
             title={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
-            className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
+            className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -91,19 +91,31 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
               onChange={(e) => handleChange(e.target.value)}
               autoComplete="off"
               style={{ outline: 'none', WebkitAppearance: 'none' }}
-              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none focus:outline-none focus:ring-0 focus-visible:outline-none transition-colors duration-200 focus:border-brand-light pl-10 ${value ? 'pr-9' : 'pr-4'}`}
+              className={`h-11 w-full rounded-full border border-border-base bg-white text-[14px] font-medium text-ink outline-none focus:outline-none focus:ring-0 focus-visible:outline-none transition-colors duration-200 focus:border-brand-light pl-10 ${value ? 'pr-16' : 'pr-4'}`}
             />
             {value && (
-              <motion.button
-                type="button"
-                onClick={() => { setValue(''); onQueryChange(''); }}
-                whileTap={{ scale: 0.92 }}
-                transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                aria-label={t('মুছুন')}
-                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors duration-brand hover:bg-brand-light hover:text-white"
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-              </motion.button>
+              // 🛠️ ফিক্স: আগে এই বাটনে top-1/2 + -translate-y-1/2 (Tailwind ক্লাস)
+              // আর framer-motion-এর whileTap স্কেল — দুটোই একসাথে CSS "transform"
+              // প্রপার্টি নিয়ন্ত্রণ করার চেষ্টা করত। ট্যাপ করলে framer-motion নিজের
+              // transform (scale) বসিয়ে Tailwind-এর translateY(-50%) মুছে ফেলত,
+              // ফলে বাটনটা হঠাৎ অর্ধেক উচ্চতা নিচে "নেমে" যেত। এখন translateY
+              // বাদ দিয়ে বাইরের একটা flex-centered wrapper (inset-y-0 + items-center)
+              // দিয়ে ভার্টিক্যাল সেন্টারিং করা হচ্ছে, তাই ভেতরের motion.button-এর
+              // নিজের transform শুধু স্কেল-অ্যানিমেশনের জন্যই ফাঁকা থাকে — পজিশন
+              // আর নড়ে না। পাশাপাশি চোখে-লাগা নীল সার্কেল X বাদ দিয়ে একটা হালকা
+              // "মুছুন" টেক্সট-বাটন বসানো হয়েছে, যেটা কম জোরালো/কম বিরক্তিকর লাগবে।
+              <div className="absolute inset-y-0 right-2 flex items-center">
+                <motion.button
+                  type="button"
+                  onClick={() => { setValue(''); onQueryChange(''); }}
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 480, damping: 28 }}
+                  aria-label={t('মুছুন')}
+                  className="flex h-7 items-center rounded-full px-2.5 font-body text-[11.5px] font-bold text-muted transition-colors duration-brand hover:bg-surface-muted hover:text-brand-light"
+                >
+                  {t('মুছুন')}
+                </motion.button>
+              </div>
             )}
           </div>
         </div>

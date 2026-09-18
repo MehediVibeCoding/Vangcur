@@ -853,17 +853,22 @@ export default function Navbar({
                     className={`${desktopSearchInputClass} h-full ${searchQuery ? 'pr-9' : ''}`}
                   />
                   {searchQuery && (
-                    <motion.button
-                      type="button"
-                      onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                      whileTap={{ scale: 0.92 }}
-                      transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                      className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
-                      title={t('মুছুন')}
-                      aria-label={t('মুছুন')}
-                    >
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                    </motion.button>
+                    // 🛠️ ফিক্স: একই translate-y-1/2 + framer-motion transform সংঘর্ষ
+                    // (দেখুন মোবাইল সার্চ বক্সের একই ফিক্সের কমেন্ট) — flex-centered
+                    // wrapper দিয়ে সমাধান, স্টাইল অপরিবর্তিত।
+                    <div className="absolute inset-y-0 right-2.5 flex items-center">
+                      <motion.button
+                        type="button"
+                        onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                        whileTap={{ scale: 0.92 }}
+                        transition={{ type: 'spring', stiffness: 480, damping: 28 }}
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
+                        title={t('মুছুন')}
+                        aria-label={t('মুছুন')}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </motion.button>
+                    </div>
                   )}
                   {showDropdown && (
                     <SearchDropdown
@@ -1008,16 +1013,24 @@ export default function Navbar({
                   className={`${searchInputClass} ${searchQuery ? 'pr-9' : ''}`}
                 />
                 {searchQuery && (
-                  <motion.button
-                    whileTap={{ scale: 0.92 }}
-                    transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
-                    onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
-                    title={t('মুছুন')}
-                    aria-label={t('মুছুন')}
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                  </motion.button>
+                  // 🛠️ ফিক্স: top-1/2 + -translate-y-1/2 (Tailwind) আর framer-motion-এর
+                  // whileTap স্কেল একসাথে transform নিয়ন্ত্রণ করার চেষ্টা করায় ট্যাপ
+                  // করলে বাটনটা মাঝে মাঝে নিচে নেমে যেত (translateY মুছে যেত)। এখন
+                  // একটা flex-centered wrapper (inset-y-0 + items-center) দিয়ে সেন্টার
+                  // করা হচ্ছে, motion.button-এর নিজের transform শুধু স্কেলের জন্যই
+                  // ব্যবহার হয় — স্টাইল অপরিবর্তিত, শুধু পজিশন আর নড়ে না।
+                  <div className="absolute inset-y-0 right-2.5 flex items-center">
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
+                      transition={{ type: 'spring', stiffness: 480, damping: 28 }}
+                      className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-bg text-brand-light transition-colors hover:bg-brand-light hover:text-white"
+                      onClick={() => { if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current); setSearchQuery(''); setSearchResults([]); setCatResults([]); setShowDropdown(false); }}
+                      title={t('মুছুন')}
+                      aria-label={t('মুছুন')}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                    </motion.button>
+                  </div>
                 )}
               </div>
             </div>

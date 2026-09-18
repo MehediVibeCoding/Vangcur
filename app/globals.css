@@ -229,6 +229,31 @@
   }
 }
 
+/* ১ক. ফুটারের টপ-ওয়েভ রিপল (শুধু স্ক্রল করার সময় নড়ে) — animation-play-state
+   দিয়ে paused/running টগল করা হয় বলে থামলে সেই মুহূর্তের অবস্থানেই ফিক্স
+   হয়ে থাকে, শুরুর পজিশনে রিসেট/লাফ দেয় না। */
+.vc-top-wave-layer {
+  will-change: transform;
+  animation-duration: 2.4s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-play-state: paused;
+}
+.vc-top-wave-layer-1 { animation-name: vcTopWaveDrift1; }
+.vc-top-wave-layer-2 { animation-name: vcTopWaveDrift2; animation-duration: 1.7s; }
+.vc-top-wave-scrolling .vc-top-wave-layer-1,
+.vc-top-wave-scrolling .vc-top-wave-layer-2 {
+  animation-play-state: running;
+}
+@keyframes vcTopWaveDrift1 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-1.4%, 1px, 0); }
+}
+@keyframes vcTopWaveDrift2 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(1.7%, -1px, 0); }
+}
+
 /* ২. Ambient Shimmer Sheen */
 .shimmer-sheen {
   position: relative;

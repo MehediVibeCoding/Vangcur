@@ -158,6 +158,24 @@ export default function Footer() {
   const { t, lang } = useT();
   const supabase = useMemo(() => createClient(), []);
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
+  // 🌊 টপ ওয়েভ রিপল: স্ক্রল করার সময় সত্যিকারের পানির ওয়েভের মতো নড়বে,
+  // থামার সাথে সাথেই ঠিক ওই মুহূর্তের অবস্থানে ফিক্স/থেমে থাকবে (রিসেট হবে না) —
+  // animation-play-state paused/running টগল করে এটা অর্জন করা হয়েছে, যাতে
+  // অ্যানিমেশন বন্ধ হলে শুরুর পজিশনে "লাফিয়ে" ফিরে না যায়।
+  const [isScrolling, setIsScrolling] = useState(false);
+  useEffect(() => {
+    let stopTimer: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      setIsScrolling(true);
+      clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => setIsScrolling(false), 180);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(stopTimer);
+    };
+  }, []);
   const [contact, setContact] = useState<FooterContact>(DEFAULT_FOOTER.contact);
   const [extras, setExtras] = useState<FooterExtras>({
     desc: DEFAULT_FOOTER.desc,
@@ -251,6 +269,47 @@ export default function Footer() {
             className="object-cover object-bottom"
             priority={false}
           />
+        </div>
+
+        {/* 🌊 ০. উপরের কাটআউট ঢেউ (bottom-wave-এর একই "solid overlay" পদ্ধতি,
+            কিন্তু ইচ্ছাকৃতভাবে অনেক কম উঁচু-নিচু/শ্যালো — উপরে পেজের সাধারণ
+            সাদা ব্যাকগ্রাউন্ডের সাথে মিশে যায় বলে ফিল কালার সাদা)। আগের
+            clip-path কার্ভটা (নিচে) ছবির bounding-shape হিসেবে অপরিবর্তিত
+            রাখা হয়েছে — এই ওভারলে-টাই আসল দৃশ্যমান "ঢেউ কাটআউট" তৈরি করে,
+            তাই clip-path-এর সিম/দাগ আর চোখে পড়বে না। দুই-লেয়ার সূক্ষ্ম রিপল
+            শুধুমাত্র স্ক্রল করার সময় নড়ে, animation-play-state দিয়ে থামলে
+            ঠিক সেই মুহূর্তের পজিশনেই ফিক্স হয়ে থাকে। */}
+        <div
+          className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
+          style={{ transform: 'translate3d(0, -1px, 0)' }}
+        >
+          <svg
+            viewBox="0 0 1440 50"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            shapeRendering="geometricPrecision"
+            className="vc-top-wave-layer vc-top-wave-layer-1 h-6 w-[112%] -ml-[6%] sm:h-9 md:h-12"
+          >
+            <path
+              d="M0,25 C180,15 360,10 540,18 C720,26 900,12 1080,20 C1260,28 1350,20 1440,22 L1440,0 L0,0 Z"
+              fill="#FFFFFF"
+            />
+          </svg>
+          <svg
+            viewBox="0 0 1440 50"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            shapeRendering="geometricPrecision"
+            className="vc-top-wave-layer vc-top-wave-layer-2 absolute inset-0 h-6 w-[112%] -ml-[6%] sm:h-9 md:h-12"
+            style={{ opacity: 0.55 }}
+          >
+            <path
+              d="M0,20 C200,30 380,14 560,20 C760,26 940,10 1120,16 C1280,21 1370,26 1440,24 L1440,0 L0,0 Z"
+              fill="#FFFFFF"
+            />
+          </svg>
         </div>
 
         {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
