@@ -3,12 +3,13 @@ export default function GuidePageLoading() {
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white">
       {/* ================= Navbar Skeleton (showHomeButton ভ্যারিয়েন্ট) ================= */}
       <div className="mx-2 mb-1.5 mt-[14px] max-[400px]:mx-1.5 sm:mx-3">
-        <div className="navbar-glass relative rounded-[35px] border border-white/60 bg-white/80 shadow-sh1 backdrop-blur-[8px]">
+        <div className="navbar-glass relative rounded-[35px] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px]">
           <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
             <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">
-              <div className="flex shrink-0 items-center gap-1.5">
-                <div className="h-[23px] w-[23px] animate-pulse rounded bg-brand-bg/60" />
-                <div className="h-4 w-8 animate-pulse rounded bg-brand-bg/50" />
+              <div className="flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 shadow-xs max-[400px]:pr-2 max-[400px]:pl-1.5 min-[420px]:pr-3.5">
+                <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-brand-light/40" />
+                <div className="hidden h-3.5 w-16 animate-pulse rounded bg-brand-bg/50 min-[420px]:block" />
+                <div className="h-3.5 w-9 animate-pulse rounded bg-brand-bg/50 min-[420px]:hidden" />
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden h-10 animate-pulse rounded-full bg-brand-bg/30 md:block md:w-[240px] lg:w-[300px]" />
@@ -28,14 +29,14 @@ export default function GuidePageLoading() {
       <div className="pt-2 sm:pt-3">
         {/* ================= Hero ব্লক Skeleton ================= */}
         <div className="border-b border-border-base bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white">
-          <div className="mx-auto grid max-w-[1100px] gap-8 px-4 py-10 sm:px-5 sm:py-14 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+          <div className="mx-auto grid max-w-[1100px] gap-8 px-4 pb-10 pt-6 sm:px-5 sm:pb-14 sm:pt-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
             <div>
               <div className="mb-3 h-6 w-32 animate-pulse rounded-full bg-white/80" />
               <div className="space-y-2.5">
                 <div className="h-7 w-full animate-pulse rounded-lg bg-white/70 sm:h-8" />
                 <div className="h-7 w-4/5 animate-pulse rounded-lg bg-white/70 sm:h-8" />
               </div>
-              <div className="mt-4 space-y-2">
+              <div className="mt-3 space-y-2">
                 <div className="h-3.5 w-full animate-pulse rounded bg-white/50" />
                 <div className="h-3.5 w-11/12 animate-pulse rounded bg-white/50" />
                 <div className="h-3.5 w-2/3 animate-pulse rounded bg-white/50" />
@@ -47,7 +48,10 @@ export default function GuidePageLoading() {
 
         {/* ================= মিশ্র কন্টেন্ট ব্লক Skeleton (টেবিল/কার্ড-গ্রিড ধাঁচের) ================= */}
         <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-5">
-          <div className="mb-4 h-6 w-56 animate-pulse rounded-lg bg-surface-muted" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-brand-light/40" />
+            <div className="h-5 w-56 animate-pulse rounded-lg bg-surface-muted" />
+          </div>
           <div className="overflow-hidden rounded-2xl border border-border-base shadow-xs">
             <div className="grid grid-cols-3 gap-px bg-border-base">
               {Array.from({ length: 12 }).map((_, i) => (
@@ -62,11 +66,13 @@ export default function GuidePageLoading() {
 
         {/* ================= কার্ড-গ্রিড ব্লক Skeleton ================= */}
         <div className="mx-auto max-w-[1100px] px-4 pb-8 sm:px-5">
-          <div className="mb-4 h-6 w-48 animate-pulse rounded-lg bg-surface-muted" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-brand-light/40" />
+            <div className="h-5 w-48 animate-pulse rounded-lg bg-surface-muted" />
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="rounded-2xl border border-border-base bg-white/95 p-5 shadow-xs">
-                <div className="mb-3 h-10 w-10 animate-pulse rounded-full bg-brand-bg/50" />
                 <div className="mb-2 h-4 w-3/4 animate-pulse rounded bg-surface-muted" />
                 <div className="space-y-1.5">
                   <div className="h-3 w-full animate-pulse rounded bg-surface-muted" />
@@ -78,8 +84,11 @@ export default function GuidePageLoading() {
         </div>
 
         {/* ================= FAQ ব্লক Skeleton ================= */}
-        <div className="mx-auto max-w-[880px] px-4 pb-12 sm:px-5">
-          <div className="mb-4 h-6 w-40 animate-pulse rounded-lg bg-surface-muted" />
+        <div className="mx-auto max-w-[880px] px-4 py-8 sm:px-5">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-brand-light/40" />
+            <div className="h-5 w-40 animate-pulse rounded-lg bg-surface-muted" />
+          </div>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-14 animate-pulse rounded-[16px] border border-border-base bg-white/95 shadow-xs" />
