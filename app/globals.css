@@ -11,6 +11,10 @@
     min-height: 100vh;
     overflow-x: hidden;
     max-width: 100%;
+    /* 🎨 পেজের আসল ব্যাকগ্রাউন্ড কালার — থিম (লাইট/ডার্ক) বদলালে এটাও বদলে যায়।
+       ফুটারের টপ-ওয়েভ ওভারলে এই একই ভ্যারিয়েবল ব্যবহার করে, যাতে হার্ডকোড করা
+       সাদার বদলে সবসময় পেজের প্রকৃত ব্যাকগ্রাউন্ডের সাথে মিশে যায় (ডার্ক মোডেও)। */
+    --vc-page-bg: #FFFFFF;
     /* Chrome/Android-এর নিজস্ব edge-swipe "back/forward" preview animation বন্ধ —
        এটাই ছিল সেই কালো ফ্ল্যাশ/screen-tear/flicker-এর আসল উৎস, যেটা প্রতিবার
        ভিন্ন ভিন্ন স্টাইলে দেখাচ্ছিল (গতি, cached snapshot ইত্যাদির উপর নির্ভর করে)।
@@ -253,6 +257,8 @@
   0%, 100% { transform: translate3d(0, 0, 0); }
   50% { transform: translate3d(1.7%, -1px, 0); }
 }
+/* হার্ডকোড করা সাদার বদলে পেজের প্রকৃত (থিম-নির্ভর) ব্যাকগ্রাউন্ড কালার */
+.vc-top-wave-fill { fill: var(--vc-page-bg, #FFFFFF); }
 
 /* ২. Ambient Shimmer Sheen */
 .shimmer-sheen {
@@ -559,6 +565,7 @@ html.dark {
 .dark body {
   background-color: #0B111E;
   color: #F8FAFC;
+  --vc-page-bg: #0B111E;
 }
 
 /* মসৃণ থিম-ট্রানজিশন (ফ্লিকার-ফ্রি ফিল) */
@@ -569,8 +576,9 @@ body,
 .bg-white,
 .bg-surface-muted,
 .bg-brand-bg,
+.vc-top-wave-fill,
 .border-border-base {
-  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, fill 0.35s ease;
 }
 
 /* ফ্রস্টেড গ্লাস ন্যাভবার ও সার্চ ড্রপডাউন — ডার্ক ভ্যারিয়েন্ট */
