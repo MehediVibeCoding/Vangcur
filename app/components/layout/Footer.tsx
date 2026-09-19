@@ -271,43 +271,49 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 ০. উপরের কাটআউট ঢেউ (bottom-wave-এর একই "solid overlay" পদ্ধতি,
-            কিন্তু ইচ্ছাকৃতভাবে অনেক কম উঁচু-নিচু/শ্যালো — উপরে পেজের সাধারণ
-            সাদা ব্যাকগ্রাউন্ডের সাথে মিশে যায় বলে ফিল কালার সাদা)। আগের
-            clip-path কার্ভটা (নিচে) ছবির bounding-shape হিসেবে অপরিবর্তিত
-            রাখা হয়েছে — এই ওভারলে-টাই আসল দৃশ্যমান "ঢেউ কাটআউট" তৈরি করে,
-            তাই clip-path-এর সিম/দাগ আর চোখে পড়বে না। দুই-লেয়ার সূক্ষ্ম রিপল
-            শুধুমাত্র স্ক্রল করার সময় নড়ে, animation-play-state দিয়ে থামলে
-            ঠিক সেই মুহূর্তের পজিশনেই ফিক্স হয়ে থাকে। */}
+        {/* 🌊 ০. উপরের কাটআউট ঢেউ (bottom-wave-এর একই "solid overlay" পদ্ধতি)।
+            রিভিশন ২: (ক) ফিল কালার আর হার্ডকোড সাদা না — .vc-top-wave-fill
+            ক্লাস দিয়ে পেজের আসল (থিম-নির্ভর) ব্যাকগ্রাউন্ড ভ্যারিয়েবল
+            ব্যবহার করছে, তাই ডার্ক মোডেও ঠিক মিশে যায়; (খ) দুটো ঢেউ-লেয়ারই
+            আগের চেয়ে অনেক গভীর/উঁচু-নিচু এবং কন্টেইনারের উচ্চতাও বড় করা
+            হয়েছে (h-6→h-11, ইত্যাদি); (গ) প্রতিটি লেয়ারে এখন সম্পূর্ণ প্রস্থ
+            জুড়ে একটানা রিপিটিং তরঙ্গ প্যাটার্ন (৪টা করে চূড়া/খাদ), তাই
+            মাঝখানে আর ফ্ল্যাট/অদৃশ্য দেখায় না — দুই লেয়ারের তরঙ্গ-দৈর্ঘ্য
+            ইচ্ছাকৃতভাবে আলাদা রাখা হয়েছে যাতে বাস্তব পানির ঢেউয়ের মতো একটার
+            উপর আরেকটা ওভারল্যাপ করে। আগের clip-path কার্ভটা (নিচে) শুধু
+            ছবির bounding-shape হিসেবে অপরিবর্তিত রাখা হয়েছে — এই ওভারলে-টাই
+            আসল দৃশ্যমান "ঢেউ কাটআউট" তৈরি করে। দুই-লেয়ার রিপল শুধুমাত্র
+            স্ক্রল করার সময় নড়ে, animation-play-state দিয়ে থামলে ঠিক সেই
+            মুহূর্তের পজিশনেই ফিক্স হয়ে থাকে। */}
         <div
           className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
           style={{ transform: 'translate3d(0, -1px, 0)' }}
         >
           <svg
-            viewBox="0 0 1440 50"
+            viewBox="0 0 1440 90"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
-            className="vc-top-wave-layer vc-top-wave-layer-1 h-6 w-[112%] -ml-[6%] sm:h-9 md:h-12"
+            className="vc-top-wave-layer vc-top-wave-layer-1 h-11 w-[112%] -ml-[6%] sm:h-16 md:h-24"
           >
             <path
-              d="M0,25 C180,15 360,10 540,18 C720,26 900,12 1080,20 C1260,28 1350,20 1440,22 L1440,0 L0,0 Z"
-              fill="#FFFFFF"
+              d="M0,50 C120,15 240,15 360,50 C480,85 600,85 720,50 C840,15 960,15 1080,50 C1200,85 1320,85 1440,50 L1440,0 L0,0 Z"
+              className="vc-top-wave-fill"
             />
           </svg>
           <svg
-            viewBox="0 0 1440 50"
+            viewBox="0 0 1440 90"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
-            className="vc-top-wave-layer vc-top-wave-layer-2 absolute inset-0 h-6 w-[112%] -ml-[6%] sm:h-9 md:h-12"
-            style={{ opacity: 0.55 }}
+            className="vc-top-wave-layer vc-top-wave-layer-2 absolute inset-0 h-11 w-[112%] -ml-[6%] sm:h-16 md:h-24"
+            style={{ opacity: 0.6 }}
           >
             <path
-              d="M0,20 C200,30 380,14 560,20 C760,26 940,10 1120,16 C1280,21 1370,26 1440,24 L1440,0 L0,0 Z"
-              fill="#FFFFFF"
+              d="M0,35 C100,68 200,68 300,35 C400,2 500,2 600,35 C700,68 800,68 900,35 C1000,2 1100,2 1200,35 C1300,68 1400,68 1440,50 L1440,0 L0,0 Z"
+              className="vc-top-wave-fill"
             />
           </svg>
         </div>
