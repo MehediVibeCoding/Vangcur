@@ -64,7 +64,7 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
             onClick={handleBackToHome}
             aria-label={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
             title={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
-            className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
+            className="group flex h-11 shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base bg-white/80 pl-2 pr-3 min-[420px]:pr-3.5 backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
