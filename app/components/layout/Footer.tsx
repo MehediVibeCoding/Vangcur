@@ -213,30 +213,11 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
-      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
-        <defs>
-          <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.055 C 0.12,0.030 0.22,0.015 0.32,0.015 C 0.52,0.015 0.60,0.095 0.74,0.095 C 0.86,0.095 0.94,0.068 1,0.050 L 1,1 L 0,1 Z" />
-          </clipPath>
-          <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.045 C 0.12,0.024 0.22,0.012 0.32,0.012 C 0.52,0.012 0.60,0.075 0.74,0.075 C 0.86,0.075 0.94,0.055 1,0.040 L 1,1 L 0,1 Z" />
-          </clipPath>
-        </defs>
-      </svg>
-
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
-        <div
-          className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-mobile)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
-            transform: 'translateZ(0)',
-          }}
-        >
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — স্বাভাবিক আন-ক্লিপড ও রেসপন্সিভ */}
+        <div className="relative aspect-[20/27] w-full overflow-hidden md:hidden">
           <Image
             src="/footer-illustration-mobile.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -247,15 +228,8 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
-        <div
-          className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-desktop)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-desktop)',
-            transform: 'translateZ(0)',
-          }}
-        >
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — স্বাভাবিক আন-ক্লিপড ও রেসপন্সিভ */}
+        <div className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block">
           <Image
             src="/footer-illustration-desktop.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -266,59 +240,59 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 শীর্ষভাগে দৃশ্যমান দুটি প্রাকৃতিক পানির ঢেউ ওভারলে (সোজা দাগহীন ও সমন্বিত স্কাই-ব্লু গ্রেডিয়েন্ট) */}
+        {/* 🌊 শীর্ষভাগে নিখুঁত একক ভেক্টর আর্কিটেকচার: পেজের রঙের সাথে ১০০% ব্লেন্ড বেস এবং দুটি মসৃণ পানির ঢেউ */}
         <div
           className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
           style={{ transform: 'translate3d(0, -1px, 0)' }}
         >
           <svg
-            viewBox="0 0 1440 120"
+            viewBox="0 0 1440 100"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
-            className="w-full h-11 sm:h-14 md:h-20"
+            className="w-full h-10 sm:h-14 md:h-20"
           >
             <defs>
-              {/* পেজের আসল স্কাই-ব্লু ব্যাকগ্রাউন্ডের সাথে সিমলেস ম্যাচিং গ্রেডিয়েন্ট (সাদা অংশ দূর করতে) */}
-              <linearGradient id="vcx-sky-bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              {/* পেজের আসল ক্যানভাস ব্যাকগ্রাউন্ডের সাথে সিমলেস ব্লেন্ড গ্রেডিয়েন্ট */}
+              <linearGradient id="vcx-top-sky-grad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#C3DEFC" />
                 <stop offset="100%" stopColor="#DCEBFD" />
               </linearGradient>
 
-              {/* Vangcur সমন্বিত স্কাই-ব্লু লাইভ গ্রেডিয়েন্ট ১ (সফট ও মার্জিত) */}
+              {/* Vangcur প্রাকৃতিক স্কাই-ব্লু গ্রেডিয়েন্ট ১ (প্রধান ঢেউ) */}
               <linearGradient id="vcx-water-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#44A7FC" stopOpacity="0.32" />
-                <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.42" />
-                <stop offset="100%" stopColor="#44A7FC" stopOpacity="0.35" />
+                <stop offset="0%" stopColor="#44A7FC" stopOpacity="0.40" />
+                <stop offset="48%" stopColor="#38BDF8" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="#44A7FC" stopOpacity="0.42" />
               </linearGradient>
 
-              {/* Vangcur সমন্বিত লাইট স্কাই-ব্লু লাইভ গ্রেডিয়েন্ট ২ (ন্যাচারাল ওয়াটার ফ্লো) */}
+              {/* Vangcur সফট আইস-ব্লু গ্রেডিয়েন্ট ২ (সেকেন্ডারি অফসেট রিপল) */}
               <linearGradient id="vcx-water-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#7DD3FC" stopOpacity="0.25" />
-                <stop offset="50%" stopColor="#93C5FD" stopOpacity="0.32" />
-                <stop offset="100%" stopColor="#7DD3FC" stopOpacity="0.26" />
+                <stop offset="0%" stopColor="#BAE0FD" stopOpacity="0.45" />
+                <stop offset="52%" stopColor="#C3DEFC" stopOpacity="0.60" />
+                <stop offset="100%" stopColor="#BAE0FD" stopOpacity="0.40" />
               </linearGradient>
             </defs>
 
-            {/* পানির ঢেউ ২ (সেকেন্ডারি ড্যান্সিং রিপল — নরম স্কাই-ব্লু) */}
+            {/* লেয়ার ৩: দ্বিতীয় পানির ঢেউ (সেকেন্ডারি অফসেট রিপল — একটু গভীরে ও আলাদা ফেজে আলতো প্রবহমান) */}
             <path
-              d="M -50,52 C 150,32 310,22 480,22 C 730,22 890,84 1070,84 C 1230,84 1370,62 1490,48 L 1490,64 C 1370,78 1230,100 1070,100 C 890,100 730,38 480,38 C 310,38 150,46 -50,68 Z"
+              d="M -50,0 L 1490,0 L 1490,48 C 1300,62 1140,70 980,66 C 760,60 580,32 380,32 C 220,32 100,40 -50,46 Z"
               fill="url(#vcx-water-grad-2)"
-              className="vc-top-wave-layer vc-top-wave-layer-2 dark:fill-[#60A5FA] dark:fill-opacity-35"
+              className="vc-top-wave-layer vc-top-wave-layer-2"
             />
 
-            {/* পানির ঢেউ ১ (প্রধান জলতরঙ্গ — সুষম ও প্রাকৃতিক স্কাই-ব্লু ক্রেস্ট) */}
+            {/* লেয়ার ২: প্রথম পানির ঢেউ (প্রধান জলতরঙ্গ — ছবির ঠিক ওপর দিয়ে স্বচ্ছ স্কাই-ব্লু ঢেউ) */}
             <path
-              d="M -50,44 C 140,24 300,16 460,16 C 720,16 880,78 1060,78 C 1220,78 1360,56 1490,42 L 1490,58 C 1360,72 1220,94 1060,94 C 880,94 720,32 460,32 C 300,32 140,40 -50,60 Z"
+              d="M -50,0 L 1490,0 L 1490,40 C 1260,54 1100,62 940,58 C 720,52 540,24 340,24 C 180,24 80,32 -50,38 Z"
               fill="url(#vcx-water-grad-1)"
-              className="vc-top-wave-layer vc-top-wave-layer-1 dark:fill-[#38BDF8] dark:fill-opacity-45"
+              className="vc-top-wave-layer vc-top-wave-layer-1"
             />
 
-            {/* বেস লেয়ার: ওপরের পেজের ব্যাকগ্রাউন্ড কালারের সাথে ১০০% সিমলেস ব্লেন্ড (সাদা রঙ বাদ) */}
+            {/* লেয়ার ১: মূল কাটআউট বেস — পেজের রঙের সাথে ১০০% সিমলেসভাবে মিশে যাবে (কোনো সাদা দাগ থাকবে না) */}
             <path
-              d="M -50,0 L 1490,0 L 1490,26 C 1260,36 1120,42 960,40 C 740,36 540,14 340,14 C 180,14 80,20 -50,24 Z"
-              fill="url(#vcx-sky-bg-grad)"
+              d="M -50,0 L 1490,0 L 1490,32 C 1260,46 1100,54 940,50 C 720,44 540,16 340,16 C 180,16 80,24 -50,30 Z"
+              fill="url(#vcx-top-sky-grad)"
               className="dark:fill-[#0B111E]"
             />
           </svg>
