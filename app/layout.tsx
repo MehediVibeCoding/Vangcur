@@ -21,10 +21,16 @@ export async function generateMetadata(): Promise<Metadata> {
       template: '%s | Vangcur',
     },
     description,
+    // 🔖 ব্রাউজার ট্যাব ফেভিকন ও "Add to Home Screen" আইকন — এখানে ইচ্ছাকৃতভাবে
+    // পুরো ওয়ার্ডমার্ক লোগো (vangcur-logo.png) ব্যবহার হচ্ছে না, কারণ ছোট
+    // ফেভিকন সাইজে (১৬-৩২px) পুরো লেখা চ্যাপ্টা/চিকন হয়ে অস্পষ্ট দেখাত। এর
+    // বদলে শুধু "V" মার্কের টাইট-ক্রপড স্কয়ার ভার্সন (ব্যাকগ্রাউন্ড সহ)
+    // ব্যবহার হচ্ছে — এটা ছোট সাইজেও স্পষ্ট থাকে। নেভবারের লোগো (Navbar.tsx)
+    // এই পরিবর্তনে প্রভাবিত হয়নি, সেটা এখনও পূর্ণ ওয়ার্ডমার্ক ব্যবহার করছে।
     icons: {
-      icon: '/vangcur-logo.png',
-      shortcut: '/vangcur-logo.png',
-      apple: '/vangcur-logo.png',
+      icon: '/icon-192.png',
+      shortcut: '/icon-192.png',
+      apple: '/apple-touch-icon.png',
     },
     // 🔗 মেসেঞ্জার/ফেসবুক/হোয়াটসঅ্যাপে vangcur.com শেয়ার করলে যাতে
     // স্বয়ংক্রিয়ভাবে প্রিভিউ কার্ড (লোগো + টাইটেল + বিবরণ) ফুটে ওঠে —
