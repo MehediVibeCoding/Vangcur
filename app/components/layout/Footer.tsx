@@ -160,7 +160,7 @@ export default function Footer() {
   const supabase = useMemo(() => createClient(), []);
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
 
-  // 🌊 টপ ওয়েভ রিপল: স্ক্রল করার সময় প্রাকৃতিক পানির মতো আলতো দোলে, থামলে সেই অবস্থানেই ফিক্স থাকে
+  // 🌊 স্ক্রল রিপল লিসেনার
   const [isScrolling, setIsScrolling] = useState(false);
   useEffect(() => {
     let stopTimer: ReturnType<typeof setTimeout>;
@@ -213,11 +213,30 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
+      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.055 C 0.12,0.030 0.22,0.015 0.32,0.015 C 0.52,0.015 0.60,0.095 0.74,0.095 C 0.86,0.095 0.94,0.068 1,0.050 L 1,1 L 0,1 Z" />
+          </clipPath>
+          <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.045 C 0.12,0.024 0.22,0.012 0.32,0.012 C 0.52,0.012 0.60,0.075 0.74,0.075 C 0.86,0.075 0.94,0.055 1,0.040 L 1,1 L 0,1 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
-        <div className="relative aspect-[20/27] w-full overflow-hidden md:hidden">
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — গভীরতর প্রাকৃতিক একক ক্লিপ-পাথ */}
+        <div
+          className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
+          style={{
+            clipPath: 'url(#footer-top-wave-clip-mobile)',
+            WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
+            transform: 'translateZ(0)',
+          }}
+        >
           <Image
             src="/footer-illustration-mobile.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -228,8 +247,15 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
-        <div className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block">
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — গভীরতর প্রাকৃতিক একক ক্লিপ-পাথ */}
+        <div
+          className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
+          style={{
+            clipPath: 'url(#footer-top-wave-clip-desktop)',
+            WebkitClipPath: 'url(#footer-top-wave-clip-desktop)',
+            transform: 'translateZ(0)',
+          }}
+        >
           <Image
             src="/footer-illustration-desktop.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -240,39 +266,35 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 শীর্ষভাগে মসৃণ একক পানির ঢেউ ও ডাবল ওয়াটার রিপল ওভারলে (কম গভীর ও ১০০% সিমলেস ব্লেন্ড) */}
+        {/* 🌊 শীর্ষভাগে দৃশ্যমান দুটি প্রাকৃতিক পানির ঢেউ ওভারলে (সোজা দাগহীন ও ভাইব্রেন্ট ওয়াটার কালার) */}
         <div
           className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
-          style={{ transform: 'translate3d(0, -1px, 0)' }}
         >
           <svg
-            viewBox="0 0 1440 90"
+            viewBox="0 0 1440 120"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
-            className="w-full h-8 sm:h-12 md:h-16"
+            className="w-full h-11 sm:h-14 md:h-20"
           >
-            {/* লেয়ার ৩: দ্বিতীয় পানির ঢেউ (সবচেয়ে নিচে আলতো নরম স্বচ্ছ রিপল) */}
+            {/* পানির ঢেউ ২ (সেকেন্ডারি ড্যান্সিং রিপল — নরম আকাশি আভাযুক্ত) */}
             <path
-              d="M -60,0 L 1500,0 L 1500,42 C 1380,50 1200,62 1020,62 C 800,62 560,26 340,26 C 180,26 60,30 -60,40 Z"
+              d="M -50,52 C 150,32 310,22 480,22 C 730,22 890,84 1070,84 C 1230,84 1370,62 1490,48 L 1490,64 C 1370,78 1230,100 1070,100 C 890,100 730,38 480,38 C 310,38 150,46 -50,68 Z"
               fill="#38BDF8"
-              fillOpacity="0.18"
-              className="vc-top-wave-layer vc-top-wave-layer-2 dark:fill-[#38BDF8] dark:fill-opacity-15"
+              fillOpacity="0.60"
+              className="vc-top-wave-layer vc-top-wave-layer-2 dark:fill-[#60A5FA] dark:fill-opacity-45"
             />
 
-            {/* লেয়ার ২: প্রথম পানির ঢেউ (মধ্যবর্তী স্বচ্ছ জলতরঙ্গ) */}
+            {/* পানির ঢেউ ১ (প্রধান জলতরঙ্গ — স্পষ্ট ও দৃষ্টিনন্দন পানির ক্রেস্ট) */}
             <path
-              d="M -60,0 L 1500,0 L 1500,36 C 1380,42 1220,54 1040,54 C 820,54 580,20 360,20 C 200,20 70,24 -60,34 Z"
-              fill="#44A7FC"
-              fillOpacity="0.28"
-              className="vc-top-wave-layer vc-top-wave-layer-1 dark:fill-[#44A7FC] dark:fill-opacity-25"
-            />
-
-            {/* লেয়ার ১: মূল কাটআউট ঢেউ — পেজের ব্যাকগ্রাউন্ড কালারের সাথে ১০০% সিমলেস ব্লেন্ড */}
-            <path
-              d="M -60,0 L 1500,0 L 1500,30 C 1380,34 1240,46 1060,46 C 840,46 600,14 380,14 C 220,14 80,18 -60,28 Z"
-              className="fill-[#DCEBFD] dark:fill-[#0B111E]"
+              d="M -50,44 C 140,24 300,16 460,16 C 720,16 880,78 1060,78 C 1220,78 1360,56 1490,42 L 1490,58 C 1360,72 1220,94 1060,94 C 880,94 720,32 460,32 C 300,32 140,40 -50,60 Z"
+              fill="#90C8FA"
+              fillOpacity="0.75"
+              stroke="#E0F2FE"
+              strokeWidth="1.5"
+              strokeOpacity="0.85"
+              className="vc-top-wave-layer vc-top-wave-layer-1 dark:fill-[#38BDF8] dark:fill-opacity-60 dark:stroke-[#7DD3FC]"
             />
           </svg>
         </div>
