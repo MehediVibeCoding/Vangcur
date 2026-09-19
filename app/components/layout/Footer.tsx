@@ -1,3 +1,4 @@
+// ফাইলের পাথ: app/components/layout/Footer.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -158,10 +159,8 @@ export default function Footer() {
   const { t, lang } = useT();
   const supabase = useMemo(() => createClient(), []);
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
-  // 🌊 টপ ওয়েভ রিপল: স্ক্রল করার সময় সত্যিকারের পানির ওয়েভের মতো নড়বে,
-  // থামার সাথে সাথেই ঠিক ওই মুহূর্তের অবস্থানে ফিক্স/থেমে থাকবে (রিসেট হবে না) —
-  // animation-play-state paused/running টগল করে এটা অর্জন করা হয়েছে, যাতে
-  // অ্যানিমেশন বন্ধ হলে শুরুর পজিশনে "লাফিয়ে" ফিরে না যায়।
+
+  // 🌊 টপ ওয়েভ রিপল: স্ক্রল করার সময় প্রাকৃতিক পানির মতো আলতো দোলে, থামলে সেই অবস্থানেই ফিক্স থাকে
   const [isScrolling, setIsScrolling] = useState(false);
   useEffect(() => {
     let stopTimer: ReturnType<typeof setTimeout>;
@@ -176,6 +175,7 @@ export default function Footer() {
       clearTimeout(stopTimer);
     };
   }, []);
+
   const [contact, setContact] = useState<FooterContact>(DEFAULT_FOOTER.contact);
   const [extras, setExtras] = useState<FooterExtras>({
     desc: DEFAULT_FOOTER.desc,
@@ -213,33 +213,11 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
-      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
-        <defs>
-          <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.038 C 0.18,0.068 0.35,0.015 0.55,0.015 C 0.72,0.015 0.88,0.065 1,0.035 L 1,1 L 0,1 Z" />
-          </clipPath>
-          <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.02 C 0.25,0.007 0.75,0.007 1,0.02 L 1,1 L 0,1 Z" />
-          </clipPath>
-        </defs>
-      </svg>
-
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — নিজস্ব হালকা ক্লিপ-পাথ + সিমলেস-এজ ফিক্স (GPU লেয়ার ফোর্স করে
-            যাতে ক্লিপ-কার্ভ বরাবর কোনো দৃশ্যমান জোড়াতালি/সেলাই রেখা না দেখা যায়) */}
-        <div
-          className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-mobile)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
-            transform: 'translateZ(0)',
-            WebkitBackfaceVisibility: 'hidden',
-            isolation: 'isolate',
-          }}
-        >
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
+        <div className="relative aspect-[20/27] w-full overflow-hidden md:hidden">
           <Image
             src="/footer-illustration-mobile.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -250,17 +228,8 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — কার্ভ অপরিবর্তিত, শুধু সিমলেস-এজ ফিক্স যোগ হয়েছে */}
-        <div
-          className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-desktop)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-desktop)',
-            transform: 'translateZ(0)',
-            WebkitBackfaceVisibility: 'hidden',
-            isolation: 'isolate',
-          }}
-        >
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
+        <div className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block">
           <Image
             src="/footer-illustration-desktop.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -271,49 +240,44 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 ০. উপরের কাটআউট ঢেউ — রিভিশন ৩: আগের ভার্সনে ভুলবশত প্রতি লেয়ারে
-            ৪টা করে চূড়া/খাদ (রিপিটিং সাইন-ওয়েভ) বসানো হয়েছিল, যেটা অনেক বেশি
-            জটিল/গভীর দেখাচ্ছিল আর দুই লেয়ার একে অপরের ভেতরে ঢুকে একটা মাত্র
-            দেখাচ্ছিল। এখন নিচের রেফারেন্স ঢেউয়ের (২ নম্বর সেকশন) ঠিক একই
-            "এক-চক্র" স্টাইলে (একটা চূড়া-খাদ-চূড়া, পুরো প্রস্থ জুড়ে একবারই)
-            ফিরিয়ে আনা হয়েছে — কিন্তু নিচেরটার চেয়ে অনেকটাই কম উঁচু-নিচু।
-            দুই লেয়ারের বাঁক-বিন্দু ইচ্ছাকৃতভাবে আলাদা জায়গায় (ফেজ-শিফটেড)
-            রাখা হয়েছে, তাই বিশ্রামেও দুটো আলাদা, স্পষ্ট ঢেউ-রেখা হিসেবে
-            দেখা যাবে (আগের মতো একটার ভেতরে আরেকটা মিশে যাবে না)। */}
+        {/* 🌊 শীর্ষভাগে মসৃণ একক পানির ঢেউ ও ডাবল ওয়াটার রিপল ওভারলে (কম গভীর ও ১০০% সিমলেস ব্লেন্ড) */}
         <div
           className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
           style={{ transform: 'translate3d(0, -1px, 0)' }}
         >
           <svg
-            viewBox="0 0 1440 60"
+            viewBox="0 0 1440 90"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
-            className="vc-top-wave-layer vc-top-wave-layer-1 h-8 w-[112%] -ml-[6%] sm:h-14 md:h-16"
+            className="w-full h-8 sm:h-12 md:h-16"
           >
+            {/* লেয়ার ৩: দ্বিতীয় পানির ঢেউ (সবচেয়ে নিচে আলতো নরম স্বচ্ছ রিপল) */}
             <path
-              d="M0,18 C140,6 200,5 300,5 C440,5 600,42 760,42 C960,42 1100,8 1220,8 C1300,8 1350,12 1440,16 L1440,0 L0,0 Z"
-              className="vc-top-wave-fill"
+              d="M -60,0 L 1500,0 L 1500,42 C 1380,50 1200,62 1020,62 C 800,62 560,26 340,26 C 180,26 60,30 -60,40 Z"
+              fill="#38BDF8"
+              fillOpacity="0.18"
+              className="vc-top-wave-layer vc-top-wave-layer-2 dark:fill-[#38BDF8] dark:fill-opacity-15"
             />
-          </svg>
-          <svg
-            viewBox="0 0 1440 60"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            shapeRendering="geometricPrecision"
-            className="vc-top-wave-layer vc-top-wave-layer-2 absolute inset-0 h-8 w-[112%] -ml-[6%] sm:h-14 md:h-16"
-            style={{ opacity: 0.55 }}
-          >
+
+            {/* লেয়ার ২: প্রথম পানির ঢেউ (মধ্যবর্তী স্বচ্ছ জলতরঙ্গ) */}
             <path
-              d="M0,25 C160,10 280,8 400,8 C560,8 700,50 860,50 C1020,50 1160,12 1280,12 C1360,12 1400,18 1440,22 L1440,0 L0,0 Z"
-              className="vc-top-wave-fill"
+              d="M -60,0 L 1500,0 L 1500,36 C 1380,42 1220,54 1040,54 C 820,54 580,20 360,20 C 200,20 70,24 -60,34 Z"
+              fill="#44A7FC"
+              fillOpacity="0.28"
+              className="vc-top-wave-layer vc-top-wave-layer-1 dark:fill-[#44A7FC] dark:fill-opacity-25"
+            />
+
+            {/* লেয়ার ১: মূল কাটআউট ঢেউ — পেজের ব্যাকগ্রাউন্ড কালারের সাথে ১০০% সিমলেস ব্লেন্ড */}
+            <path
+              d="M -60,0 L 1500,0 L 1500,30 C 1380,34 1240,46 1060,46 C 840,46 600,14 380,14 C 220,14 80,18 -60,28 Z"
+              className="fill-[#DCEBFD] dark:fill-[#0B111E]"
             />
           </svg>
         </div>
 
-        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (রেফারেন্স ছবির হুবহু ডাবল-পিক কার্ভ) */}
+        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (ফুটার গ্রিডের সাথে সম্পূর্ণ মেলানো) */}
         <div
           className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none"
           style={{ transform: 'translate3d(0, 1px, 0)' }}
@@ -329,6 +293,7 @@ export default function Footer() {
             <path
               d="M0,110 C120,85 180,75 280,75 C420,75 580,142 760,142 C960,142 1120,88 1260,88 C1340,88 1390,96 1440,105 L1440,160 L0,160 Z"
               fill="#D3E7FC"
+              className="dark:fill-[#0F172A]"
             />
           </svg>
         </div>
