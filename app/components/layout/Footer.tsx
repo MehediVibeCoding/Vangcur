@@ -213,30 +213,11 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
-      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
-        <defs>
-          <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.055 C 0.12,0.030 0.22,0.015 0.32,0.015 C 0.52,0.015 0.60,0.095 0.74,0.095 C 0.86,0.095 0.94,0.068 1,0.050 L 1,1 L 0,1 Z" />
-          </clipPath>
-          <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.045 C 0.12,0.024 0.22,0.012 0.32,0.012 C 0.52,0.012 0.60,0.075 0.74,0.075 C 0.86,0.075 0.94,0.055 1,0.040 L 1,1 L 0,1 Z" />
-          </clipPath>
-        </defs>
-      </svg>
-
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — গভীরতর প্রাকৃতিক একক ক্লিপ-পাথ */}
-        <div
-          className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-mobile)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-mobile)',
-            transform: 'translateZ(0)',
-          }}
-        >
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
+        <div className="relative aspect-[20/27] w-full overflow-hidden md:hidden">
           <Image
             src="/footer-illustration-mobile.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -247,15 +228,8 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — গভীরতর প্রাকৃতিক একক ক্লিপ-পাথ */}
-        <div
-          className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
-          style={{
-            clipPath: 'url(#footer-top-wave-clip-desktop)',
-            WebkitClipPath: 'url(#footer-top-wave-clip-desktop)',
-            transform: 'translateZ(0)',
-          }}
-        >
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
+        <div className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block">
           <Image
             src="/footer-illustration-desktop.webp"
             alt="Vangcur Gadgets Lifestyle"
@@ -266,35 +240,53 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 শীর্ষভাগে দৃশ্যমান দুটি প্রাকৃতিক পানির ঢেউ ওভারলে (সোজা দাগহীন ও ভাইব্রেন্ট ওয়াটার কালার) */}
+        {/* 🌊 শীর্ষভাগে মসৃণ একক প্রাকৃতিক পানির ঢেউ ও দুটি ভিন্ন পজিশনের ওয়াটার গ্রেডিয়েন্ট রিপল */}
         <div
           className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
+          style={{ transform: 'translate3d(0, -1px, 0)' }}
         >
           <svg
-            viewBox="0 0 1440 120"
+            viewBox="0 0 1440 90"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
-            className="w-full h-11 sm:h-14 md:h-20"
+            className="w-full h-8 sm:h-12 md:h-16"
           >
-            {/* পানির ঢেউ ২ (সেকেন্ডারি ড্যান্সিং রিপল — নরম আকাশি আভাযুক্ত) */}
+            <defs>
+              {/* Vangcur সিগনেচার স্কাই-ব্লু লাইভ গ্রেডিয়েন্ট ১ (প্রধান ঢেউ) */}
+              <linearGradient id="vcx-water-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#44A7FC" stopOpacity="0.45" />
+                <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.60" />
+                <stop offset="100%" stopColor="#44A7FC" stopOpacity="0.48" />
+              </linearGradient>
+
+              {/* Vangcur সফট আইস-ব্লু লাইভ গ্রেডিয়েন্ট ২ (সেকেন্ডারি অফসেট রিপল) */}
+              <linearGradient id="vcx-water-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#BAE0FD" stopOpacity="0.55" />
+                <stop offset="55%" stopColor="#C3DEFC" stopOpacity="0.70" />
+                <stop offset="100%" stopColor="#BAE0FD" stopOpacity="0.50" />
+              </linearGradient>
+            </defs>
+
+            {/* পানির ঢেউ ২: সেকেন্ডারি রিপল (ডানপাশে শিফটেড ফেজ, আলাদা পজিশনে আলতোভাবে প্রবাহিত) */}
             <path
-              d="M -50,52 C 150,32 310,22 480,22 C 730,22 890,84 1070,84 C 1230,84 1370,62 1490,48 L 1490,64 C 1370,78 1230,100 1070,100 C 890,100 730,38 480,38 C 310,38 150,46 -50,68 Z"
-              fill="#38BDF8"
-              fillOpacity="0.60"
-              className="vc-top-wave-layer vc-top-wave-layer-2 dark:fill-[#60A5FA] dark:fill-opacity-45"
+              d="M -50,0 L 1490,0 L 1490,40 C 1300,52 1180,56 1060,54 C 860,50 680,26 480,26 C 300,26 120,34 -50,38 Z"
+              fill="url(#vcx-water-grad-2)"
+              className="vc-top-wave-layer vc-top-wave-layer-2"
             />
 
-            {/* পানির ঢেউ ১ (প্রধান জলতরঙ্গ — স্পষ্ট ও দৃষ্টিনন্দন পানির ক্রেস্ট) */}
+            {/* পানির ঢেউ ১: প্রধান জলতরঙ্গ (বামপাশে ফোকাসড ক্রেস্ট, সুন্দর স্পষ্ট স্কাই-ব্লু ফ্লো) */}
             <path
-              d="M -50,44 C 140,24 300,16 460,16 C 720,16 880,78 1060,78 C 1220,78 1360,56 1490,42 L 1490,58 C 1360,72 1220,94 1060,94 C 880,94 720,32 460,32 C 300,32 140,40 -50,60 Z"
-              fill="#90C8FA"
-              fillOpacity="0.75"
-              stroke="#E0F2FE"
-              strokeWidth="1.5"
-              strokeOpacity="0.85"
-              className="vc-top-wave-layer vc-top-wave-layer-1 dark:fill-[#38BDF8] dark:fill-opacity-60 dark:stroke-[#7DD3FC]"
+              d="M -50,0 L 1490,0 L 1490,34 C 1260,44 1120,50 960,48 C 740,44 540,20 340,20 C 180,20 80,26 -50,30 Z"
+              fill="url(#vcx-water-grad-1)"
+              className="vc-top-wave-layer vc-top-wave-layer-1"
+            />
+
+            {/* বেস লেয়ার: পেজের আসল ব্যাকগ্রাউন্ডের সাথে ১০০% মিশে যাওয়া পরিমিত একক ঢেউ (সোজা দাগহীন) */}
+            <path
+              d="M -50,0 L 1490,0 L 1490,26 C 1260,36 1120,42 960,40 C 740,36 540,14 340,14 C 180,14 80,20 -50,24 Z"
+              className="fill-white dark:fill-[#0B111E]"
             />
           </svg>
         </div>
