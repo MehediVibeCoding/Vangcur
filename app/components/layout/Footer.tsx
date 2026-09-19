@@ -216,7 +216,7 @@ export default function Footer() {
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — স্বাভাবিক আন-ক্লিপড ও রেসপন্সিভ */}
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
         <div className="relative aspect-[20/27] w-full overflow-hidden md:hidden">
           <Image
             src="/footer-illustration-mobile.webp"
@@ -228,7 +228,7 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — স্বাভাবিক আন-ক্লিপড ও রেসপন্সিভ */}
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
         <div className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block">
           <Image
             src="/footer-illustration-desktop.webp"
@@ -240,7 +240,7 @@ export default function Footer() {
           />
         </div>
 
-        {/* 🌊 শীর্ষভাগে নিখুঁত একক ভেক্টর আর্কিটেকচার: পেজের রঙের সাথে ১০০% ব্লেন্ড বেস এবং দুটি মসৃণ পানির ঢেউ */}
+        {/* 🌊 শীর্ষভাগে মসৃণ পানির ঢেউ ওভারলে: উপরের রঙের সাথে শতভাগ ম্যাচ বেস এবং দুটি বিপরীতমুখী স্কাই-ব্লু ও সাদা পানির ঢেউ */}
         <div
           className={`absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none ${isScrolling ? 'vc-top-wave-scrolling' : ''}`}
           style={{ transform: 'translate3d(0, -1px, 0)' }}
@@ -254,42 +254,42 @@ export default function Footer() {
             className="w-full h-10 sm:h-14 md:h-20"
           >
             <defs>
-              {/* পেজের আসল ক্যানভাস ব্যাকগ্রাউন্ডের সাথে সিমলেস ব্লেন্ড গ্রেডিয়েন্ট */}
+              {/* উপরের পেজ ব্যাকগ্রাউন্ড কালারের সাথে ১০০% হুবহু মেলানো বেস গ্রেডিয়েন্ট (যাতে কোনো সোজা দাগ না থাকে) */}
               <linearGradient id="vcx-top-sky-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#C3DEFC" />
-                <stop offset="100%" stopColor="#DCEBFD" />
+                <stop offset="0%" stopColor="#EAF3FD" />
+                <stop offset="100%" stopColor="#EAF3FD" />
               </linearGradient>
 
-              {/* Vangcur প্রাকৃতিক স্কাই-ব্লু গ্রেডিয়েন্ট ১ (প্রধান ঢেউ) */}
+              {/* পানির ঢেউ ১: বামে স্কাই-ব্লু (#44A7FC) দিয়ে শুরু ➔ মাঝে সফট মিক্স ➔ ডানে সাদা (#FFFFFF) */}
               <linearGradient id="vcx-water-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#44A7FC" stopOpacity="0.40" />
-                <stop offset="48%" stopColor="#38BDF8" stopOpacity="0.55" />
-                <stop offset="100%" stopColor="#44A7FC" stopOpacity="0.42" />
+                <stop offset="0%" stopColor="#44A7FC" stopOpacity="0.75" />
+                <stop offset="50%" stopColor="#BAE0FD" stopOpacity="0.65" />
+                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.55" />
               </linearGradient>
 
-              {/* Vangcur সফট আইস-ব্লু গ্রেডিয়েন্ট ২ (সেকেন্ডারি অফসেট রিপল) */}
+              {/* পানির ঢেউ ২: সম্পূর্ণ বিপরীত — বামে সাদা (#FFFFFF) ➔ মাঝে সফট মিক্স ➔ ডানে স্কাই-ব্লু (#44A7FC) */}
               <linearGradient id="vcx-water-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#BAE0FD" stopOpacity="0.45" />
-                <stop offset="52%" stopColor="#C3DEFC" stopOpacity="0.60" />
-                <stop offset="100%" stopColor="#BAE0FD" stopOpacity="0.40" />
+                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+                <stop offset="50%" stopColor="#BAE0FD" stopOpacity="0.65" />
+                <stop offset="100%" stopColor="#44A7FC" stopOpacity="0.75" />
               </linearGradient>
             </defs>
 
-            {/* লেয়ার ৩: দ্বিতীয় পানির ঢেউ (সেকেন্ডারি অফসেট রিপল — একটু গভীরে ও আলাদা ফেজে আলতো প্রবহমান) */}
+            {/* ২ নম্বর ঢেউ (নিচের ঢেউ): সম্পূর্ণ বিপরীতমুখী গ্রেডিয়েন্ট (বামে সাদা ➔ ডানে স্কাই-ব্লু) */}
             <path
               d="M -50,0 L 1490,0 L 1490,48 C 1300,62 1140,70 980,66 C 760,60 580,32 380,32 C 220,32 100,40 -50,46 Z"
               fill="url(#vcx-water-grad-2)"
               className="vc-top-wave-layer vc-top-wave-layer-2"
             />
 
-            {/* লেয়ার ২: প্রথম পানির ঢেউ (প্রধান জলতরঙ্গ — ছবির ঠিক ওপর দিয়ে স্বচ্ছ স্কাই-ব্লু ঢেউ) */}
+            {/* ১ নম্বর ঢেউ (উপরের ঢেউ): স্কাই-ব্লু ➔ সাদা গ্রেডিয়েন্ট (বামে স্কাই-ব্লু ➔ ডানে সাদা) */}
             <path
               d="M -50,0 L 1490,0 L 1490,40 C 1260,54 1100,62 940,58 C 720,52 540,24 340,24 C 180,24 80,32 -50,38 Z"
               fill="url(#vcx-water-grad-1)"
               className="vc-top-wave-layer vc-top-wave-layer-1"
             />
 
-            {/* লেয়ার ১: মূল কাটআউট বেস — পেজের রঙের সাথে ১০০% সিমলেসভাবে মিশে যাবে (কোনো সাদা দাগ থাকবে না) */}
+            {/* বেস লেয়ার: উপরের পেজের ব্যাকগ্রাউন্ড কালারের সাথে ১০০% সিমলেস ব্লেন্ড (কোনো দাগ বা কালার পার্থক্য থাকবে না) */}
             <path
               d="M -50,0 L 1490,0 L 1490,32 C 1260,46 1100,54 940,50 C 720,44 540,16 340,16 C 180,16 80,24 -50,30 Z"
               fill="url(#vcx-top-sky-grad)"
