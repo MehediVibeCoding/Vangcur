@@ -197,16 +197,16 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 overflow-hidden">
-      {/* 🌊 শীর্ষভাগে নিখুঁত, স্লিক ও হালকা একক কাটআউট ক্লিপ-পাথ (ছবি নিচে নামবে না) */}
+      {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) — সাবলীল ও মার্জিত কার্ভ */}
       <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
         <defs>
-          {/* মোবাইল ডিভাইসে পরিমিত প্রাকৃতিক ঢেউ — সর্বোচ্চ গভীরতা মাত্র ২.৫% */}
+          {/* মোবাইল ডিভাইসে প্রাকৃতিক একক ঢেউ — গভীরতা সুষম ও হালকা */}
           <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.024 C 0.15,0.010 0.28,0.006 0.42,0.006 C 0.62,0.006 0.78,0.032 0.88,0.032 C 0.94,0.032 0.98,0.026 1,0.024 L 1,1 L 0,1 Z" />
+            <path d="M 0,0.038 C 0.14,0.022 0.24,0.016 0.35,0.016 C 0.52,0.016 0.65,0.052 0.78,0.052 C 0.88,0.052 0.94,0.040 1,0.034 L 1,1 L 0,1 Z" />
           </clipPath>
-          {/* ডেস্কটপ ডিভাইসে পরিমিত প্রাকৃতিক ঢেউ — সর্বোচ্চ গভীরতা মাত্র ২% */}
+          {/* ডেস্কটপ ডিভাইসে প্রাকৃতিক একক ঢেউ — গভীরতা সুষম ও হালকা */}
           <clipPath id="footer-top-wave-clip-desktop" clipPathUnits="objectBoundingBox">
-            <path d="M 0,0.018 C 0.15,0.008 0.28,0.005 0.42,0.005 C 0.62,0.005 0.78,0.024 0.88,0.024 C 0.94,0.024 0.98,0.020 1,0.018 L 1,1 L 0,1 Z" />
+            <path d="M 0,0.028 C 0.14,0.016 0.24,0.012 0.35,0.012 C 0.52,0.012 0.65,0.038 0.78,0.038 C 0.88,0.038 0.94,0.030 1,0.026 L 1,1 L 0,1 Z" />
           </clipPath>
         </defs>
       </svg>
@@ -214,7 +214,7 @@ export default function Footer() {
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — স্লিক ও মসৃণ একক কার্ভ */}
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
         <div
           className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
           style={{
@@ -233,7 +233,7 @@ export default function Footer() {
           />
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — স্লিক ও মসৃণ একক কার্ভ */}
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
         <div
           className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
           style={{
@@ -250,6 +250,47 @@ export default function Footer() {
             className="object-cover object-bottom"
             priority={false}
           />
+        </div>
+
+        {/* 🌊 শীর্ষভাগে লিকুইড ওয়াটার-ক্রেস্ট ট্রিম ও ফ্রস্টেড গ্লাস হাইলাইট (কাঁচা কাটার দাগ দূর করতে) */}
+        <div
+          className="absolute inset-x-0 top-0 z-10 w-full overflow-hidden leading-none pointer-events-none"
+          style={{ transform: 'translate3d(0, -1px, 0)' }}
+        >
+          <svg
+            viewBox="0 0 1440 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
+            shapeRendering="geometricPrecision"
+            className="w-full h-10 sm:h-14 md:h-18"
+          >
+            {/* নরম স্কাই-ব্লু ওয়াটার রিবন (পানির তরল স্তর) */}
+            <path
+              d="M -40,38 C 160,22 320,16 500,16 C 750,16 940,52 1120,52 C 1270,52 1370,40 1480,34 L 1480,44 C 1370,50 1270,62 1120,62 C 940,62 750,26 500,26 C 320,26 160,32 -40,48 Z"
+              fill="#38BDF8"
+              fillOpacity="0.30"
+              className="dark:fill-[#38BDF8] dark:fill-opacity-25"
+            />
+
+            {/* দ্বিতীয় নরম ওয়াটার রিপল (গভীরতা ও রিয়েলিস্টিক জলের অনুভূতি) */}
+            <path
+              d="M -40,44 C 180,28 360,22 540,22 C 780,22 980,58 1160,58 C 1300,58 1390,46 1480,40 L 1480,50 C 1390,56 1300,68 1160,68 C 980,68 780,32 540,32 C 360,32 180,38 -40,54 Z"
+              fill="#BAE0FD"
+              fillOpacity="0.35"
+              className="dark:fill-[#60A5FA] dark:fill-opacity-20"
+            />
+
+            {/* চকচকে ওয়াটার-ক্রেস্ট এজ লাইন (আলোকিত ফ্রস্টেড গ্লাস শাইন — ধারালো কাঁচা কাট ঢেকে দেবে) */}
+            <path
+              d="M -40,38 C 160,22 320,16 500,16 C 750,16 940,52 1120,52 C 1270,52 1370,40 1480,34"
+              stroke="#E0F2FE"
+              strokeWidth="2"
+              strokeOpacity="0.85"
+              strokeLinecap="round"
+              className="dark:stroke-[#7DD3FC] dark:stroke-opacity-60"
+            />
+          </svg>
         </div>
 
         {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (ফুটার গ্রিডের সাথে সম্পূর্ণ মেলানো) */}
