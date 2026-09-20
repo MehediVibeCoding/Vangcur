@@ -1,3 +1,5 @@
+import { WishlistIconSkeleton, CartIconSkeleton, TrackIconSkeleton, SearchIconSkeleton } from '@/app/components/ui/Skeletons';
+
 export default function OffersLoading() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white">
@@ -16,11 +18,11 @@ export default function OffersLoading() {
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden h-10 animate-pulse rounded-full bg-brand-bg/30 md:block md:w-[240px] lg:w-[300px]" />
                 <div className="flex items-center gap-1.5">
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
+                  <div className="flex h-9 w-9 items-center justify-center"><WishlistIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center"><CartIconSkeleton /></div>
                   <div className="h-9 w-[74px] animate-pulse rounded-full bg-brand-light/30 sm:w-20" />
-                  <div className="hidden h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50 min-[401px]:block" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50 md:hidden" />
+                  <div className="hidden h-9 w-9 items-center justify-center min-[401px]:flex"><TrackIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center md:hidden"><SearchIconSkeleton /></div>
                 </div>
               </div>
             </div>

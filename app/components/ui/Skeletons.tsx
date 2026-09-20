@@ -1,4 +1,6 @@
 // GitHub পাথ: app/components/ui/Skeletons.tsx — নতুন ফাইল
+import type { ReactNode } from 'react';
+
 /**
  * এই ফাইলে আছে client-state-চালিত (isLoading boolean) জায়গাগুলোর জন্য
  * রিইউজেবল স্কেলেটন প্লেসহোল্ডার — যেগুলো SkeletonTransition এর সাথে
@@ -217,5 +219,122 @@ export function InvoiceLoadingSkeleton() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Navbar আইকন/লোগো স্কেলেটন — বক্স/বৃত্তের বদলে আসল আইকন-শেপ
+   ══════════════════════════════════════════════════════════════════════
+   Navbar.tsx ও AccountClient.tsx-এ wishlist/cart/track-order/সার্চ/ক্রাউন/
+   বেল বাটনগুলোর আসলে কোনো background box নেই — খালি একটা SVG আইকন ভাসে,
+   hover করলে তখনই হালকা ব্যাকগ্রাউন্ড আসে। তাই এখানে সেই একই SVG path-গুলো
+   হালকা ধূসর রঙে (background ছাড়া, animate-pulse সহ) বসানো হলো, যাতে
+   স্কেলেটন থেকে আসল কনটেন্টে বদলানোর সময় শেপ অপরিবর্তিত থাকে — বক্স/বৃত্ত
+   থেকে হঠাৎ আইকনে "বদলে যাওয়া"র বদলে আইকনটাই শুরু থেকে দেখা যাবে, শুধু
+   রং বদলাবে। */
+
+function NavIconSkeleton({
+  children, size = 20, className = '',
+}: { children: ReactNode; size?: number; className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      className={`shrink-0 animate-pulse text-muted/45 ${className}`}
+    >
+      {children}
+    </svg>
+  );
+}
+
+/** Navbar.tsx-এর SearchIcon-এর হুবহু কপি */
+export function SearchIconSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <NavIconSkeleton size={20} className={className}>
+      <g strokeWidth="2.2" strokeLinecap="round">
+        <circle cx="11" cy="11" r="8" />
+        <path d="M21 21l-4.35-4.35" />
+      </g>
+    </NavIconSkeleton>
+  );
+}
+
+/** Navbar.tsx-এর NavWishlistIcon-এর হার্ট outline-এর হুবহু কপি */
+export function WishlistIconSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <NavIconSkeleton size={20} className={className}>
+      <path strokeWidth="2" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+    </NavIconSkeleton>
+  );
+}
+
+/** Navbar.tsx-এর কার্ট আইকনের হুবহু কপি */
+export function CartIconSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <NavIconSkeleton size={20} className={className}>
+      <g strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </g>
+    </NavIconSkeleton>
+  );
+}
+
+/** Navbar.tsx-এর ট্র্যাক-অর্ডার আইকনের হুবহু কপি */
+export function TrackIconSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <NavIconSkeleton size={20} className={className}>
+      <g strokeWidth="2">
+        <path d="M9 17H7A5 5 0 017 7h2" /><path d="M15 7h2a5 5 0 010 10h-2" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </g>
+    </NavIconSkeleton>
+  );
+}
+
+/** AccountClient.tsx-এর IconCrownNavbar (মেম্বারশিপ) আইকনের হুবহু কপি */
+export function CrownIconSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <NavIconSkeleton size={17} className={className}>
+      <path strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
+    </NavIconSkeleton>
+  );
+}
+
+/** NotificationBell.tsx-এর বেল আইকনের হুবহু কপি */
+export function BellIconSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <NavIconSkeleton size={20} className={className}>
+      <g strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </g>
+    </NavIconSkeleton>
+  );
+}
+
+/** public/vangcur-logo.png-এর হুবহু সিলুয়েট — CSS mask-image দিয়ে আসল PNG-র
+ * আলফা-শেপটাই ব্যবহার করে তার উপর ধূসর রং বসানো হয়, তাই কোনো এক্সট্রা বক্স/
+ * ইমেজ ডাউনলোড লাগে না (এই একই ফাইল আসল লোগোর জন্যও এমনিতেই লোড হয়)। */
+export function LogoSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`shrink-0 animate-pulse bg-muted/40 ${className}`}
+      style={{
+        WebkitMaskImage: "url('/vangcur-logo.png')",
+        maskImage: "url('/vangcur-logo.png')",
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+        WebkitMaskPosition: 'left center',
+        maskPosition: 'left center',
+      }}
+    />
   );
 }

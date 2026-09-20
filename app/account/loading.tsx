@@ -1,5 +1,5 @@
 // GitHub পাথ: app/account/loading.tsx — পুরো ফাইলটা এটা দিয়ে replace করবে
-import { OrderListSkeleton } from '@/app/components/ui/Skeletons';
+import { OrderListSkeleton, WishlistIconSkeleton, CartIconSkeleton, CrownIconSkeleton, TrackIconSkeleton, BellIconSkeleton } from '@/app/components/ui/Skeletons';
 
 export default function AccountLoading() {
   return (
@@ -18,15 +18,16 @@ export default function AccountLoading() {
                 {/* ডেস্কটপ: লেবেলযুক্ত AccountNavTabs পিল + নোটিফিকেশন বেল (কোনো সার্চ বার নেই) */}
                 <div className="hidden items-center gap-2 md:flex">
                   <div className="h-10 w-[300px] animate-pulse rounded-full border border-border-base/70 bg-surface-muted/50 lg:w-[340px]" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
+                  <div className="flex h-9 w-9 items-center justify-center"><BellIconSkeleton /></div>
                 </div>
-                {/* মোবাইল: ৪টা আইকন বাটন (উইশলিস্ট, কার্ট, মেম্বারশিপ, ট্র্যাক অর্ডার) + নোটিফিকেশন বেল */}
+                {/* মোবাইল: ৪টা আইকন বাটন (উইশলিস্ট, কার্ট, মেম্বারশিপ, ট্র্যাক অর্ডার) + নোটিফিকেশন বেল —
+                    সবগুলোই আসলে ট্রান্সপারেন্ট আইকন-বাটন, তাই বৃত্তের বদলে হুবহু আইকন-শেপ */}
                 <div className="flex items-center gap-1.5 md:hidden">
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
+                  <div className="flex h-9 w-9 items-center justify-center"><WishlistIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center"><CartIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center"><CrownIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center"><TrackIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center"><BellIconSkeleton /></div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 // GitHub পাথ: app/track-order/loading.tsx — পুরো ফাইলটা এটা দিয়ে replace করবে
-import { OrderListSkeleton } from '@/app/components/ui/Skeletons';
+import { OrderListSkeleton, WishlistIconSkeleton, CartIconSkeleton, SearchIconSkeleton } from '@/app/components/ui/Skeletons';
 
 export default function TrackLoading() {
   return (
@@ -17,10 +17,10 @@ export default function TrackLoading() {
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden h-10 animate-pulse rounded-full bg-brand-bg/30 md:block md:w-[240px] lg:w-[300px]" />
                 <div className="flex items-center gap-1.5">
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50" />
+                  <div className="flex h-9 w-9 items-center justify-center"><WishlistIconSkeleton /></div>
+                  <div className="flex h-9 w-9 items-center justify-center"><CartIconSkeleton /></div>
                   <div className="h-9 w-[74px] animate-pulse rounded-full bg-brand-light/30 sm:w-20" />
-                  <div className="h-9 w-9 animate-pulse rounded-[9px] bg-brand-bg/50 md:hidden" />
+                  <div className="flex h-9 w-9 items-center justify-center md:hidden"><SearchIconSkeleton /></div>
                 </div>
               </div>
             </div>
