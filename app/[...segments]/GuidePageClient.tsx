@@ -44,13 +44,14 @@ export default function GuidePageClient({
       />
 
       <article className="pt-2 sm:pt-3">
-        {page.blocks.map((block) => (
+        {page.blocks.map((block, i) => (
           <GuideBlockRenderer
             key={block.id}
             block={block}
             lang={lang}
             productSnapshots={productSnapshots}
             relatedLinkHrefs={relatedLinkHrefs}
+            nextBlock={page.blocks[i + 1]}
           />
         ))}
       </article>
