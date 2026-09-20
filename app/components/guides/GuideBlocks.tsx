@@ -46,17 +46,31 @@ function WideContainer({ children, className = '' }: { children: React.ReactNode
   return <div className={`mx-auto max-w-[1100px] px-4 sm:px-5 ${className}`}>{children}</div>;
 }
 
-// 🛠️ ফিক্স: guide-content-parser.ts-এর assembleAroundList() যখন একটা সেকশনের
-// ভূমিকা/উপসংহার বাক্যকে (lead/trail) আলাদা RichText ব্লকে ভাগ করে, তখন মাঝের
-// checklist/steps ব্লকটার নিজের কোনো heading থাকে না (heading আগের lead
-// ব্লকেই বসে থাকে) — কিন্তু প্রতিটা ব্লক স্বাধীনভাবে `py-8` (উপরে+নিচে সমান
-// প্যাডিং) নেওয়ায় lead-এর শেষ আর headless core-এর শুরুর মাঝে দুটো `py-8`
-// যোগ হয়ে একটা অস্বাভাবিক বড়, কোনো heading/কারণ ছাড়া ফাঁকা গ্যাপ তৈরি হতো
-// (স্ক্রিনশটে বারবার রিপোর্ট হওয়া "অতিরিক্ত স্পেস" সমস্যার একটা বড় উৎস)।
-// এখন heading-হীন continuation ব্লকের উপরের প্যাডিং কমিয়ে আনা হলো, যাতে সেটা
-// আগের ব্লকের সাথেই একটা টানা প্রবাহ মনে হয়, আলাদা সেকশন না।
-function sectionPad(hasHeading: boolean): string {
-  return hasHeading ? 'py-8' : 'pt-1 pb-8';
+// 🛠️ ফিক্স (দ্বিতীয় দফা): প্রথম দফায় শুধু headless ব্লকের *উপরের* প্যাডিং
+// কমানো হয়েছিল — কিন্তু headless ব্লকের নিজের *নিচের* প্যাডিং, আর তার আগের
+// (headed) ব্লকের নিচের প্যাডিং তখনও পুরো `py-8`/`pb-8` থেকে যেত। ফলে lead
+// প্যারাগ্রাফ → headless checklist/steps → headless trail প্যারাগ্রাফ — এই
+// টানা সিকোয়েন্সে প্রতিটা জোড়ার মাঝখানে তখনও প্রায় ৩৬px ফাঁকা গ্যাপ থেকে
+// যাচ্ছিল (স্ক্রিনশটে আবার রিপোর্ট হওয়া সমস্যা)। এখন প্রতিটা ব্লকের স্পেসিং
+// তার *নিজের* heading থাকা/না-থাকা (উপরের গ্যাপ) আর *পরের* ব্লকের heading
+// থাকা/না-থাকা (নিচের গ্যাপ) — দুটো মিলিয়ে ঠিক হয়, যাতে একই সেকশনের ভেতরের
+// সবগুলো টুকরা (lead + list + trail) একসাথে একটানা দেখায়, কিন্তু দুটো আলাদা
+// সেকশনের মাঝে (যেখানে পরের ব্লকের নিজস্ব heading আছে) স্বাভাবিক বড় প্যাডিং
+// বজায় থাকে। শূন্য (একদম গ্যাপ-ছাড়া) না রেখে ইচ্ছাকৃতভাবে অল্প একটু স্পেস
+// (৪px) রাখা হয়েছে, যাতে টুকরাগুলো একদম গায়ে-গায়ে লেগে না যায়।
+const CONTINUATION_TYPES = new Set(['richText', 'checklist', 'steps']);
+
+function isContinuationBlock(block?: GuideBlock): boolean {
+  if (!block) return false;
+  if (!CONTINUATION_TYPES.has(block.type)) return false;
+  const heading = (block as { heading?: LocalizedText }).heading;
+  return !heading || (!heading.bn?.trim() && !heading.en?.trim());
+}
+
+function sectionPad(block: GuideBlock, nextBlock?: GuideBlock): string {
+  const top = isContinuationBlock(block) ? 'pt-1' : 'pt-8';
+  const bottom = isContinuationBlock(nextBlock) ? 'pb-1' : 'pb-8';
+  return `${top} ${bottom}`;
 }
 
 function getHeadingIcon(icon?: string, headingText?: string): string {
@@ -147,9 +161,9 @@ function HeroBlockView({ block, lang }: { block: HeroBlock; lang: Lang }) {
   );
 }
 
-function RichTextBlockView({ block, lang }: { block: RichTextBlock; lang: Lang }) {
+function RichTextBlockView({ block, lang, nextBlock }: { block: RichTextBlock; lang: Lang; nextBlock?: GuideBlock }) {
   return (
-    <Container className={sectionPad(Boolean(block.heading))}>
+    <Container className={sectionPad(block, nextBlock)}>
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon} />
       <div className="space-y-3.5 font-body text-[15.5px] leading-[1.9] text-ink/85">
         {block.paragraphs.map((p, i) => (
@@ -285,12 +299,12 @@ function ComparisonTableBlockView({ block, lang }: { block: ComparisonTableBlock
 // লিস্ট হিসেবে দেখায় — একটা step-এও image/warning থাকলে (ইনস্টলেশন গাইডে
 // ভবিষ্যতে ছবি-সহ ধাপ যোগ হলে যেমন হতে পারে) পুরো ব্লকই আগের রিচ কার্ড-লেআউটে
 // থেকে যায়, যাতে সেই richer content-এর জন্য দরকারি ভিজ্যুয়াল বিভাজন বজায় থাকে।
-function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
+function StepsBlockView({ block, lang, nextBlock }: { block: StepsBlock; lang: Lang; nextBlock?: GuideBlock }) {
   const isRich = block.steps.some((s) => Boolean(s.image?.url) || Boolean(s.warning));
 
   if (!isRich) {
     return (
-      <Container className={sectionPad(Boolean(block.heading))}>
+      <Container className={sectionPad(block, nextBlock)}>
         <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'wrench'} />
         <ol className="space-y-2.5">
           {block.steps.map((step, i) => {
@@ -311,7 +325,7 @@ function StepsBlockView({ block, lang }: { block: StepsBlock; lang: Lang }) {
   }
 
   return (
-    <Container className={sectionPad(Boolean(block.heading))}>
+    <Container className={sectionPad(block, nextBlock)}>
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || 'wrench'} />
       <div className="space-y-4">
         {block.steps.map((step, i) => (
@@ -358,10 +372,10 @@ function isChecklistHeading(text?: LocalizedText): boolean {
   return CHECKLIST_HEADING_PATTERN.test(text.bn) || CHECKLIST_HEADING_PATTERN.test(text.en);
 }
 
-function ChecklistBlockView({ block, lang }: { block: ChecklistBlock; lang: Lang }) {
+function ChecklistBlockView({ block, lang, nextBlock }: { block: ChecklistBlock; lang: Lang; nextBlock?: GuideBlock }) {
   const showCheckbox = block.style ? block.style === 'checkbox' : isChecklistHeading(block.heading);
   return (
-    <Container className={sectionPad(Boolean(block.heading))}>
+    <Container className={sectionPad(block, nextBlock)}>
       <BlockHeading text={block.heading} lang={lang} icon={block.headingIcon || (showCheckbox ? 'clipboard' : 'spark')} />
       <ul className="space-y-3">
         {block.items.map((item, i) => (
@@ -566,17 +580,21 @@ export function GuideBlockRenderer({
   lang,
   productSnapshots,
   relatedLinkHrefs,
+  nextBlock,
 }: {
   block: GuideBlock;
   lang: Lang;
   productSnapshots?: Record<number, ProductSnapshot>;
   relatedLinkHrefs?: Record<string, string>;
+  /** পরের ব্লকটা কী — শুধু স্পেসিং হিসাব করতে ব্যবহার হয় (দেখুন sectionPad)।
+   *  পেজে ব্লকগুলো লিস্ট আকারে বসানোর সময় `blocks[i+1]` পাঠিয়ে দিলেই হবে। */
+  nextBlock?: GuideBlock;
 }) {
   switch (block.type) {
     case 'hero':
       return <HeroBlockView block={block} lang={lang} />;
     case 'richText':
-      return <RichTextBlockView block={block} lang={lang} />;
+      return <RichTextBlockView block={block} lang={lang} nextBlock={nextBlock} />;
     case 'cardGrid':
       return <CardGridBlockView block={block} lang={lang} />;
     case 'priceTable':
@@ -584,9 +602,9 @@ export function GuideBlockRenderer({
     case 'comparisonTable':
       return <ComparisonTableBlockView block={block} lang={lang} />;
     case 'steps':
-      return <StepsBlockView block={block} lang={lang} />;
+      return <StepsBlockView block={block} lang={lang} nextBlock={nextBlock} />;
     case 'checklist':
-      return <ChecklistBlockView block={block} lang={lang} />;
+      return <ChecklistBlockView block={block} lang={lang} nextBlock={nextBlock} />;
     case 'imageText':
       return <ImageTextBlockView block={block} lang={lang} />;
     case 'productRecommendation':
