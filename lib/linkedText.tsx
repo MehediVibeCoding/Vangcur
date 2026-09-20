@@ -1,25 +1,31 @@
 // ফাইলের পাথ: lib/linkedText.tsx
 // সব SEO কনটেন্টের ভেতরে (প্রোডাক্ট Description/Features/Extra Info/FAQ,
-// গাইড পেজের RichText/Checklist/CardGrid/FAQ ইত্যাদি) ৪ ধরনের ইনলাইন
-// মার্কডাউন থাকতে পারে:
-//   ১. `[লেখা](/url)`         — লিংক
-//   ২. `**[লেখা](/url)**`     — বোল্ড লিংক (CTA-স্টাইল, যেমন "...দেখুন →")
-//   ৩. `**লেখা**`              — বোল্ড/emphasis (গুরুত্বপূর্ণ কথা হাইলাইট করতে)
-//   ৪. `*লেখা*`                — italic (কম ব্যবহৃত, তবু সাপোর্টেড)
-// renderLinkedText() এই চারটাই একসাথে পার্স করে আসল React নোডে বদলে দেয়।
+// গাইড পেজের RichText/Checklist/CardGrid/FAQ ইত্যাদি) ৩ ধরনের ইনলাইন
+// মার্কডাউন থাকতে পারে, আর যেকোনো গভীরতায় একটা আরেকটার ভেতরে বসতে পারে:
+//   ১. `[লেখা](/url)`  — লিংক
+//   ২. `**লেখা**`       — বোল্ড (লেখার ভেতরে পুরোটা বা আংশিক একটা লিংক থাকতে পারে)
+//   ৩. `*লেখা*`         — italic (এর ভেতরেও বোল্ড/লিংক থাকতে পারে, যেমন
+//                         `*(বিস্তারিত: **[গাইড →](/url)**)*`)
+// renderLinkedText() এই তিনটাই — যত গভীরেই নেস্টেড হোক — একসাথে পার্স করে
+// আসল React নোডে বদলে দেয়।
 //
-// [হার্ডেনিং] আগে শুধু প্লেইন `[লেখা](/url)` লিংক আর প্লেইন `**বোল্ড**` টেক্সট
-// আলাদা আলাদাভাবে পার্স হতো — একটা লিংক-স্ক্যান পাস আগে চলত, তারপর বাকি অংশে
-// bold/italic স্ক্যান। সমস্যা হলো `**[লেখা](/url)**` (পুরো লিংকটাই বোল্ড করে
-// লেখা, CTA-লাইনে খুব সাধারণ একটা প্যাটার্ন) লেখা থাকলে লিংক-স্ক্যান শুধু
-// `[লেখা](/url)` অংশটাই ধরত, সামনে-পেছনের `**` দুটো "লিংকের বাইরের প্লেইন
-// টেক্সট" হিসেবে বাকি থেকে যেত — আর সেই এতিম `**` জোড়া (নিজেদের ভেতরে কোনো
-// টেক্সট নেই বলে) bold/italic প্যাটার্নেও ম্যাচ করত না, ফলে raw `**` অক্ষর
-// হিসেবেই লিংকের ঠিক আগে-পরে সাইটে দেখা যেত (স্ক্রিনশটে বারবার রিপোর্ট হওয়া
-// বাগ, ঠিক এটাই)। এখন বোল্ড-লিংক প্যাটার্নটা লিংক-প্যাটার্নের সাথেই একই
-// combined regex-এ, লিংকের চেয়ে বেশি স্পেসিফিক হওয়ায় আগে ট্রাই হয় — পুরো
-// `**[...](...) **` একবারে মিলে গিয়ে বোল্ড-স্টাইল লিংক হিসেবে রেন্ডার হয়,
-// কোনো এতিম `**` থাকে না।
+// [হার্ডেনিং, দ্বিতীয় দফা] প্রথম দফায় শুধু `**[লেখা](url)**` (বোল্ড পুরোটাই
+// একটা লিংক) আলাদাভাবে বিশেষ-কেস হিসেবে ফিক্স হয়েছিল — কিন্তু `*(কিছু টেক্সট
+// **[লিংক →](url)** আরও টেক্সট)*` -এর মতো "ইতালিকের ভেতরে বোল্ড-লিংক" প্যাটার্ন
+// তখনও ভাঙত: বোল্ড-লিংকের জন্য যে অংশটা আলাদা করে প্রসেস হতো, সেটা ইতালিকের
+// খোলা `*` আর বন্ধ `*` — এই দুটোকে দুই টুকরায় আলাদা করে ফেলত, ফলে কোনো টুকরাতেই
+// পূর্ণ জোড়া না থাকায় দুটো `*`-ই raw অক্ষর হিসেবে থেকে যেত (স্ক্রিনশটে
+// রিপোর্ট হওয়া "*(" আর ")*" বাগ, ঠিক এটাই)।
+//
+// এখন পুরো ব্যাপারটা একটা ছোট recursive-descent parser দিয়ে single-pass-এ হয়:
+// বাঁ থেকে ডানে স্ক্যান করতে করতে যেখানে `[`, `**`, বা `*` পাওয়া যায়, সেখানে
+// তার সঠিক জোড়া (matching close) পুরো স্ট্রিং-এর যেকোনো দূরত্বে খোঁজা হয় —
+// মাঝে অন্য কোনো link/emphasis থাকলেও সেটা টপকে গিয়ে (nested হিসেবে ধরে)
+// আসল জোড়াটা বের করা হয়। জোড়া পাওয়া গেলে ভেতরের অংশটুকু আবার recursively এই
+// একই পার্সার দিয়ে প্রসেস হয় — তাই যেকোনো গভীরতার নেস্টিং (bold-in-italic,
+// link-in-bold, ইত্যাদি) নিরাপদে কাজ করে। জোড়া না পাওয়া গেলে (ভুল/অসম্পূর্ণ
+// মার্কডাউন) সেই একটা `*`/`[` অক্ষরকে নিরাপদে প্লেইন টেক্সট হিসেবে রেখে
+// এগিয়ে যাওয়া হয় — কখনো ক্র্যাশ করে না, কখনো বাকি পুরো টেক্সট গিলে ফেলে না।
 //
 // এছাড়া AGENTS.md-এর "নো-ইমোজি পলিসি" রেন্ডার-টাইমেও একটা সেফটি-নেট হিসেবে
 // জোরদার করা হয়েছে — raw pictograph/emoji অক্ষর (থাকলে, ভুলে থেকে গেলেও)
@@ -31,16 +37,6 @@
 
 import Link from 'next/link';
 
-// alt ১: বোল্ড-লিংক — `**[লেখা](url)**` (গ্রুপ ১,২)
-// alt ২: প্লেইন লিংক — `[লেখা](url)` (গ্রুপ ৩,৪)
-// দুটো alternative ভিন্ন অক্ষর (`**` বনাম `[`) দিয়ে শুরু হয় বলে regex
-// engine-এর কাছে এটা অস্পষ্ট না — যেটা যেখানে আসলে আছে সেটাই মেলে।
-const LINK_PATTERN =
-  /\*\*\[([^\]\n]+)\]\(([^)\s]+)\)\*\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g;
-const BOLD_PATTERN = /\*\*([^*\n]+)\*\*/g;
-const ITALIC_PATTERN = /(?:^|[^*])\*([^*\n]+)\*(?!\*)/g;
-// raw ইমোজি/পিকটোগ্রাফ রেঞ্জ — তীরচিহ্ন (U+2190–21FF) ও সাধারণ পাংচুয়েশন এর
-// বাইরে, তাই "...দেখুন →" এর মতো ইচ্ছাকৃত ব্যবহার প্রভাবিত হয় না
 const EMOJI_PATTERN = /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu;
 // দ্রুত early-exit: লিংক/বোল্ড/ইতালিক/ইমোজি — এই ৪টার একটাও না থাকলে বাকি কোনো প্রসেসিং লাগবে না
 const HAS_ANYTHING_TO_PARSE = /\]\(|\*|[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u;
@@ -49,93 +45,147 @@ function stripEmoji(s: string): string {
   return s.replace(EMOJI_PATTERN, '');
 }
 
-/** একটা প্লেইন টেক্সট খণ্ডের ভেতরে বোল্ড ও ইতালিক মার্কডাউন পার্স করে নোড-অ্যারেতে বদলায় */
-function renderEmphasis(text: string, keyRef: { n: number }): React.ReactNode[] {
-  const cleaned = stripEmoji(text);
-  if (!cleaned) return [];
-  if (!cleaned.includes('*')) return [cleaned];
-
-  const out: React.ReactNode[] = [];
-  let lastIndex = 0;
-  const boldRe = new RegExp(BOLD_PATTERN);
-  let m: RegExpExecArray | null;
-
-  while ((m = boldRe.exec(cleaned)) !== null) {
-    if (m.index > lastIndex) out.push(...renderItalic(cleaned.slice(lastIndex, m.index), keyRef));
-    out.push(
-      <strong key={keyRef.n++} className="font-bold text-ink">
-        {m[1]}
-      </strong>
-    );
-    lastIndex = m.index + m[0].length;
-  }
-  if (lastIndex < cleaned.length) out.push(...renderItalic(cleaned.slice(lastIndex), keyRef));
-  return out;
+function linkClassName(bold: boolean): string {
+  return bold
+    ? 'font-bold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light'
+    : 'font-semibold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light';
 }
 
-function renderItalic(text: string, keyRef: { n: number }): React.ReactNode[] {
-  if (!text) return [];
-  if (!text.includes('*')) return [text];
+function makeLinkNode(label: string, href: string, bold: boolean, keyRef: { n: number }): React.ReactNode {
+  const cleanLabel = stripEmoji(label);
+  const isInternal = href.startsWith('/');
+  const className = linkClassName(bold);
+  return isInternal ? (
+    <Link key={keyRef.n++} href={href} className={className}>
+      {cleanLabel}
+    </Link>
+  ) : (
+    <a key={keyRef.n++} href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      {cleanLabel}
+    </a>
+  );
+}
 
-  const out: React.ReactNode[] = [];
-  let lastIndex = 0;
-  const italicRe = new RegExp(ITALIC_PATTERN);
-  let m: RegExpExecArray | null;
+/** `text[i]` থেকে `[লেখা](url)` মেলে কিনা দেখে — মিললে নোড আর পরের ইনডেক্স রিটার্ন করে */
+function tryMatchLink(
+  text: string,
+  i: number,
+  bold: boolean,
+  keyRef: { n: number }
+): { node: React.ReactNode; next: number } | null {
+  if (text[i] !== '[') return null;
+  const closeBracket = text.indexOf(']', i + 1);
+  if (closeBracket === -1 || text[closeBracket + 1] !== '(') return null;
+  const closeParen = text.indexOf(')', closeBracket + 2);
+  if (closeParen === -1) return null;
+  const label = text.slice(i + 1, closeBracket);
+  const href = text.slice(closeBracket + 2, closeParen);
+  if (!label || !href || /\s/.test(href)) return null; // href-এ স্পেস থাকলে এটা বৈধ URL না, লিংক হিসেবে ধরব না
+  return { node: makeLinkNode(label, href, bold, keyRef), next: closeParen + 1 };
+}
 
-  while ((m = italicRe.exec(text)) !== null) {
-    // m[0] তে leading non-* ক্যারেক্টারটাও ধরা পড়ে (^|[^*]) — তাই আসল * শুরুর
-    // পজিশন বের করে সেই আগের অক্ষরটা প্লেইন টেক্সট হিসেবে রাখা হচ্ছে
-    const starIdx = m.index + m[0].indexOf('*');
-    if (starIdx > lastIndex) out.push(text.slice(lastIndex, starIdx));
-    out.push(<em key={keyRef.n++}>{m[1]}</em>);
-    lastIndex = starIdx + m[1].length + 2;
-    italicRe.lastIndex = lastIndex;
+/** `**` (বোল্ড) বা `*` (ইতালিক)-এর সঠিক বন্ধ-জোড়াটা খোঁজে, মাঝে থাকা নেস্টেড
+ *  bold/italic/link টপকে গিয়ে — জোড়া না পেলে -1 রিটার্ন করে */
+function findClosing(text: string, start: number, marker: '**' | '*'): number {
+  let i = start;
+  while (i < text.length) {
+    const idx = text.indexOf('*', i);
+    if (idx === -1) return -1;
+    const isDouble = text[idx + 1] === '*';
+    if (marker === '**') {
+      if (isDouble) return idx; // ** এর বন্ধ জোড়া পাওয়া গেছে
+      i = idx + 1; // একটা স্ট্রে সিঙ্গেল *, টপকে যাও
+      continue;
+    }
+    // marker === '*' (italic) — মাঝে একটা ** (নেস্টেড বোল্ড) পড়লে সেটা টপকে যাও
+    if (isDouble) {
+      const nestedClose = text.indexOf('**', idx + 2);
+      i = nestedClose === -1 ? idx + 2 : nestedClose + 2;
+      continue;
+    }
+    return idx; // ইতালিকের বন্ধ জোড়া (একটা স্ট্যান্ডঅ্যালোন *)
   }
-  if (lastIndex < text.length) out.push(text.slice(lastIndex));
+  return -1;
+}
+
+/** মূল recursive parser — text-এর ভেতরে যেকোনো গভীরতার link/bold/italic নেস্টিং পার্স করে */
+function parseInline(text: string, keyRef: { n: number }, boldCtx: boolean): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  let buf = '';
+  let i = 0;
+
+  const flush = () => {
+    if (buf) {
+      out.push(stripEmoji(buf));
+      buf = '';
+    }
+  };
+
+  while (i < text.length) {
+    const ch = text[i];
+
+    if (ch === '[') {
+      const m = tryMatchLink(text, i, boldCtx, keyRef);
+      if (m) {
+        flush();
+        out.push(m.node);
+        i = m.next;
+        continue;
+      }
+    }
+
+    if (ch === '*' && text[i + 1] === '*') {
+      const close = findClosing(text, i + 2, '**');
+      if (close !== -1) {
+        flush();
+        const inner = parseInline(text.slice(i + 2, close), keyRef, true);
+        // পুরো বোল্ড-অংশটাই যদি একটামাত্র লিংক হয় (যেমন `**[...](url)**`),
+        // তাহলে <strong> র‍্যাপার ছাড়াই সরাসরি বোল্ড-স্টাইল লিংকটা বসে —
+        // নাহলে ("**গুরুত্বপূর্ণ টেক্সট**" বা মিশ্র কনটেন্ট) স্বাভাবিক <strong>।
+        if (inner.length === 1 && typeof inner[0] !== 'string') {
+          out.push(inner[0]);
+        } else {
+          out.push(
+            <strong key={keyRef.n++} className="font-bold text-ink">
+              {inner}
+            </strong>
+          );
+        }
+        i = close + 2;
+        continue;
+      }
+      // বন্ধ `**` কোথাও পাওয়া যায়নি (অসম্পূর্ণ/ভাঙা মার্কডাউন) — এই দুটো `*`-কে
+      // একসাথে "একটা ইউনিট" ধরে সিঙ্গেল-স্টার ইতালিক হিসেবে আবার চেষ্টা করা
+      // ঠিক না: তাহলে দ্বিতীয় `*`-টাকেই ভুলবশত প্রথমটার "বন্ধনী" ধরে ফেলা হয়
+      // (দুটো মিলে একটা ফাঁকা `<em></em>` হয়ে যায়)। তার বদলে শুধু প্রথম `*`-টা
+      // প্লেইন অক্ষর হিসেবে রেখে এক ধাপ এগোনো হয় — পরের ধাপে দ্বিতীয় `*`-টা
+      // নিজে থেকেই নতুন করে যাচাই হবে (হয়তো সেটা কোনো italic-এর আসল শুরু)।
+      buf += ch;
+      i += 1;
+      continue;
+    }
+
+    if (ch === '*') {
+      const close = findClosing(text, i + 1, '*');
+      if (close !== -1) {
+        flush();
+        out.push(<em key={keyRef.n++}>{parseInline(text.slice(i + 1, close), keyRef, boldCtx)}</em>);
+        i = close + 1;
+        continue;
+      }
+    }
+
+    buf += ch;
+    i += 1;
+  }
+
+  flush();
   return out;
 }
 
 export function renderLinkedText(text: string | undefined | null): React.ReactNode {
   if (!text) return text ?? '';
   if (!HAS_ANYTHING_TO_PARSE.test(text)) return text; // বেশিরভাগ লাইনেই কিছু পার্স করার থাকে না
-
   const keyRef = { n: 0 };
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  const re = new RegExp(LINK_PATTERN);
-  let match: RegExpExecArray | null;
-
-  while ((match = re.exec(text)) !== null) {
-    const isBoldLink = match[1] !== undefined;
-    const label = isBoldLink ? match[1] : match[3];
-    const href = isBoldLink ? match[2] : match[4];
-    const full = match[0];
-
-    if (match.index > lastIndex) {
-      parts.push(...renderEmphasis(text.slice(lastIndex, match.index), keyRef));
-    }
-
-    const isInternal = href.startsWith('/');
-    const linkClass = isBoldLink
-      ? 'font-bold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light'
-      : 'font-semibold text-brand-light underline decoration-brand-light/40 underline-offset-2 hover:decoration-brand-light';
-    const cleanLabel = stripEmoji(label);
-
-    parts.push(
-      isInternal ? (
-        <Link key={keyRef.n++} href={href} className={linkClass}>
-          {cleanLabel}
-        </Link>
-      ) : (
-        <a key={keyRef.n++} href={href} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          {cleanLabel}
-        </a>
-      )
-    );
-
-    lastIndex = match.index + full.length;
-  }
-
-  if (lastIndex < text.length) parts.push(...renderEmphasis(text.slice(lastIndex), keyRef));
-  return parts;
+  return parseInline(text, keyRef, false);
 }
