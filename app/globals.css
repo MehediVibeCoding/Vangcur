@@ -381,16 +381,16 @@
   --obg-spread-x: 110%;
   --obg-spread-y: 110%;
   --obg-color-1: #F0F8FF;
-  --obg-color-2: #C3DEFC;
-  --obg-color-3: #44A7FC;
-  --obg-color-4: #C3DEFC;
+  --obg-color-2: #E0F2FE;
+  --obg-color-3: #BAE6FD;
+  --obg-color-4: #7DD3FC;
   --obg-color-5: #E0F2FE;
   --obg-stop-1: 0%;
   --obg-stop-2: 10%;
   --obg-stop-3: 35.44%;
   --obg-stop-4: 71.34%;
   --obg-stop-5: 150%;
-  color: #0062E3;
+  color: #0284C7;
 }
 @media (prefers-reduced-motion: reduce) {
   .order-btn-glow { transition: color .2s ease; }
