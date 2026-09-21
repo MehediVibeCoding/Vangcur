@@ -145,7 +145,7 @@ export default function Categories({ initialCategories }: CategoriesProps) {
         </button>
 
         <div className="touch-pan-y overflow-hidden py-1" ref={viewportRef}>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4 md:gap-3">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
             {currentCategories.map((cat) => (
               <div
                 key={cat.id}
