@@ -51,8 +51,7 @@ export default function About() {
               <>
                 <span className="block text-[18px] min-[360px]:text-[20px] sm:inline sm:text-[28px] md:text-[30px]">
                   Vangcur
-                </span>
-                <span className="hidden sm:inline"> — </span>
+                </span>{' '}
                 <span className="block text-[14px] min-[360px]:text-[15.5px] sm:inline sm:text-[28px] md:text-[30px] text-brand-light mt-1 sm:mt-0">
                   Your Trusted Tech &amp; Lifestyle Store
                 </span>
@@ -61,8 +60,7 @@ export default function About() {
               <>
                 <span className="block text-[19px] min-[360px]:text-[21px] sm:inline sm:text-[28px] md:text-[30px]">
                   Vangcur — ভাঙচুর
-                </span>
-                <span className="hidden sm:inline"> — </span>
+                </span>{' '}
                 <span className="block text-[13px] min-[360px]:text-[14.5px] min-[400px]:text-[16px] sm:inline sm:text-[28px] md:text-[30px] text-brand-light mt-1 sm:mt-0">
                   আপনার বিশ্বস্ত গ্যাজেট ও লাইফস্টাইল শপ
                 </span>
