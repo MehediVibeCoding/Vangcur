@@ -459,21 +459,21 @@ export default function CustomerGallery() {
     <div className="mb-8 text-center">
       <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-3.5 py-1 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light shadow-xs backdrop-blur-md">
         <CameraPhotoIcon />
-        <span>{lang === 'en' ? 'Customer Unboxing' : 'কাস্টমার আনবক্সিং'}</span>
+        <span>{lang === 'en' ? 'Customer Reviews' : 'কাস্টমার রিভিউ'}</span>
       </div>
       
       <h2 className="font-body text-2xl font-extrabold text-ink sm:text-[28px]">
         {lang === 'en' ? (
-          <>Unboxing <span className="text-brand-light">Gallery</span></>
+          <>Review <span className="text-brand-light">Gallery</span></>
         ) : (
-          <>Unboxing <span className="text-brand-light">গ্যালারি</span></>
+          <>রিভিউ <span className="text-brand-light">গ্যালারি</span></>
         )}
       </h2>
       
       <p className="mt-1.5 font-body text-[13px] text-muted sm:text-[14px]">
         {lang === 'en'
-          ? 'Happy moments and authentic unboxing experiences from our customers'
-          : 'আমাদের আসল গ্রাহকদের আনন্দময় আনবক্সিং মুহূর্ত ও অভিজ্ঞতা'}
+          ? 'Happy moments and authentic review experiences from our customers'
+          : 'আমাদের আসল গ্রাহকদের আনন্দময় রিভিউ মুহূর্ত ও অভিজ্ঞতা'}
       </p>
     </div>
   );
@@ -581,7 +581,7 @@ export default function CustomerGallery() {
                         <img
                           className="block h-full w-full object-cover select-none"
                           src={optimizeCloudinaryUrl(imgUrl, 900)}
-                          alt="Customer Unboxing"
+                          alt="Customer Review"
                           loading="lazy"
                           draggable={false}
                           onError={(e) => { e.currentTarget.style.opacity = '.3'; }}
@@ -716,7 +716,7 @@ export default function CustomerGallery() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={optimizeCloudinaryUrl(zoomImageUrl, 1600)}
-              alt="Full Resolution Unboxing"
+              alt="Full Resolution Review"
               style={{
                 transform: `translate3d(${zoomTranslate.x}px, ${zoomTranslate.y}px, 0) scale(${zoomScale})`,
                 transition: isPanning ? 'none' : 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
