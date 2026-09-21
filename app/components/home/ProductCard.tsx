@@ -188,7 +188,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
 
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 70%, rgba(8,12,22,.55) 85%, rgba(5,7,14,.95) 100%)' }}
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 58%, rgba(8,12,22,.55) 78%, rgba(5,7,14,.95) 100%)' }}
         />
 
         {sold ? (
