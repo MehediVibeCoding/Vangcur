@@ -101,7 +101,7 @@ export default function FAQ() {
               className={`overflow-hidden rounded-[16px] border transition-colors duration-200 [contain:paint_layout] [transform:translateZ(0)] ${
                 open
                   ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] via-white to-white shadow-sh1 ring-1 ring-brand-light/20'
-                  : 'border-border-base bg-white/95 shadow-xs hover:border-brand-light/40 hover:bg-white'
+                  : 'border-border-base bg-gradient-to-br from-[#F0F7FF] via-white to-[#EFF6FE]/75 shadow-xs hover:border-brand-light/40'
               }`}
             >
               <button
