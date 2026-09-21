@@ -466,7 +466,7 @@ export default function CustomerGallery() {
         {lang === 'en' ? (
           <>Review <span className="text-brand-light">Gallery</span></>
         ) : (
-          <>রিভিউ <span className="text-brand-light">গ্যালারি</span></>
+          <>Review <span className="text-brand-light">গ্যালারি</span></>
         )}
       </h2>
       
