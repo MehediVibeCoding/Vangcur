@@ -1,8 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchProductById, productHref } from './productData';
 import { getStockNotifications } from './accountData';
-import { MEMBERSHIP_TIERS, getTier } from './membershipData';
-import { getTierSpinReward } from './accountData';
+import { MEMBERSHIP_TIERS, getTier, getTierSpinReward } from './membershipData';
 import type { Order, DraftOrder } from '@/types';
 
 export interface NotificationItem {

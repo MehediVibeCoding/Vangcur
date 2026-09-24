@@ -1,10 +1,13 @@
 const SAFE_HREF_PROTOCOLS = ['http:', 'https:', 'tel:', 'mailto:'];
 
+// 🛡️ ফিক্স (audit P2-B13): আগে এখানে `<`/`>` কে `&lt;`/`&gt;` করে সেভ করা হতো
+// (ভ্যানিলা JS যুগের রীতি), কিন্তু React JSX-এ `{text}` দিয়ে রেন্ডার করলে
+// React নিজেই সব টেক্সট নিরাপদে escape করে — তাই সেভ করা `&lt;` আবার
+// escape হয়ে ইউজার আক্ষরিক অর্থেই "&lt;" লেখা দেখত, `<` নয়। এই তিনটে
+// কলার (প্রশ্ন/উত্তর/রিভিউ) কোথাও dangerouslySetInnerHTML দিয়ে রেন্ডার হয় না,
+// তাই এখানে আর আগে থেকে escape করার দরকার নেই — শুধু ট্রিম যথেষ্ট।
 export function sanitizeInput(value: string): string {
-  return value
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .trim();
+  return value.trim();
 }
 
 export function sanitizeHref(url: string | null | undefined): string {
@@ -21,10 +24,12 @@ export function sanitizeHref(url: string | null | undefined): string {
   }
 }
 
-export function validatePhone(phone: string): boolean {
-  const digits = phone.replace(/\D/g, '');
-  return /^01[3-9]\d{8}$/.test(digits);
-}
+// 🛡️ ফিক্স (audit P2-B6): আগে এখানে একটা আলাদা, দুর্বল validatePhone ছিল
+// (শুধু ফরম্যাট চেক করত, all-same/sequential ফেক প্যাটার্ন ধরত না) —
+// checkout.ts যেটা ব্যবহার করে সেটার চেয়ে ভিন্ন নিয়ম, ফলে রেজিস্ট্রেশন/
+// প্রোফাইল/স্টক-নোটিফাইতে এমন নম্বর গ্রহণ হতো যা checkout-এ বাতিল হতো।
+// এখন একটাই বাস্তবায়ন (lib/checkoutData.ts-এ) ব্যবহার হচ্ছে সব জায়গায়।
+export { validatePhone } from './checkoutData';
 
 export const MAX_PHONE_LEN = 11;
 

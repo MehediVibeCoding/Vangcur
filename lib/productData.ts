@@ -87,7 +87,20 @@ interface RawCustomProduct {
 }
 
 export function mapCustomProduct(p: RawCustomProduct): Product {
-  const specs = parseJsonish(p.specs, (p.specs as Record<string, string>) || {});
+  const rawSpecs = parseJsonish(p.specs, (p.specs as Record<string, string>) || {}) as Record<string, unknown>;
+  // 🛡️ ফিক্স (audit P0-01): specs কলামে অ্যাডমিন-অনলি ইন্টারনাল কী (যেমন
+  // `_profit` — প্রতি ইউনিটের লাভ) থাকে। আগে পুরো specs হুবহু ব্রাউজারে পাঠানো
+  // হতো, ফলে যে কেউ পেজের HTML/RSC payload দেখে প্রোডাক্টের লাভের মার্জিন জেনে
+  // যেতে পারত। এখন "_" দিয়ে শুরু হওয়া যেকোনো internal কী (`_profit`,
+  // `_discount_color`, লেগ্যাসি `_quick_keys` ইত্যাদি) পাবলিক আউটপুট থেকে
+  // বাদ — শুধু `_discount_color`-এর মান (UI রঙের জন্য দরকার) আলাদাভাবে বের
+  // করে রাখা হচ্ছে।
+  const discountColor = (rawSpecs._discount_color as string) || '';
+  const specs: Record<string, string> = {};
+  for (const [k, v] of Object.entries(rawSpecs)) {
+    if (!k.startsWith('_')) specs[k] = v as string;
+  }
+
   let imgs = p.imgs as unknown;
   if (typeof imgs === 'string') imgs = parseJsonish<string[]>(imgs, imgs ? [imgs] : ['📦']);
   if (!Array.isArray(imgs) || !imgs.length) imgs = ['📦'];
@@ -101,11 +114,11 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
     old: Number(p.old) || Number(p.price) || 0,
     stock: p.stock !== undefined && p.stock !== null ? Number(p.stock) : 0,
     badge: p.badge || '',
-    discountColor: (specs as { _discount_color?: string })._discount_color || '',
+    discountColor,
     warranty: p.warranty || '৭ দিন',
     rating: Number(p.rating) || 4.5,
     imgs: imgs as string[],
-    specs: specs as Record<string, string>,
+    specs,
     desc: p.desc_text || p.desc || '',
     longDesc: p.long_desc || p.desc_text || p.desc || '',
     features: Array.isArray(p.features) ? p.features : [],

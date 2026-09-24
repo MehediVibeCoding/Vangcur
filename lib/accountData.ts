@@ -364,7 +364,7 @@ function mapOrderRow(o: Record<string, any>): Order {
     id: o.id,
     orderNum: o.order_num || o.orderNum || o.id,
     date: o.created_at || o.date,
-    customer: o.customer || { name: o.customer_name || '' },
+    customer: o.customer || { name: o.customer_name || '', phone: o.customer_phone || '' },
     items: o.items || [],
     status: o.status || 'pending',
     total: o.total || 0,
@@ -383,7 +383,11 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
     // এখানে দেখানো হবে।
     let q = supabase
       .from('orders')
-      .select('*')
+      // 🛡️ ফিক্স (audit P2-A4): আগে select('*') পুরো সারি (fingerprint_id,
+      // payment_txn ইত্যাদি সহ) আনত, অথচ অর্ডার-লিস্ট কার্ড এর কিছুই
+      // ব্যবহার করে না (OrderCard.tsx-এ যাচাই করা)। ইনভয়েস ফ্লো আলাদা
+      // fetchFullOrder() দিয়ে নিজের প্রয়োজনীয় কলাম আনে, এখানে প্রভাব পড়ে না।
+      .select('id, order_num, created_at, customer_name, customer_phone, status, total, items, user_id, customer_email')
       .not('status', 'in', '(cancelled,rejected)')
       .order('created_at', { ascending: false });
     if (currentUser.id) q = q.eq('user_id', currentUser.id);
@@ -409,7 +413,11 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
 export function orderStats(orders: Order[]): OrderStats {
   const total = orders.length;
   const running = orders.filter((o) => ['pending', 'confirmed', 'shipped'].includes(o.status)).length;
-  const completed = orders.filter((o) => ['confirmed', 'shipped', 'delivered'].includes(o.status)).length;
+  // 🛡️ ফিক্স (audit P2-F1/F2): আগে completed-এ confirmed/shipped-ও গোনা হতো,
+  // ফলে total ≠ running + completed হতো এবং মেম্বারশিপ টায়ার (যেটা
+  // stats.completed পড়ে) ডেলিভারির আগেই বেড়ে যেত। এখন completed মানে
+  // সত্যিই ডেলিভার হওয়া অর্ডার।
+  const completed = orders.filter((o) => o.status === 'delivered').length;
   return { total, running, completed };
 }
 
@@ -559,113 +567,3 @@ export async function deleteAllDrafts(supabase: SupabaseClient, currentUser: Cur
     }
   }
 }
-
-// ══════════════════════════════════════════════════════════════════════
-// 🎡 মেম্বারশিপ স্পিন হুইল ও ভিআইপি রিওয়ার্ড আর্কিটেকচার
-// ══════════════════════════════════════════════════════════════════════
-
-export interface SpinSlice {
-  id: number;
-  label: string;
-  labelEn: string;
-  value: number;
-  type: 'fixed' | 'free_shipping';
-  minOrder: number;
-  weight: number;
-  color: string;
-  bg: string;
-}
-
-export interface TierSpinReward {
-  tierKey: string;
-  code: string;
-  slice: SpinSlice;
-  wonAt: number;
-  expiresAt: number;
-}
-
-export const SILVER_SPIN_SLICES: SpinSlice[] = [
-  { id: 0, label: '৳৫০ ছাড়', labelEn: '৳50 OFF', value: 50, type: 'fixed', minOrder: 800, weight: 70, color: '#0F172A', bg: '#F8FAFC' },
-  { id: 1, label: '৳২০০ ছাড়', labelEn: '৳200 OFF', value: 200, type: 'fixed', minOrder: 2500, weight: 0, color: '#0F172A', bg: '#EFF6FE' },
-  { id: 2, label: '৳২০ ছাড়', labelEn: '৳20 OFF', value: 20, type: 'fixed', minOrder: 500, weight: 25, color: '#0F172A', bg: '#F8FAFC' },
-  { id: 3, label: '৳৫০০ ছাড়', labelEn: '৳500 OFF', value: 500, type: 'fixed', minOrder: 5000, weight: 0, color: '#0F172A', bg: '#EFF6FE' },
-  { id: 4, label: '৳১০০ ছাড়', labelEn: '৳100 OFF', value: 100, type: 'fixed', minOrder: 1500, weight: 5, color: '#0F172A', bg: '#F8FAFC' },
-  { id: 5, label: '৳৩০০ ছাড়', labelEn: '৳300 OFF', value: 300, type: 'fixed', minOrder: 3500, weight: 0, color: '#0F172A', bg: '#EFF6FE' },
-];
-
-export const GOLD_SPIN_SLICES: SpinSlice[] = [
-  { id: 0, label: 'ফ্রি ডেলিভারি', labelEn: 'Free Delivery', value: 0, type: 'free_shipping', minOrder: 0, weight: 65, color: '#0F172A', bg: '#F8FAFC' },
-  { id: 1, label: 'SAVE500', labelEn: 'SAVE500', value: 500, type: 'fixed', minOrder: 5000, weight: 0, color: '#0F172A', bg: '#FEF3C7' },
-  { id: 2, label: 'SAVE100', labelEn: 'SAVE100', value: 100, type: 'fixed', minOrder: 1200, weight: 30, color: '#0F172A', bg: '#F8FAFC' },
-  { id: 3, label: 'SAVE200', labelEn: 'SAVE200', value: 200, type: 'fixed', minOrder: 2500, weight: 0, color: '#0F172A', bg: '#FEF3C7' },
-  { id: 4, label: 'SAVE150', labelEn: 'SAVE150', value: 150, type: 'fixed', minOrder: 2000, weight: 5, color: '#0F172A', bg: '#F8FAFC' },
-  { id: 5, label: 'সারপ্রাইজ গিফট', labelEn: 'Mystery Gift', value: 0, type: 'free_shipping', minOrder: 0, weight: 0, color: '#0F172A', bg: '#FEF3C7' },
-];
-
-export function computeWinningSlice(slices: SpinSlice[]): { slice: SpinSlice; index: number } {
-  const eligible = slices
-    .map((s, idx) => ({ slice: s, index: idx }))
-    .filter((x) => x.slice.weight > 0);
-
-  const totalWeight = eligible.reduce((acc, curr) => acc + curr.slice.weight, 0);
-  let random = Math.random() * totalWeight;
-
-  for (const item of eligible) {
-    if (random < item.slice.weight) {
-      return item;
-    }
-    random -= item.slice.weight;
-  }
-
-  return eligible[0] || { slice: slices[0], index: 0 };
-}
-
-const SPIN_STORAGE_PREFIX = 'vc_tier_spin_';
-
-export function getTierSpinReward(tierKey: string): TierSpinReward | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(`${SPIN_STORAGE_PREFIX}${tierKey}`);
-    if (!raw) return null;
-    const data: TierSpinReward = JSON.parse(raw);
-    if (Date.now() > data.expiresAt) {
-      localStorage.removeItem(`${SPIN_STORAGE_PREFIX}${tierKey}`);
-      return null;
-    }
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-export function saveTierSpinReward(tierKey: string, slice: SpinSlice): TierSpinReward {
-  const now = Date.now();
-  const expiresAt = now + 24 * 60 * 60 * 1000;
-  
-  let code = `VC-${tierKey.toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-  if (slice.type === 'free_shipping') {
-    code = `FREESHIP-${tierKey.toUpperCase()}`;
-  } else if (slice.value > 0) {
-    code = `SAVE${slice.value}-${tierKey.toUpperCase()}`;
-  }
-
-  const reward: TierSpinReward = {
-    tierKey,
-    code,
-    slice,
-    wonAt: now,
-    expiresAt,
-  };
-
-  try {
-    localStorage.setItem(`${SPIN_STORAGE_PREFIX}${tierKey}`, JSON.stringify(reward));
-  } catch {
-    // ignore
-  }
-
-  return reward;
-}
-
-export function hasUserSpunTier(tierKey: string): boolean {
-  return getTierSpinReward(tierKey) !== null;
-    }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   MEMBERSHIP_TIERS,
@@ -8,12 +8,16 @@ import {
   crownSVG,
   SILVER_SPIN_SLICES,
   GOLD_SPIN_SLICES,
-  computeWinningSlice,
   getTierSpinReward,
   saveTierSpinReward,
+  spinTierWheel,
+  claimLegendaryReward,
+  getLegendaryVoucherStatus,
   type SpinSlice,
   type TierSpinReward,
+  type LegendaryVoucherStatus,
 } from '@/lib/membershipData';
+import { createClient } from '@/lib/supabase/client';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_MEMBERSHIP_EVENT } from '@/lib/uiEvents';
@@ -98,6 +102,7 @@ export default function MembershipModal({
   completedCount: propsCompletedCount,
 }: MembershipModalProps = {}) {
   const { t, lang } = useT();
+  const supabase = useRef(createClient()).current;
   const [eventCompletedCount, setEventCompletedCount] = useState<number | null>(null);
   const [selectedTierKey, setSelectedTierKey] = useState<string>('regular');
 
@@ -107,11 +112,47 @@ export default function MembershipModal({
   const [countdownText, setCountdownText] = useState('');
   const [copyCodeLabel, setCopyCodeLabel] = useState('Copy');
   const [diamondCopyLabel, setDiamondCopyLabel] = useState('Copy');
+  const [legendaryVoucher, setLegendaryVoucher] = useState<LegendaryVoucherStatus | null>(null);
+  const [isClaimingLegendary, setIsClaimingLegendary] = useState(false);
 
   const isControlled = typeof propsIsOpen === 'boolean';
   const isEventOpen = eventCompletedCount !== null;
   const isModalOpen = isControlled ? propsIsOpen : isEventOpen;
   const effectiveCount = isControlled ? (propsCompletedCount ?? 0) : (eventCompletedCount ?? 0);
+
+  useEffect(() => {
+    // মডাল খোলার সময় একবারই ভাউচারের বর্তমান অবস্থা পড়ে নেওয়া হচ্ছে (RLS
+    // নিজের সারি ছাড়া কিছু ফেরত দেয় না) — Legendary ট্যাবে না গেলেও ঠিক
+    // আছে, খরচ নগণ্য আর ট্যাব বদলালে আলাদা করে আর কল করতে হয় না।
+    if (!isModalOpen) {
+      setLegendaryVoucher(null);
+      return;
+    }
+    let cancelled = false;
+    getLegendaryVoucherStatus(supabase).then((res) => {
+      if (!cancelled) setLegendaryVoucher(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isModalOpen, supabase]);
+
+  const handleClaimLegendary = async () => {
+    if (isClaimingLegendary) return;
+    setIsClaimingLegendary(true);
+    const res = await claimLegendaryReward(supabase);
+    setIsClaimingLegendary(false);
+    if (!res.ok) {
+      showToast(res.error || (lang === 'en' ? 'Something went wrong, please try again' : 'একটু সমস্যা হয়েছে, আবার চেষ্টা করুন'));
+      return;
+    }
+    setLegendaryVoucher(res);
+    showToast(
+      lang === 'en'
+        ? 'Claimed! Your next order will be 100% Cash on Delivery.'
+        : 'ক্লেইম সফল হয়েছে! আপনার পরবর্তী অর্ডারটি সম্পূর্ণ ক্যাশ অন ডেলিভারিতে হবে।',
+    );
+  };
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -204,11 +245,26 @@ export default function MembershipModal({
     }
   }, [lang, t]);
 
-  const handleTriggerSpin = (slices: SpinSlice[]) => {
+  const handleTriggerSpin = async (slices: SpinSlice[]) => {
     if (isSpinning || activeReward || !isSelectedTierUnlocked) return;
 
     setIsSpinning(true);
-    const { slice, index } = computeWinningSlice(slices);
+
+    // 🛡️ ফিক্স (audit P1-19): আগে এখানে computeWinningSlice() দিয়ে ক্লায়েন্ট
+    // নিজেই বিজয়ী ঠিক করত এবং saveTierSpinReward() একটা কোড বানাত যেটা
+    // coupons টেবিলে কখনো থাকত না। এখন সার্ভার (spin_tier_wheel RPC) আসল
+    // বিজয়ী স্লাইস ও একটা সত্যিকারের, checkout-এ কাজ করা কুপন ঠিক করে দেয়;
+    // ক্লায়েন্ট শুধু সেই ফলাফল অনুযায়ী চাকাটা ঘুরিয়ে দেখায়।
+    const result = await spinTierWheel(supabase, selectedTier.key);
+
+    if (!result.ok || result.index === undefined || !result.code) {
+      setIsSpinning(false);
+      showToast(lang === 'en' ? 'Something went wrong, please try again' : 'একটু সমস্যা হয়েছে, আবার চেষ্টা করুন');
+      return;
+    }
+
+    const index = result.index;
+    const slice = slices[index] || slices[0];
 
     const sliceAngle = 360 / slices.length;
     const targetDegree = 360 * 5 + (360 - (index * sliceAngle + sliceAngle / 2));
@@ -222,7 +278,7 @@ export default function MembershipModal({
 
     setTimeout(() => {
       setIsSpinning(false);
-      const saved = saveTierSpinReward(selectedTier.key, slice);
+      const saved = saveTierSpinReward(selectedTier.key, slice, result.code, result.expiresAt);
       setActiveReward(saved);
       showToast(lang === 'en' ? `Congratulations! You won ${slice.labelEn}!` : `অভিনন্দন! আপনি ${slice.label} জিতেছেন!`);
     }, 3900);
@@ -651,14 +707,39 @@ export default function MembershipModal({
                   </h4>
                   <p className="mt-1.5 font-body text-[12px] leading-relaxed text-amber-800/90">
                     {lang === 'en'
-                      ? 'As a Legendary customer, your orders require ZERO advance payment. Enjoy 100% full Cash on Delivery privilege!'
-                      : 'আপনি আমাদের সর্বোচ্চ সম্মানিত লিজেন্ডারি কাস্টমার! আপনার কোনো বিকাশ অগ্রিম পেমেন্ট লাগবে না, সম্পূর্ণ ক্যাশ অন ডেলিভারিতে অর্ডার করুন।'}
+                      ? 'As a Legendary customer, claim your one-time reward: your very next order needs ZERO advance payment!'
+                      : 'আপনি আমাদের সর্বোচ্চ সম্মানিত লিজেন্ডারি কাস্টমার! একবার ক্লেইম করলে আপনার পরবর্তী একটি অর্ডার সম্পূর্ণ ক্যাশ অন ডেলিভারিতে হবে — কোনো অগ্রিম লাগবে না।'}
                   </p>
 
-                  <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100/80 px-4 py-1.5 font-body text-xs font-extrabold text-amber-900 shadow-2xs">
-                    <span>✓</span>
-                    <span>{isSelectedTierUnlocked ? (lang === 'en' ? 'Active on your checkout' : 'আপনার চেকআউটে সক্রিয় সুবিধা') : (lang === 'en' ? 'Legendary Locked' : 'লিজেন্ডারি লকড')}</span>
-                  </div>
+                  {!isSelectedTierUnlocked ? (
+                    <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100/80 px-4 py-1.5 font-body text-xs font-extrabold text-amber-900 shadow-2xs">
+                      <span>✓</span>
+                      <span>{lang === 'en' ? 'Legendary Locked' : 'লিজেন্ডারি লকড'}</span>
+                    </div>
+                  ) : !legendaryVoucher ? (
+                    <div className="mt-3.5 font-body text-xs text-amber-700/70">{lang === 'en' ? 'Loading…' : 'লোড হচ্ছে…'}</div>
+                  ) : legendaryVoucher.used ? (
+                    <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100/80 px-4 py-1.5 font-body text-xs font-extrabold text-amber-900 shadow-2xs">
+                      <span>✓</span>
+                      <span>{lang === 'en' ? 'One-time reward already used' : 'এই বিশেষ সুবিধাটি আপনি ইতিমধ্যে ব্যবহার করেছেন'}</span>
+                    </div>
+                  ) : legendaryVoucher.isAvailable ? (
+                    <div className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-100/80 px-4 py-1.5 font-body text-xs font-extrabold text-emerald-900 shadow-2xs">
+                      <span>✓</span>
+                      <span>{lang === 'en' ? 'Ready — your next order will be full COD' : 'প্রস্তুত — আপনার পরবর্তী অর্ডার সম্পূর্ণ COD হবে'}</span>
+                    </div>
+                  ) : (
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      disabled={isClaimingLegendary}
+                      onClick={handleClaimLegendary}
+                      className="mt-3.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-5 py-2 font-body text-xs font-extrabold text-white shadow-sh2 disabled:opacity-60"
+                    >
+                      {isClaimingLegendary
+                        ? (lang === 'en' ? 'Claiming…' : 'ক্লেইম হচ্ছে…')
+                        : (lang === 'en' ? 'Claim your reward' : 'রিওয়ার্ড ক্লেইম করুন')}
+                    </motion.button>
+                  )}
                 </div>
               )}
 

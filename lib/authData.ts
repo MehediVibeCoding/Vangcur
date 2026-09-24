@@ -50,6 +50,15 @@ export async function logout(supabase: SupabaseClient): Promise<void> {
     }
   }
   useAuthStore.getState().setCurrentUser(null);
+  // 🛡️ ফিক্স (audit P2-B10): vc_user আগে থেকেই ক্লিয়ার হতো, কিন্তু অর্ডার-হিস্ট্রির
+  // PII (নাম/ফোন/ঠিকানা সহ vc_orders, vc_guest_orders) লগআউটের পরও ব্রাউজারে
+  // থেকে যেত — শেয়ার্ড/পাবলিক ডিভাইসে পরের ব্যবহারকারী তা দেখতে পেত।
+  try {
+    localStorage.removeItem('vc_orders');
+    localStorage.removeItem('vc_guest_orders');
+  } catch {
+    // storage unavailable, ignore
+  }
   try {
     // 🛡️ নিশ্চিত করা হচ্ছে সেশন সত্যিই শেষ হয়েছে — এখনো জীবিত থাকলে জোর করে local সাইন-আউট
     const { data } = await supabase.auth.getUser();

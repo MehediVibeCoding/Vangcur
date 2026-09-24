@@ -1,4 +1,5 @@
 import type { MembershipTier } from '@/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const MEMBERSHIP_TIERS: MembershipTier[] = [
   { min: 0, max: 0, key: 'regular', bn: 'সাধারণ', en: 'Regular Member', crown: 'regular' },
@@ -119,6 +120,95 @@ export function computeWinningSlice(slices: SpinSlice[]): { slice: SpinSlice; in
   return eligible[0] || { slice: slices[0], index: 0 };
 }
 
+export interface SpinServerResult {
+  ok: boolean;
+  error?: string;
+  alreadySpun?: boolean;
+  index?: number;
+  label?: string;
+  code?: string;
+  discountType?: string;
+  discountValue?: number;
+  minOrderAmount?: number;
+  expiresAt?: string;
+}
+
+/**
+ * 🛡️ ফিক্স (audit P1-19): বিজয়ী স্লাইস ও কুপন এখন সার্ভার (spin_tier_wheel RPC)
+ * ঠিক করে, ক্লায়েন্টের computeWinningSlice() আর ব্যবহার হয় না — client শুধু
+ * ফেরত-আসা index অনুযায়ী চাকাটা ঘুরিয়ে দেখায়।
+ */
+export async function spinTierWheel(supabase: SupabaseClient, tierKey: string): Promise<SpinServerResult> {
+  try {
+    const { data, error } = await supabase.rpc('spin_tier_wheel', { p_tier_key: tierKey });
+    if (error || !data || data.ok !== true) {
+      return { ok: false, error: data?.error || error?.message || 'unknown_error' };
+    }
+    return {
+      ok: true,
+      alreadySpun: !!data.already_spun,
+      index: Number(data.index),
+      label: data.label,
+      code: data.code,
+      discountType: data.discount_type,
+      discountValue: Number(data.discount_value),
+      minOrderAmount: Number(data.min_order_amount),
+      expiresAt: data.expires_at,
+    };
+  } catch (e) {
+    return { ok: false, error: (e as Error)?.message || 'network_error' };
+  }
+}
+
+export interface LegendaryVoucherStatus {
+  ok: boolean;
+  error?: string;
+  alreadyClaimed?: boolean;
+  isAvailable?: boolean;
+  used?: boolean;
+  deliveredCount?: number;
+}
+
+/**
+ * মেম্বারশিপ মডাল থেকে "ক্লেইম করুন" চাপলে কল হয়। সার্ভার নিজে (এখানেই,
+ * একবারই) ইউজারের ডেলিভার্ড-অর্ডার গোনে — ১০+ হলে লাইফটাইমে-একবার একটা
+ * ভাউচার ইস্যু করে। এরপর checkout শুধু এই ভাউচারের boolean flag দেখে,
+ * অর্ডার-সংখ্যা আর নতুন করে গোনে না।
+ */
+export async function claimLegendaryReward(supabase: SupabaseClient): Promise<LegendaryVoucherStatus> {
+  try {
+    const { data, error } = await supabase.rpc('claim_legendary_reward');
+    if (error || !data || data.ok !== true) {
+      return { ok: false, error: data?.error || error?.message || 'unknown_error' };
+    }
+    return {
+      ok: true,
+      alreadyClaimed: !!data.already_claimed,
+      isAvailable: !!data.is_available,
+      used: !!data.used,
+    };
+  } catch (e) {
+    return { ok: false, error: (e as Error)?.message || 'network_error' };
+  }
+}
+
+/** checkout/অ্যাকাউন্ট পেজে দেখানোর জন্য — শুধু নিজের ভাউচারের স্ট্যাটাস পড়ে (RLS-সুরক্ষিত)। */
+export async function getLegendaryVoucherStatus(supabase: SupabaseClient): Promise<LegendaryVoucherStatus> {
+  try {
+    // RLS পলিসি নিজেই শুধু auth.uid() = user_id সারি ফেরত দেয়, তাই আলাদা
+    // করে userId ফিল্টার/prop পাস করার দরকার নেই।
+    const { data, error } = await supabase
+      .from('legendary_vouchers')
+      .select('is_available, used_at')
+      .maybeSingle();
+    if (error) return { ok: false, error: error.message };
+    if (!data) return { ok: true, alreadyClaimed: false, isAvailable: false, used: false };
+    return { ok: true, alreadyClaimed: true, isAvailable: !!data.is_available, used: !!data.used_at };
+  } catch (e) {
+    return { ok: false, error: (e as Error)?.message || 'network_error' };
+  }
+}
+
 const SPIN_STORAGE_PREFIX = 'vc_tier_spin_';
 
 export function getTierSpinReward(tierKey: string): TierSpinReward | null {
@@ -137,15 +227,27 @@ export function getTierSpinReward(tierKey: string): TierSpinReward | null {
   }
 }
 
-export function saveTierSpinReward(tierKey: string, slice: SpinSlice): TierSpinReward {
+export function saveTierSpinReward(
+  tierKey: string,
+  slice: SpinSlice,
+  serverCode?: string,
+  serverExpiresAtIso?: string,
+): TierSpinReward {
   const now = Date.now();
-  const expiresAt = now + 24 * 60 * 60 * 1000; // ২৪ ঘণ্টার FOMO কাউন্টডাউন টাইমার
-  
-  let code = `VC-${tierKey.toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-  if (slice.type === 'free_shipping') {
-    code = `FREESHIP-${tierKey.toUpperCase()}`;
-  } else if (slice.value > 0) {
-    code = `SAVE${slice.value}-${tierKey.toUpperCase()}`;
+  // 🛡️ ফিক্স (audit P1-19): সার্ভার (spin_tier_wheel RPC) থেকে আসল, checkout-এ
+  // কাজ করা কোড ও মেয়াদ দেওয়া থাকলে সেটাই ব্যবহার করা হচ্ছে। আগে এখানে যে
+  // কোড বানানো হতো (SAVE100-GOLD ইত্যাদি) তা কখনো coupons টেবিলে থাকত না,
+  // তাই checkout-এ সবসময় "কুপন কোডটি সঠিক নয়" আসত।
+  const expiresAt = serverExpiresAtIso ? new Date(serverExpiresAtIso).getTime() : now + 24 * 60 * 60 * 1000;
+
+  let code = serverCode;
+  if (!code) {
+    code = `VC-${tierKey.toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    if (slice.type === 'free_shipping') {
+      code = `FREESHIP-${tierKey.toUpperCase()}`;
+    } else if (slice.value > 0) {
+      code = `SAVE${slice.value}-${tierKey.toUpperCase()}`;
+    }
   }
 
   const reward: TierSpinReward = {

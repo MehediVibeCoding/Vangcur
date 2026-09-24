@@ -133,9 +133,12 @@ export async function middleware(request: NextRequest) {
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://www.googletagmanager.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://www.googletagmanager.com https://www.google-analytics.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://www.googletagmanager.com",
+    // 🛡️ ফিক্স (audit P1-08): Cloudinary আপলোড API, ওয়েদার-উইজেট ও GA4 এন্ডপয়েন্ট
+    // আগে এখানে না থাকায় ব্রাউজার নীরবে ব্লক করছিল (রিভিউ-ছবি আপলোড ও
+    // অ্যানালিটিক্স ট্র্যাকিং কাজ করছিল না)।
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://www.googletagmanager.com https://api.cloudinary.com https://api.open-meteo.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://stats.g.doubleclick.net",
     "frame-src https://challenges.cloudflare.com https://www.googletagmanager.com",
     "object-src 'none'",
     "base-uri 'self'",

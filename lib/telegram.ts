@@ -17,6 +17,17 @@ interface TelegramOrderNotification {
   paymentLast4?: string;
 }
 
+// 🛡️ ফিক্স (audit P1-12): parse_mode 'HTML'-এ পাঠানোর আগে সব ডাইনামিক
+// (কাস্টমার-সরবরাহিত) মান escape করা — নইলে নাম/ইমেইল/ঠিকানায় থাকা `<`/`>`/`&`
+// Telegram-এর HTML পার্সার ব্যর্থ করে দিতে পারে এবং পুরো নোটিফিকেশন
+// নিঃশব্দে হারিয়ে যায়।
+function escapeTelegramHtml(value: string): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 export async function sendTelegramOrderNotification(order: TelegramOrderNotification): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -25,14 +36,16 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
     return;
   }
 
+  const e = escapeTelegramHtml;
+
   const itemsText = order.items
-    .map((i, idx) => `${idx + 1}. <b>${i.name}</b> × ${i.qty} — ৳${(i.price * i.qty).toLocaleString('en-US')}`)
+    .map((i, idx) => `${idx + 1}. <b>${e(i.name)}</b> × ${i.qty} — ৳${(i.price * i.qty).toLocaleString('en-US')}`)
     .join('\n');
 
   const paymentInfo = order.paymentTxn
-    ? `TxnID: <code>${order.paymentTxn}</code>`
+    ? `TxnID: <code>${e(order.paymentTxn)}</code>`
     : order.paymentLast4
-    ? `Last 4 digits: <code>${order.paymentLast4}</code>`
+    ? `Last 4 digits: <code>${e(order.paymentLast4)}</code>`
     : 'N/A';
 
   const advance = Number(order.advancePaid ?? 200);
@@ -45,11 +58,11 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
 
   const message = `<b>নতুন অর্ডার এসেছে</b>\n` +
     `${DIVIDER}\n` +
-    `<b>অর্ডার নং:</b> ${order.orderNum}\n` +
-    `<b>কাস্টমার:</b> ${order.name}\n` +
-    `<b>ফোন:</b> <code>${order.phone}</code>\n` +
-    `<b>ঠিকানা:</b> ${order.district ? `${order.district}, ` : ''}${order.address}\n` +
-    `${order.email ? `<b>ইমেইল:</b> ${order.email}\n` : ''}` +
+    `<b>অর্ডার নং:</b> ${e(order.orderNum)}\n` +
+    `<b>কাস্টমার:</b> ${e(order.name)}\n` +
+    `<b>ফোন:</b> <code>${e(order.phone)}</code>\n` +
+    `<b>ঠিকানা:</b> ${order.district ? `${e(order.district)}, ` : ''}${e(order.address)}\n` +
+    `${order.email ? `<b>ইমেইল:</b> ${e(order.email)}\n` : ''}` +
     `${DIVIDER}\n` +
     `<b>পণ্যসমূহ:</b>\n${itemsText}\n` +
     `${DIVIDER}\n` +
@@ -61,7 +74,7 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
     `${DIVIDER}`;
 
   try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -71,7 +84,15 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
       }),
       signal: AbortSignal.timeout(5000),
     });
+
+    // 🛡️ ফিক্স: আগে res.ok চেক না করায় Telegram ৪xx/৫xx দিলেও কোথাও লগ হতো
+    // না — অর্ডার হয়ে যেত কিন্তু কেউ জানত না। token/chatId কখনো লগ হয় না।
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.text()).slice(0, 300); } catch { /* ignore */ }
+      logWarn('[Telegram] sendMessage failed:', res.status, detail, '| order:', order.orderNum);
+    }
   } catch (err) {
-    logWarn('[Telegram] Failed to send order notification:', err);
+    logWarn('[Telegram] Failed to send order notification:', err, '| order:', order.orderNum);
   }
 }

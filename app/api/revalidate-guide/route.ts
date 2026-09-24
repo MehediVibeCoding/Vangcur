@@ -17,8 +17,20 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { timingSafeEqual } from 'crypto';
 import { logWarn } from '@/lib/logger';
 import { RESERVED_URL_PREFIXES } from '@/types/guides';
+
+// 🛡️ ফিক্স (audit P2-B11): === দিয়ে secret তুলনা করলে তাত্ত্বিকভাবে টাইমিং দিয়ে
+// অনুমান করার সুযোগ থাকে (early-exit string compare)। constant-time compare
+// ব্যবহার করা হচ্ছে; দৈর্ঘ্য না মিললেও নিরাপদে false রিটার্ন করে (crypto নিজে
+// দৈর্ঘ্য-ভিন্ন হলে exception ছোঁড়ে, তাই আগে length চেক)।
+function secretsMatch(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-revalidate-secret');
@@ -30,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: 'not configured' }, { status: 503 });
   }
 
-  if (!secret || secret !== process.env.GUIDE_REVALIDATE_SECRET_KEY) {
+  if (!secret || !secretsMatch(secret, process.env.GUIDE_REVALIDATE_SECRET_KEY)) {
     return NextResponse.json({ ok: false, message: 'unauthorized' }, { status: 401 });
   }
 

@@ -28,13 +28,17 @@ export async function fetchContactSettings(_supabase: SupabaseClient): Promise<C
   return null;
 }
 
-// আসল ডাটা কখনো বদলাবে না (এডিট করার পথ নেই), তাই এখানে postgres_changes
-// লিসেনার লাগানো হয়নি — শুধু কলার-দের কোড অপরিবর্তিত রাখতে (supabase.removeChannel
-// নিরাপদে কল করা যাবে) একটা খালি চ্যানেল ফেরত দেওয়া হচ্ছে।
+// আসল ডাটা কখনো বদলাবে না (এডিট করার পথ নেই), তাই postgres_changes লিসেনার
+// লাগানো হয়নি। 🛡️ ফিক্স (audit P1-15): আগে .subscribe() কল করে একটা আসল
+// Realtime WebSocket খোলা হতো যদিও কোনো ইভেন্ট কখনো আসে না (fetch সবসময় null
+// রিটার্ন করে)। এই কম্পোনেন্টগুলো (Footer-এর মতোই) প্রায় সব পেজে থাকায় প্রতিটি
+// ভিজিটর অকারণে সকেট ধরে রাখত। এখন .subscribe() ছাড়া শুধু একটা খালি
+// চ্যানেল-হ্যান্ডেল রিটার্ন করা হচ্ছে — কলারের supabase.removeChannel(channel)
+// ক্লিনআপ কোড অপরিবর্তিত/নিরাপদ থাকে, কিন্তু নেটওয়ার্ক সংযোগ খোলে না।
 export function subscribeContactSettings(
   supabase: SupabaseClient,
   _onChange: (contact: ContactSettings) => void,
 ): RealtimeChannel {
   const uniqueName = `float-btns-contact-watch-${Math.random().toString(36).slice(2, 9)}`;
-  return supabase.channel(uniqueName).subscribe();
+  return supabase.channel(uniqueName);
 }

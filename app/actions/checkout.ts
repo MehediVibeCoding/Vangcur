@@ -64,12 +64,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const validShipKeys: string[] = getShipOptions(dist).map((o) => o.key);
   if (!shipping || !validShipKeys.includes(shipping)) return fail(t('সঠিক শিপিং অপশন সিলেক্ট করুন'));
 
-  const hasTxn = !!txn;
-  const hasLast4 = !!last4;
-  if (!hasTxn && !hasLast4) return fail(t('Transaction ID অথবা শেষ ৪ ডিজিট দিন'));
-  if (hasTxn && !validateTxnId(txn)) return fail(t('সঠিক বিকাশ ট্রানজেকশন আইডি দিন'));
-  if (hasLast4 && !/^\d{4}$/.test(last4)) return fail(t('সঠিক শেষ ৪ ডিজিট দিন'));
-
   if (!rawItems.length || rawItems.length > MAX_ITEMS) return fail(t('কার্ট খালি বা অস্বাভাবিক, রিফ্রেশ করে আবার চেষ্টা করুন'));
 
   const mergedMap: Record<string, number> = {};
@@ -116,6 +110,51 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   } catch {
     // ignore
+  }
+
+  // 🎖️ ফিচার: Legendary (১০+ ডেলিভার্ড অর্ডার) সদস্যের একবার-ব্যবহারযোগ্য
+  // "Zero Advance / ১০০% COD" ভাউচার। মেম্বারশিপ থেকে ক্লেইম করা থাকলে
+  // (claim_legendary_reward RPC) এখানে atomic UPDATE...WHERE দিয়ে reserve
+  // করা হচ্ছে — একই ইউজার দুই ট্যাবে একসাথে চেকআউট করলেও ভাউচার একবারই
+  // ব্যবহার হবে। এই একটামাত্র লুকআপ ছাড়া checkout আর কোথাও ইউজারের
+  // ডেলিভারি-সংখ্যা নতুন করে গোনে না — সেই ভারী হিসাব শুধু ক্লেইমের সময়
+  // একবারই হয়।
+  let legendaryVoucherReserved = false;
+  if (currentUserId) {
+    try {
+      const { data: voucherRow } = await service
+        .from('legendary_vouchers')
+        .update({ is_available: false })
+        .eq('user_id', currentUserId)
+        .eq('is_available', true)
+        .select('user_id')
+        .maybeSingle();
+      legendaryVoucherReserved = !!voucherRow;
+    } catch (e) {
+      logError('[checkout] legendary voucher reserve check failed (continuing as a normal order):', e);
+    }
+  }
+
+  async function revertLegendaryVoucherIfNeeded() {
+    if (!legendaryVoucherReserved || !currentUserId) return;
+    try {
+      await service
+        .from('legendary_vouchers')
+        .update({ is_available: true })
+        .eq('user_id', currentUserId)
+        .eq('is_available', false)
+        .is('used_at', null);
+    } catch (e) {
+      logError('[checkout] legendary voucher release failed:', e);
+    }
+  }
+
+  const hasTxn = !!txn;
+  const hasLast4 = !!last4;
+  if (!legendaryVoucherReserved) {
+    if (!hasTxn && !hasLast4) return fail(t('Transaction ID অথবা শেষ ৪ ডিজিট দিন'));
+    if (hasTxn && !validateTxnId(txn)) return fail(t('সঠিক বিকাশ ট্রানজেকশন আইডি দিন'));
+    if (hasLast4 && !/^\d{4}$/.test(last4)) return fail(t('সঠিক শেষ ৪ ডিজিট দিন'));
   }
 
   if (!isPrivilegedUser) {
@@ -222,6 +261,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
 
   let discountAmount = 0;
   let appliedCouponCode: string | null = null;
+  let couponReserved = false;
 
   if (couponCode) {
     try {
@@ -233,6 +273,22 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       });
 
       if (!couponErr && couponRes && couponRes.ok) {
+        // 🛡️ ফিক্স (audit P1-18): আগে কুপনের ব্যবহার-সংখ্যা অর্ডার বসে যাওয়ার
+        // *পরে* আলাদাভাবে বাড়ানো হতো (after() ব্লকে) — ফলে একসাথে দুইটা অর্ডার
+        // একই কুপনের max_uses_total-এর শেষ স্লট নিয়ে race করলে দুটোই ডিসকাউন্ট
+        // পেয়ে যেত। এখন এখানেই, ডিসকাউন্ট প্রয়োগের আগে, atomic RPC দিয়ে
+        // ব্যবহার-সংখ্যা "রিজার্ভ" করা হচ্ছে — সীমা শেষ থাকলে অর্ডারই আটকে যাবে।
+        const { data: reserved, error: reserveErr } = await service.rpc('reserve_coupon_usage', {
+          p_code: couponRes.code,
+        });
+        if (reserveErr) {
+          logError('[checkout] coupon reserve RPC error — fail-closed for this coupon:', reserveErr.message);
+          return fail(t('কুপন প্রয়োগ করা যায়নি, একটু পরে আবার চেষ্টা করুন'));
+        }
+        if (!reserved) {
+          return fail(t('দুঃখিত, এই কুপনটির ব্যবহারসীমা এইমাত্র শেষ হয়ে গেছে'));
+        }
+        couponReserved = true;
         appliedCouponCode = String(couponRes.code);
         discountAmount = Number(couponRes.discount_amount) || 0;
         if (couponRes.free_shipping === true) {
@@ -246,26 +302,55 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   }
 
+  // কুপন reserve হয়ে যাওয়ার পর অর্ডারটা শেষমেশ (max-total চেক/স্টক-শেষ/ইনসার্ট-
+  // ব্যর্থতা) বসাতে না পারলে reserve করা ব্যবহার-সংখ্যা ফেরত দেওয়ার জন্য।
+  async function revertCouponIfNeeded() {
+    if (!couponReserved || !appliedCouponCode) return;
+    try {
+      await service.rpc('release_coupon_usage', { p_code: appliedCouponCode });
+    } catch (e) {
+      logError('[checkout] coupon usage release failed:', e);
+    }
+  }
+
   const effectiveProductSubtotal = Math.max(0, vSub - discountAmount);
   const vTotal = Math.max(0, effectiveProductSubtotal + sc);
 
   if (vTotal > MAX_ONLINE_ORDER_TOTAL && !isPrivilegedUser) {
+    await revertCouponIfNeeded();
+    await revertLegendaryVoucherIfNeeded();
     return fail(t('২০,০০০ টাকার বেশি অর্ডারের জন্য অনুগ্রহ করে সরাসরি WhatsApp-এ যোগাযোগ করুন'));
   }
 
   const advanceBreakdown = calculateAdvancePayment(vTotal);
-  const advancePaidAmount = advanceBreakdown.totalAdvance;
+  // 🎖️ Legendary ভাউচার সক্রিয় থাকলে টায়ার/শতাংশ যাই হোক, অগ্রিম ০ —
+  // সম্পূর্ণটাই ক্যাশ অন ডেলিভারি।
+  const advancePaidAmount = legendaryVoucherReserved ? 0 : advanceBreakdown.totalAdvance;
 
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
   let stockDecremented = false;
   try {
     const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
     if (stockErr && stockErr.message?.includes('INSUFFICIENT_STOCK')) {
+      await revertCouponIfNeeded();
+      await revertLegendaryVoucherIfNeeded();
       return fail(t('দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই'));
     }
-    if (!stockErr) stockDecremented = true;
+    if (stockErr) {
+      // 🛡️ ফিক্স (audit P1-09): আগে এখানে অজানা error (নেটওয়ার্ক/টাইমআউট/RPC
+      // অনুপস্থিত) হলে চুপচাপ এগিয়ে যেত এবং স্টক না কমিয়েই অর্ডার বসে যেত
+      // (overselling)। এখন fail-closed — বাকি রেট-লিমিট চেকগুলোর মতোই।
+      logError('[checkout] stock decrement RPC error — fail-closed:', stockErr.message);
+      await revertCouponIfNeeded();
+      await revertLegendaryVoucherIfNeeded();
+      return fail(GENERIC_RETRY_MSG);
+    }
+    stockDecremented = true;
   } catch (e) {
-    logWarn('[checkout] stock decrement skipped:', e);
+    logError('[checkout] stock decrement exception — fail-closed:', e);
+    await revertCouponIfNeeded();
+    await revertLegendaryVoucherIfNeeded();
+    return fail(GENERIC_RETRY_MSG);
   }
 
   // 🛡️ স্টক কমার পর অর্ডার ইনসার্ট ফেইল করলে stock আটকে না থেকে ফেরত
@@ -325,34 +410,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     ...(currentUserId ? { user_id: currentUserId } : {}),
   };
 
-  let insResult = await service.from('orders').insert(primaryPayload).select('id').single();
-
-  if (insResult.error && insResult.error.code === '42703') {
-    logWarn('[checkout] Missing optional columns in DB schema, falling back to core fields...');
-    const fallbackPayload: Record<string, unknown> = {
-      order_num: orderNum,
-      created_at: new Date().toISOString(),
-      customer_name: name,
-      customer_phone: phone,
-      customer_district: dist,
-      customer_address: addr,
-      customer_email: email,
-      items: verifiedItems,
-      shipping,
-      shipping_cost: sc,
-      subtotal: vSub,
-      total: vTotal,
-      payment_txn: safeTxn,
-      payment_last4: last4,
-      status: 'pending',
-      ...(currentUserId ? { user_id: currentUserId } : {}),
-    };
-    insResult = await service.from('orders').insert(fallbackPayload).select('id').single();
-  }
+  const insResult = await service.from('orders').insert(primaryPayload).select('id').single();
 
   if (insResult.error || !insResult.data) {
     logError('[checkout] order insert failed:', insResult.error?.message, '| Code:', insResult.error?.code);
     await revertStockIfNeeded();
+    await revertCouponIfNeeded();
+    await revertLegendaryVoucherIfNeeded();
 
     if (insResult.error?.code === '23505') {
       return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
@@ -360,15 +424,24 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
   }
 
-  after(async () => {
-    if (appliedCouponCode) {
-      try {
-        await service.rpc('increment_coupon_usage', { p_code: appliedCouponCode });
-      } catch (e) {
-        logWarn('[checkout] increment_coupon_usage failed:', e);
-      }
+  // 🎖️ ভাউচার স্থায়ীভাবে ব্যবহৃত হিসেবে মার্ক (is_available ইতিমধ্যে reserve
+  // করার সময় false হয়ে গেছে — এখানে শুধু used_at/used_order_id রেকর্ড রাখা)
+  if (legendaryVoucherReserved && currentUserId) {
+    try {
+      await service
+        .from('legendary_vouchers')
+        .update({ used_at: new Date().toISOString(), used_order_id: insResult.data.id })
+        .eq('user_id', currentUserId);
+    } catch (e) {
+      logError('[checkout] legendary voucher finalize (used_at) failed:', e);
     }
+  }
 
+  // 🛡️ ফিক্স (audit P1-18): কুপনের ব্যবহার-সংখ্যা এখন উপরে validate-এর সময়েই
+  // atomically reserve হয়ে গেছে (reserve_coupon_usage) — এখানে আবার
+  // increment_coupon_usage কল করলে একই অর্ডারে দুইবার গোনা হতো, তাই বাদ।
+
+  after(async () => {
     try {
       await sendTelegramOrderNotification({
         orderNum,

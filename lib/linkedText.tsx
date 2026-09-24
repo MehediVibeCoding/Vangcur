@@ -36,6 +36,7 @@
 // উপরের কোনো সিনট্যাক্স না থাকলে আগের মতোই প্লেইন স্ট্রিং হিসেবে রেন্ডার হবে।
 
 import Link from 'next/link';
+import { sanitizeHref } from './security';
 
 const EMOJI_PATTERN = /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu;
 // দ্রুত early-exit: লিংক/বোল্ড/ইতালিক/ইমোজি — এই ৪টার একটাও না থাকলে বাকি কোনো প্রসেসিং লাগবে না
@@ -53,14 +54,18 @@ function linkClassName(bold: boolean): string {
 
 function makeLinkNode(label: string, href: string, bold: boolean, keyRef: { n: number }): React.ReactNode {
   const cleanLabel = stripEmoji(label);
-  const isInternal = href.startsWith('/');
+  // 🛡️ ফিক্স (audit P2-B12): লেখা থেকে পার্স হওয়া href allow-list দিয়ে
+  // যাচাই করা হচ্ছে (http/https/মেইলটু/tel + internal path ছাড়া বাকি সব `#`) —
+  // বৈধ লিংকের জন্য আউটপুট অপরিবর্তিত থাকে।
+  const safeHref = sanitizeHref(href);
+  const isInternal = safeHref.startsWith('/');
   const className = linkClassName(bold);
   return isInternal ? (
-    <Link key={keyRef.n++} href={href} className={className}>
+    <Link key={keyRef.n++} href={safeHref} className={className}>
       {cleanLabel}
     </Link>
   ) : (
-    <a key={keyRef.n++} href={href} target="_blank" rel="noopener noreferrer" className={className}>
+    <a key={keyRef.n++} href={safeHref} target="_blank" rel="noopener noreferrer" className={className}>
       {cleanLabel}
     </a>
   );

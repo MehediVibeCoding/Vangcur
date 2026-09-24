@@ -25,6 +25,7 @@ import {
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
 } from '@/lib/couponData';
+import { getLegendaryVoucherStatus } from '@/lib/membershipData';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'), { ssr: false });
 const PreConfirmLoginModal = dynamic(() => import('@/app/components/checkout/PreConfirmLoginModal'), { ssr: false });
@@ -245,6 +246,22 @@ export default function CheckoutPage() {
   const [stepDirection, setStepDirection] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDirectQuickOrder, setIsDirectQuickOrder] = useState(false);
+  const [hasZeroAdvanceVoucher, setHasZeroAdvanceVoucher] = useState(false);
+
+  useEffect(() => {
+    // 🎖️ Legendary সদস্যের অব্যবহৃত "Zero Advance" ভাউচার আছে কিনা — একবারই
+    // চেক করা হয় (RLS নিজের সারি ছাড়া কিছু ফেরত দেয় না)। কোনো ভারী
+    // অর্ডার-গণনা এখানে হয় না, শুধু একটা সস্তা boolean ফ্ল্যাগ পড়া হয়।
+    const user = useAuthStore.getState().currentUser;
+    if (!user) return;
+    let cancelled = false;
+    getLegendaryVoucherStatus(supabase).then((res) => {
+      if (!cancelled && res.ok) setHasZeroAdvanceVoucher(!!res.isAvailable);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   useEffect(() => {
     if (step === 3) {
@@ -664,8 +681,15 @@ export default function CheckoutPage() {
   const total = Math.max(0, effectiveProductSubtotal + effectiveShippingCost);
 
   const advanceInfo = useMemo(() => {
-    return calculateAdvancePayment(total);
-  }, [total]);
+    const base = calculateAdvancePayment(total);
+    // 🎖️ Legendary ভাউচার সক্রিয় থাকলে অগ্রিম শূন্য দেখানো হচ্ছে — সার্ভার
+    // (app/actions/checkout.ts) নিজে আবার স্বাধীনভাবে ভাউচার যাচাই করে,
+    // এটা শুধু UI-এর জন্য।
+    if (hasZeroAdvanceVoucher) {
+      return { ...base, baseAdvance: 0, bkashFee: 0, totalAdvance: 0 };
+    }
+    return base;
+  }, [total, hasZeroAdvanceVoucher]);
 
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
@@ -760,6 +784,10 @@ export default function CheckoutPage() {
   };
 
   const goToStep3 = () => {
+    if (hasZeroAdvanceVoucher) {
+      updateStep(3);
+      return;
+    }
     const txnUpper = txn.trim().toUpperCase();
     const l4 = last4.trim();
     if (!txnUpper && !l4) {
@@ -1372,6 +1400,40 @@ export default function CheckoutPage() {
               transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
               className="px-6 py-4"
             >
+              {hasZeroAdvanceVoucher ? (
+                <>
+                  <div className="mb-4 rounded-[20px] border border-emerald-300/70 bg-gradient-to-br from-emerald-50 via-white to-[#ECFDF5] p-5 text-center shadow-xs">
+                    <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <IconCheck />
+                    </div>
+                    <h4 className="font-body text-[16px] font-extrabold text-emerald-900">
+                      {lang === 'en' ? '100% Cash on Delivery — No Advance Needed' : '১০০% ক্যাশ অন ডেলিভারি — কোনো অগ্রিম লাগবে না'}
+                    </h4>
+                    <p className="mt-1.5 font-body text-[12.5px] leading-relaxed text-emerald-800/90">
+                      {lang === 'en'
+                        ? 'This is your one-time Legendary member reward. Pay the full amount in cash when your order is delivered.'
+                        : 'এটি আপনার একবারের লিজেন্ডারি মেম্বার রিওয়ার্ড। ডেলিভারির সময় সম্পূর্ণ টাকা ক্যাশে পরিশোধ করবেন।'}
+                    </p>
+                    <div className="mt-3.5 flex items-center justify-center gap-2 font-body text-sm font-extrabold text-emerald-900">
+                      <span>{lang === 'en' ? 'Amount due on delivery:' : 'ডেলিভারিতে পরিশোধযোগ্য:'}</span>
+                      <span>৳{total.toLocaleString('en-US')}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <motion.button
+                      className={`${btnNextClass} flex items-center justify-center gap-2 cursor-pointer`}
+                      onClick={goToStep3}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    >
+                      <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
+                      <IconArrowRight />
+                    </motion.button>
+                  </div>
+                </>
+              ) : (
+                <>
               <div className="mb-4 rounded-[20px] border border-border-base bg-white p-5 shadow-xs">
                 <div className="mb-2 flex items-center gap-2 font-body text-[15px] font-bold text-ink">
                   <span className="text-brand-light"><IconCard /></span>
@@ -1549,6 +1611,8 @@ export default function CheckoutPage() {
                   <IconArrowRight />
                 </motion.button>
               </div>
+                </>
+              )}
             </motion.div>
           )}
 
