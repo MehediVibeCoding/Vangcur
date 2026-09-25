@@ -163,9 +163,11 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       if (phoneRlErr) {
         // 🛡️ fail-closed: RPC এরর হলে চুপচাপ চালিয়ে না দিয়ে অর্ডার আটকানো হবে
         logError('[checkout] phone rate limit RPC error — fail-closed:', phoneRlErr.message);
+        await revertLegendaryVoucherIfNeeded();
         return fail(GENERIC_RETRY_MSG);
       }
       if (phoneOk === false) {
+        await revertLegendaryVoucherIfNeeded();
         return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
       }
 
@@ -173,9 +175,11 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         const { data: fpOk, error: fpErr } = await service.rpc('check_and_set_fingerprint_limit', { p_fingerprint_id: fingerprintId });
         if (fpErr) {
           logError('[checkout] fingerprint rate limit RPC error — fail-closed:', fpErr.message);
+          await revertLegendaryVoucherIfNeeded();
           return fail(GENERIC_RETRY_MSG);
         }
         if (fpOk === false) {
+          await revertLegendaryVoucherIfNeeded();
           return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
       }
@@ -191,17 +195,21 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         const { data: ipOk, error: ipErr } = await service.rpc('check_and_set_ip_limit', { p_ip: clientIp });
         if (ipErr) {
           logError('[checkout] ip rate limit RPC error — fail-closed:', ipErr.message);
+          await revertLegendaryVoucherIfNeeded();
           return fail(GENERIC_RETRY_MSG);
         }
         if (ipOk === false) {
+          await revertLegendaryVoucherIfNeeded();
           return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
       } catch (e) {
         logError('[checkout] ip rate limit exception — fail-closed:', e);
+        await revertLegendaryVoucherIfNeeded();
         return fail(GENERIC_RETRY_MSG);
       }
     } catch (e) {
       logError('[checkout] rate limit exception — fail-closed:', e);
+      await revertLegendaryVoucherIfNeeded();
       return fail(GENERIC_RETRY_MSG);
     }
   }
@@ -240,12 +248,18 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     logWarn('[checkout] parallel fetch failed:', e);
   }
 
-  if (!authoritativeProds.length) return fail(t(GENERIC_RETRY_MSG));
+  if (!authoritativeProds.length) {
+    await revertLegendaryVoucherIfNeeded();
+    return fail(t(GENERIC_RETRY_MSG));
+  }
 
   const verifiedItems: { id: string | number; name: string; emoji: string; price: number; qty: number; cat: string }[] = [];
   for (const item of cleanItems) {
     const prod = authoritativeProds.find((p) => String(p.id) === item.id);
-    if (!prod) return fail(t('একটি পণ্য আর পাওয়া যাচ্ছে না, পেজ রিফ্রেশ করে আবার চেষ্টা করুন'));
+    if (!prod) {
+      await revertLegendaryVoucherIfNeeded();
+      return fail(t('একটি পণ্য আর পাওয়া যাচ্ছে না, পেজ রিফ্রেশ করে আবার চেষ্টা করুন'));
+    }
     verifiedItems.push({
       id: prod.id,
       name: prod.name,
@@ -283,9 +297,11 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         });
         if (reserveErr) {
           logError('[checkout] coupon reserve RPC error — fail-closed for this coupon:', reserveErr.message);
+          await revertLegendaryVoucherIfNeeded();
           return fail(t('কুপন প্রয়োগ করা যায়নি, একটু পরে আবার চেষ্টা করুন'));
         }
         if (!reserved) {
+          await revertLegendaryVoucherIfNeeded();
           return fail(t('দুঃখিত, এই কুপনটির ব্যবহারসীমা এইমাত্র শেষ হয়ে গেছে'));
         }
         couponReserved = true;
@@ -295,6 +311,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
           sc = 0;
         }
       } else if (couponRes?.error) {
+        await revertLegendaryVoucherIfNeeded();
         return fail(t(couponRes.error));
       }
     } catch (e) {
