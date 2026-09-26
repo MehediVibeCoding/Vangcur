@@ -1,5 +1,5 @@
 // [NEW FILE] ফাইলের পাথ: lib/couponData.ts
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { validateCouponAction } from '@/app/actions/coupon';
 
 export const COUPON_CHANGE_EVENT = 'vc:couponChange';
 const COUPON_STORAGE_KEY = 'vc_applied_coupon';
@@ -62,11 +62,11 @@ export function removeAppliedCoupon(): void {
  * Supabase RPC কল করে কুপন কোড ও শর্তাবলী নিখুঁতভাবে যাচাই করা
  */
 export async function validateCoupon(
-  supabase: SupabaseClient,
   code: string,
   subtotal: number,
   phone?: string,
   userId?: string | null,
+  fingerprintId?: string | null,
 ): Promise<CouponValidationResult> {
   const cleanCode = (code || '').trim().toUpperCase();
   if (!cleanCode) {
@@ -74,33 +74,9 @@ export async function validateCoupon(
   }
 
   try {
-    const { data, error } = await supabase.rpc('validate_and_apply_coupon', {
-      p_code: cleanCode,
-      p_subtotal: Number(subtotal) || 0,
-      p_phone: phone ? phone.trim() : null,
-      p_user_id: userId ? userId.trim() : null,
-    });
-
-    if (error || !data) {
-      return { ok: false, error: error?.message || 'কুপন যাচাই করা সম্ভব হয়নি' };
-    }
-
-    if (!data.ok) {
-      return { ok: false, error: data.error || 'অবৈধ কুপন কোড' };
-    }
-
-    const applied: AppliedCoupon = {
-      code: data.code,
-      discountType: data.discount_type,
-      discountValue: Number(data.discount_value),
-      discountAmount: Number(data.discount_amount),
-      freeShipping: !!data.free_shipping,
-      minOrderAmount: Number(data.min_order_amount) || 0,
-    };
-
-    return { ok: true, coupon: applied };
+    return await validateCouponAction(cleanCode, subtotal, phone, userId, fingerprintId);
   } catch (err: any) {
-    return { ok: false, error: err?.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।' };
+    return { ok: false, error: err?.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।' };
   }
 }
 

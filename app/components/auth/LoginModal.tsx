@@ -18,7 +18,7 @@ import {
   validateEmail, validatePhone, validateName, sanitizePlainName, sanitizeEmailInput,
 } from '@/lib/security';
 import { verifyTurnstileToken } from '@/lib/turnstile';
-import { checkPasswordResetLimit } from '@/lib/rateLimit';
+import { checkPasswordResetLimitAction } from '@/app/actions/rateLimit';
 import { useT } from '@/lib/i18n/useT';
 import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import TurnstileWidget, { type TurnstileHandle } from './TurnstileWidget';
@@ -300,7 +300,7 @@ export default function LoginModal({
     if (!em || !validateEmail(em)) { setForgotEmailErr(t('সঠিক ইমেইল ঠিকানা দিন')); return; }
     setForgotEmailErr('');
     setForgotLoading(true);
-    const limit = await checkPasswordResetLimit(supabase, em);
+    const limit = await checkPasswordResetLimitAction(em);
     if (!limit.allowed) {
       setForgotLoading(false);
       setForgotEmailErr(t('আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'));

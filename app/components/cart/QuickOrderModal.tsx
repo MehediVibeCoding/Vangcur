@@ -261,7 +261,7 @@ export default function QuickOrderModal() {
     }
 
     setCouponLoading(true);
-    const res = await validateCoupon(supabase, clean, subtotal, currentUser?.phone, currentUser?.id);
+    const res = await validateCoupon(clean, subtotal, currentUser?.phone, currentUser?.id);
     setCouponLoading(false);
 
     if (!res.ok || !res.coupon) {

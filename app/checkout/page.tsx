@@ -711,7 +711,7 @@ export default function CheckoutPage() {
 
     setCouponLoading(true);
     const user = useAuthStore.getState().currentUser;
-    const res = await validateCoupon(supabase, clean, sub, phone || user?.phone, user?.id);
+    const res = await validateCoupon(clean, sub, phone || user?.phone, user?.id, fingerprintIdRef.current);
     setCouponLoading(false);
 
     if (!res.ok || !res.coupon) {

@@ -284,6 +284,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         p_subtotal: vSub,
         p_phone: phone,
         p_user_id: currentUserId,
+        p_fingerprint_id: fingerprintId || null,
       });
 
       if (!couponErr && couponRes && couponRes.ok) {
