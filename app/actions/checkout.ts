@@ -187,10 +187,21 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       // 🛡️ IP-ভিত্তিক ব্যাকস্টপ — fingerprintId খালি/অ্যাডব্লকার দিয়ে ব্লকড হলেও
       // (বা সরাসরি server action কল করে বাইপাস করার চেষ্টা হলেও), ভিজিটরের real IP
       // ইউজার নিজে বদলাতে পারে না, তাই এটা একটা স্বাধীন নিরাপত্তা স্তর
+      //
+      // 🔒 ফিক্স (audit P1-13): আগে `x-forwarded-for`-এর প্রথম উপাদান নেওয়া হতো —
+      // এই হেডারটা ক্লায়েন্ট নিজেই পাঠাতে পারে (Vercel সবসময় ওভাররাইট করে না,
+      // শুরুতে নিজের ভুয়া IP জুড়ে দিতে পারে), তাই এটা ছিল স্পুফযোগ্য। এখন Vercel-এর
+      // নিজস্ব এজ-সেট হেডার (`x-vercel-forwarded-for` → `x-real-ip`) আগে ট্রাই করা
+      // হয়, যেগুলো ক্লায়েন্ট বদলাতে পারে না — `x-forwarded-for` শুধু শেষ ব্যাকআপ।
       try {
         const hdrs = await headers();
+        const vercelForwardedFor = hdrs.get('x-vercel-forwarded-for');
+        const realIp = hdrs.get('x-real-ip');
         const forwardedFor = hdrs.get('x-forwarded-for');
-        const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (hdrs.get('x-real-ip') || '');
+        const clientIp =
+          (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
+          (realIp ? realIp.trim() : '') ||
+          (forwardedFor ? forwardedFor.split(',')[0].trim() : '');
 
         const { data: ipOk, error: ipErr } = await service.rpc('check_and_set_ip_limit', { p_ip: clientIp });
         if (ipErr) {

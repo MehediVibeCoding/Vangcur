@@ -30,10 +30,15 @@ function checkVerifyRateLimit(ip: string): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    // 🔒 ফিক্স (audit P1-13): Vercel-এর এজ-সেট হেডার আগে ট্রাই হয় (স্পুফ-প্রুফ)
+    const vercelForwardedFor = req.headers.get('x-vercel-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
     const forwardedFor = req.headers.get('x-forwarded-for');
-    const clientIp = forwardedFor
-      ? forwardedFor.split(',')[0].trim()
-      : (req.headers.get('x-real-ip') || '127.0.0.1');
+    const clientIp =
+      (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
+      (realIp ? realIp.trim() : '') ||
+      (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
+      '127.0.0.1';
 
     if (!checkVerifyRateLimit(clientIp)) {
       return NextResponse.json(

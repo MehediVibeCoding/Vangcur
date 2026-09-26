@@ -85,8 +85,16 @@ export async function middleware(request: NextRequest) {
   }
 
   // ২. ক্লায়েন্ট আইপি এক্সট্র্যাক্ট ও এজ রেট লিমিট যাচাই
+  // 🔒 ফিক্স (audit P1-13): x-forwarded-for-এর প্রথম উপাদান ক্লায়েন্ট নিজেই
+  // স্পুফ করতে পারে — এখন Vercel-এর নিজস্ব এজ-সেট হেডার আগে ট্রাই হয়
+  const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
   const forwardedFor = request.headers.get('x-forwarded-for');
-  const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (request.headers.get('x-real-ip') || '127.0.0.1');
+  const clientIp =
+    (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
+    (realIp ? realIp.trim() : '') ||
+    (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
+    '127.0.0.1';
   const isApiRoute = pathname.startsWith('/api/');
 
   // 🌐 পরিচিত সার্চ-ইঞ্জিন ক্রলার হলে শুধু পেজ-রেট-লিমিট (API-তে না) থেকে ছাড়,
