@@ -1,6 +1,6 @@
-// [REPLACE] ফাইলের পাথ: app/product/[slug]/page.tsx
 import type { Metadata } from 'next';
 import { cache } from 'react';
+import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { idFromSlug, makeSlug, fetchProductById, fetchCustomProducts } from '@/lib/productData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
@@ -8,32 +8,29 @@ import ProductDetailClient from './ProductDetailClient';
 
 const SITE_URL = 'https://vangcur.com';
 
-// ৫ মিনিট পর পর ব্যাকগ্রাউন্ডে ফ্রেশ ডাটা ক্যাশ আপডেট হবে (Edge ISR)
 export const revalidate = 300;
 
 const getProduct = cache(async (id: string) => {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+  const supabase = createClient(supabaseUrl, supabaseKey);
   return fetchProductById(supabase, id);
 });
 
-// 🌟 সার্ভার থেকেই সম্পূর্ণ প্রোডাক্ট তালিকা ক্যাশড ফেচ করা (রিলেটেড প্রোডাক্টের জন্য)
 const getAllProducts = cache(async () => {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return [];
+  const supabase = createClient(supabaseUrl, supabaseKey);
   return fetchCustomProducts(supabase);
 });
 
-// গুগল স্কিমার জন্য অনুমোদিত আসল রিভিউয়ের লাইভ গড় ও সংখ্যা ফেচ করা
 const getProductReviewsSummary = cache(async (id: string) => {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return null;
+  const supabase = createClient(supabaseUrl, supabaseKey);
   try {
     const { data, error } = await supabase
       .from('product_reviews')
@@ -56,12 +53,19 @@ const getProductReviewsSummary = cache(async (id: string) => {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const id = idFromSlug(slug);
-  const [p, lang] = await Promise.all([id ? getProduct(id) : Promise.resolve(null), getServerLang()]);
+  if (!id) {
+    return {
+      title: 'Product Not Found - Vangcur',
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const [p, lang] = await Promise.all([getProduct(id), getServerLang()]);
 
   if (!p) {
     return {
       title: lang === 'en' ? 'Product Not Found - Vangcur' : 'প্রোডাক্ট পাওয়া যায়নি - Vangcur',
-      robots: { index: false, follow: true },
+      robots: { index: false, follow: false },
     };
   }
 
@@ -106,55 +110,55 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const id = idFromSlug(slug);
 
-  const [initialProduct, liveReviewsSummary, initialProducts] = id
-    ? await Promise.all([getProduct(id), getProductReviewsSummary(id), getAllProducts()])
-    : [null, null, []];
+  if (!id) notFound();
 
-  let jsonLd = null;
-  if (initialProduct) {
-    const canonicalSlug = `${makeSlug(initialProduct.name)}-${initialProduct.id}`;
-    const validImgs = (initialProduct.imgs || []).filter(
-      (img) => typeof img === 'string' && img.startsWith('http')
-    );
+  const initialProduct = await getProduct(id);
+  if (!initialProduct) notFound();
 
-    // স্মার্ট হাইব্রিড রেটিং: আসল এপ্রুভড রিভিউ থাকলে লাইভ ডাটা, না থাকলে ফলব্যাক বেস রেটিং
-    const ratingValue = liveReviewsSummary?.ratingValue || initialProduct.rating || 4.8;
-    const reviewCount = liveReviewsSummary?.reviewCount || Math.floor((Number(initialProduct.id) || 1) * 37 + initialProduct.stock * 13) % 80 + 20;
+  const [liveReviewsSummary, initialProducts] = await Promise.all([
+    getProductReviewsSummary(id),
+    getAllProducts(),
+  ]);
 
-    jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      name: initialProduct.name,
-      image: validImgs.length ? validImgs : undefined,
-      description: initialProduct.desc || initialProduct.metaDescription || initialProduct.name,
-      offers: {
-        '@type': 'Offer',
-        priceCurrency: 'BDT',
-        price: initialProduct.price,
-        availability: initialProduct.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        url: `${SITE_URL}/product/${canonicalSlug}`,
-        itemCondition: 'https://schema.org/NewCondition',
-        seller: {
-          '@type': 'Organization',
-          name: 'Vangcur',
-        },
+  const canonicalSlug = `${makeSlug(initialProduct.name)}-${initialProduct.id}`;
+  const validImgs = (initialProduct.imgs || []).filter(
+    (img) => typeof img === 'string' && img.startsWith('http')
+  );
+
+  const ratingValue = liveReviewsSummary?.ratingValue || initialProduct.rating || 4.8;
+  const reviewCount = liveReviewsSummary?.reviewCount || Math.floor((Number(initialProduct.id) || 1) * 37 + initialProduct.stock * 13) % 80 + 20;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: initialProduct.name,
+    image: validImgs.length ? validImgs : undefined,
+    description: initialProduct.desc || initialProduct.metaDescription || initialProduct.name,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'BDT',
+      price: initialProduct.price,
+      availability: initialProduct.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `${SITE_URL}/product/${canonicalSlug}`,
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: {
+        '@type': 'Organization',
+        name: 'Vangcur',
       },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue,
-        reviewCount,
-      },
-    };
-  }
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue,
+      reviewCount,
+    },
+  };
 
   return (
     <>
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ProductDetailClient
         slug={slug}
         initialId={id}
