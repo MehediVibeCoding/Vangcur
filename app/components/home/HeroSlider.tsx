@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
@@ -12,8 +12,6 @@ import {
   fetchHeroCards,
   padCards,
 } from '@/lib/heroSliderData';
-
-const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const AUTOPLAY_MS = 5500;
 const HOVER_AUTOPLAY_MS = 8000;
@@ -73,9 +71,8 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   // প্রথম স্ক্রিনের দৃশ্যমান কার্ডগুলোর তাৎক্ষণিক প্রিলোড + পেজ স্থির হওয়ার পর বাকি কার্ডগুলোর ব্যাকগ্রাউন্ড প্রিলোড
   useEffect(() => {
     if (typeof window === 'undefined' || !cards.length) return;
-    const perPage = getDuoPerPage(); // মোবাইলে ২, ডেক্সটপে ৬
+    const perPage = getDuoPerPage();
     
-    // ১. ইনিশিয়াল স্ক্রিনের দৃশ্যমান কার্ডগুলোর অগ্রাধিকার প্রিলোড
     for (let idx = 0; idx < perPage; idx++) {
       const src = cards[idx]?.img;
       if (!src) continue;
@@ -84,7 +81,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       preloadImg.src = href;
     }
 
-    // ২. পেজ মাউন্ট ও LCP সম্পন্ন হওয়ার পর (Idle সময়ে) বাকি কার্ডগুলোর ব্যাকগ্রাউন্ড প্রিলোড
     const idlePreload = () => {
       for (let idx = perPage; idx < cards.length; idx++) {
         const src = cards[idx]?.img;
@@ -112,26 +108,17 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     };
   }, [cards]);
 
+  // 🚀 জিরো রিফ্লো পজিশনিং — কোনো DOM নোড মিউটেশন ছাড়া সরাসরি GPU কম্পোজিটর ট্রান্সফর্ম
   const setPosition = useCallback((animate: boolean) => {
     const track = trackRef.current;
     const wrap = wrapRef.current;
     if (!track || !wrap) return;
 
-    const allCards = track.querySelectorAll<HTMLElement>('[data-cath-card]');
     const perPage = getDuoPerPage();
-    const wrapWidth = wrap.clientWidth || wrap.getBoundingClientRect().width;
+    const wrapWidth = wrap.clientWidth;
     if (!wrapWidth || wrapWidth < 50) return;
 
-    const cardWidth = Math.floor((wrapWidth - GAP * (perPage - 1)) / perPage);
-    if (!cardWidth || cardWidth < 10) return;
-
-    allCards.forEach((c) => {
-      c.style.width = `${cardWidth}px`;
-      c.style.minWidth = `${cardWidth}px`;
-      c.style.maxWidth = `${cardWidth}px`;
-      c.style.flexShrink = '0';
-    });
-
+    const cardWidth = (wrapWidth - GAP * (perPage - 1)) / perPage;
     const offset = duoIdxRef.current * (cardWidth + GAP);
 
     if (animate) {
@@ -169,7 +156,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     }, intervalMs);
   }, [duoStep]);
 
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     const wrap = wrapRef.current;
     const track = trackRef.current;
     if (!wrap || !track) return;
@@ -183,7 +170,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
     startAuto(AUTOPLAY_MS);
 
-    // 🎯 স্ক্রিন আউট হলে তাৎক্ষণিক অটো-স্লাইডার পজ
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
