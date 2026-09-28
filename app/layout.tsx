@@ -21,23 +21,11 @@ export async function generateMetadata(): Promise<Metadata> {
       template: '%s | Vangcur',
     },
     description,
-    // 🔖 ব্রাউজার ট্যাব ফেভিকন ও "Add to Home Screen" আইকন — এখানে ইচ্ছাকৃতভাবে
-    // পুরো ওয়ার্ডমার্ক লোগো (vangcur-logo.png) ব্যবহার হচ্ছে না, কারণ ছোট
-    // ফেভিকন সাইজে (১৬-৩২px) পুরো লেখা চ্যাপ্টা/চিকন হয়ে অস্পষ্ট দেখাত। এর
-    // বদলে শুধু "V" মার্কের টাইট-ক্রপড স্কয়ার ভার্সন (ব্যাকগ্রাউন্ড সহ)
-    // ব্যবহার হচ্ছে — এটা ছোট সাইজেও স্পষ্ট থাকে। নেভবারের লোগো (Navbar.tsx)
-    // এই পরিবর্তনে প্রভাবিত হয়নি, সেটা এখনও পূর্ণ ওয়ার্ডমার্ক ব্যবহার করছে।
     icons: {
       icon: '/icon-192.png',
       shortcut: '/icon-192.png',
       apple: '/apple-touch-icon.png',
     },
-    // 🔗 মেসেঞ্জার/ফেসবুক/হোয়াটসঅ্যাপে vangcur.com শেয়ার করলে যাতে
-    // স্বয়ংক্রিয়ভাবে প্রিভিউ কার্ড (লোগো + টাইটেল + বিবরণ) ফুটে ওঠে —
-    // এটাই সাইটের ডিফল্ট/ফলব্যাক OG ট্যাগ। প্রোডাক্ট/অফার/ক্যাটাগরি পেজগুলো
-    // নিজেদের generateMetadata()-এ নিজস্ব openGraph/twitter দিয়ে এটা ওভাররাইড
-    // করে (product/[slug]/page.tsx, offers/page.tsx, category/[slug]/page.tsx),
-    // তাই এখানকার ডিফল্ট মূলত হোমপেজ ও বাকি সাধারণ পেজগুলোর জন্য প্রযোজ্য হবে।
     openGraph: {
       type: 'website',
       url: SITE_URL,
@@ -78,12 +66,6 @@ export default async function RootLayout({
       className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}
     >
       <head>
-        {/*
-          🌙 ডার্ক মোড ফ্লিকার-ফ্রি স্ক্রিন গার্ড।
-          হাইড্রেশনের আগেই (beforeInteractive) সেভ করা থিম পড়ে <html> ট্যাগে
-          .dark ক্লাস বসিয়ে দেয়, যাতে রিফ্রেশে কোনো সাদা স্ক্রিন ফ্ল্যাশ না হয়।
-          lib/store/themeStore.ts এর সাথে key ('vc_theme') মিলিয়ে রাখা আবশ্যক।
-        */}
         <Script
           id="theme-flicker-guard"
           strategy="beforeInteractive"
@@ -93,23 +75,8 @@ export default async function RootLayout({
         />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        {/*
-          Digit-only font override.
-          Loads Noto Sans Bengali but the `text=` param tells Google Fonts to
-          subset it down to just the ten Bengali digits (০-৯), which also makes
-          Google generate a `unicode-range` on the @font-face limited to those
-          same characters. Because of that unicode-range, this font is ONLY
-          ever picked for digit characters - every other Bengali character
-          keeps falling through to Hind Siliguri. This is what lets digits and
-          regular text use two different fonts without wrapping every number
-          in its own <span>. See the font-family stacks in tailwind.config.ts
-          (`body`) and app/checkout/invoice/InvoiceClient.tsx for where it's
-          layered in - always list it BEFORE Hind Siliguri in those stacks.
-        */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&text=%E0%A7%A6%E0%A7%A7%E0%A7%A8%E0%A7%A9%E0%A7%AA%E0%A7%AB%E0%A7%AC%E0%A7%AD%E0%A7%AE%E0%A7%AF&display=swap"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         {gtmId && (
           <Script
             id="gtm-script"
