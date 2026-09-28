@@ -1,10 +1,10 @@
-// ফাইলের পাথ: app/components/layout/Footer.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/lib/store/authStore';
 import {
   DEFAULT_FOOTER,
   fetchFooterSettings,
@@ -157,6 +157,7 @@ const colLinkClass =
 
 export default function Footer() {
   const { t, lang } = useT();
+  const currentUser = useAuthStore((s) => s.currentUser);
   const supabase = useMemo(() => createClient(), []);
   const [logo, setLogo] = useState<FooterLogo>(computeLogo(null));
 
@@ -200,7 +201,7 @@ export default function Footer() {
       {/* 🌊 শীর্ষভাগে ট্রু ট্রান্সপারেন্ট ক্লিপ-পাথ ভেক্টর ডেফিনিশন (SVG Defs) */}
       <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
         <defs>
-          {/* মোবাইল ডিভাইসে উচ্চতায় স্লিক ও হালকা কাটআউট (ছবি নিচে নামবে না) */}
+          {/* মোবাইল ডিভাইসে উচ্চতায় স্লিক ও হালকা কাটআউট */}
           <clipPath id="footer-top-wave-clip-mobile" clipPathUnits="objectBoundingBox">
             <path d="M 0,0.020 C 0.14,0.010 0.24,0.006 0.35,0.006 C 0.52,0.006 0.65,0.028 0.78,0.028 C 0.88,0.028 0.94,0.022 1,0.018 L 1,1 L 0,1 Z" />
           </clipPath>
@@ -214,7 +215,7 @@ export default function Footer() {
       {/* ইলাস্ট্রেশন ছবি ও পারফেক্ট কাটআউট আর্কিটেকচার */}
       <div className="relative w-full select-none pointer-events-none bg-transparent">
         
-        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) — ওয়াটার ওভারলে সহ ১:১ সমন্বিত কন্টেইনার */}
+        {/* মোবাইল ইমেজ (লম্বা কম্পোজিশন) */}
         <div
           className="relative aspect-[20/27] w-full overflow-hidden md:hidden"
           style={{
@@ -232,20 +233,18 @@ export default function Footer() {
             priority={false}
           />
 
-          {/* 🌊 ছবির মাথার কাটিং এজের ঠিক ওপরে ১০০% লক করা ওয়াটার রিবন ও ক্রেস্ট (কোনো ফাঁকা গ্যাপ থাকবে না) */}
+          {/* 🌊 ছবির মাথার কাটিং এজের ঠিক ওপরে ১০০% লক করা ওয়াটার রিবন ও ক্রেস্ট */}
           <svg
             viewBox="0 0 1 1"
             preserveAspectRatio="none"
             className="absolute inset-0 z-10 h-full w-full pointer-events-none"
           >
-            {/* নরম স্কাই-ব্লু ওয়াটার রিবন */}
             <path
               d="M 0,0.020 C 0.14,0.010 0.24,0.006 0.35,0.006 C 0.52,0.006 0.65,0.028 0.78,0.028 C 0.88,0.028 0.94,0.022 1,0.018 L 1,0.026 C 0.94,0.030 0.88,0.036 0.78,0.036 C 0.65,0.036 0.52,0.014 0.35,0.014 C 0.24,0.014 0.14,0.018 0,0.028 Z"
               fill="#38BDF8"
               fillOpacity="0.30"
               className="dark:fill-[#38BDF8] dark:fill-opacity-25"
             />
-            {/* আলোকিত ওয়াটার-ক্রেস্ট হাইলাইট লাইন */}
             <path
               d="M 0,0.020 C 0.14,0.010 0.24,0.006 0.35,0.006 C 0.52,0.006 0.65,0.028 0.78,0.028 C 0.88,0.028 0.94,0.022 1,0.018"
               fill="none"
@@ -259,7 +258,7 @@ export default function Footer() {
           </svg>
         </div>
 
-        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) — ওয়াটার ওভারলে সহ ১:১ সমন্বিত কন্টেইনার */}
+        {/* ডেস্কটপ ইমেজ (চওড়া কম্পোজিশন) */}
         <div
           className="relative hidden aspect-[2000/1333] w-full overflow-hidden md:block"
           style={{
@@ -283,14 +282,12 @@ export default function Footer() {
             preserveAspectRatio="none"
             className="absolute inset-0 z-10 h-full w-full pointer-events-none"
           >
-            {/* নরম স্কাই-ব্লু ওয়াটার রিবন */}
             <path
               d="M 0,0.014 C 0.14,0.007 0.24,0.004 0.35,0.004 C 0.52,0.004 0.65,0.020 0.78,0.020 C 0.88,0.020 0.94,0.016 1,0.012 L 1,0.020 C 0.94,0.023 0.88,0.027 0.78,0.027 C 0.65,0.027 0.52,0.011 0.35,0.011 C 0.24,0.011 0.14,0.014 0,0.021 Z"
               fill="#38BDF8"
               fillOpacity="0.30"
               className="dark:fill-[#38BDF8] dark:fill-opacity-25"
             />
-            {/* আলোকিত ওয়াটার-ক্রেস্ট হাইলাইট লাইন */}
             <path
               d="M 0,0.014 C 0.14,0.007 0.24,0.004 0.35,0.004 C 0.52,0.004 0.65,0.020 0.78,0.020 C 0.88,0.020 0.94,0.016 1,0.012"
               fill="none"
@@ -304,7 +301,7 @@ export default function Footer() {
           </svg>
         </div>
 
-        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ (ফুটার গ্রিডের সাথে সম্পূর্ণ মেলানো) */}
+        {/* 🌊 ২. নিচের নিখুঁত কাটআউট ঢেউ */}
         <div
           className="absolute inset-x-0 bottom-0 z-10 w-full overflow-hidden leading-none pointer-events-none"
           style={{ transform: 'translate3d(0, 1px, 0)' }}
@@ -454,16 +451,26 @@ export default function Footer() {
                   {t('ক্যাটাগরি')}
                 </button>
               </li>
-              <li>
-                <Link href="/account" prefetch={true} className={colLinkClass}>
-                  {t('মাই প্রোফাইল')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/account" prefetch={true} className={colLinkClass}>
-                  {t('লগইন')}
-                </Link>
-              </li>
+              {currentUser ? (
+                <>
+                  <li>
+                    <Link href="/account" prefetch={true} className={colLinkClass}>
+                      {t('মাই প্রোফাইল')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/account?open=membership" prefetch={true} className={colLinkClass}>
+                      {t('মেম্বারশিপ')}
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <li>
+                  <Link href="/account" prefetch={true} className={colLinkClass}>
+                    {t('লগইন')}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href="/track-order" prefetch={true} className={colLinkClass}>
                   {t('ট্র্যাক অর্ডার')}
