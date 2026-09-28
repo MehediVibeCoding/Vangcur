@@ -231,8 +231,6 @@ export default function AccountClient() {
     return () => clearInterval(timer);
   }, []);
 
-  // 🆕 "Legendary/tier" নোটিফিকেশন থেকে সরাসরি এসেছে কিনা — এলে মেম্বারশিপ মডাল
-  // নিজে থেকে খুলে দেওয়া হয় (আগে শুধু /account-এ ল্যান্ড করত, মডাল খুলতো না)
   useEffect(() => {
     if (searchParams.get('open') === 'membership') {
       setMembershipOpen(true);
@@ -253,7 +251,6 @@ export default function AccountClient() {
     fetchIsRaining(supabase, currentUser).then(setIsRaining);
   }, [currentUser, supabase]);
 
-  // 🆕 প্রোফাইল সম্পূর্ণ কিনা (ফোন + ঠিকানা) চেক — অসম্পূর্ণ হলে ব্যানার দেখানো হবে
   useEffect(() => {
     if (!currentUser?.id) {
       setProfileComplete(null);
@@ -488,13 +485,11 @@ export default function AccountClient() {
 
               return (
                 <>
-                  {/* ডেস্কটপ: লেবেলযুক্ত ট্যাব-সুইচ + ডান পাশে নোটিফিকেশন বেল */}
                   <div className="hidden items-center gap-2 md:flex">
                     <AccountNavTabs tabs={navTabs} />
                     <NotificationBell />
                   </div>
 
-                  {/* মোবাইল: আগের মতোই শুধু আইকন, একদম ডানে নোটিফিকেশন বেল */}
                   <div className="flex items-center gap-1.5 md:hidden">
                     {navTabs.map((tab) => (
                       <button
@@ -549,13 +544,13 @@ export default function AccountClient() {
             {/* হেডার */}
             <div className="mb-6 text-center">
               <h1 className="font-body text-xl sm:text-2xl font-extrabold text-brand-light">
-                Welcome To Your Profile
+                {lang === 'en' ? 'Welcome To Your Profile' : 'আপনার প্রোফাইলে স্বাগতম'}
               </h1>
               <div className="mt-1 font-body text-[13.5px] font-semibold text-ink/80">
-                {getGreeting(currentUser, now)}
+                {getGreeting(currentUser, now, lang)}
               </div>
               <div className="mt-0.5 font-body text-[11.5px] text-muted">
-                {formatLiveTimeDate(now)}
+                {formatLiveTimeDate(now, lang)}
               </div>
             </div>
 
@@ -565,7 +560,7 @@ export default function AccountClient() {
               {/* বাম কলাম: সাইডবার উইজেটসমূহ */}
               <div className="flex flex-col gap-4">
                 
-                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড (তুলতুলে মেঘ, উঁচু সিনারি ও সিমলেস গ্রাউন্ড) */}
+                {/* ১. লাইভ ওয়েদার ও সেলেস্টিয়াল কার্ড */}
                 <div
                   ref={cardRef}
                   className={`relative flex flex-col justify-between overflow-hidden rounded-[24px] p-5 shadow-sh2 select-none ${
@@ -573,7 +568,7 @@ export default function AccountClient() {
                   }`}
                   style={{ minHeight: 280 }}
                 >
-                  {/* তারার মেলা (রাতের আকাশে) */}
+                  {/* রাতের আকাশের তারা */}
                   {celestial.state === 'night' && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                       {[
@@ -603,10 +598,9 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* ☁️ তুলতুলে থ্রি-ডি অর্গানিক ক্লাউড (ফ্ল্যাট শেপ সম্পূর্ণ মুক্ত) */}
+                  {/* ভাসমান থ্রি-ডি মেঘ */}
                   {celestial.state !== 'night' && celestial.state !== 'rain' && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                      {/* মেঘ ১ (সামনের ফ্লাফি মেঘ) */}
                       <div
                         className="absolute top-2.5 opacity-85"
                         style={{ animation: 'cloudDrift 24s linear infinite 0s' }}
@@ -623,7 +617,6 @@ export default function AccountClient() {
                         </svg>
                       </div>
 
-                      {/* মেঘ ২ (পেছনের নরম মেঘ) */}
                       <div
                         className="absolute top-8 opacity-65"
                         style={{ animation: 'cloudDrift 34s linear infinite -12s' }}
@@ -638,7 +631,7 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* আকাশ পাড়ি দেওয়া ডানা ঝাপটানো পাখি */}
+                  {/* আকাশ পাড়ি দেওয়া পাখি */}
                   {celestial.birdsVisible && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                       <svg
@@ -709,7 +702,7 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  {/* 🌟 উঁচু ও নিখুঁত সিনারি (বাটনের নিচ পর্যন্ত এক টানা ল্যান্ডস্কেপ ফ্লো) */}
+                  {/* সিনারি ল্যান্ডস্কেপ */}
                   <div
                     className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 w-full opacity-95 z-10"
                     dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(celestial.sceneryHtml) }}
@@ -766,7 +759,7 @@ export default function AccountClient() {
                     </div>
                   </div>
 
-                  {/* নিচের অংশ: এডিট ও লগআউট বাটন (কালো ছোপ ছাড়া সফট ফ্রস্টেড গ্লাস স্ট্রিপ) */}
+                  {/* নিচের অংশ: এডিট ও লগআউট বাটন */}
                   <div className="relative z-20 mt-auto pt-3">
                     {profileComplete === false && (
                       <div className="mb-2 flex items-center gap-1.5 font-body text-[11px] font-bold text-amber-200">
@@ -797,7 +790,7 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                {/* ২. ৩-কার্ডের নতুন রিডিজাইন */}
+                {/* ২. ৩-কার্ডের রিডিজাইন */}
                 <div className="grid grid-cols-3 gap-2.5">
                   <div className="flex flex-col items-center justify-center rounded-[20px] border border-white/80 bg-white/85 py-3.5 px-2 text-center shadow-xs backdrop-blur-md">
                     <div className="font-body text-base font-extrabold text-ink leading-tight">
@@ -1077,7 +1070,7 @@ export default function AccountClient() {
 
       <Footer />
 
-      {/* প্রিমিয়াম ফ্রস্টেড গ্লাস লগআউট কনফার্মেশন মোডাল */}
+      {/* লগআউট কনফার্মেশন মোডাল */}
       {showLogoutConfirm && (
         <div
           className="fixed inset-0 z-[1200] flex items-center justify-center bg-ink/55 p-4 backdrop-blur-[3px] animate-section-reveal"
