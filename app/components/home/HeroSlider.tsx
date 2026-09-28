@@ -70,17 +70,46 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const touchRef = useRef({ startX: 0, startY: 0 });
   const isVisibleRef = useRef(true);
 
-  // প্রথম স্ক্রিনের দৃশ্যমান কার্ডগুলোর ক্লাউডিনারি প্রিলোড
+  // প্রথম স্ক্রিনের দৃশ্যমান কার্ডগুলোর তাৎক্ষণিক প্রিলোড + পেজ স্থির হওয়ার পর বাকি কার্ডগুলোর ব্যাকগ্রাউন্ড প্রিলোড
   useEffect(() => {
     if (typeof window === 'undefined' || !cards.length) return;
-    const count = Math.min(6, cards.length);
-    for (let idx = 0; idx < count; idx++) {
+    const perPage = getDuoPerPage(); // মোবাইলে ২, ডেক্সটপে ৬
+    
+    // ১. ইনিশিয়াল স্ক্রিনের দৃশ্যমান কার্ডগুলোর অগ্রাধিকার প্রিলোড
+    for (let idx = 0; idx < perPage; idx++) {
       const src = cards[idx]?.img;
       if (!src) continue;
       const href = optimizeCloudinaryUrl(src, 360);
       const preloadImg = new window.Image();
       preloadImg.src = href;
     }
+
+    // ২. পেজ মাউন্ট ও LCP সম্পন্ন হওয়ার পর (Idle সময়ে) বাকি কার্ডগুলোর ব্যাকগ্রাউন্ড প্রিলোড
+    const idlePreload = () => {
+      for (let idx = perPage; idx < cards.length; idx++) {
+        const src = cards[idx]?.img;
+        if (!src) continue;
+        const href = optimizeCloudinaryUrl(src, 360);
+        const preloadImg = new window.Image();
+        preloadImg.src = href;
+      }
+    };
+
+    let idleId: number | null = null;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(idlePreload, { timeout: 1500 });
+    } else {
+      timerId = setTimeout(idlePreload, 1200);
+    }
+
+    return () => {
+      if (idleId !== null && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId) clearTimeout(timerId);
+    };
   }, [cards]);
 
   const setPosition = useCallback((animate: boolean) => {
@@ -120,7 +149,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     const perPage = getDuoPerPage();
     const totalCards = cards.length;
 
-    // যদি ব্যবহারকারী একদম শুরুতে (0) থাকা অবস্থায় বাঁ থেকে ডানে (পেছনে) সোয়াইপ করে
     if (dir < 0 && duoIdxRef.current <= 0) {
       infiniteJumpRef.current = true;
       duoIdxRef.current = totalCards;
@@ -135,7 +163,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const startAuto = useCallback((intervalMs = AUTOPLAY_MS) => {
     if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     autoTimerRef.current = setInterval(() => {
-      // স্ক্রিনে দৃশ্যমান থাকা অবস্থায় সবসময় ডান থেকে বামে (Next: dir = 1) অগ্রসর হবে
       if (!isInteractingRef.current && isVisibleRef.current) {
         duoStep(1);
       }
@@ -156,7 +183,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
     startAuto(AUTOPLAY_MS);
 
-    // 🎯 স্ক্রিন আউট হলে তাৎক্ষণিক অটো-স্লাইডার পজ এবং পুনরায় স্ক্রিনে এলে যেখান থেকে স্টপ ছিল ওখান থেকে চালু
+    // 🎯 স্ক্রিন আউট হলে তাৎক্ষণিক অটো-স্লাইডার পজ
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
@@ -247,7 +274,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       }
     };
 
-    // ট্রানজিশন শেষে নির্বিঘ্নে ইনডেক্স স্বাভাবিকীকরণ (Zero Stutter)
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.target !== trackRef.current || infiniteJumpRef.current) return;
 
@@ -366,7 +392,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     }
   };
 
-  // বাফার নিশ্চিত করার জন্য ৩ সেট কার্ড (Set A, Set B, Set C)
   const tripled = [...cards, ...cards, ...cards];
 
   return (
@@ -381,7 +406,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
           will-change: opacity, transform;
         }
         @media (max-width: 767.98px) {
-          /* মোবাইলে ৩নং থেকে ৬নং কার্ডের অ্যানিমেশন কঠোরভাবে বন্ধ */
           .hero-card-anim-in[data-hero-desktop-extra='true'] {
             animation: none !important;
             opacity: 1 !important;
@@ -398,8 +422,6 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
             const label = card.label || '';
             const isSvgEmoji = typeof card.emoji === 'string' && card.emoji.trim().startsWith('<svg');
 
-            // 🎯 অ্যানিমেশন রুলস: মোবাইলে শুধুমাত্র প্রথম ২টা (Index 0, 1)
-            // ডেক্সটপে প্রথম ৬টা (Index 0 থেকে 5)। বাকি সকল কার্ডে কোনো এন্ট্রান্স অ্যানিমেশন নেই!
             const isFirstDuo = i < 2;
             const isDesktopExtra = i >= 2 && i < 6;
             const isInitialCard = isFirstDuo || isDesktopExtra;
