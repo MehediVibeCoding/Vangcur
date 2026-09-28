@@ -50,7 +50,7 @@ import {
 } from '@/lib/checkoutData';
 import {
   sanitizePlainName, validateName, MAX_NAME_LEN,
-  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN,
+  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN, sanitizePhoneInput, PHONE_INPUT_MAX_CHARS,
 } from '@/lib/security';
 import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
@@ -302,6 +302,8 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const confirmLockRef = useRef(false);
   const fingerprintIdRef = useRef('');
+  // (audit P2-B1) প্রতিটা চেকআউট-চেষ্টার জন্য একটাই কী; সফল হলে পরের অর্ডারের জন্য নতুন হয়
+  const idempotencyKeyRef = useRef('');
 
   const [confirmAnim, setConfirmAnim] = useState<'idle' | 'loading' | 'success'>('idle');
   const confirmAnimStartRef = useRef(0);
@@ -874,6 +876,14 @@ export default function CheckoutPage() {
     confirmLockRef.current = true;
     setSubmitting(true);
 
+    if (!idempotencyKeyRef.current) {
+      try {
+        idempotencyKeyRef.current = crypto.randomUUID();
+      } catch {
+        idempotencyKeyRef.current = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}-${Math.random().toString(36).slice(2, 12)}`;
+      }
+    }
+
     // 🛠️ ফিক্স: আগে fingerprintIdRef শুধু mount-এ (fire-and-forget) সেট হতো —
     // ইউজার ফর্ম দ্রুত সাবমিট করলে (বা autofill থাকলে) প্রমিজ রিজলভ হওয়ার আগেই
     // খালি ভ্যালু পাঠিয়ে দিত, ফলে ডিভাইস-লিমিট চেকটাই স্কিপ হয়ে যেত। এখন সাবমিটের
@@ -902,6 +912,7 @@ export default function CheckoutPage() {
         paymentTxn: txn.trim(),
         paymentLast4: last4.trim(),
         fingerprintId: fingerprintIdRef.current,
+        idempotencyKey: idempotencyKeyRef.current,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         lang,
       });
@@ -926,6 +937,7 @@ export default function CheckoutPage() {
       }
 
       const { id: orderId, orderNum: num } = result.data;
+      idempotencyKeyRef.current = ''; // সফল — পরের অর্ডার নতুন কী পাবে
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData?.user?.id || null;
 
@@ -1253,8 +1265,9 @@ export default function CheckoutPage() {
                   <input
                     className={fieldInputClass(!!errors.eP)}
                     value={phone}
-                    maxLength={11}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    maxLength={PHONE_INPUT_MAX_CHARS}
+                    inputMode="tel"
+                    onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                     placeholder="01XXXXXXXXX"
                   />
                 </div>

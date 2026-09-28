@@ -9,6 +9,7 @@ import { useLanguageStore } from '@/lib/store/languageStore';
 import { useThemeStore } from '@/lib/store/themeStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { useAuthStore } from '@/lib/store/authStore';
 import { TOAST_EVENT, type ToastDetail, type ToastType, showToast } from '@/lib/toast';
 import { RESERVED_URL_PREFIXES } from '@/types/guides';
 
@@ -110,6 +111,10 @@ export default function GlobalOverlays() {
   }, [router]);
 
   useEffect(() => {
+    // 🔒 authStore আগে হাইড্রেট করতে হবে — themeStore.hydrate() ভেতরে
+    // isLoggedIn() দিয়ে currentUser চেক করে, তাই ক্রম উল্টালে লগইন-করা
+    // ইউজারও প্রথম হাইড্রেটে "গেস্ট" ধরে লাইট থিমে রিসেট হয়ে যেত।
+    useAuthStore.getState().hydrate();
     useCartStore.getState().hydrate();
     useWishlistStore.getState().hydrate();
     useThemeStore.getState().hydrate();

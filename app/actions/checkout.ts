@@ -12,7 +12,7 @@ import {
 } from '@/lib/checkoutData';
 import {
   sanitizePlainName, validateName, MAX_NAME_LEN,
-  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN,
+  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN, normalizeBdPhone,
 } from '@/lib/security';
 import { logWarn, logError } from '@/lib/logger';
 import { staticDictionary } from '@/lib/i18n/dictionary';
@@ -37,6 +37,32 @@ function parseJsonish<T>(val: unknown, fallback: T): T {
   }
 }
 
+/**
+ * (audit P2-B1) idempotency_key দিয়ে আগের অর্ডার খোঁজে।
+ * - পাওয়া গেলে ও ফোন + আইটেম (id/qty) মিললে → সেই অর্ডার
+ * - পাওয়া গেলে কিন্তু মেলে না → 'mismatch' (কীটা এই নতুন অর্ডারের জন্য ব্যবহার করা হবে না)
+ * - না পেলে → null
+ */
+async function findOrderByIdempotencyKey(
+  service: SupabaseClient,
+  key: string,
+  phone: string,
+  cleanItems: { id: string; qty: number }[],
+): Promise<{ id: string | number; orderNum: string } | 'mismatch' | null> {
+  const { data, error } = await service
+    .from('orders')
+    .select('id, order_num, customer_phone, items')
+    .eq('idempotency_key', key)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (String(data.customer_phone || '') !== phone) return 'mismatch';
+  const stored = parseJsonish<{ id: string | number; qty: number }[]>(data.items, []);
+  const sig = (arr: { id: string | number; qty: number }[]) =>
+    arr.map((i) => `${String(i.id)}x${Number(i.qty)}`).sort().join('|');
+  if (sig(Array.isArray(stored) ? stored : []) !== sig(cleanItems)) return 'mismatch';
+  return { id: data.id, orderNum: String(data.order_num || '') };
+}
+
 export async function createOrder(payload: OrderPayload): Promise<ActionResponse<CreateOrderResult>> {
   const lang = payload?.lang === 'en' ? 'en' : 'bn';
   const t = (text: string): string => (lang === 'en' ? (staticDictionary[text] ?? text) : text);
@@ -44,14 +70,23 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   if (!payload || typeof payload !== 'object') return fail(t('অবৈধ অনুরোধ'));
 
   const name = sanitizePlainName(String(payload.name || '')).trim();
-  const phone = String(payload.phone || '').trim();
+  // (audit P2-B6) +88 / 0088 ইত্যাদি হলে সার্ভারও একই নিয়মে ১১ ডিজিটে আনে; তারপর কড়া যাচাই
+  const phone = normalizeBdPhone(String(payload.phone || '').trim());
   const dist = String(payload.district || '').trim();
   const addr = sanitizeAddressInput(String(payload.address || '')).trim();
   const email = sanitizeEmailInput(String(payload.email || '')).trim();
   const shipping = String(payload.shipping || '').trim();
   const txn = String(payload.paymentTxn || '').trim().toUpperCase();
   const last4 = String(payload.paymentLast4 || '').trim();
-  const fingerprintId = String(payload.fingerprintId || '').trim().slice(0, 128);
+  // (audit P2-B4) fingerprint ক্লায়েন্ট থেকে আসে, তাই এটা শুধু "সহায়ক সংকেত" — একমাত্র সুরক্ষা নয়
+  // (আসল বাধা: ফোন + IP লিমিট)। তবু FingerprintJS v4 visitorId সবসময় ৩২ অক্ষরের hex;
+  // এর বাইরের যেকোনো মান (আবর্জনা/অতিদীর্ঘ/ইনজেকশন) সার্ভার অগ্রাহ্য করে খালি ধরে —
+  // তখন শুধু ফোন ও IP লিমিট প্রযোজ্য হয়, আসল কাস্টমার আটকায় না।
+  const rawFingerprint = String(payload.fingerprintId || '').trim();
+  const fingerprintId = /^[a-f0-9]{32}$/i.test(rawFingerprint) ? rawFingerprint.toLowerCase() : '';
+  // (audit P2-B1) ক্লায়েন্ট-জেনারেটেড UUID; একই চেকআউট-চেষ্টার রিট্রাই/ডাবল-ক্লিক চেনার জন্য
+  const rawIdemKey = String(payload.idempotencyKey || '').trim();
+  const idempotencyKey = /^[A-Za-z0-9_-]{16,64}$/.test(rawIdemKey) ? rawIdemKey : '';
   const couponCode = String(payload.couponCode || '').trim().toUpperCase();
   const rawItems = Array.isArray(payload.items) ? payload.items : [];
 
@@ -119,6 +154,23 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   // ব্যবহার হবে। এই একটামাত্র লুকআপ ছাড়া checkout আর কোথাও ইউজারের
   // ডেলিভারি-সংখ্যা নতুন করে গোনে না — সেই ভারী হিসাব শুধু ক্লেইমের সময়
   // একবারই হয়।
+  // (audit P2-B1) Idempotency: একই কী দিয়ে অর্ডার আগেই তৈরি হয়ে থাকলে (ডাবল-ক্লিক / নেট-স্লো রিট্রাই)
+  // নতুন কিছু না বানিয়ে আগের অর্ডারটাই ফেরত দিই — স্টক/কুপন/ভাউচার/রেট-লিমিটে হাত পড়ে না।
+  // নিরাপত্তা: একই ফোন ও একই আইটেম-তালিকা না মিললে এটা "একই অর্ডার" ধরা হয় না (নতুন অর্ডার হিসেবে চলবে)।
+  let idemKeyForInsert: string | null = idempotencyKey || null;
+  if (idempotencyKey) {
+    try {
+      const existing = await findOrderByIdempotencyKey(service, idempotencyKey, phone, cleanItems);
+      if (existing === 'mismatch') {
+        idemKeyForInsert = null;
+      } else if (existing) {
+        return { ok: true, data: { id: existing.id, orderNum: existing.orderNum } };
+      }
+    } catch (e) {
+      logWarn('[checkout] idempotency lookup failed (continuing normally):', e);
+    }
+  }
+
   let legendaryVoucherReserved = false;
   if (currentUserId) {
     try {
@@ -395,7 +447,11 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   }
 
 
-  let orderNum = `#VC-${Date.now().toString(36).toUpperCase()}`;
+  // (audit P2-B2) কাউন্টার ফাংশন ব্যর্থ হলে ব্যাকআপ নম্বর: সময় + র‍্যান্ডম সাফিক্স, যাতে একই মিলিসেকেন্ডে
+  // দুটো অর্ডারের নম্বর এক হওয়ার সম্ভাবনা কার্যত শূন্য হয়। (আসল নম্বর DB sequence থেকে আসে — সেটা কখনো ডুপ্লিকেট হয় না;
+  // তারপরও orders.order_num UNIQUE, তাই ডুপ্লিকেট হলে insert ব্যর্থ হয়ে সব রিভার্ট হয়।)
+  const fallbackSuffix = Math.random().toString(36).slice(2, 6).toUpperCase().padEnd(4, 'X');
+  let orderNum = `#VC-${Date.now().toString(36).toUpperCase()}${fallbackSuffix}`;
   try {
     const { data: counterData, error: counterErr } = await service.rpc('increment_order_counter');
     if (!counterErr && counterData) orderNum = `#VC-${counterData}`;
@@ -435,6 +491,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     payment_txn: safeTxn,
     payment_last4: last4,
     fingerprint_id: fingerprintId || null,
+    idempotency_key: idemKeyForInsert,
     status: 'pending',
     ...(currentUserId ? { user_id: currentUserId } : {}),
   };
@@ -448,6 +505,24 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     await revertLegendaryVoucherIfNeeded();
 
     if (insResult.error?.code === '23505') {
+      const dupMsg = String(insResult.error?.message || '');
+      // (audit P2-B1) একই মুহূর্তে আসা "জমজ" রিকোয়েস্ট: অন্যটা আগেই অর্ডার বানিয়ে ফেলেছে →
+      // এই রিকোয়েস্টের স্টক/কুপন/ভাউচার ওপরে রিভার্ট হয়ে গেছে; কাস্টমারকে আগের অর্ডারটাই দেখাই।
+      if (idemKeyForInsert && dupMsg.includes('idempotency_key')) {
+        try {
+          const twin = await findOrderByIdempotencyKey(service, idemKeyForInsert, phone, cleanItems);
+          if (twin && twin !== 'mismatch') {
+            return { ok: true, data: { id: twin.id, orderNum: twin.orderNum } };
+          }
+        } catch (e) {
+          logWarn('[checkout] idempotency twin lookup failed:', e);
+        }
+        return fail(GENERIC_RETRY_MSG);
+      }
+      // (audit P2-B2) অর্ডার-নম্বর সংঘর্ষ ট্রানজেকশন-ডুপ্লিকেটের ভুল বার্তা পেত; এখন আলাদা
+      if (dupMsg.includes('order_num')) {
+        return fail(GENERIC_RETRY_MSG);
+      }
       return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
     }
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));

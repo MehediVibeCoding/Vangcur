@@ -25,6 +25,7 @@ interface ClientHomeProps {
   initialCategories?: Category[];
   initialHeroCards?: HeroCard[];
   initialCategory?: string;
+  initialHasMore?: boolean;
 }
 
 export default function ClientHome({
@@ -32,6 +33,7 @@ export default function ClientHome({
   initialCategories,
   initialHeroCards,
   initialCategory,
+  initialHasMore,
 }: ClientHomeProps) {
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
@@ -61,7 +63,7 @@ export default function ClientHome({
       <HeroSlider initialCards={initialHeroCards} />
       <TrustStrip />
       <Categories initialCategories={initialCategories} />
-      <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} />
+      <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} initialHasMore={initialHasMore} />
       <CustomerGallery />
       <FAQ />
       <About />

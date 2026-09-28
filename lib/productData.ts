@@ -18,7 +18,7 @@ function getTimeoutSignal(ms: number): AbortSignal | undefined {
   return undefined;
 }
 
-export function prodInCat(p: Product, catId: string): boolean {
+export function prodInCat(p: Pick<Product, 'cat' | 'cats'>, catId: string): boolean {
   const targetCat = String(catId || '').trim().toLowerCase();
   if (!targetCat || targetCat === 'all') return true;
   if (Array.isArray(p.cats) && p.cats.length) {
@@ -27,7 +27,7 @@ export function prodInCat(p: Product, catId: string): boolean {
   return String(p.cat || '').trim().toLowerCase() === targetCat;
 }
 
-export function applyProdOrder(prods: Product[], orderArr: unknown): Product[] {
+export function applyProdOrder<T extends { id: number | string }>(prods: T[], orderArr: unknown): T[] {
   let order: unknown = orderArr || null;
   if (typeof order === 'string' && (order.startsWith('[') || order.startsWith('{'))) {
     try {
@@ -197,6 +197,100 @@ export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Pro
   return [];
 }
 
+export interface ProductsPageResult {
+  products: Product[];
+  hasMore: boolean;
+  total: number;
+}
+
+// হোমপেজ/ক্যাটাগরি-পেজের প্রথম ব্যাচ আর "আরও লোড" ব্যাচের সাইজ — সার্ভার
+// কম্পোনেন্ট (initial SSR fetch) আর ProductGrid.tsx (client, পরের ব্যাচ) —
+// দুই জায়গাতেই একই কনস্ট্যান্ট থেকে আসে, যাতে আলাদা হয়ে না যায়
+export const PRODUCTS_PAGE_SIZE = 24;
+export const PRODUCTS_LOAD_MORE_BATCHES = [24, 36, 60, 84, 120, 180];
+
+// 🔒 ফিক্স (audit P1-16): হোমপেজে আগে fetchCustomProducts() দিয়ে পুরো ক্যাটালগ
+// একসাথে আনা হতো (SSR পেলোডে) — কয়েকশো প্রোডাক্টে এটা ভারী হয়ে যাবে। এই ফাংশন
+// প্রথমে শুধু id+cat+cats আনে (হালকা — সব প্রোডাক্ট মিলিয়েও ছোট), তা দিয়ে
+// কাস্টম অর্ডার+ক্যাটাগরি-ফিল্টার করে সঠিক ID-ক্রম বের করে, তারপর ভারী
+// GRID_COLS ডেটা শুধু ওই পেজের (limit-টা) আইডির জন্যই আনে — বাকিগুলো তখনই
+// আনা হয় যখন স্ক্রল করে বা ক্যাটাগরি বদলে সেটা দরকার হয়।
+async function fetchOrderedFilteredIds(supabase: SupabaseClient, category: string): Promise<(number | string)[]> {
+  const orderPromise = fetchProdOrder(supabase);
+  const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+  const { data, error } = await supabase
+    .from('custom_products')
+    .select('id, cat, cats, stock')
+    .order('id', { ascending: true })
+    .abortSignal(signal as any);
+  if (error || !data) return [];
+  const filtered = (data as { id: number | string; cat: string | null; cats: string[] | null; stock: number }[]).filter((p) =>
+    prodInCat({ cat: p.cat || '', cats: p.cats || [] }, category)
+  );
+  const orderArr = await orderPromise;
+  const ordered = applyProdOrder(filtered, orderArr);
+  // fetchCustomProducts()-এর পুরনো আচরণের সাথে মেলাতে: স্টক-আউট প্রোডাক্ট
+  // পুরো লিস্টের শেষে যাবে (নির্দিষ্ট পেজের ভেতরে না — পুরো ক্যাটাগরি জুড়ে),
+  // stable sort বলে বাকি ক্রম (prodOrder অনুযায়ী) অক্ষত থাকে
+  const stableOrdered = [...ordered].sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0));
+  return stableOrdered.map((p) => p.id);
+}
+
+export async function fetchProductsPage(
+  supabase: SupabaseClient,
+  category: string,
+  offset: number,
+  limit: number
+): Promise<ProductsPageResult> {
+  try {
+    const allIds = await fetchOrderedFilteredIds(supabase, category || 'all');
+    const pageIds = allIds.slice(offset, offset + limit);
+    if (!pageIds.length) return { products: [], hasMore: false, total: allIds.length };
+
+    const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+    const { data: sbProds, error } = await supabase
+      .from('custom_products')
+      .select(GRID_COLS)
+      .in('id', pageIds)
+      .abortSignal(signal as any);
+
+    if (error || !sbProds) {
+      logWarn('[Vangcur] fetchProductsPage fetch error:', error?.message);
+      return { products: [], hasMore: false, total: allIds.length };
+    }
+
+    const mapped = (sbProds as unknown as RawCustomProduct[]).map(mapCustomProduct);
+    // .in() রেজাল্টের নিজস্ব ক্রম গ্যারান্টিড না — pageIds-এর ক্রম অনুযায়ী আবার সাজানো হলো
+    const byId = new Map(mapped.map((p) => [String(p.id), p]));
+    const products = pageIds.map((id) => byId.get(String(id))).filter((p): p is Product => !!p);
+
+    return { products, hasMore: offset + limit < allIds.length, total: allIds.length };
+  } catch (e) {
+    logWarn('[Vangcur] fetchProductsPage exception:', e);
+    return { products: [], hasMore: false, total: 0 };
+  }
+}
+
+// 🔒 ফিক্স (audit P1-15): Realtime WebSocket-এর বদলে হালকা পোলিং — নির্দিষ্ট
+// কিছু আইডির জন্য সর্বশেষ ডেটা আনে (পুরো ক্যাটালগ না), তাই ভিজিটর অনেক বাড়লেও
+// এটা সাধারণ রিকোয়েস্টের মতোই (কোনো "খোলা কানেকশন" ধরে রাখে না)।
+export async function fetchProductsByIds(supabase: SupabaseClient, ids: (number | string)[]): Promise<Product[]> {
+  if (!ids.length) return [];
+  try {
+    const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+    const { data, error } = await supabase
+      .from('custom_products')
+      .select(GRID_COLS)
+      .in('id', ids)
+      .abortSignal(signal as any);
+    if (error || !data) return [];
+    return (data as unknown as RawCustomProduct[]).map(mapCustomProduct);
+  } catch (e) {
+    logWarn('[Vangcur] fetchProductsByIds exception:', e);
+    return [];
+  }
+}
+
 export async function fetchProductById(supabase: SupabaseClient, id: number | string): Promise<Product | null> {
   try {
     const { data, error } = await supabase
@@ -231,31 +325,6 @@ export function mergeCustomProducts(defaults: Product[], customRows: Product[]):
     }
   });
   return list;
-}
-
-export function subscribeCustomProducts(
-  supabase: SupabaseClient,
-  { onInsert, onUpdate, onDelete }: {
-    onInsert: (p: Product) => void;
-    onUpdate: (p: Product) => void;
-    onDelete: (id: number | string) => void;
-  },
-) {
-  const uniqueName = `products-grid-watch-${Math.random().toString(36).slice(2, 9)}`;
-  const channel = supabase
-    .channel(uniqueName)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'custom_products' }, (payload) => {
-      if (payload.new) onInsert(mapCustomProduct(payload.new as RawCustomProduct));
-    })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'custom_products' }, (payload) => {
-      if (payload.new && (payload.new as RawCustomProduct).id !== undefined) onUpdate(mapCustomProduct(payload.new as RawCustomProduct));
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'custom_products' }, (payload) => {
-      const oldRow = payload.old as { id?: number | string };
-      if (oldRow && oldRow.id !== undefined) onDelete(oldRow.id);
-    })
-    .subscribe();
-  return channel;
 }
 
 export const QUICK_ORDER_EVENT = 'vc:quickOrder';

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { logWarn } from '@/lib/logger';
+import { normalizeBdPhone } from '@/lib/security';
+import { validatePhone } from '@/lib/checkoutData';
 
 // 🛡️ স্প্রেডশিট ফর্মুলা ইনজেকশন ফিল্টার ও কঠোর সাইজ গার্ড
 function sanitizeSpreadsheetValue(val: unknown, maxLen = 100): string {
@@ -75,8 +77,9 @@ export async function POST(req: NextRequest) {
     // কেস ১: স্টক নোটিফিকেশন রিকোয়েস্ট (addStockRequest)
     // =========================================================================
     if (action === 'addStockRequest') {
-      const phoneStr = String(payload.mobileNumber || payload.phone || '').trim().replace(/\D/g, '');
-      if (phoneStr.length < 10 || phoneStr.length > 15) {
+      // (audit P2-B6) সব জায়গার মতো একই নিয়ম: +88 পরিষ্কার → বাংলাদেশি নম্বরের কড়া যাচাই
+      const phoneStr = normalizeBdPhone(String(payload.mobileNumber || payload.phone || '').trim());
+      if (!validatePhone(phoneStr)) {
         return NextResponse.json({ ok: false, error: 'Invalid phone format' }, { status: 400 });
       }
 
@@ -110,8 +113,8 @@ export async function POST(req: NextRequest) {
     // =========================================================================
     // কেস ২: চেকআউট ড্রাফট লিড ক্যাপচার (addLead)
     // =========================================================================
-    const phoneStr = String(payload.phone || '').trim().replace(/\D/g, '');
-    if (phoneStr.length < 10 || phoneStr.length > 15) {
+    const phoneStr = normalizeBdPhone(String(payload.phone || '').trim());
+    if (!validatePhone(phoneStr)) {
       return NextResponse.json({ ok: false, error: 'Invalid phone format' }, { status: 400 });
     }
 

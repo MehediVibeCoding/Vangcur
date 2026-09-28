@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   CATEGORY_FILTER_EVENT, makeCatSlug, DEFAULT_CATEGORIES,
 } from '@/lib/categoryData';
-import { prodInCat } from '@/lib/productData';
+import { PRODUCTS_PAGE_SIZE, PRODUCTS_LOAD_MORE_BATCHES } from '@/lib/productData';
+import { fetchProductsPageAction } from '@/app/actions/products';
 import { useT } from '@/lib/i18n/useT';
 import type { Category, Product } from '@/types';
 import ProductCard from './ProductCard';
-
-const LADDER_BATCHES = [24, 36, 60, 84, 120, 180];
 
 function EmptyBoxIcon() {
   return (
@@ -35,71 +34,100 @@ const brandCtaBtnClass = 'inline-flex items-center gap-2 rounded-full border-non
 interface ProductGridProps {
   initialProducts: Product[];
   initialCategory?: string;
+  initialHasMore?: boolean;
   categoryName?: string;
 }
 
-export default function ProductGrid({ initialProducts, initialCategory, categoryName }: ProductGridProps) {
+// 🔒 ফিক্স (audit P1-16): আগে এই কম্পোনেন্ট পুরো ক্যাটালগ props হিসেবে পেত আর
+// ক্যাটাগরি বদল/স্ক্রল — দুটোই client-এ থাকা সেই একই পুরো অ্যারে থেকে
+// filter/slice করত। এখন শুধু বর্তমান পেজের প্রোডাক্টগুলোই state-এ থাকে —
+// ক্যাটাগরি বদলালে বা স্ক্রল করলে সার্ভার থেকে নতুন পেজ আনা হয়
+// (fetchProductsPageAction)। প্রোডাক্ট কয়েকশো হয়ে গেলেও হোমপেজ হালকা থাকবে।
+export default function ProductGrid({ initialProducts, initialCategory, initialHasMore, categoryName }: ProductGridProps) {
   const { t, lang } = useT();
   const searchParams = useSearchParams();
-  const [prods] = useState<Product[]>(initialProducts);
-  const [activeCat, setActiveCat] = useState(initialCategory || 'all');
+  const startCat = initialCategory || 'all';
+
+  const [items, setItems] = useState<Product[]>(initialProducts);
+  const [total, setTotal] = useState<number>(initialProducts.length);
+  const [hasMore, setHasMore] = useState<boolean>(!!initialHasMore);
+  const [switching, setSwitching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [activeCat, setActiveCat] = useState(startCat);
   const [cats] = useState<Category[]>(DEFAULT_CATEGORIES);
 
-  const initialFilteredCount = initialCategory && initialCategory !== 'all'
-    ? initialProducts.filter((p) => prodInCat(p, initialCategory)).length
-    : initialProducts.length;
-
-  const [renderedCount, setRenderedCount] = useState(() => Math.min(LADDER_BATCHES[0], initialFilteredCount || LADDER_BATCHES[0]));
-  const [showSpinner, setShowSpinner] = useState(false);
-
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const batchCountRef = useRef(1);
-  const renderedCountRef = useRef(Math.min(LADDER_BATCHES[0], initialFilteredCount || LADDER_BATCHES[0]));
-  const listRef = useRef<Product[]>([]);
-  const prevCatRef = useRef(activeCat);
+  const prevCatRef = useRef(startCat);
+  const reqIdRef = useRef(0);
+  const activeCatRef = useRef(startCat);
+  const offsetRef = useRef(initialProducts.length);
+  const hasMoreRef = useRef(!!initialHasMore);
+  const loadingRef = useRef(false);
+  const batchIdxRef = useRef(0);
 
-  const list = useMemo(() => {
-    const filtered = activeCat === 'all' ? prods : prods.filter((p) => prodInCat(p, activeCat));
-    return [...filtered].sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0));
-  }, [prods, activeCat]);
+  useEffect(() => { activeCatRef.current = activeCat; }, [activeCat]);
+  useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
 
-  useEffect(() => { listRef.current = list; }, [list]);
-  useEffect(() => { renderedCountRef.current = renderedCount; }, [renderedCount]);
-
-  const appendNextBatch = useCallback(() => {
-    const currentList = listRef.current;
-    const cur = renderedCountRef.current;
-    if (cur >= currentList.length) {
-      setShowSpinner(false);
-      return;
-    }
-
-    const currentBatchIdx = batchCountRef.current;
-    const nextAddition = LADDER_BATCHES[Math.min(currentBatchIdx, LADDER_BATCHES.length - 1)];
-    const nextCount = Math.min(cur + nextAddition, currentList.length);
-
-    batchCountRef.current += 1;
-    renderedCountRef.current = nextCount;
-    setRenderedCount(nextCount);
-
-    if (nextCount >= currentList.length) {
-      setShowSpinner(false);
-    } else {
-      setShowSpinner(true);
-    }
-  }, []);
-
+  // ক্যাটাগরি বদলালে নতুন করে প্রথম পেজ আনা হয় — প্রথম মাউন্টে (SSR-এর
+  // initialCategory-এর সাথে মিলে গেলে) এই effect কিছু করে না, SSR ডেটাই থাকে
   useEffect(() => {
     if (prevCatRef.current === activeCat) return;
     prevCatRef.current = activeCat;
 
-    batchCountRef.current = 0;
-    renderedCountRef.current = 0;
-    setShowSpinner(false);
-    setRenderedCount(0);
-    const timer = setTimeout(() => appendNextBatch(), 0);
-    return () => clearTimeout(timer);
-  }, [activeCat, appendNextBatch]);
+    const myReqId = ++reqIdRef.current;
+    batchIdxRef.current = 0;
+    setSwitching(true);
+    setLoadingMore(false);
+
+    fetchProductsPageAction(activeCat, 0, PRODUCTS_PAGE_SIZE)
+      .then((res) => {
+        if (reqIdRef.current !== myReqId) return; // ইতিমধ্যে আরেকবার ক্যাটাগরি বদলেছে — পুরনো রেসপন্স উপেক্ষা
+        setItems(res.products);
+        setTotal(res.total);
+        setHasMore(res.hasMore);
+        offsetRef.current = res.products.length;
+        hasMoreRef.current = res.hasMore;
+        setSwitching(false);
+      })
+      .catch(() => {
+        if (reqIdRef.current !== myReqId) return;
+        setItems([]);
+        setTotal(0);
+        setHasMore(false);
+        offsetRef.current = 0;
+        hasMoreRef.current = false;
+        setSwitching(false);
+      });
+  }, [activeCat]);
+
+  const appendNextBatch = useCallback(() => {
+    if (loadingRef.current || !hasMoreRef.current) return;
+    loadingRef.current = true;
+    setLoadingMore(true);
+
+    const myReqId = reqIdRef.current;
+    const cat = activeCatRef.current;
+    const offset = offsetRef.current;
+    const batchSize = PRODUCTS_LOAD_MORE_BATCHES[Math.min(batchIdxRef.current, PRODUCTS_LOAD_MORE_BATCHES.length - 1)];
+
+    fetchProductsPageAction(cat, offset, batchSize)
+      .then((res) => {
+        if (reqIdRef.current !== myReqId) return; // এর মধ্যে ক্যাটাগরি বদলে গেছে — বাতিল
+        batchIdxRef.current += 1;
+        offsetRef.current = offset + res.products.length;
+        hasMoreRef.current = res.hasMore;
+        setItems((prev) => [...prev, ...res.products]);
+        setTotal(res.total);
+        setHasMore(res.hasMore);
+        loadingRef.current = false;
+        setLoadingMore(false);
+      })
+      .catch(() => {
+        if (reqIdRef.current !== myReqId) return;
+        loadingRef.current = false;
+        setLoadingMore(false);
+      });
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -114,9 +142,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
           if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
             return;
           }
-          if (renderedCountRef.current < listRef.current.length) {
-            appendNextBatch();
-          }
+          appendNextBatch();
         }, 120);
       } else if (timer) {
         clearTimeout(timer);
@@ -169,9 +195,8 @@ export default function ProductGrid({ initialProducts, initialCategory, category
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const visibleItems = list.slice(0, renderedCount);
-  const isDone = renderedCount >= list.length;
-  const showCategoryEndBtn = isDone && activeCat !== 'all' && list.length > 0;
+  const isDone = !hasMore;
+  const showCategoryEndBtn = isDone && !switching && activeCat !== 'all' && items.length > 0;
   const activeCategoryName = categoryName || cats.find((c) => c.id === activeCat)?.name;
 
   return (
@@ -188,10 +213,10 @@ export default function ProductGrid({ initialProducts, initialCategory, category
             <>{t('সকল')} <span className="text-brand-light">{t('প্রোডাক্ট')}</span></>
           )}
         </h2>
-        <span className="text-[13px] text-muted">{lang === 'en' ? `${list.length} Products` : `${list.length}টি প্রোডাক্ট`}</span>
+        <span className="text-[13px] text-muted">{lang === 'en' ? `${total} Products` : `${total}টি প্রোডাক্ট`}</span>
       </div>
 
-      {list.length === 0 ? (
+      {items.length === 0 && !switching ? (
         <div className="col-span-full flex flex-col items-center gap-3.5 px-5 py-[60px] text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-brand-bg/50 to-surface-muted text-brand-light/60">
             <EmptyBoxIcon />
@@ -202,8 +227,8 @@ export default function ProductGrid({ initialProducts, initialCategory, category
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {visibleItems.map((p, i) => (
+        <div className={`grid grid-cols-2 gap-3.5 transition-brand duration-brand sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 ${switching ? 'opacity-40' : 'opacity-100'}`}>
+          {items.map((p, i) => (
             <ProductCard key={`${activeCat}-${p.id}`} prod={p} isFirst={i === 0} index={i} />
           ))}
           {showCategoryEndBtn && (
@@ -220,7 +245,7 @@ export default function ProductGrid({ initialProducts, initialCategory, category
       )}
 
       <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
-        {showSpinner && !isDone && (
+        {(loadingMore || switching) && !isDone && (
           <div className="flex items-center gap-2 text-[13px] text-muted">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin text-brand-light">
               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />

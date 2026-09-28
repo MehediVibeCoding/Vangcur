@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { fetchCustomProducts } from '@/lib/productData';
+import { fetchProductsPage, PRODUCTS_PAGE_SIZE } from '@/lib/productData';
 import { fetchCategories, DEFAULT_CATEGORIES } from '@/lib/categoryData';
 import { fetchHeroCards, DEFAULT_HERO_CARDS } from '@/lib/heroSliderData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
@@ -38,13 +38,20 @@ export default async function HomePage() {
     logError('[Vangcur] HomePage: Supabase env var missing at request time.');
   }
 
-  const [initialProducts, initialCategories, initialHeroCards] = supabase
+  // 🔒 ফিক্স (audit P1-16): আগে fetchCustomProducts() দিয়ে পুরো ক্যাটালগ SSR
+  // পেলোডে যেত। এখন শুধু প্রথম পেজ (PRODUCTS_PAGE_SIZE) আসে — বাকিটা স্ক্রল
+  // করলে ProductGrid.tsx ক্লায়েন্ট থেকে চেয়ে নেয়। প্রোডাক্ট সংখ্যা কম থাকা
+  // অবস্থায় (যেমন এখন) আচরণ প্রায় একই থাকবে, কিন্তু ক্যাটালগ বড় হলে হোমপেজ
+  // হালকা থেকে যাবে।
+  const [productsPage, initialCategories, initialHeroCards] = supabase
     ? await Promise.all([
-      fetchCustomProducts(supabase),
+      fetchProductsPage(supabase, 'all', 0, PRODUCTS_PAGE_SIZE),
       fetchCategories(supabase),
       fetchHeroCards(supabase),
     ])
-    : [[], DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
+    : [{ products: [], hasMore: false }, DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
+  const initialProducts = productsPage.products;
+  const initialHasMore = productsPage.hasMore;
 
   // LCP preload — derived from the same card data + the same
   // optimizeCloudinaryUrl() transform HeroSlider actually renders with,
@@ -70,6 +77,7 @@ export default async function HomePage() {
         initialProducts={initialProducts}
         initialCategories={initialCategories}
         initialHeroCards={initialHeroCards}
+        initialHasMore={initialHasMore}
       />
     </>
   );

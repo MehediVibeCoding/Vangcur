@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import Footer from '@/app/components/layout/Footer';
 import ProductCard from '@/app/components/home/ProductCard';
 import { searchProducts, matchCategories } from '@/lib/searchData';
-import { subscribeCustomProducts } from '@/lib/productData';
+import { fetchProductsByIds } from '@/lib/productData';
 import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { showToast } from '@/lib/toast';
@@ -226,22 +226,38 @@ export default function SearchClient({ initialProducts, initialCategories }: Sea
     }
   }, [supabase, initialCategories]);
 
-  useEffect(() => {
-    const channel = subscribeCustomProducts(supabase, {
-      onInsert: (mapped) => setProds((prev) => (
-        prev.find((x) => String(x.id) === String(mapped.id)) ? prev : [...prev, mapped]
-      )),
-      onUpdate: (mapped) => setProds((prev) => {
-        const idx = prev.findIndex((x) => String(x.id) === String(mapped.id));
-        if (idx === -1) return prev;
-        const next = [...prev];
-        next[idx] = { ...next[idx], ...mapped };
-        return next;
-      }),
-      onDelete: (id) => setProds((prev) => prev.filter((x) => String(x.id) !== String(id))),
-    });
+  // 🔒 ফিক্স (audit P1-15): Realtime WebSocket-এর বদলে হালকা পোলিং — সার্চ
+  // পেজে লোড হওয়া প্রোডাক্টগুলোর দাম/স্টক প্রতি ৩০ সেকেন্ডে যাচাই করে,
+  // ট্যাব ব্যাকগ্রাউন্ডে থাকলে স্কিপ করে (দ্রষ্টব্য: ProductDetailClient.tsx-এও
+  // একই প্যাটার্ন)
+  const prodsRef = useRef(prods);
+  useEffect(() => { prodsRef.current = prods; }, [prods]);
 
-    return () => { supabase.removeChannel(channel); };
+  useEffect(() => {
+    let cancelled = false;
+    const POLL_MS = 30000;
+
+    const tick = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const ids = prodsRef.current.map((p) => p.id);
+      if (!ids.length) return;
+      const fresh = await fetchProductsByIds(supabase, ids);
+      if (cancelled) return;
+      const freshById = new Map(fresh.map((p) => [String(p.id), p]));
+      setProds((prev) => prev
+        .filter((p) => freshById.has(String(p.id)))
+        .map((p) => ({ ...p, ...freshById.get(String(p.id))! })));
+    };
+
+    const timer = setInterval(tick, POLL_MS);
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [supabase]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
-  prodInCat, fetchCustomProducts, mergeCustomProducts, subscribeCustomProducts,
+  prodInCat, fetchCustomProducts, mergeCustomProducts, fetchProductsByIds,
   findProdBySlug,
   startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
@@ -419,25 +419,45 @@ export default function ProductDetailClient({
       });
     }
 
-    const channel = subscribeCustomProducts(supabase, {
-      onInsert: (mapped) => setProds((prev) => (
-        prev.find((x) => String(x.id) === String(mapped.id)) ? prev : [...prev, mapped]
-      )),
-      onUpdate: (mapped) => setProds((prev) => {
-        const idx = prev.findIndex((x) => String(x.id) === String(mapped.id));
-        if (idx === -1) return prev;
-        const next = [...prev];
-        next[idx] = { ...next[idx], ...mapped };
-        return next;
-      }),
-      onDelete: (id) => setProds((prev) => prev.filter((x) => String(x.id) !== String(id))),
-    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, initialProducts]);
+
+  // 🔒 ফিক্স (audit P1-15): আগে এখানে পুরো custom_products টেবিলের Realtime
+  // WebSocket সাবস্ক্রিপশন ছিল (কোনো ফিল্টার ছাড়া) — ভিজিটর বাড়লে Supabase-এর
+  // concurrent-connection সীমা ছাড়িয়ে যেত। এখন বদলে হালকা পোলিং — প্রতি ৩০
+  // সেকেন্ডে শুধু এই পেজে দেখানো প্রোডাক্টগুলোর (এই + রিলেটেড) সর্বশেষ দাম/স্টক
+  // চেক করে, ট্যাব ব্যাকগ্রাউন্ডে থাকলে স্কিপ করে।
+  const prodsRef = useRef(prods);
+  useEffect(() => { prodsRef.current = prods; }, [prods]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const POLL_MS = 30000;
+
+    const tick = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const ids = prodsRef.current.map((p) => p.id);
+      if (!ids.length) return;
+      const fresh = await fetchProductsByIds(supabase, ids);
+      if (cancelled) return;
+      const freshById = new Map(fresh.map((p) => [String(p.id), p]));
+      setProds((prev) => prev
+        .filter((p) => freshById.has(String(p.id)))
+        .map((p) => ({ ...p, ...freshById.get(String(p.id))! })));
+    };
+
+    const timer = setInterval(tick, POLL_MS);
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener('visibilitychange', onVisible);
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [supabase, initialProducts]);
+  }, [supabase]);
 
   const baseProd = useMemo(
     () => findProdBySlug(prods, slug) || (initialId ? prods.find((x) => String(x.id) === String(initialId)) : null),

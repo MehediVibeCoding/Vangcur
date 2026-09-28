@@ -16,6 +16,7 @@ import {
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import {
   validateEmail, validatePhone, validateName, sanitizePlainName, sanitizeEmailInput,
+  sanitizePhoneInput, PHONE_INPUT_MAX_CHARS,
 } from '@/lib/security';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { checkPasswordResetLimitAction } from '@/app/actions/rateLimit';
@@ -28,19 +29,6 @@ import type { CurrentUser } from '@/types';
 const MAX_NAME_LEN = 30;
 const MAX_PASS_LEN = 30;
 const MAX_EMAIL_LEN = 254;
-
-function filterPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '');
-  let out = '';
-  for (const ch of digits) {
-    if (out.length >= 11) break;
-    if (out.length === 0) { if (ch === '0') out += ch; }
-    else if (out.length === 1) { if (ch === '1') out += ch; }
-    else if (out.length === 2) { if (ch >= '3' && ch <= '9') out += ch; }
-    else { out += ch; }
-  }
-  return out;
-}
 
 type Mode = 'login' | 'register' | 'forgot';
 
@@ -397,7 +385,7 @@ export default function LoginModal({
     if (rHoneypot) return;
 
     const nm = sanitizePlainName(rName.trim());
-    const ph = filterPhoneInput(rPhone.trim());
+    const ph = sanitizePhoneInput(rPhone.trim());
     const em = sanitizeEmailInput(rEmail.trim());
     const pw = rPass;
     setRErr('');
@@ -623,8 +611,8 @@ export default function LoginModal({
                     <div className="relative">
                       <span className={fieldIconWrapClass}><IconPhone /></span>
                       <input
-                        type="tel" placeholder="01XXXXXXXXX" maxLength={11} inputMode="numeric"
-                        value={rPhone} onChange={(e) => setRPhone(filterPhoneInput(e.target.value))}
+                        type="tel" placeholder="01XXXXXXXXX" maxLength={PHONE_INPUT_MAX_CHARS} inputMode="numeric"
+                        value={rPhone} onChange={(e) => setRPhone(sanitizePhoneInput(e.target.value))}
                         className={fieldClass(false)}
                       />
                     </div>

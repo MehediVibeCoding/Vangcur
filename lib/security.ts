@@ -35,9 +35,27 @@ export const MAX_PHONE_LEN = 11;
 
 // 🛡️ ফোন নম্বর ইনপুট থেকে শুধুমাত্র সংখ্যা রাখা হয় — বাংলাদেশি মোবাইল নম্বর ছাড়া
 // আর কিছুই (স্ক্রিপ্ট, চিহ্ন, লেটার) এই ফিল্ডে ঢুকতে পারবে না।
-export function sanitizePhoneInput(value: string): string {
-  return value.replace(/\D/g, '').slice(0, MAX_PHONE_LEN);
+/**
+ * (audit P2-B6) বাংলাদেশি নম্বরের আন্তর্জাতিক/অন্য ফরম্যাটকে ১১ ডিজিটের স্থানীয় রূপে আনে।
+ *   +8801712345678 / 8801712345678 / 008801712345678 / +880 01712345678 / +88 01712-345678 → 01712345678
+ * শুধু সংখ্যা রাখে; ঠিক ১৩ ডিজিটের 880-প্রিফিক্স (বা তার 00/0-যুক্ত রূপ) হলেই কাটে।
+ * ১০ ডিজিটের নম্বরে (শুরুর ০ বাদ) কিছু যোগ করে না — সেটা ইচ্ছাকৃতভাবে ভুল হিসেবেই গণ্য।
+ * ক্লায়েন্ট ও সার্ভার — দুই জায়গাতেই এই একটাই ফাংশন।
+ */
+export function normalizeBdPhone(value: string): string {
+  let d = String(value ?? '').replace(/\D/g, '');
+  if (d.startsWith('00880')) d = d.slice(2);                       // 00880… → 880…
+  if (d.startsWith('8800') && d.length === 14) d = d.slice(3);      // +880 0171… → 0171…
+  else if (d.startsWith('880') && d.length === 13) d = d.slice(2);  // 8801712345678 → 01712345678
+  return d;
 }
+
+export function sanitizePhoneInput(value: string): string {
+  return normalizeBdPhone(value).slice(0, MAX_PHONE_LEN);
+}
+
+/** ফোন ইনপুট ঘরের maxLength — পেস্ট করা "+88 01712-345678" যেন ব্রাউজার আগেই না কেটে ফেলে (কাটার কাজ sanitizePhoneInput করে) */
+export const PHONE_INPUT_MAX_CHARS = 24;
 
 export function validateEmail(email: string): boolean {
   const trimmed = email.trim();

@@ -14,8 +14,8 @@ import {
 } from '@/lib/profileData';
 import { DISTRICTS, getDistrictLabel } from '@/lib/checkoutData';
 import {
-  MAX_NAME_LEN, MAX_PHONE_LEN, MAX_ADDR_LEN,
-  sanitizePlainName, sanitizePhoneInput, sanitizeAddressInput,
+  MAX_NAME_LEN, MAX_ADDR_LEN,
+  sanitizePlainName, sanitizePhoneInput, sanitizeAddressInput, PHONE_INPUT_MAX_CHARS,
 } from '@/lib/security';
 
 interface CompleteProfileModalProps {
@@ -172,7 +172,7 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
                     type="tel"
                     inputMode="numeric"
                     required
-                    maxLength={MAX_PHONE_LEN}
+                    maxLength={PHONE_INPUT_MAX_CHARS}
                     value={phone}
                     onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                     placeholder="01XXXXXXXXX"

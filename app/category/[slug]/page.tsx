@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { fetchCustomProducts } from '@/lib/productData';
+import { fetchProductsPage, PRODUCTS_PAGE_SIZE } from '@/lib/productData';
 import { fetchCategories, makeCatSlug, DEFAULT_CATEGORIES } from '@/lib/categoryData';
 import { fetchHeroCards, DEFAULT_HERO_CARDS } from '@/lib/heroSliderData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
@@ -73,13 +73,17 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     }
   }
 
-  const [initialProducts, initialCategories, initialHeroCards] = supabase
+  // 🔒 ফিক্স (audit P1-16): হোমপেজের মতোই এখানেও পুরো ক্যাটালগ না এনে শুধু
+  // এই ক্যাটাগরির প্রথম পেজ আনা হচ্ছে
+  const [productsPage, initialCategories, initialHeroCards] = supabase
     ? await Promise.all([
-      fetchCustomProducts(supabase),
+      fetchProductsPage(supabase, cat.id, 0, PRODUCTS_PAGE_SIZE),
       fetchCategories(supabase),
       fetchHeroCards(supabase),
     ])
-    : [[], DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
+    : [{ products: [], hasMore: false }, DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
+  const initialProducts = productsPage.products;
+  const initialHasMore = productsPage.hasMore;
 
   return (
     <ClientHome
@@ -87,6 +91,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       initialCategories={initialCategories}
       initialHeroCards={initialHeroCards}
       initialCategory={cat.id}
+      initialHasMore={initialHasMore}
     />
   );
 }

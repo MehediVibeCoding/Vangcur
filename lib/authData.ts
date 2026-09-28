@@ -56,6 +56,20 @@ export async function logout(supabase: SupabaseClient): Promise<void> {
   try {
     localStorage.removeItem('vc_orders');
     localStorage.removeItem('vc_guest_orders');
+    // (audit P2-B10, বাকি অংশ) চেকআউটের নাম/ফোন/ঠিকানা/ইমেইল-ড্রাফট ও শেষ অর্ডারের ফোন —
+    // শেয়ার্ড কম্পিউটারে (সাইবার ক্যাফে) পরের ইউজারের হাতে পড়তে পারত
+    localStorage.removeItem('vc_abandoned_draft');
+    localStorage.removeItem('vc_pending_ls');
+    localStorage.removeItem('vc_pending_num_ls');
+    localStorage.removeItem('vc_pending_phone_ls');
+    localStorage.removeItem('vc_pending_ts');
+  } catch {
+    // storage unavailable, ignore
+  }
+  try {
+    sessionStorage.removeItem('vc_form_draft');
+    sessionStorage.removeItem('vc_lead_id');
+    sessionStorage.removeItem('vc_quick_order_items');
   } catch {
     // storage unavailable, ignore
   }

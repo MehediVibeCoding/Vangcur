@@ -6,26 +6,13 @@ import { STOCK_NOTIFY_EVENT } from '@/lib/productData';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
-import { validateName, sanitizePlainName, validatePhone, MAX_NAME_LEN } from '@/lib/security';
+import { validateName, sanitizePlainName, validatePhone, sanitizePhoneInput, PHONE_INPUT_MAX_CHARS, MAX_NAME_LEN } from '@/lib/security';
 import useHistoryModal from '@/lib/useHistoryModal';
 import { useT } from '@/lib/i18n/useT';
 
 interface NotifyDetail {
   id: number | string;
   name: string;
-}
-
-function filterPhoneInput(value: string): string {
-  const digits = value.replace(/\D/g, '');
-  let out = '';
-  for (const ch of digits) {
-    if (out.length >= 11) break;
-    if (out.length === 0) { if (ch === '0') out += ch; }
-    else if (out.length === 1) { if (ch === '1') out += ch; }
-    else if (out.length === 2) { if (ch >= '3' && ch <= '9') out += ch; }
-    else { out += ch; }
-  }
-  return out;
 }
 
 const lineIcon = {
@@ -113,7 +100,7 @@ export default function StockNotifyModal() {
       if (d && d.id !== undefined) {
         setDetail(d);
         setName(currentUser?.name || '');
-        setPhone(currentUser?.phone ? filterPhoneInput(currentUser.phone) : '');
+        setPhone(currentUser?.phone ? sanitizePhoneInput(currentUser.phone) : '');
         setNameErr('');
         setPhoneErr('');
       }
@@ -134,7 +121,7 @@ export default function StockNotifyModal() {
 
     let hasErr = false;
     const cleanName = sanitizePlainName(name.trim());
-    const cleanPhone = filterPhoneInput(phone.trim());
+    const cleanPhone = sanitizePhoneInput(phone.trim());
 
     if (!validateName(cleanName)) {
       setNameErr(lang === 'en' ? 'Enter a valid name (min 3 characters)' : 'কমপক্ষে ৩ অক্ষরের সঠিক নাম দিন');
@@ -282,9 +269,9 @@ export default function StockNotifyModal() {
                   <input
                     type="tel"
                     value={phone}
-                    maxLength={11}
+                    maxLength={PHONE_INPUT_MAX_CHARS}
                     onChange={(e) => {
-                      setPhone(filterPhoneInput(e.target.value));
+                      setPhone(sanitizePhoneInput(e.target.value));
                       if (phoneErr) setPhoneErr('');
                     }}
                     placeholder="01XXXXXXXXX"

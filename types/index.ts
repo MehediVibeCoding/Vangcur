@@ -233,6 +233,8 @@ export interface OrderPayload {
   paymentTxn: string;
   paymentLast4: string;
   fingerprintId: string;
+  /** (audit P2-B1) একই চেকআউট-চেষ্টার ডাবল-সাবমিট শনাক্ত করার ক্লায়েন্ট-জেনারেটেড কী (ঐচ্ছিক) */
+  idempotencyKey?: string;
   lang?: 'bn' | 'en';
   couponCode?: string;
 }
