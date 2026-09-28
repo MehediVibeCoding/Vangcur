@@ -3,46 +3,26 @@
 > Vangcur is a premier e-commerce brand in Bangladesh specializing in unique gadgets, RGB lighting, crystal items, lifestyle tech, and mobile accessories with fast home delivery and warranty support across all 64 districts.
 
 ## About Vangcur
-- Official Website: https://vangcur.com
-- Location: Dhaka, Bangladesh
-- Customer Support WhatsApp: +8801897804055
-- Customer Support Email: vangcurgadgets@gmail.com
-- Facebook: https://facebook.com/vangcurgadgets
-- Facebook Community Group: https://facebook.com/groups/vangcurgadgets
+- [Official Website](https://vangcur.com): Official e-commerce store for gadgets and lifestyle accessories in Bangladesh.
+- [Facebook Page](https://facebook.com/vangcurgadgets): Official Facebook page for updates, customer queries, and announcements.
+- [Facebook Community Group](https://facebook.com/groups/vangcurgadgets): Community group for gadget enthusiasts and customer discussions.
+- [Customer Support WhatsApp](https://wa.me/8801897804055): Direct WhatsApp helpline (+8801897804055) available 9:00 AM – 10:00 PM.
 
 ## Product Categories
-- RGB Lights & Neon Lights: Ambient LED decor, custom neon desk lights, and smart lighting solutions.
-- TWS Earbuds & Headphones: Wireless Bluetooth earphones, neckbands, and audio gear.
-- Power Banks & Charging Accessories: Fast chargers, high-capacity portable power banks, and durable cables.
-- Smart Watches: Health tracking, fitness monitoring, and lifestyle smartwatches.
-- Crystal Balls & Lamps: Decorative crystal art lamps, Moon lamps, and acrylic night lights.
-- Desk Fans & Humidifiers: Rechargeable cooling fans, desk mist humidifiers, and lifestyle electronics.
-- Unique Tools & Tech Gadgets: Portable mini printers, unique utility tools, and desktop gadgets.
+- [RGB & Neon Lights](https://vangcur.com/category/rgb): Ambient LED decor, custom neon desk lights, and smart lighting solutions.
+- [TWS Earbuds & Audio](https://vangcur.com/category/tws): Wireless Bluetooth earphones, neckbands, and audio gear.
+- [Power Banks & Charging](https://vangcur.com/category/powerbank): Fast chargers, high-capacity portable power banks, and durable cables.
+- [Smart Watches](https://vangcur.com/category/smartwatch): Health tracking, fitness monitoring, and lifestyle smartwatches.
+- [Crystal Balls & Lamps](https://vangcur.com/category/crystalball): Decorative crystal art lamps, Moon lamps, and acrylic night lights.
+- [Desk Fans & Humidifiers](https://vangcur.com/category/fan): Rechargeable cooling fans, desk mist humidifiers, and lifestyle electronics.
+- [Unique Tools & Gadgets](https://vangcur.com/category/unique): Portable mini printers, unique utility tools, and desktop gadgets.
 
-## Delivery & Shipping Policies
-- Coverage: Entire Bangladesh (all 64 districts).
-- Delivery Partner: Pathao Courier.
-- Inside Dhaka City: 1–2 business days (Shipping charge: 70 BDT).
-- Outside Dhaka / All Bangladesh: 2–4 business days (Shipping charge: 120 BDT).
-- Method: Closed-box home delivery with Cash on Delivery (COD) for the remaining balance.
-
-## Payment Policy
-- Orders below 8,000 BDT: A nominal advance of 200 BDT is verified via bKash Send Money to confirm orders and prevent fake bookings.
-- Orders 8,000 – 20,000 BDT: 5% base advance + 1.5% bKash transaction fee verified via bKash Send Money.
-- Orders above 20,000 BDT: Processed directly via official WhatsApp support for customized bulk logistics.
-- Remaining Balance: Cash on Delivery (COD) paid to the delivery agent upon parcel arrival.
-
-## Warranty & Replacement Policy
-- Replacement Warranty: Standard 7-day to 6-month replacement warranty on products (specified on each product page).
-- Condition: A continuous, unedited unboxing video recorded from the sealed parcel opening is mandatory for warranty and replacement claims.
-- Return Policy: Full free replacement provided at Vangcur's expense for manufacturing defects, transit damage, or incorrect products. No returns for change of mind or personal preference.
-
-## Important Links
-- Home & Product Catalog: https://vangcur.com
-- Special Offers & Deals: https://vangcur.com/offers
-- User Guide & Ordering Guide: https://vangcur.com/guide
-- Order & Shipping Policy: https://vangcur.com/shipping
-- Return & Refund Policy: https://vangcur.com/refund-policy
-- Terms & Conditions: https://vangcur.com/terms
-- Privacy Policy: https://vangcur.com/privacy-policy
-- Order Tracking: https://vangcur.com/track-order
+## Important Links & Policies
+- [Home & Catalog](https://vangcur.com): Home page featuring hero stories, curated categories, and live product grid.
+- [Special Offers & Hot Deals](https://vangcur.com/offers): Current promotional campaigns, flash sales, and hot deals of the week.
+- [User Guide & How to Order](https://vangcur.com/guide): Step-by-step instructions on searching items, using coupons, bKash payments, and tracking.
+- [Order & Shipping Policy](https://vangcur.com/shipping): Delivery timelines (1-2 days Dhaka, 2-4 days Nationwide), closed-box shipping, and courier rates.
+- [Return & Replacement Policy](https://vangcur.com/refund-policy): 100% free replacement guarantee for defects, transit damages, and mandatory unboxing video guidelines.
+- [Terms & Conditions](https://vangcur.com/terms): Digital commerce operating agreement, bKash advance verification, and sales terms.
+- [Privacy Policy](https://vangcur.com/privacy-policy): Personal data protection, SSL encryption, and consumer privacy commitments.
+- [Order Tracking](https://vangcur.com/track-order): Live parcel delivery and order status tracking across Bangladesh.
