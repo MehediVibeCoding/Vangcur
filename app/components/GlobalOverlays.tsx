@@ -111,18 +111,29 @@ export default function GlobalOverlays() {
   }, [router]);
 
   useEffect(() => {
-    // 🔒 authStore আগে হাইড্রেট করতে হবে — themeStore.hydrate() ভেতরে
-    // isLoggedIn() দিয়ে currentUser চেক করে, তাই ক্রম উল্টালে লগইন-করা
-    // ইউজারও প্রথম হাইড্রেটে "গেস্ট" ধরে লাইট থিমে রিসেট হয়ে যেত।
     useAuthStore.getState().hydrate();
     useCartStore.getState().hydrate();
     useWishlistStore.getState().hydrate();
     useThemeStore.getState().hydrate();
   }, []);
 
+  // 🚀 ব্রাউজার Idle অবস্থায় পৌঁছালে শান্তভাবে ব্যাকগ্রাউন্ডে রেয়ার ওভারলে মাউন্ট করা (৯৫ KB Unused JS ফিক্স)
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(timer);
+    let idleId: number | null = null;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(() => setMounted(true), { timeout: 3500 });
+    } else {
+      timerId = setTimeout(() => setMounted(true), 2500);
+    }
+
+    return () => {
+      if (idleId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId) clearTimeout(timerId);
+    };
   }, []);
 
   // 🔔 সেন্ট্রালাইজড টোস্ট ইভেন্ট লিসেনার
@@ -173,22 +184,13 @@ export default function GlobalOverlays() {
 
   const hideFloatingBadges = pathname?.startsWith('/checkout') ?? false;
   const isProductPage = pathname?.startsWith('/product/') ?? false;
-  // 🛠️ ফিক্স: প্রোগ্রামেটিক SEO গাইড/টেমপ্লেট পেজগুলো (পিলার, কম্প্যারিজন, ইনস্টল
-  // ইত্যাদি — app/[...segments]/) একটামাত্র root-level catch-all রুট দিয়ে চলে, তাই
-  // পাথনেম দেখে সরাসরি "গাইড পেজ কিনা" বোঝা যায় না — উল্টো যাচাই করা হচ্ছে: পাথটা
-  // "/" না, আর প্রথম সেগমেন্টও types/guides.ts-এর RESERVED_URL_PREFIXES তালিকার
-  // (account, product, checkout, ইত্যাদি — সব বাস্তব static রুট) কোনোটার সাথে না
-  // মিললেই সেটা catch-all-এ পড়া একটা গাইড পেজ (এই একই তালিকা routing conflict
-  // এড়াতে ইতিমধ্যে ব্যবহার হচ্ছে, তাই নতুন কোনো টেমপ্লেট/রুট যোগ হলেও এখানে হাত
-  // দেওয়ার দরকার নেই)। এই পেজগুলোতে ফ্লোটিং কার্ট ব্যাজ ও মেসেঞ্জার/কন্টাক্ট
-  // বাটন লাগবে না (Navbar-এই কার্ট আইকন আছে) — শুধু Back-to-Top থাকবে।
   const firstSegment = pathname?.split('/').filter(Boolean)[0] ?? '';
   const isGuidePage = pathname !== '/' && !RESERVED_URL_PREFIXES.includes(firstSegment);
 
   useEffect(() => {
-    const onOpenCart = () => setCartOpen(true);
-    const onOpenWish = () => setWishOpen(true);
-    const onOpenTrack = () => setTrackOpen(true);
+    const onOpenCart = () => { setMounted(true); setCartOpen(true); };
+    const onOpenWish = () => { setMounted(true); setWishOpen(true); };
+    const onOpenTrack = () => { setMounted(true); setTrackOpen(true); };
     window.addEventListener(OPEN_CART_EVENT, onOpenCart);
     window.addEventListener(OPEN_WISHLIST_EVENT, onOpenWish);
     window.addEventListener(OPEN_TRACK_ORDER_EVENT, onOpenTrack);
