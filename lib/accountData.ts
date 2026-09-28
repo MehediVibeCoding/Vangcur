@@ -119,7 +119,7 @@ const SCENERY_BY_STATE: Record<string, string> = {
              <path d="M 18,6 L 18,32 Q 18,35 15,35" stroke="#060910" stroke-width="2" fill="none" stroke-linecap="round" />
              <circle cx="16" cy="25" r="3.6" fill="#060910" />
              <path d="M 11,28 L 22,28 L 24,45 L 9,45 Z" fill="#060910" />
-             <path d="M 13,45 L 9,58 M 20,45 L 25,56" stroke="#060910" stroke-width="2.6" stroke-linecap="round" />
+             <path d="M 13,45 L 9,58 M 20,45 L 25,56" stroke="#060910" stroke-width="2.6" stroke-linecap="round" fill="none" />
            </g>
 
            <path d="M0,64 Q110,48 220,66 T400,58 L400,100 L0,100 Z" fill="#0B0F19" />
@@ -245,9 +245,6 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
     try {
       let userDistrict: string | null = null;
 
-      // 🆕 সবচেয়ে আগে "Complete Your Profile"-এ সেভ করা জেলা চেক করা হয় — এটাই
-      // সবচেয়ে নির্ভরযোগ্য উৎস, কারণ অর্ডার করার দরকার নেই, ইউজার নিজেই একবার
-      // সেট করে রাখলেই পাওয়া যায়।
       if (currentUser?.id) {
         try {
           const { data: profile } = await supabase
@@ -257,7 +254,7 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
             .maybeSingle();
           if (profile?.district) userDistrict = profile.district;
         } catch {
-          // profiles টেবিল অ্যাক্সেস না থাকলে নিচের fallback-এ চলে যাবে
+          // profiles fallback
         }
       }
 
@@ -304,59 +301,93 @@ export async function fetchIsRaining(supabase: SupabaseClient, currentUser: Curr
   }
 }
 
-export function formatLiveTimeDate(now: Date): string {
+export function formatLiveTimeDate(now: Date, lang: 'bn' | 'en' = 'bn'): string {
   let hours = now.getHours();
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
   hours = hours || 12;
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${hours}:${minutes} ${ampm} - ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthsBn = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  const monthStr = lang === 'en' ? monthsEn[now.getMonth()] : monthsBn[now.getMonth()];
+  return `${hours}:${minutes} ${ampm} — ${now.getDate()} ${monthStr} ${now.getFullYear()}`;
 }
 
-export function getFirstName(fullName?: string | null): string {
-  if (!fullName) return 'User';
+export function getFirstName(fullName?: string | null, lang: 'bn' | 'en' = 'bn'): string {
+  if (!fullName) return lang === 'en' ? 'User' : 'কাস্টমার';
   const clean = fullName.trim();
-  if (!clean) return 'User';
+  if (!clean) return lang === 'en' ? 'User' : 'কাস্টমার';
   const parts = clean.split(/\s+/);
-  return parts[0];
+  return parts[0] || (lang === 'en' ? 'User' : 'কাস্টমার');
 }
 
-export function getGreeting(user: CurrentUser | null, now: Date): string {
-  const firstName = getFirstName(user?.name);
+export function getGreeting(user: CurrentUser | null, now: Date, lang: 'bn' | 'en' = 'bn'): string {
+  const firstName = getFirstName(user?.name, lang);
   const day = now.getDay(); // 0 = Sunday, 5 = Friday
   const hour = now.getHours();
   const minute = now.getMinutes();
   const timeVal = hour + minute / 60;
 
+  if (lang === 'en') {
+    if (day === 5) {
+      if (timeVal >= 5 && timeVal < 14) {
+        return `Hi ${firstName}, Happy Friday & Jumma Mubarak 🕌`;
+      }
+      if (timeVal >= 14 && timeVal < 23) {
+        return `Hi ${firstName}, Happy Friday & Weekend Vibes ✨`;
+      }
+    }
+
+    if (timeVal >= 5 && timeVal < 8) {
+      return `Hi ${firstName}, Good Morning, Breakfast Time ☕`;
+    }
+    if (timeVal >= 8 && timeVal < 12) {
+      return `Hi ${firstName}, Good Morning, Productive Day Ahead ✨`;
+    }
+    if (timeVal >= 12 && timeVal < 14.5) {
+      return `Hi ${firstName}, Good Afternoon, Lunch Time 🍱`;
+    }
+    if (timeVal >= 14.5 && timeVal < 17.5) {
+      return `Hi ${firstName}, Good Afternoon, Tea Break Time 🍵`;
+    }
+    if (timeVal >= 17.5 && timeVal < 20) {
+      return `Hi ${firstName}, Good Evening, Relax & Unwind 🌆`;
+    }
+    if (timeVal >= 20 && timeVal < 23) {
+      return `Hi ${firstName}, Good Night, Dinner Time 🍽️`;
+    }
+    return `Hi ${firstName}, Late Night Owl, Rest Well 😴`;
+  }
+
+  // Bengali Greetings
   if (day === 5) {
     if (timeVal >= 5 && timeVal < 14) {
-      return `Hi ${firstName}, Happy Friday & Jumma Mubarak 🕌`;
+      return `জুম্মা মোবারক ও শুভ শুক্রবার, ${firstName} 🕌`;
     }
     if (timeVal >= 14 && timeVal < 23) {
-      return `Hi ${firstName}, Happy Friday & Weekend Vibes ✨`;
+      return `শুভ শুক্রবার ও ছুটির শুভেচ্ছা, ${firstName} ✨`;
     }
   }
 
   if (timeVal >= 5 && timeVal < 8) {
-    return `Hi ${firstName}, Good Morning, Breakfast Time ☕`;
+    return `শুভ সকাল, ${firstName} — নাস্তার সময় ☕`;
   }
   if (timeVal >= 8 && timeVal < 12) {
-    return `Hi ${firstName}, Good Morning, Productive Day Ahead ✨`;
+    return `শুভ সকাল, ${firstName} — সুন্দর একটি দিনের শুভেচ্ছা ✨`;
   }
   if (timeVal >= 12 && timeVal < 14.5) {
-    return `Hi ${firstName}, Good Afternoon, Lunch Time 🍱`;
+    return `শুভ দুপুর, ${firstName} — দুপুরের খাবারের সময় 🍱`;
   }
   if (timeVal >= 14.5 && timeVal < 17.5) {
-    return `Hi ${firstName}, Good Afternoon, Tea Break Time 🍵`;
+    return `শুভ বিকাল, ${firstName} — চা বিরতির সময় 🍵`;
   }
   if (timeVal >= 17.5 && timeVal < 20) {
-    return `Hi ${firstName}, Good Evening, Relax & Unwind 🌆`;
+    return `শুভ সন্ধ্যা, ${firstName} — কিছুটা রিল্যাক্স করার সময় 🌆`;
   }
   if (timeVal >= 20 && timeVal < 23) {
-    return `Hi ${firstName}, Good Night, Dinner Time 🍽️`;
+    return `শুভ রাত্রি, ${firstName} — রাতের খাবারের সময় 🍽️`;
   }
-  return `Hi ${firstName}, Late Night Owl, Rest Well 😴`;
+  return `দেরি রাতের শুভেচ্ছা, ${firstName} — ভালো ঘুম দিন 😴`;
 }
 
 function mapOrderRow(o: Record<string, any>): Order {
@@ -376,28 +407,16 @@ function mapOrderRow(o: Record<string, any>): Order {
 export async function fetchMyOrders(supabase: SupabaseClient, currentUser: CurrentUser | null): Promise<Order[]> {
   if (!currentUser) return [];
   try {
-    // 🚫 বাতিল (cancelled) ও রিজেক্টেড (rejected) অর্ডার ইচ্ছাকৃতভাবে বাদ —
-    // এগুলো কোনো না কোনো কারণে (যেমন ফেক অর্ডার সন্দেহ) বাতিল হয়েছে, তাই
-    // কাস্টমারের অর্ডার হিস্ট্রি/ট্র্যাকিংয়ে দেখানোর দরকার নেই। শুধু
-    // অ্যাডমিন-কনফার্মড/চলমান অর্ডারগুলোই (pending/confirmed/shipped/delivered)
-    // এখানে দেখানো হবে।
     let q = supabase
       .from('orders')
-      // 🛡️ ফিক্স (audit P2-A4): আগে select('*') পুরো সারি (fingerprint_id,
-      // payment_txn ইত্যাদি সহ) আনত, অথচ অর্ডার-লিস্ট কার্ড এর কিছুই
-      // ব্যবহার করে না (OrderCard.tsx-এ যাচাই করা)। ইনভয়েস ফ্লো আলাদা
-      // fetchFullOrder() দিয়ে নিজের প্রয়োজনীয় কলাম আনে, এখানে প্রভাব পড়ে না।
       .select('id, order_num, created_at, customer_name, customer_phone, status, total, items, user_id, customer_email')
       .not('status', 'in', '(cancelled,rejected)')
       .order('created_at', { ascending: false });
     if (currentUser.id) q = q.eq('user_id', currentUser.id);
     const { data, error } = await q;
-    // 🛡️ আসল এরর হলে এখানেই throw করা হচ্ছে — সত্যিকারের খালি ফলাফল (data = [])
-    // আর প্রকৃত ডাটাবেজ এরর আর একইভাবে গিলে ফেলা হচ্ছে না
     if (error) throw error;
     return (data || []).map(mapOrderRow);
   } catch (e) {
-    // 🛡️ আসল কারণটা কনসোলে লগ করা হচ্ছে, যাতে ভবিষ্যতে এই ধরনের সমস্যা চুপচাপ চাপা না পড়ে
     logWarn('[Vangcur] fetchMyOrders ব্যর্থ হয়েছে:', e);
     try {
       const all: Order[] = JSON.parse(localStorage.getItem('vc_orders') || '[]');
@@ -413,17 +432,10 @@ export async function fetchMyOrders(supabase: SupabaseClient, currentUser: Curre
 export function orderStats(orders: Order[]): OrderStats {
   const total = orders.length;
   const running = orders.filter((o) => ['pending', 'confirmed', 'shipped'].includes(o.status)).length;
-  // 🛡️ ফিক্স (audit P2-F1/F2): আগে completed-এ confirmed/shipped-ও গোনা হতো,
-  // ফলে total ≠ running + completed হতো এবং মেম্বারশিপ টায়ার (যেটা
-  // stats.completed পড়ে) ডেলিভারির আগেই বেড়ে যেত। এখন completed মানে
-  // সত্যিই ডেলিভার হওয়া অর্ডার।
   const completed = orders.filter((o) => o.status === 'delivered').length;
   return { total, running, completed };
 }
 
-/**
- * 🛡️ নিরাপদ প্রোফাইল নাম আপডেট (ডিপ স্যানিটাইজেশন ও লেন্থ লক)
- */
 export async function updateProfileName(supabase: SupabaseClient, currentUser: CurrentUser, newName: string): Promise<boolean> {
   const cleanName = sanitizePlainName(newName || '').trim();
   if (!validateName(cleanName)) {
@@ -442,9 +454,6 @@ export async function updateProfileName(supabase: SupabaseClient, currentUser: C
   } catch {
     // profiles table fallback
   }
-  // এখানে ইচ্ছাকৃতভাবে orders.customer_name আপডেট করা হয় না — অর্ডারের নাম
-  // অর্ডার-করার-সময়কারই থাকা দরকার (যাচাইয়ের জন্য), অ্যাকাউন্টের নাম
-  // বদলালে পুরনো অর্ডারের নাম বদলে যাওয়া উচিত না।
   return true;
 }
 
