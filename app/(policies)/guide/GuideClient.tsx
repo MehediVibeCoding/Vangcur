@@ -346,18 +346,18 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? <>Track Order Page (/track-order): Enter your Order Number (e.g. VC-1082) on our <Link href="/track-order" prefetch={true} className="font-bold text-brand-light hover:underline">Track Order</Link> page to monitor courier dispatch stages.</>
-              : <>অর্ডার ট্র্যাক পেজ: ওয়েবসাইটের <Link href="/track-order" prefetch={true} className="font-bold text-brand-light hover:underline">অর্ডার ট্র্যাক</Link> পেজে অর্ডার নম্বর লিখে লাইভ স্ট্যাটাস দেখা যায়।</>}
+              ? <>Track Order Page (/track-order): Monitor your recent browser orders automatically on our <Link href="/track-order" prefetch={true} className="font-bold text-brand-light hover:underline">Track Order</Link> page, or search easily with your order number.</>
+              : <>অর্ডার ট্র্যাক পেজ: ওয়েবসাইটের <Link href="/track-order" prefetch={true} className="font-bold text-brand-light hover:underline">অর্ডার ট্র্যাক</Link> পেজে বর্তমান ডিভাইসের সাম্প্রতিক অর্ডার স্বয়ংক্রিয়ভাবে ফুটে ওঠে অথবা অর্ডার নম্বর দিয়ে লাইভ স্ট্যাটাস দেখা যায়।</>}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? <>Account Dashboard (/account/orders): Logged-in customers can view their complete order history and track deliveries live across any device.</>
-              : <>অ্যাকাউন্ট ড্যাশবোর্ড: অ্যাকাউন্টে লগইন করা থাকলে যেকোনো ডিভাইস থেকে অর্ডার ইতিহাস ও লাইভ ট্র্যাকিং দেখা যায়।</>}
+              ? <>Account Dashboard (/account/orders): Logged-in customers can view their complete order history, track deliveries, and access digital invoices live across any device.</>
+              : <>অ্যাকাউন্ট ড্যাশবোর্ড: অ্যাকাউন্টে লগইন করা থাকলে যেকোনো ডিভাইস থেকে সম্পূর্ণ অর্ডার ইতিহাস, লাইভ ট্র্যাকিং ও ডিজিটাল মেমো দেখা যায়।</>}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'SMS Tracking: Pathao Courier sends an automated SMS with a tracking link once your parcel is dispatched.'
-              : 'কুরিয়ার এসএমএস: পার্সেল কুরিয়ারে বুকিং হওয়ামাত্র আপনার ফোনে এসএমএসে ট্র্যাকিং লিংক পৌঁছে যায়।'}
+              ? 'Automated Courier SMS: Pathao Courier automatically dispatches an SMS with a live tracking link to your phone number as soon as your parcel is booked.'
+              : 'কুরিয়ার এসএমএস ট্র্যাকিং: পার্সেল কুরিয়ারে বুকিং হওয়ামাত্র পাঠাও কুরিয়ারের পক্ষ থেকে স্বয়ংক্রিয়ভাবে আপনার ফোনে ট্র্যাকিং লিংক সহ এসএমএস পৌঁছে যায়।'}
           </PolicyBulletPoint>
         </ul>
       </PolicySection>
