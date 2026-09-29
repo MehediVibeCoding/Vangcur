@@ -18,6 +18,7 @@ import {
   type LegendaryVoucherStatus,
 } from '@/lib/membershipData';
 import { createClient } from '@/lib/supabase/client';
+import { getTierCouponCodeAction } from '@/app/actions/coupon';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { OPEN_MEMBERSHIP_EVENT } from '@/lib/uiEvents';
@@ -114,6 +115,7 @@ export default function MembershipModal({
   const [diamondCopyLabel, setDiamondCopyLabel] = useState('Copy');
   const [legendaryVoucher, setLegendaryVoucher] = useState<LegendaryVoucherStatus | null>(null);
   const [isClaimingLegendary, setIsClaimingLegendary] = useState(false);
+  const [diamondCode, setDiamondCode] = useState<string | null>(null);
 
   const isControlled = typeof propsIsOpen === 'boolean';
   const isEventOpen = eventCompletedCount !== null;
@@ -192,6 +194,20 @@ export default function MembershipModal({
   const isSelectedTierUnlocked = useMemo(() => {
     return effectiveCount >= selectedTier.min;
   }, [effectiveCount, selectedTier]);
+
+  useEffect(() => {
+    if (!isModalOpen || selectedTierKey !== 'diamond' || !isSelectedTierUnlocked) {
+      setDiamondCode(null);
+      return;
+    }
+    let cancelled = false;
+    getTierCouponCodeAction('diamond').then((res) => {
+      if (!cancelled) setDiamondCode(res.ok && res.code ? res.code : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isModalOpen, selectedTierKey, isSelectedTierUnlocked]);
 
   useEffect(() => {
     if (!selectedTierKey) return;
@@ -332,7 +348,7 @@ export default function MembershipModal({
               </div>
             </div>
 
-            <div className="no-scrollbar relative z-10 flex gap-2 overflow-x-auto border-b border-ink/10 bg-white/60 px-4 py-2.5">
+            <div className="no-scrollbar relative z-10 flex gap-2 overflow-x-auto overscroll-x-contain border-b border-ink/10 bg-white/60 px-4 py-2.5 [touch-action:pan-x]">
               {MEMBERSHIP_TIERS.map((tier) => {
                 const isSelected = tier.key === selectedTierKey;
                 const isUnlocked = effectiveCount >= tier.min;
@@ -649,12 +665,12 @@ export default function MembershipModal({
                       <div className="mt-2 flex items-center justify-between rounded-xl border border-dashed border-brand-light/50 bg-white px-3.5 py-2">
                         {isSelectedTierUnlocked ? (
                           <span className="font-body text-sm font-extrabold tracking-wider text-brand-light">
-                            DIAMOND150
+                            {diamondCode ?? '••••••••••'}
                           </span>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="font-body text-sm font-extrabold tracking-wider text-brand-light/60 blur-[3px] select-none">
-                              DIAMOND150
+                            <span className="font-body text-sm font-extrabold tracking-wider text-brand-light/60 blur-[3px] select-none" aria-hidden="true">
+                              ••••••••••
                             </span>
                             <span className="rounded-md bg-amber-100 px-2 py-0.5 font-body text-[10px] font-bold text-amber-800">
                               🔒 {lang === 'en' ? 'Locked' : 'লকড'}
@@ -665,8 +681,9 @@ export default function MembershipModal({
                         {isSelectedTierUnlocked ? (
                           <motion.button
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => handleCopyCode('DIAMOND150', true)}
-                            className="flex items-center gap-1 rounded-full bg-brand-light px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs hover:bg-brand-light-hover"
+                            onClick={() => diamondCode && handleCopyCode(diamondCode, true)}
+                            disabled={!diamondCode}
+                            className="flex items-center gap-1 rounded-full bg-brand-light px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs hover:bg-brand-light-hover disabled:opacity-50"
                           >
                             {diamondCopyLabel === 'Copy' ? <IconCopy /> : <IconCheck />}
                             <span>{diamondCopyLabel}</span>

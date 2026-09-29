@@ -1,5 +1,6 @@
 let lockCount = 0;
 let touchStartY = 0;
+let touchStartX = 0;
 
 function findScrollableAncestor(start: EventTarget | null): Element | null {
   let node: Element | null = start instanceof Element ? start : null;
@@ -16,6 +17,24 @@ function findScrollableAncestor(start: EventTarget | null): Element | null {
 // গেলে আরও স্ক্রল করলে সেটা যেন বাইরের মূল পেজে "leak" করে চলে না যায়
 // (browser-এর native scroll chaining), তাই বাউন্ডারিতে থাকলে পরের স্ক্রলযোগ্য
 // পূর্বপুরুষ (থাকলে) খোঁজা হয়, না থাকলে ব্লক করে দেওয়া হয়।
+// ডানে-বামে (অনুভূমিক) স্ক্রলযোগ্য পূর্বপুরুষ — যেমন মডালের ট্যাব স্ট্রিপ। আগে শুধু
+// উপর-নিচ হিসাব হতো, তাই অনুভূমিক সোয়াইপও preventDefault হয়ে ট্যাব আটকে যেত।
+function findHorizontalScrollTarget(start: EventTarget | null, delta: number): Element | null {
+  let node: Element | null = start instanceof Element ? start : null;
+  while (node && node !== document.documentElement) {
+    const style = window.getComputedStyle(node);
+    const canScrollX = /(auto|scroll)/.test(style.overflowX) && node.scrollWidth > node.clientWidth;
+    if (canScrollX) {
+      const atLeft = node.scrollLeft <= 0;
+      const atRight = node.scrollWidth - node.scrollLeft <= node.clientWidth + 1;
+      const blocked = (delta < 0 && atLeft) || (delta > 0 && atRight);
+      if (!blocked) return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
 function findUsableScrollTarget(start: EventTarget | null, delta: number): Element | null {
   let node = findScrollableAncestor(start);
   while (node) {
@@ -34,12 +53,19 @@ function onWheel(e: WheelEvent) {
 
 function onTouchStart(e: TouchEvent) {
   touchStartY = e.touches[0]?.clientY ?? 0;
+  touchStartX = e.touches[0]?.clientX ?? 0;
 }
 
 function onTouchMove(e: TouchEvent) {
   const touch = e.touches[0];
   if (!touch) return;
   const delta = touchStartY - touch.clientY; // আঙুল উপরে সরলে (স্ক্রল-ডাউন) পজিটিভ
+  const deltaX = touchStartX - touch.clientX;
+  if (Math.abs(deltaX) > Math.abs(delta)) {
+    // মূলত অনুভূমিক সোয়াইপ — অনুভূমিকভাবে স্ক্রলযোগ্য এলিমেন্ট থাকলে ছেড়ে দিই
+    if (!findHorizontalScrollTarget(e.target, deltaX)) e.preventDefault();
+    return;
+  }
   if (!findUsableScrollTarget(e.target, delta)) e.preventDefault();
 }
 
