@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
   prodInCat, fetchCustomProducts, mergeCustomProducts, fetchProductsByIds,
-  findProdBySlug,
+  findProdBySlug, productHref,
   startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
@@ -830,6 +830,17 @@ export default function ProductDetailClient({
 
   const discountPct = prod.old && prod.old > prod.price ? Math.round((1 - prod.price / prod.old) * 100) : 0;
 
+  // কালার ভেরিয়েশন: একই color_group_id-ওয়ালা প্রোডাক্টগুলো (নিজেকে সহ) —
+  // prods-এ পুরো ক্যাটালগ আগে থেকেই আছে বলে আলাদা কোনো কোয়েরি লাগে না।
+  // স্টক শেষ থাকা সিবলিং একদম বাদ, কিন্তু বর্তমান প্রোডাক্ট নিজে সবসময় থাকবে।
+  const colorVariants = useMemo(() => {
+    if (!prod.colorGroupId) return [];
+    const currentIdStr = String(prod.id);
+    return prods.filter((p) => (
+      p.colorGroupId === prod.colorGroupId && (String(p.id) === currentIdStr || p.stock > 0)
+    ));
+  }, [prods, prod.colorGroupId, prod.id]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-bg/25 via-white to-white overflow-x-hidden">
       <Navbar {...navbarProps} />
@@ -902,6 +913,45 @@ export default function ProductDetailClient({
               </>
             )}
           </div>
+
+          {colorVariants.length > 1 && (
+            <div className="mb-4">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted">
+                {t('উপলব্ধ কালার')}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {colorVariants.map((v) => {
+                  const isCurrent = String(v.id) === String(prod.id);
+                  const dot = (
+                    <span
+                      className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10"
+                      style={{ backgroundColor: v.colorSwatch || '#D1D5DB' }}
+                    />
+                  );
+                  const label = v.colorName || v.name;
+                  return isCurrent ? (
+                    <span
+                      key={v.id}
+                      className="flex items-center gap-1.5 rounded-full border-2 border-brand-light bg-brand-bg/25 px-3 py-1.5 text-[12.5px] font-bold text-ink"
+                    >
+                      {dot}
+                      {label}
+                    </span>
+                  ) : (
+                    <Link
+                      key={v.id}
+                      href={productHref(v)}
+                      prefetch
+                      className="flex items-center gap-1.5 rounded-full border border-border-base bg-white px-3 py-1.5 text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:border-brand-light/50 hover:bg-brand-bg/10"
+                    >
+                      {dot}
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {!sold && (
             <div className="mb-3 flex items-center gap-1.5 text-[12.5px] font-semibold">

@@ -84,6 +84,9 @@ interface RawCustomProduct {
   og_description?: string | null;
   quick_specs_text?: string | null;
   packaging_content?: string | null;
+  color_group_id?: string | null;
+  color_name?: string | null;
+  color_swatch?: string | null;
 }
 
 export function mapCustomProduct(p: RawCustomProduct): Product {
@@ -132,11 +135,14 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
     ogDescription: p.og_description || '',
     quickSpecsText: p.quick_specs_text || '',
     packagingContent: p.packaging_content || '',
+    colorGroupId: p.color_group_id || null,
+    colorName: p.color_name || null,
+    colorSwatch: p.color_swatch || null,
     _detailLoaded: !!(p.long_desc || p.features || p.faqs),
   };
 }
 
-const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs';
+const GRID_COLS = 'id,cat,cats,name,name_bn,price,old,stock,badge,warranty,rating,imgs,specs,color_group_id,color_name,color_swatch';
 const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,power_info,info_boxes,seo_h1,meta_title,meta_description,og_description,quick_specs_text,packaging_content`;
 
 const QUERY_TIMEOUT_MS = 4000;

@@ -81,7 +81,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description = p.metaDescription || autoDescription;
   const ogDescription = p.ogDescription || description;
 
-  const firstImg = p.imgs.find((im) => typeof im === 'string' && im.startsWith('http'));
   const canonicalSlug = `${makeSlug(p.name)}-${p.id}`;
 
   return {
@@ -93,7 +92,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url: `${SITE_URL}/product/${canonicalSlug}`,
       title,
       description: ogDescription,
-      images: firstImg ? [{ url: firstImg, width: 800, height: 800, alt: p.name }] : undefined,
       locale: lang === 'en' ? 'en_US' : 'bn_BD',
       siteName: 'Vangcur',
     },
@@ -101,7 +99,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: 'summary_large_image',
       title,
       description: ogDescription,
-      images: firstImg ? [firstImg] : undefined,
     },
   };
 }

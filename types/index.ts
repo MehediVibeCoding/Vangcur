@@ -38,6 +38,9 @@ export interface Product {
   ogDescription?: string;
   quickSpecsText?: string;
   packagingContent?: string;
+  colorGroupId?: string | null;
+  colorName?: string | null;
+  colorSwatch?: string | null;
   _detailLoaded: boolean;
 }
 
