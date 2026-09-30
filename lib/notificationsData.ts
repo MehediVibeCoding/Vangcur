@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchProductById, productHref } from './productData';
 import { getStockNotifications } from './accountData';
-import { MEMBERSHIP_TIERS, getTier, getTierSpinReward } from './membershipData';
+import { MEMBERSHIP_TIERS, getTier, getMyTierRewards } from './membershipData';
 import type { Order, DraftOrder } from '@/types';
 
 export interface NotificationItem {
@@ -216,17 +216,22 @@ export function buildTierUpgradeNotification(completedOrders: number, lang: 'bn'
 /**
  * স্পিন-হুইল থেকে পাওয়া গোপন ডিসকাউন্ট কোড, যেটা এক্সপায়ার হয়ে যাওয়ার
  * আগেই ইউজারকে জানানো দরকার।
+ * 🛡️ ফিক্স: আগে localStorage থেকে পড়া হতো (ডিভাইস বদলালে/ক্যাশ মুছলে ভুল
+ * দেখাতো), এখন get_my_tier_rewards() RPC দিয়ে ডাটাবেজ থেকে আসল অবস্থা আনা হয়।
  */
-export function buildSecretCodeNotifications(lang: 'bn' | 'en'): NotificationItem[] {
+export async function buildSecretCodeNotifications(supabase: SupabaseClient, lang: 'bn' | 'en'): Promise<NotificationItem[]> {
   const items: NotificationItem[] = [];
+  const rewards = await getMyTierRewards(supabase);
+  if (!rewards.ok) return items;
   for (const tier of MEMBERSHIP_TIERS) {
-    const reward = getTierSpinReward(tier.key);
-    if (!reward) continue;
-    const hoursLeft = Math.max(1, Math.ceil((reward.expiresAt - Date.now()) / (60 * 60 * 1000)));
+    const state = tier.key === 'silver' ? rewards.silver : tier.key === 'gold' ? rewards.gold : undefined;
+    if (!state || state.state !== 'active' || !state.code || !state.expires_at) continue;
+    const expiresAtMs = new Date(state.expires_at).getTime();
+    const hoursLeft = Math.max(1, Math.ceil((expiresAtMs - Date.now()) / (60 * 60 * 1000)));
     items.push({
-      id: `code:${tier.key}:${reward.code}`,
+      id: `code:${tier.key}:${state.code}`,
       type: 'code',
-      title: lang === 'en' ? `Code ${reward.code} is waiting` : `কোড ${reward.code} অপেক্ষা করছে`,
+      title: lang === 'en' ? `Code ${state.code} is waiting` : `কোড ${state.code} অপেক্ষা করছে`,
       subtitle: lang === 'en' ? `Expires in ~${hoursLeft}h — use it before checkout` : `প্রায় ${hoursLeft} ঘণ্টা পর এক্সপায়ার হবে — চেকআউটে ব্যবহার করুন`,
       href: '/account',
     });

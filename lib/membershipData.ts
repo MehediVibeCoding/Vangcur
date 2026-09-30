@@ -209,64 +209,146 @@ export async function getLegendaryVoucherStatus(supabase: SupabaseClient): Promi
   }
 }
 
-const SPIN_STORAGE_PREFIX = 'vc_tier_spin_';
+// ══════════════════════════════════════════════════════════════════════
+// 🛡️ ফিক্স (কুপন সিকিউরিটি রিডিজাইন, ২০২৬-০৯-৩০): আগে "আমি স্পিন করেছি
+// কিনা / আমার রিওয়ার্ড এখনো সক্রিয় কিনা" — এই পুরো UI স্টেট শুধু ব্রাউজারের
+// localStorage থেকে পড়া হতো। ফোন বদলালে বা ক্যাশ মুছলে ইউজার তার জেতা
+// পুরস্কার "হারিয়ে" ফেলত (আসলে হারাতো না, কারণ চেকআউট সবসময় DB-ই চেক করত,
+// কিন্তু UI ভুল দেখাতো)। এখন থেকে ডাটাবেজই (get_my_tier_rewards RPC) একমাত্র
+// সত্য উৎস — localStorage সম্পূর্ণ বাদ। get_my_tier_rewards() প্রতিটা
+// tier_key-এর জন্য একটা করে অবস্থা ফেরত দেয়:
+//   locked    → এখনো ওই লেভেলে পৌঁছায়নি
+//   available → লেভেলে আছে, এখনো স্পিন করেনি
+//   active    → স্পিন করেছে, কুপন এখনো সক্রিয় ও মেয়াদ আছে
+//   expired   → স্পিন করেছে কিন্তু ২৪ ঘণ্টার মেয়াদ শেষ (আবার চালু করা যাবে)
+//   used      → কুপনটা ইতিমধ্যে অর্ডারে ব্যবহার হয়ে গেছে (স্থায়ীভাবে শেষ)
+//   disabled  → এডমিন কুপনটা নিষ্ক্রিয় করে দিয়েছে
+//   missed    → ইউজার এই লেভেল পার হয়ে উপরের লেভেলে চলে গেছে, স্পিন না করেই
+// ══════════════════════════════════════════════════════════════════════
 
-export function getTierSpinReward(tierKey: string): TierSpinReward | null {
-  if (typeof window === 'undefined') return null;
+export interface TierRewardServerState {
+  tier: string;
+  state: 'locked' | 'available' | 'active' | 'expired' | 'used' | 'disabled' | 'missed';
+  can_reactivate?: boolean;
+  index?: number;
+  label?: string;
+  code?: string;
+  discount_type?: string;
+  discount_value?: number;
+  min_order_amount?: number;
+  expires_at?: string;
+  reactivations?: number;
+}
+
+export interface MyTierRewards {
+  ok: boolean;
+  error?: string;
+  delivered?: number;
+  current_tier?: string | null;
+  silver?: TierRewardServerState;
+  gold?: TierRewardServerState;
+}
+
+/** মডাল খোলার সময় (এবং স্পিন/রিঅ্যাক্টিভেটের ঠিক আগে) ইউজারের আসল, ডাটাবেজ-ভিত্তিক অবস্থা আনে। */
+export async function getMyTierRewards(supabase: SupabaseClient): Promise<MyTierRewards> {
   try {
-    const raw = localStorage.getItem(`${SPIN_STORAGE_PREFIX}${tierKey}`);
-    if (!raw) return null;
-    const data: TierSpinReward = JSON.parse(raw);
-    if (Date.now() > data.expiresAt) {
-      localStorage.removeItem(`${SPIN_STORAGE_PREFIX}${tierKey}`);
-      return null;
-    }
-    return data;
-  } catch {
-    return null;
+    const { data, error } = await supabase.rpc('get_my_tier_rewards');
+    if (error || !data) return { ok: false, error: error?.message || 'unknown_error' };
+    return data as MyTierRewards;
+  } catch (e) {
+    return { ok: false, error: (e as Error)?.message || 'network_error' };
   }
 }
 
-export function saveTierSpinReward(
+/** "আবার চালু করুন" — একই জেতা পুরস্কার আরেকটা ২৪ ঘণ্টার জন্য সক্রিয় করে, নতুন করে ঘোরায় না। */
+export async function reactivateTierReward(supabase: SupabaseClient, tierKey: string): Promise<SpinServerResult> {
+  try {
+    const { data, error } = await supabase.rpc('reactivate_tier_reward', { p_tier_key: tierKey });
+    if (error || !data || data.ok !== true) {
+      return { ok: false, error: data?.error || error?.message || 'unknown_error' };
+    }
+    return {
+      ok: true,
+      alreadySpun: true,
+      index: Number(data.index),
+      label: data.label,
+      code: data.code,
+      discountType: data.discount_type,
+      discountValue: Number(data.discount_value),
+      minOrderAmount: Number(data.min_order_amount),
+      expiresAt: data.expires_at,
+    };
+  } catch (e) {
+    return { ok: false, error: (e as Error)?.message || 'network_error' };
+  }
+}
+
+/** সার্ভারের raw স্টেট + এখানকার স্লাইস-আর্ট (রং/লেবেল ইত্যাদি) মিলিয়ে UI-এর জন্য দরকারি একটা অবজেক্ট বানায়। */
+export interface ActiveTierReward {
+  tierKey: string;
+  code: string;
+  slice: SpinSlice;
+  expiresAt: number; // ms epoch
+  reactivations: number;
+}
+
+export interface TierSpinUIState {
+  status: TierRewardServerState['state'];
+  reward?: ActiveTierReward;
+  canReactivate: boolean;
+}
+
+export function buildTierSpinUIState(
   tierKey: string,
-  slice: SpinSlice,
-  serverCode?: string,
-  serverExpiresAtIso?: string,
-): TierSpinReward {
-  const now = Date.now();
-  // 🛡️ ফিক্স (audit P1-19): সার্ভার (spin_tier_wheel RPC) থেকে আসল, checkout-এ
-  // কাজ করা কোড ও মেয়াদ দেওয়া থাকলে সেটাই ব্যবহার করা হচ্ছে। আগে এখানে যে
-  // কোড বানানো হতো (SAVE100-GOLD ইত্যাদি) তা কখনো coupons টেবিলে থাকত না,
-  // তাই checkout-এ সবসময় "কুপন কোডটি সঠিক নয়" আসত।
-  const expiresAt = serverExpiresAtIso ? new Date(serverExpiresAtIso).getTime() : now + 24 * 60 * 60 * 1000;
-
-  let code = serverCode;
-  if (!code) {
-    code = `VC-${tierKey.toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-    if (slice.type === 'free_shipping') {
-      code = `FREESHIP-${tierKey.toUpperCase()}`;
-    } else if (slice.value > 0) {
-      code = `SAVE${slice.value}-${tierKey.toUpperCase()}`;
-    }
+  slices: SpinSlice[],
+  serverState?: TierRewardServerState,
+): TierSpinUIState {
+  if (!serverState) return { status: 'locked', canReactivate: false };
+  const { state } = serverState;
+  if (state === 'active' || state === 'expired') {
+    const slice = (typeof serverState.index === 'number' && slices.find((s) => s.id === serverState.index)) || slices[0];
+    return {
+      status: state,
+      canReactivate: !!serverState.can_reactivate,
+      reward: {
+        tierKey,
+        code: serverState.code || '',
+        slice,
+        expiresAt: serverState.expires_at ? new Date(serverState.expires_at).getTime() : Date.now(),
+        reactivations: serverState.reactivations || 0,
+      },
+    };
   }
-
-  const reward: TierSpinReward = {
-    tierKey,
-    code,
-    slice,
-    wonAt: now,
-    expiresAt,
-  };
-
-  try {
-    localStorage.setItem(`${SPIN_STORAGE_PREFIX}${tierKey}`, JSON.stringify(reward));
-  } catch {
-    // ignore
-  }
-
-  return reward;
+  return { status: state, canReactivate: false };
 }
 
-export function hasUserSpunTier(tierKey: string): boolean {
-  return getTierSpinReward(tierKey) !== null;
+/** স্পিন/রিঅ্যাক্টিভেট সফল হওয়ার পর ফেরত-আসা ফলাফল দিয়ে লোকাল state প্যাচ করার জন্য। */
+export function patchTierRewardState(
+  prev: MyTierRewards | null,
+  tierKey: 'silver' | 'gold',
+  result: SpinServerResult,
+): MyTierRewards {
+  const base: MyTierRewards = prev || { ok: true };
+  const patched: TierRewardServerState = {
+    tier: tierKey,
+    state: 'active',
+    index: result.index,
+    label: result.label,
+    code: result.code,
+    discount_type: result.discountType,
+    discount_value: result.discountValue,
+    min_order_amount: result.minOrderAmount,
+    expires_at: result.expiresAt,
+    reactivations: ((tierKey === 'silver' ? base.silver?.reactivations : base.gold?.reactivations) || 0) + (result.alreadySpun ? 1 : 0),
+    can_reactivate: false,
+  };
+  return { ...base, [tierKey]: patched };
+}
+
+/** সময় ফুরালে (কাউন্টডাউন ০ হলে) লোকাল state-কে 'expired'-এ নামিয়ে দেওয়ার জন্য, রিফেচ ছাড়াই। */
+export function markTierRewardExpiredLocally(prev: MyTierRewards | null, tierKey: 'silver' | 'gold'): MyTierRewards | null {
+  if (!prev) return prev;
+  const current = tierKey === 'silver' ? prev.silver : prev.gold;
+  if (!current || current.state !== 'active') return prev;
+  return { ...prev, [tierKey]: { ...current, state: 'expired', can_reactivate: true } };
 }
