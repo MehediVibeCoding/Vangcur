@@ -8,14 +8,19 @@ import {
   crownSVG,
   SILVER_SPIN_SLICES,
   GOLD_SPIN_SLICES,
-  getTierSpinReward,
-  saveTierSpinReward,
   spinTierWheel,
   claimLegendaryReward,
   getLegendaryVoucherStatus,
+  getMyTierRewards,
+  reactivateTierReward,
+  buildTierSpinUIState,
+  patchTierRewardState,
+  markTierRewardExpiredLocally,
   type SpinSlice,
-  type TierSpinReward,
   type LegendaryVoucherStatus,
+  type MyTierRewards,
+  type TierSpinUIState,
+  type ActiveTierReward,
 } from '@/lib/membershipData';
 import { createClient } from '@/lib/supabase/client';
 import { getTierCouponCodeAction } from '@/app/actions/coupon';
@@ -89,6 +94,60 @@ function IconSparkles() {
   );
 }
 
+function TierEndedMessage({ lang, variant }: { lang: 'bn' | 'en'; variant: 'missed' | 'used' | 'disabled' }) {
+  const copy: Record<typeof variant, { bn: string; en: string }> = {
+    missed: { bn: 'এই লেভেলের সুযোগ শেষ হয়ে গেছে', en: "This tier's spin opportunity has ended" },
+    used: { bn: 'এই পুরস্কারটি আপনি ইতিমধ্যে ব্যবহার করে ফেলেছেন', en: 'You have already used this reward' },
+    disabled: { bn: 'এই মুহূর্তে এই সুবিধাটি ব্যবহারযোগ্য নয়', en: 'This reward is currently unavailable' },
+  };
+  return (
+    <div className="rounded-[16px] border border-border-base bg-white/70 p-5 text-center shadow-xs">
+      <div className="font-body text-[13px] font-bold text-muted">
+        {lang === 'en' ? copy[variant].en : copy[variant].bn}
+      </div>
+    </div>
+  );
+}
+
+function TierExpiredCard({
+  lang,
+  reward,
+  isReactivating,
+  onReactivate,
+  accentFrom,
+  accentTo,
+}: {
+  lang: 'bn' | 'en';
+  reward: ActiveTierReward;
+  isReactivating: boolean;
+  onReactivate: () => void;
+  accentFrom: string;
+  accentTo: string;
+}) {
+  return (
+    <div className="rounded-[16px] border border-amber-300/80 bg-amber-50/90 p-4 text-center shadow-xs animate-section-reveal">
+      <div className="font-body text-[14px] font-extrabold text-amber-900">
+        {lang === 'en' ? `Your ${reward.slice.labelEn} reward expired` : `আপনার ${reward.slice.label} পুরস্কারের মেয়াদ শেষ হয়ে গেছে`}
+      </div>
+      <p className="mt-1 font-body text-[11.5px] text-amber-800">
+        {lang === 'en'
+          ? 'Reactivate to get another 24 hours to use the same reward'
+          : 'আবার চালু করলে একই পুরস্কার ব্যবহারের জন্য আরও ২৪ ঘণ্টা পাবেন'}
+      </p>
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        disabled={isReactivating}
+        onClick={onReactivate}
+        className={`mt-3.5 rounded-full bg-gradient-to-r ${accentFrom} ${accentTo} px-5 py-2 font-body text-xs font-extrabold text-white shadow-sh2 disabled:opacity-60`}
+      >
+        {isReactivating
+          ? (lang === 'en' ? 'Reactivating…' : 'চালু হচ্ছে…')
+          : (lang === 'en' ? 'Reactivate reward' : 'আবার চালু করুন')}
+      </motion.button>
+    </div>
+  );
+}
+
 function formatCountdown(targetMs: number): string {
   const diff = Math.max(0, targetMs - Date.now());
   const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -109,13 +168,14 @@ export default function MembershipModal({
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinRotation, setSpinRotation] = useState(0);
-  const [activeReward, setActiveReward] = useState<TierSpinReward | null>(null);
+  const [tierRewards, setTierRewards] = useState<MyTierRewards | null>(null);
   const [countdownText, setCountdownText] = useState('');
   const [copyCodeLabel, setCopyCodeLabel] = useState('Copy');
   const [diamondCopyLabel, setDiamondCopyLabel] = useState('Copy');
   const [legendaryVoucher, setLegendaryVoucher] = useState<LegendaryVoucherStatus | null>(null);
   const [isClaimingLegendary, setIsClaimingLegendary] = useState(false);
   const [diamondCode, setDiamondCode] = useState<string | null>(null);
+  const [reactivatingTier, setReactivatingTier] = useState<'silver' | 'gold' | null>(null);
 
   const isControlled = typeof propsIsOpen === 'boolean';
   const isEventOpen = eventCompletedCount !== null;
@@ -128,11 +188,18 @@ export default function MembershipModal({
     // আছে, খরচ নগণ্য আর ট্যাব বদলালে আলাদা করে আর কল করতে হয় না।
     if (!isModalOpen) {
       setLegendaryVoucher(null);
+      setTierRewards(null);
       return;
     }
     let cancelled = false;
     getLegendaryVoucherStatus(supabase).then((res) => {
       if (!cancelled) setLegendaryVoucher(res);
+    });
+    // 🛡️ সিলভার/গোল্ড স্পিনের আসল অবস্থা (জিতেছে/সক্রিয়/মেয়াদ শেষ/ব্যবহৃত/
+    // সুযোগ শেষ) মডাল খোলার সাথে সাথেই ডাটাবেজ থেকে আনা হচ্ছে — localStorage
+    // আর নয়, তাই ডিভাইস বদলালে বা ক্যাশ মুছলেও সঠিক অবস্থাই দেখাবে।
+    getMyTierRewards(supabase).then((res) => {
+      if (!cancelled) setTierRewards(res);
     });
     return () => {
       cancelled = true;
@@ -211,25 +278,39 @@ export default function MembershipModal({
 
   useEffect(() => {
     if (!selectedTierKey) return;
-    const existing = getTierSpinReward(selectedTierKey);
-    setActiveReward(existing);
     setSpinRotation(0);
   }, [selectedTierKey]);
 
+  const silverUIState: TierSpinUIState = useMemo(
+    () => buildTierSpinUIState('silver', SILVER_SPIN_SLICES, tierRewards?.silver),
+    [tierRewards]
+  );
+  const goldUIState: TierSpinUIState = useMemo(
+    () => buildTierSpinUIState('gold', GOLD_SPIN_SLICES, tierRewards?.gold),
+    [tierRewards]
+  );
+  const currentTierUIState: TierSpinUIState | null =
+    selectedTier.key === 'silver' ? silverUIState : selectedTier.key === 'gold' ? goldUIState : null;
+
   useEffect(() => {
-    if (!activeReward) return;
-    setCountdownText(formatCountdown(activeReward.expiresAt));
+    if (!currentTierUIState || currentTierUIState.status !== 'active' || !currentTierUIState.reward) {
+      setCountdownText('');
+      return;
+    }
+    const expiresAt = currentTierUIState.reward.expiresAt;
+    const tierKey = selectedTier.key as 'silver' | 'gold';
+    setCountdownText(formatCountdown(expiresAt));
     const timer = setInterval(() => {
-      const remaining = activeReward.expiresAt - Date.now();
+      const remaining = expiresAt - Date.now();
       if (remaining <= 0) {
-        setActiveReward(null);
+        setTierRewards((prev) => markTierRewardExpiredLocally(prev, tierKey));
         clearInterval(timer);
       } else {
-        setCountdownText(formatCountdown(activeReward.expiresAt));
+        setCountdownText(formatCountdown(expiresAt));
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [activeReward]);
+  }, [currentTierUIState?.status, currentTierUIState?.reward?.expiresAt, selectedTier.key]);
 
   const close = useCallback(() => {
     if (propsOnClose) propsOnClose();
@@ -262,7 +343,8 @@ export default function MembershipModal({
   }, [lang, t]);
 
   const handleTriggerSpin = async (slices: SpinSlice[]) => {
-    if (isSpinning || activeReward || !isSelectedTierUnlocked) return;
+    const tierKey = selectedTier.key as 'silver' | 'gold';
+    if (isSpinning || currentTierUIState?.status !== 'available') return;
 
     setIsSpinning(true);
 
@@ -294,10 +376,26 @@ export default function MembershipModal({
 
     setTimeout(() => {
       setIsSpinning(false);
-      const saved = saveTierSpinReward(selectedTier.key, slice, result.code, result.expiresAt);
-      setActiveReward(saved);
+      setTierRewards((prev) => patchTierRewardState(prev, tierKey, result));
       showToast(lang === 'en' ? `Congratulations! You won ${slice.labelEn}!` : `অভিনন্দন! আপনি ${slice.label} জিতেছেন!`);
     }, 3900);
+  };
+
+  const handleReactivate = async (tierKey: 'silver' | 'gold') => {
+    if (reactivatingTier) return;
+    setReactivatingTier(tierKey);
+    const result = await reactivateTierReward(supabase, tierKey);
+    setReactivatingTier(null);
+    if (!result.ok) {
+      showToast(result.error || (lang === 'en' ? 'Something went wrong, please try again' : 'একটু সমস্যা হয়েছে, আবার চেষ্টা করুন'));
+      return;
+    }
+    setTierRewards((prev) => patchTierRewardState(prev, tierKey, result));
+    showToast(
+      lang === 'en'
+        ? 'Reactivated! You have 24 more hours to use it.'
+        : 'আবার চালু হয়েছে! ব্যবহারের জন্য আরও ২৪ ঘণ্টা পাবেন।',
+    );
   };
 
   return (
@@ -436,7 +534,11 @@ export default function MembershipModal({
                     <span>{lang === 'en' ? 'Silver Lucky Cash Spin Wheel' : 'সিলভার লাকি ক্যাশ স্পিন হুইল'}</span>
                   </div>
 
-                  {!activeReward ? (
+                  {!tierRewards ? (
+                    <div className="py-8 text-center font-body text-[12px] text-muted">
+                      {lang === 'en' ? 'Loading…' : 'লোড হচ্ছে…'}
+                    </div>
+                  ) : silverUIState.status === 'locked' || silverUIState.status === 'available' ? (
                     <div className="flex flex-col items-center">
                       <div className="relative my-2 flex h-[210px] w-[210px] items-center justify-center">
                         <div className="absolute -top-2 left-1/2 z-20 -translate-x-1/2 drop-shadow-md">
@@ -495,34 +597,34 @@ export default function MembershipModal({
                         whileTap={{ scale: 0.96 }}
                         transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                         onClick={() => handleTriggerSpin(SILVER_SPIN_SLICES)}
-                        disabled={isSpinning || !isSelectedTierUnlocked}
+                        disabled={isSpinning || silverUIState.status !== 'available'}
                         className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-2.5 font-body text-xs sm:text-sm font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSpinning
                           ? t('চাকা ঘুরছে...')
-                          : !isSelectedTierUnlocked
-                          ? (lang === 'en' ? `Locked (${Math.max(0, selectedTier.min - effectiveCount)} orders left)` : `লকড (আর ${Math.max(0, selectedTier.min - effectiveCount)}টি অর্ডার প্রয়োজন)`)
+                          : silverUIState.status === 'locked'
+                          ? (lang === 'en' ? `Locked (${Math.max(0, selectedTier.min - effectiveCount)} orders left)` : `লকড (আর ${Math.max(0, selectedTier.min - effectiveCount)}টি অর্ডার প্রয়োজন)`)
                           : (lang === 'en' ? 'Spin & Win Discount' : 'স্পিন করে ডিসকাউন্ট জিতুন')}
                       </motion.button>
                     </div>
-                  ) : (
+                  ) : silverUIState.status === 'active' && silverUIState.reward ? (
                     <div className="rounded-[16px] border border-emerald-300/80 bg-emerald-50/90 p-4 text-center shadow-xs animate-section-reveal">
                       <div className="font-body text-[15px] font-extrabold text-emerald-900">
-                        {lang === 'en' ? `You Won ${activeReward.slice.labelEn}!` : `আপনি জিতেছেন ${activeReward.slice.label}!`}
+                        {lang === 'en' ? `You Won ${silverUIState.reward.slice.labelEn}!` : `আপনি জিতেছেন ${silverUIState.reward.slice.label}!`}
                       </div>
                       <p className="mt-0.5 font-body text-[11px] text-emerald-800">
                         {lang === 'en'
-                          ? `Valid on orders above ৳${activeReward.slice.minOrder}`
-                          : `সর্বনিম্ন ৳${activeReward.slice.minOrder} টাকার অর্ডারে প্রযোজ্য`}
+                          ? `Valid on orders above ৳${silverUIState.reward.slice.minOrder}`
+                          : `সর্বনিম্ন ৳${silverUIState.reward.slice.minOrder} টাকার অর্ডারে প্রযোজ্য`}
                       </p>
 
                       <div className="my-3 flex items-center justify-between rounded-xl border border-dashed border-emerald-400 bg-white/95 px-3.5 py-2">
                         <span className="font-body text-sm font-extrabold tracking-wider text-emerald-800">
-                          {activeReward.code}
+                          {silverUIState.reward.code}
                         </span>
                         <motion.button
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => handleCopyCode(activeReward.code)}
+                          onClick={() => handleCopyCode(silverUIState.reward!.code)}
                           className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs hover:bg-emerald-700"
                         >
                           {copyCodeLabel === 'Copy' ? <IconCopy /> : <IconCheck />}
@@ -531,9 +633,23 @@ export default function MembershipModal({
                       </div>
 
                       <div className="font-body text-[10.5px] font-bold text-amber-700">
-                        {lang === 'en' ? `Expires in: ${countdownText}` : `মেয়াদ আর মাত্র: ${countdownText}`}
+                        {lang === 'en' ? `Expires in: ${countdownText}` : `মেয়াদ আর মাত্র: ${countdownText}`}
                       </div>
                     </div>
+                  ) : silverUIState.status === 'expired' && silverUIState.reward ? (
+                    <TierExpiredCard
+                      lang={lang}
+                      reward={silverUIState.reward}
+                      isReactivating={reactivatingTier === 'silver'}
+                      onReactivate={() => handleReactivate('silver')}
+                      accentFrom="from-info"
+                      accentTo="to-brand-light"
+                    />
+                  ) : (
+                    <TierEndedMessage
+                      lang={lang}
+                      variant={silverUIState.status === 'used' ? 'used' : silverUIState.status === 'disabled' ? 'disabled' : 'missed'}
+                    />
                   )}
                 </div>
               )}
@@ -545,7 +661,11 @@ export default function MembershipModal({
                     <span>{lang === 'en' ? 'Gold VIP Magic Spinner' : 'গোল্ড ভিআইপি ম্যাজিক স্পিনার'}</span>
                   </div>
 
-                  {!activeReward ? (
+                  {!tierRewards ? (
+                    <div className="py-8 text-center font-body text-[12px] text-muted">
+                      {lang === 'en' ? 'Loading…' : 'লোড হচ্ছে…'}
+                    </div>
+                  ) : goldUIState.status === 'locked' || goldUIState.status === 'available' ? (
                     <div className="flex flex-col items-center">
                       <div className="relative my-2 flex h-[210px] w-[210px] items-center justify-center">
                         <div className="absolute -top-2 left-1/2 z-20 -translate-x-1/2 drop-shadow-md">
@@ -604,34 +724,34 @@ export default function MembershipModal({
                         whileTap={{ scale: 0.96 }}
                         transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                         onClick={() => handleTriggerSpin(GOLD_SPIN_SLICES)}
-                        disabled={isSpinning || !isSelectedTierUnlocked}
+                        disabled={isSpinning || goldUIState.status !== 'available'}
                         className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 font-body text-xs sm:text-sm font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-105 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSpinning
                           ? t('চাকা ঘুরছে...')
-                          : !isSelectedTierUnlocked
-                          ? (lang === 'en' ? `Locked (${Math.max(0, selectedTier.min - effectiveCount)} orders left)` : `লকড (আর ${Math.max(0, selectedTier.min - effectiveCount)}টি অর্ডার প্রয়োজন)`)
+                          : goldUIState.status === 'locked'
+                          ? (lang === 'en' ? `Locked (${Math.max(0, selectedTier.min - effectiveCount)} orders left)` : `লকড (আর ${Math.max(0, selectedTier.min - effectiveCount)}টি অর্ডার প্রয়োজন)`)
                           : (lang === 'en' ? 'Spin Gold Wheel' : 'গোল্ড স্পিন করুন')}
                       </motion.button>
                     </div>
-                  ) : (
+                  ) : goldUIState.status === 'active' && goldUIState.reward ? (
                     <div className="rounded-[16px] border border-emerald-300/80 bg-emerald-50/90 p-4 text-center shadow-xs animate-section-reveal">
                       <div className="font-body text-[15px] font-extrabold text-emerald-900">
-                        {lang === 'en' ? `You Won ${activeReward.slice.labelEn}!` : `আপনি জিতেছেন ${activeReward.slice.label}!`}
+                        {lang === 'en' ? `You Won ${goldUIState.reward.slice.labelEn}!` : `আপনি জিতেছেন ${goldUIState.reward.slice.label}!`}
                       </div>
                       <p className="mt-0.5 font-body text-[11px] text-emerald-800">
-                        {activeReward.slice.type === 'free_shipping'
+                        {goldUIState.reward.slice.type === 'free_shipping'
                           ? (lang === 'en' ? 'Free delivery on your next order' : 'পরবর্তী অর্ডারে সম্পূর্ণ ফ্রি ডেলিভারি')
-                          : (lang === 'en' ? `Valid on orders above ৳${activeReward.slice.minOrder}` : `সর্বনিম্ন ৳${activeReward.slice.minOrder} টাকার অর্ডারে প্রযোজ্য`)}
+                          : (lang === 'en' ? `Valid on orders above ৳${goldUIState.reward.slice.minOrder}` : `সর্বনিম্ন ৳${goldUIState.reward.slice.minOrder} টাকার অর্ডারে প্রযোজ্য`)}
                       </p>
 
                       <div className="my-3 flex items-center justify-between rounded-xl border border-dashed border-emerald-400 bg-white/95 px-3.5 py-2">
                         <span className="font-body text-sm font-extrabold tracking-wider text-emerald-800">
-                          {activeReward.code}
+                          {goldUIState.reward.code}
                         </span>
                         <motion.button
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => handleCopyCode(activeReward.code)}
+                          onClick={() => handleCopyCode(goldUIState.reward!.code)}
                           className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 font-body text-[11px] font-bold text-white shadow-xs hover:bg-emerald-700"
                         >
                           {copyCodeLabel === 'Copy' ? <IconCopy /> : <IconCheck />}
@@ -640,9 +760,23 @@ export default function MembershipModal({
                       </div>
 
                       <div className="font-body text-[10.5px] font-bold text-amber-700">
-                        {lang === 'en' ? `Expires in: ${countdownText}` : `মেয়াদ আর মাত্র: ${countdownText}`}
+                        {lang === 'en' ? `Expires in: ${countdownText}` : `মেয়াদ আর মাত্র: ${countdownText}`}
                       </div>
                     </div>
+                  ) : goldUIState.status === 'expired' && goldUIState.reward ? (
+                    <TierExpiredCard
+                      lang={lang}
+                      reward={goldUIState.reward}
+                      isReactivating={reactivatingTier === 'gold'}
+                      onReactivate={() => handleReactivate('gold')}
+                      accentFrom="from-amber-500"
+                      accentTo="to-amber-600"
+                    />
+                  ) : (
+                    <TierEndedMessage
+                      lang={lang}
+                      variant={goldUIState.status === 'used' ? 'used' : goldUIState.status === 'disabled' ? 'disabled' : 'missed'}
+                    />
                   )}
                 </div>
               )}

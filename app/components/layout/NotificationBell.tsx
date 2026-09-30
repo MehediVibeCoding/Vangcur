@@ -250,7 +250,7 @@ export default function NotificationBell({ className = '' }: { className?: strin
     const draftNotifs = buildDraftOrderNotifications(drafts, lang);
     const reviewNotifs = buildReviewRequestNotifications(orders, lang);
     const tierNotif = buildTierUpgradeNotification(orderStats(orders).completed, lang);
-    const codeNotifs = buildSecretCodeNotifications(lang);
+    const codeNotifs = await buildSecretCodeNotifications(supabase, lang);
 
     const dismissed = getDismissedNotifIds();
     const next = [
