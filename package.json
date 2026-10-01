@@ -18,20 +18,20 @@
   ],
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.5.1",
+    "@sparticuz/chromium": "^133.0.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.10",
-    "@sparticuz/chromium-min": "^141.0.0",
-    "puppeteer-core": "^24.23.1",
-    "html2canvas": "^1.4.1",
-    "isomorphic-dompurify": "^3.19.0",
+    "dompurify": "^3.2.4",
     "motion": "^13.0.0",
     "next": "^15.5.18",
+    "puppeteer-core": "^24.23.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
@@ -49,7 +49,6 @@
   },
   "overrides": {
     "postcss": "$postcss",
-    "sharp": "^0.35.0",
-    "jsdom": "25.0.1"
+    "sharp": "^0.35.0"
   }
 }
