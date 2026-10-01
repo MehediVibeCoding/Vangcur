@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import useCloseWhenOffscreen from '@/lib/useCloseWhenOffscreen';
 import Link from 'next/link';
 import Image from 'next/image';
 import type {
@@ -456,6 +457,9 @@ function ProductRecommendationBlockView({
 
 function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
+  // খোলা প্রশ্নটা স্ক্রলে পুরোপুরি স্ক্রিনের বাইরে চলে গেলে অটো-বন্ধ
+  useCloseWhenOffscreen(openIndex, itemRefs, () => setOpenIndex(null));
 
   return (
     <Container className="py-8">
@@ -466,6 +470,7 @@ function FaqBlockView({ block, lang }: { block: FaqBlock; lang: Lang }) {
           return (
             <div
               key={i}
+              ref={(el) => { itemRefs.current[i] = el; }}
               className={`overflow-hidden rounded-[16px] border transition-colors duration-200 ${
                 open
                   ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] via-white to-white shadow-sh1 ring-1 ring-brand-light/20'

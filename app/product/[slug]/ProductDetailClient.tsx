@@ -27,6 +27,7 @@ import { prefersReducedMotion, makeHeartBurst, BurstHeart, type HeartParticle } 
 import Navbar from '@/app/components/layout/Navbar';
 import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
+import useCloseWhenOffscreen from '@/lib/useCloseWhenOffscreen';
 import LoginModal from '@/app/components/auth/LoginModal';
 import ProductQnA from '@/app/components/product/ProductQnA';
 import ProductReviews from '@/app/components/product/ProductReviews';
@@ -406,6 +407,11 @@ export default function ProductDetailClient({
 
   useEffect(() => {
     router.prefetch('/checkout');
+    // 🛠️ ব্যাক করলে হোমপেজে স্কেলেটন ঝলক: প্রোডাক্ট পেজে রিফ্রেশ দিলে ব্রাউজারের রাউটার-ক্যাশ
+    // খালি হয়ে যায়, তখন ব্যাক করলে হোমপেজ সার্ভার থেকে আবার আনতে হয় (এবং app/loading.tsx
+    // স্কেলেটন দেখায়)। এখানে আগেভাগেই '/' প্রিফেচ করে রাখলে ব্যাক করার আগেই হোমপেজ
+    // ক্যাশে তৈরি থাকে, তাই ব্যাকে তাৎক্ষণিক খোলে।
+    router.prefetch('/');
   }, [router]);
 
   useEffect(() => {
@@ -492,6 +498,9 @@ export default function ProductDetailClient({
   const [transformOrigin, setTransformOrigin] = useState('center center');
   const [activeTab, setActiveTab] = useState('ppSecDesc');
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
+  const faqItemRefs = useRef<(HTMLElement | null)[]>([]);
+  // খোলা FAQ স্ক্রলে পুরোপুরি স্ক্রিনের বাইরে চলে গেলে অটো-বন্ধ
+  useCloseWhenOffscreen(openFaqIdx, faqItemRefs, () => setOpenFaqIdx(null));
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
 
@@ -1204,15 +1213,18 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      <div className="sticky top-0 z-30 border-b border-border-base bg-white/95 backdrop-blur-md" ref={tabsWrapRef}>
+      <div className="sticky top-0 z-30 border-b border-brand-light/20 bg-gradient-to-b from-brand-bg/90 to-white/95 shadow-xs backdrop-blur-md" ref={tabsWrapRef}>
+        {/* 🛠️ ফিক্স: আগে এখানে [touch-action:pan-x] ছিল — এতে ট্যাব বারের ওপর আঙুল
+            রেখে উপর-নিচে টানলে ব্রাউজার উল্লম্ব স্ক্রলই বন্ধ করে দিত। এখন pan-x pan-y
+            দুটোই খোলা: বামে-ডানে টানলে ট্যাব সরে, উপর-নিচে টানলে পুরো পেজ স্ক্রল হয়। */}
         <div
-          className="no-scrollbar mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x] md:px-8"
+          className="no-scrollbar mx-auto flex max-w-[1100px] gap-1.5 overflow-x-auto px-4 py-2 [overscroll-behavior-x:contain] [touch-action:pan-x_pan-y] md:px-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {TABS.map((tab) => (
             <button
               key={tab.id}
-              className={`whitespace-nowrap border-b-2 px-3.5 py-3.5 text-[13px] font-semibold transition-brand duration-brand ${activeTab === tab.id ? 'border-brand-light text-brand-light' : 'border-transparent text-muted hover:text-ink'}`}
+              className={`whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-bold transition-brand duration-brand ${activeTab === tab.id ? 'border-brand-light bg-brand-light text-white shadow-sh1' : 'border-transparent bg-white/60 text-muted hover:border-brand-light/30 hover:bg-brand-bg hover:text-brand-light'}`}
               onClick={() => scrollToSection(tab.id)}
             >
               {t(tab.label)}
@@ -1326,6 +1338,7 @@ export default function ProductDetailClient({
                   return (
                     <div
                       key={i}
+                      ref={(el) => { faqItemRefs.current[i] = el; }}
                       className={`overflow-hidden rounded-[14px] border transition-colors duration-200 ${
                         isOpen
                           ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] to-white shadow-sh1 ring-1 ring-brand-light/20'

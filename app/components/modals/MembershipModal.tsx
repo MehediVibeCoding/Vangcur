@@ -129,7 +129,7 @@ function TierExpiredCard({
       <div className="font-body text-[14px] font-extrabold text-amber-900">
         {lang === 'en' ? `Your ${reward.slice.labelEn} reward expired` : `আপনার ${reward.slice.label} পুরস্কারের মেয়াদ শেষ হয়ে গেছে`}
       </div>
-      <p className="mt-1 font-body text-[11.5px] text-amber-800">
+      <p className="mt-1 font-body text-[12.5px] text-amber-800">
         {lang === 'en'
           ? 'Reactivate to get another 24 hours to use the same reward'
           : 'আবার চালু করলে একই পুরস্কার ব্যবহারের জন্য আরও ২৪ ঘণ্টা পাবেন'}
@@ -429,7 +429,7 @@ export default function MembershipModal({
                     <h3 className="font-body text-[17px] font-extrabold text-ink leading-none">
                       {lang === 'en' ? 'VIP Membership Club' : 'ভিআইপি মেম্বারশিপ ক্লাব'}
                     </h3>
-                    <p className="mt-1 font-body text-[11.5px] font-bold text-brand-light">
+                    <p className="mt-1 font-body text-[12.5px] font-bold text-brand-light">
                       {lang === 'en' ? `Your Level: ${userCurrentTier.en}` : `আপনার বর্তমান লেভেল: ${userCurrentTier.bn}`}
                     </p>
                   </div>
@@ -487,7 +487,7 @@ export default function MembershipModal({
                 >
                   {lang === 'en' ? selectedTier.en : selectedTier.bn}
                 </div>
-                <div className="mt-0.5 font-body text-[11.5px] text-muted">
+                <div className="mt-0.5 font-body text-[12.5px] text-muted">
                   {lang === 'en'
                     ? selectedTier.max === Infinity
                       ? `Requirement: ${selectedTier.min}+ Delivered Orders`
@@ -519,7 +519,7 @@ export default function MembershipModal({
                   <h4 className="font-body text-[14.5px] font-bold text-ink">
                     {lang === 'en' ? 'Welcome to Vangcur!' : 'ভাঙচুর ক্লাবে স্বাগতম!'}
                   </h4>
-                  <p className="mt-1 font-body text-[12px] leading-relaxed text-muted">
+                  <p className="mt-1 font-body text-[13px] leading-relaxed text-muted">
                     {lang === 'en'
                       ? 'Place your 1st order to step up to the Silver Tier and unlock the Lucky Cash Spin Wheel!'
                       : 'আপনার ১ম অর্ডারটি রিসিভ করলেই পদোন্নতি পাবেন সিলভার লেভেলে এবং আনলক হবে লাকি ক্যাশ স্পিনার!'}
@@ -612,7 +612,7 @@ export default function MembershipModal({
                       <div className="font-body text-[15px] font-extrabold text-emerald-900">
                         {lang === 'en' ? `You Won ${silverUIState.reward.slice.labelEn}!` : `আপনি জিতেছেন ${silverUIState.reward.slice.label}!`}
                       </div>
-                      <p className="mt-0.5 font-body text-[11px] text-emerald-800">
+                      <p className="mt-0.5 font-body text-[12px] text-emerald-800">
                         {lang === 'en'
                           ? `Valid on orders above ৳${silverUIState.reward.slice.minOrder}`
                           : `সর্বনিম্ন ৳${silverUIState.reward.slice.minOrder} টাকার অর্ডারে প্রযোজ্য`}
@@ -739,7 +739,7 @@ export default function MembershipModal({
                       <div className="font-body text-[15px] font-extrabold text-emerald-900">
                         {lang === 'en' ? `You Won ${goldUIState.reward.slice.labelEn}!` : `আপনি জিতেছেন ${goldUIState.reward.slice.label}!`}
                       </div>
-                      <p className="mt-0.5 font-body text-[11px] text-emerald-800">
+                      <p className="mt-0.5 font-body text-[12px] text-emerald-800">
                         {goldUIState.reward.slice.type === 'free_shipping'
                           ? (lang === 'en' ? 'Free delivery on your next order' : 'পরবর্তী অর্ডারে সম্পূর্ণ ফ্রি ডেলিভারি')
                           : (lang === 'en' ? `Valid on orders above ৳${goldUIState.reward.slice.minOrder}` : `সর্বনিম্ন ৳${goldUIState.reward.slice.minOrder} টাকার অর্ডারে প্রযোজ্য`)}
@@ -792,7 +792,7 @@ export default function MembershipModal({
                   <div className="flex items-start gap-2.5 rounded-[12px] border border-brand-light/25 bg-brand-bg/25 p-3">
                     <span className="mt-0.5 text-base">🎁</span>
                     <div className="min-w-0 flex-1">
-                      <div className="font-body text-[12.5px] font-bold text-ink">
+                      <div className="font-body text-[13px] font-bold text-ink">
                         {lang === 'en' ? 'Flat ৳150 OFF Guaranteed Coupon' : 'ফ্ল্যাট ৳১৫০ ছাড়ের এক্সক্লুসিভ কুপন'}
                       </div>
 
@@ -833,14 +833,14 @@ export default function MembershipModal({
 
                   <div className="flex items-center gap-2.5 rounded-[12px] border border-white/80 bg-white/80 p-3 shadow-2xs">
                     <span className="text-base">⚡</span>
-                    <div className="font-body text-[12px] font-bold text-ink">
+                    <div className="font-body text-[13px] font-bold text-ink">
                       {lang === 'en' ? 'Priority 1-Day Dispatch & Courier Handover' : 'সবার আগে ১ দিনে কুরিয়ারে অগ্রাধিকার হ্যান্ডওভার'}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2.5 rounded-[12px] border border-white/80 bg-white/80 p-3 shadow-2xs">
                     <span className="text-base">✨</span>
-                    <div className="font-body text-[12px] font-bold text-ink">
+                    <div className="font-body text-[13px] font-bold text-ink">
                       {lang === 'en' ? 'Free Mystery Tech Accessory with every parcel' : 'প্রতিটি অর্ডারের সাথে সারপ্রাইজ গ্যাজেট গিফট'}
                     </div>
                   </div>
@@ -856,7 +856,7 @@ export default function MembershipModal({
                   <h4 className="font-body text-[16px] font-extrabold text-amber-900">
                     {lang === 'en' ? '100% Cash on Delivery (Zero Advance)' : '১০০% ক্যাশ অন ডেলিভারি (Zero Advance)'}
                   </h4>
-                  <p className="mt-1.5 font-body text-[12px] leading-relaxed text-amber-800/90">
+                  <p className="mt-1.5 font-body text-[13px] leading-relaxed text-amber-800/90">
                     {lang === 'en'
                       ? 'As a Legendary customer, claim your one-time reward: your very next order needs ZERO advance payment!'
                       : 'আপনি আমাদের সর্বোচ্চ সম্মানিত লিজেন্ডারি কাস্টমার! একবার ক্লেইম করলে আপনার পরবর্তী একটি অর্ডার সম্পূর্ণ ক্যাশ অন ডেলিভারিতে হবে — কোনো অগ্রিম লাগবে না।'}

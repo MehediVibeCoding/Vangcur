@@ -184,7 +184,7 @@ export default function RecoveryToast() {
           <h3 className="font-body text-[15px] font-extrabold text-ink leading-tight">
             {lang === 'en' ? 'Complete Your Order' : 'পেন্ডিং অর্ডারটি সম্পন্ন করুন'}
           </h3>
-          <p className="mt-0.5 font-body text-[11.5px] text-muted">
+          <p className="mt-0.5 font-body text-[12.5px] text-muted">
             {lang === 'en' ? 'You recently started an order for this item.' : 'আপনি সম্প্রতি একটি প্রোডাক্ট অর্ডার করতে চেয়েছিলেন।'}
           </p>
         </div>

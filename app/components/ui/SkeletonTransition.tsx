@@ -45,19 +45,27 @@ export default function SkeletonTransition({
   children,
   className = '',
 }: SkeletonTransitionProps) {
+  // 🛠️ ফিক্স (লাফ/"বাড়ি" খাওয়া): আগে skeleton আর content দুটোই স্বাভাবিক ফ্লো-তে
+  // বসত — ক্রসফেডের ০.২৬ সেকেন্ড দুটো একসাথে জায়গা নিত, ফলে কন্টেইনারের উচ্চতা
+  // হঠাৎ প্রায় দ্বিগুণ হয়ে আবার কমে যেত (ইনভয়েস/ট্র্যাক-অর্ডার মডাল/অর্ডার লিস্টে
+  // "ছোট → বড় → ছোট" লাফ)। এখন বাইরে একটা CSS grid, আর দুটো চাইল্ডই একই
+  // গ্রিড-সেলে (col-start-1 row-start-1) থাকে — তাই ওভারল্যাপ করে ফেড হয়, উচ্চতা
+  // কখনো যোগ হয় না (সেল = দুটোর মধ্যে বড়টার মাপ)।
   return (
     // mode দেওয়া হয়নি ইচ্ছাকৃতভাবে — ডিফল্ট "sync" মোডে exiting skeleton
     // আর entering content একসাথে ওভারল্যাপ করে ফেড হয়, যেটাই crossfade।
-    <AnimatePresence initial={false}>
-      {!isReady ? (
-        <motion.div key="skeleton" {...fade} className={className}>
-          {skeleton}
-        </motion.div>
-      ) : (
-        <motion.div key="content" {...fade} className={className}>
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="grid">
+      <AnimatePresence initial={false}>
+        {!isReady ? (
+          <motion.div key="skeleton" {...fade} className={`col-start-1 row-start-1 min-w-0 ${className}`}>
+            {skeleton}
+          </motion.div>
+        ) : (
+          <motion.div key="content" {...fade} className={`col-start-1 row-start-1 min-w-0 ${className}`}>
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

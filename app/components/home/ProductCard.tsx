@@ -254,7 +254,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
               <>
                 <span className="text-[10px] text-white/50 line-through sm:text-xs">৳{p.old.toLocaleString('en-US')}</span>
                 {showDiscBadge && (
-                  <span className="text-[10px] font-bold text-success sm:text-xs">-{discPct}%</span>
+                  <span className="whitespace-nowrap text-[12px] font-bold text-success sm:text-[14px] xl:text-[13px]">-{discPct}%</span>
                 )}
               </>
             )}
@@ -265,7 +265,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
               <button
                 type="button"
                 disabled
-                className="flex h-8 w-full min-w-0 items-center justify-center rounded-full border border-white/20 bg-[#5A6578] font-body text-[11.5px] font-bold text-white shadow-xs cursor-not-allowed select-none sm:h-9 sm:text-xs lg:h-10"
+                className="flex h-8 w-full min-w-0 items-center justify-center rounded-full border border-white/20 bg-[#5A6578] font-body text-[11.5px] font-bold text-white shadow-xs cursor-not-allowed select-none sm:h-9 sm:text-xs lg:h-9"
               >
                 {lang === 'en' ? 'Out of Stock' : 'স্টক শেষ'}
               </button>
@@ -275,7 +275,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                 <div className="relative shrink-0">
                   <motion.button
                     type="button"
-                    className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-colors duration-150 hover:bg-white/30 hover:border-white/70 sm:h-9 lg:h-10"
+                    className="box-border flex aspect-square h-8 shrink-0 items-center justify-center rounded-full border border-white/50 bg-white/20 text-white shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-colors duration-150 hover:bg-white/30 hover:border-white/70 sm:h-9 lg:h-9"
                     title={t('কার্টে যোগ করুন')}
                     aria-label={t('কার্টে যোগ করুন')}
                     onClick={handleAddToCartDirect}
@@ -329,7 +329,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
                 {/* Refined Crystal Liquid Glass Button (Based on Image 3 with Fresh Ice-Sky Tint) */}
                 <motion.button
                   type="button"
-                  className="order-btn-glow relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/90 font-body text-[12px] font-extrabold tracking-wide shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_3px_10px_rgba(0,88,199,0.12)] sm:h-9 sm:text-[13px] lg:h-10"
+                  className="order-btn-glow relative flex h-8 min-w-0 flex-1 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-white/90 font-body text-[12px] font-extrabold tracking-wide shadow-[inset_0_1.5px_2px_rgba(255,255,255,1),0_3px_10px_rgba(0,88,199,0.12)] sm:h-9 sm:text-[13px] lg:h-9"
                   onClick={handleOrderNowDirect}
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 18 }}

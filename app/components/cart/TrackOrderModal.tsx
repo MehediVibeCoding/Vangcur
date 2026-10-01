@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
@@ -66,15 +66,45 @@ function HeaderDecor() {
   );
 }
 
+type GuestRef = { id?: string; orderNum?: string; phone?: string };
+
+// এই ডিভাইসে সেভ থাকা গেস্ট-অর্ডারের তালিকা (সিঙ্ক্রোনাস, শুধু localStorage/sessionStorage পড়ে)।
+function readGuestList(): GuestRef[] {
+  try {
+    const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
+    if (Array.isArray(list) && list.length > 0) return list;
+  } catch {
+    // ignore
+  }
+  const pending = readPendingOrder();
+  if (pending && pending.phone) return [pending];
+  const latest = readLatestGuestOrder();
+  if (latest && latest.phone) return [latest];
+  return [];
+}
+
+function hasGuestOrdersSync(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return readGuestList().length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProps) {
   const { t, lang } = useT();
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const currentUser = useAuthStore((s) => s.currentUser);
 
-  const [loading, setLoading] = useState(true);
+  // 🛠️ ফিক্স (প্রথমবার খুললে ঝাঁকুনি): আগে loading সবসময় `true` দিয়ে শুরু হতো, তাই প্রথমবার
+  // খুললে আগে স্কেলেটন দেখাত, তারপর "কোনো অর্ডার নেই" কনটেন্টে ক্রসফেড হয়ে মডালের উচ্চতা
+  // বদলাত (পরের বার state আগেরটাই থাকত বলে মসৃণ লাগত)। এখন শুরুতেই localStorage দেখে ঠিক
+  // করা হয়: অর্ডার না থাকলে প্রথম রেন্ডারেই চূড়ান্ত "অর্ডার নেই" স্টেট — কোনো স্কেলেটন নেই।
+  const [loading, setLoading] = useState<boolean>(() => hasGuestOrdersSync());
   const [orders, setOrders] = useState<Order[]>([]);
-  const [notFound, setNotFound] = useState(false);
+  const [notFound, setNotFound] = useState<boolean>(() => !hasGuestOrdersSync());
   const [loginOpen, setLoginOpen] = useState(false);
 
   // 🛡️ এটি শুধুমাত্র এই ডিভাইসে আগেই অটোমেটিকভাবে লোড হওয়া (localStorage-ভিত্তিক,
@@ -98,19 +128,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setOrders([]);
     setQuery('');
 
-    const guestList: { id?: string; orderNum?: string; phone?: string }[] = (() => {
-      try {
-        const list = JSON.parse(localStorage.getItem('vc_guest_orders') || '[]');
-        if (Array.isArray(list) && list.length > 0) return list;
-      } catch {
-        // ignore
-      }
-      const pending = readPendingOrder();
-      if (pending && pending.phone) return [pending];
-      const latest = readLatestGuestOrder();
-      if (latest && latest.phone) return [latest];
-      return [];
-    })();
+    const guestList = readGuestList();
 
     if (guestList.length === 0) {
       setLoading(false);
@@ -144,7 +162,8 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
     setLoading(false);
   }, [supabase]);
 
-  useEffect(() => {
+  // useLayoutEffect: খোলার মুহূর্তের সিঙ্ক্রোনাস state (লোডিং/অর্ডার-নেই) প্রথম পেইন্টের আগেই বসে যায়
+  useLayoutEffect(() => {
     if (!isOpen) return;
 
     if (currentUser) {
@@ -242,14 +261,14 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                       <div className="mb-1 font-body text-[15.5px] font-bold text-ink">
                         {lang === 'en' ? 'No orders yet' : 'এখনো কোনো অর্ডার নেই'}
                       </div>
-                      <p className="mx-auto mb-4 max-w-xs font-body text-[12px] leading-relaxed text-muted">
+                      <p className="mx-auto mb-4 max-w-xs font-body text-[13px] leading-relaxed text-muted">
                         {lang === 'en'
                           ? 'Orders will appear here automatically once placed. This device has no order information yet — meaning you haven\'t placed an order so far.'
                           : 'অর্ডার করলে সেটি এখানে দেখা যাবে। এই ডিভাইসে এখন পর্যন্ত কোনো অর্ডারের তথ্য নেই, অর্থাৎ আপনি এখন পর্যন্ত অর্ডার করেননি।'}
                       </p>
 
                       <div className="mb-4 rounded-[14px] border border-brand-light/30 bg-white/70 p-3.5 text-left">
-                        <p className="font-body text-[11.5px] leading-relaxed text-ink/80">
+                        <p className="font-body text-[12.5px] leading-relaxed text-ink/80">
                           {lang === 'en'
                             ? 'Please log in before placing your order — this keeps your order secure and unlocks membership benefits, free delivery, discounts, and coupons.'
                             : 'অর্ডার প্লেস করার আগে অবশ্যই লগইন করে অর্ডার প্লেস করবেন। এতে আপনার অর্ডারের সুরক্ষা নিশ্চিত হয়, এবং আপনি মেম্বারশিপ সুবিধা, ফ্রি ডেলিভারি চার্জ, ডিসকাউন্ট ও কুপনের মতো সুবিধা পেতে পারেন।'}
@@ -303,7 +322,7 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                             <div className="mb-1 font-body text-[13.5px] font-extrabold text-ink">
                               {lang === 'en' ? 'Unlock VIP Features & Discounts' : 'ভিআইপি মেম্বারশিপ ও অফার সুবিধা পান'}
                             </div>
-                            <p className="font-body text-[12px] leading-[1.7] text-ink/75">
+                            <p className="font-body text-[13px] leading-[1.7] text-ink/75">
                               {lang === 'en'
                                 ? 'This order information is temporarily stored in this browser. Log in now to track & manage orders across all devices, switch languages (Bangla/English), save invoice history, and unlock VIP membership rewards & exclusive coupon discounts.'
                                 : 'এই অর্ডারের তথ্য শুধুমাত্র সাময়িক সময়ের জন্য এই ব্রাউজারে সংরক্ষিত রয়েছে। যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও হিস্টোরি সংরক্ষণ, ভাষা পরিবর্তন (বাংলা/English), মেম্বারশিপ রিওয়ার্ড ও স্পেশাল কুপন ডিসকাউন্ট সুবিধা পেতে এখনই অ্যাকাউন্টে লগইন করে নিন।'}

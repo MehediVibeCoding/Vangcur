@@ -280,7 +280,7 @@ export default function BackInStockToast() {
               ? (lang === 'en' ? 'Products Back in Stock!' : 'পণ্যগুলো আবার স্টকে এসেছে!')
               : (lang === 'en' ? 'Product Back in Stock!' : 'প্রোডাক্ট আবার স্টকে এসেছে!')}
           </h3>
-          <p className="mt-0.5 font-body text-[11.5px] text-muted">
+          <p className="mt-0.5 font-body text-[12.5px] text-muted">
             {isMultiple
               ? (lang === 'en' ? 'Items you requested are now ready to order.' : 'আপনার অনুরোধ করা পণ্যগুলো এখন অর্ডারের জন্য প্রস্তুত।')
               : (lang === 'en' ? 'The item you requested is now available.' : 'আপনার অনুরোধ করা প্রোডাক্টটি এখন স্টকে পাওয়া যাচ্ছে।')}
@@ -337,7 +337,7 @@ export default function BackInStockToast() {
                 >
                   <ItemThumbnail imgVal={(item.imgs || [''])[0]} />
                   <div className="min-w-0 flex-1">
-                    <div className="line-clamp-1 font-body text-[12.5px] font-bold text-ink">
+                    <div className="line-clamp-1 font-body text-[13px] font-bold text-ink">
                       {item.name}
                     </div>
                     <div className="font-body text-[12px] font-extrabold text-brand-light">

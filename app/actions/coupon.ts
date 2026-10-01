@@ -33,11 +33,11 @@ export async function validateCouponAction(
     const clientIp = getClientIp(await headers());
     const bucket = await tokenBucketLimit(`coupon:${clientIp}`, 8, 1 / 6);
     if (!bucket.allowed) {
-      return { ok: false, error: `অনেকবার চেষ্টা করা হয়েছে। ${bucket.retryAfterSec} সেকেন্ড পরে আবার চেষ্টা করুন।` };
+      return { ok: false, error: `অনেকবার চেষ্টা করা হয়েছে। ${bucket.retryAfterSec} সেকেন্ড পরে আবার চেষ্টা করুন।`, transient: true };
     }
     const failPeek = await slidingWindowLimit(`coupon-fail:${clientIp}`, 20, 3600, 0);
     if (!failPeek.allowed) {
-      return { ok: false, error: 'অনেকবার ভুল কুপন দেওয়া হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।' };
+      return { ok: false, error: 'অনেকবার ভুল কুপন দেওয়া হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।', transient: true };
     }
 
     // ইউজার আইডি ক্লায়েন্টের পাঠানো মান থেকে নয়, লগইন সেশন থেকে নেওয়া হয় —
@@ -57,7 +57,7 @@ export async function validateCouponAction(
 
     if (error || !data) {
       logWarn('[Vangcur] validate_and_apply_coupon RPC error:', error?.message);
-      return { ok: false, error: 'কুপন যাচাই করা সম্ভব হয়নি' };
+      return { ok: false, error: 'কুপন যাচাই করা সম্ভব হয়নি', transient: true };
     }
 
     if (!data.ok) {
@@ -79,7 +79,7 @@ export async function validateCouponAction(
     };
   } catch (e) {
     logWarn('[Vangcur] validate_and_apply_coupon exception:', e);
-    return { ok: false, error: 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।' };
+    return { ok: false, error: 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।', transient: true };
   }
 }
 

@@ -66,11 +66,16 @@ export default async function RootLayout({
       className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}
     >
       <head>
+        {/* 🛠️ ফিক্স (ডার্ক → লাইট বাড়ি): ডার্ক মোড শুধু লগইন করা ইউজারের জন্য (themeStore.ts
+            দেখুন)। আগে এই স্ক্রিপ্ট কোনো সেভ করা থিম না পেলে ডিভাইসের prefers-color-scheme
+            দেখে প্রথম ফ্রেমেই `dark` ক্লাস বসিয়ে দিত, তারপর হাইড্রেশনে themeStore সেটা সরিয়ে
+            লাইট করত — এটাই ঝলক। এখন লগইন করা (localStorage-এ vc_user আছে) না হলে কখনো ডার্ক
+            বসানো হয় না, তাই গেস্টের প্রথম পেইন্ট থেকেই লাইট। */}
         <Script
           id="theme-flicker-guard"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var k='vc_theme',t=null;var m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(m)t=decodeURIComponent(m[1]);if(t!=='dark'&&t!=='light'){try{t=window.localStorage.getItem(k);}catch(e){}}if(t!=='dark'&&t!=='light'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}}catch(e){}})();`,
+            __html: `(function(){try{var k='vc_theme',t=null;var u=null;try{u=window.localStorage.getItem('vc_user');}catch(e){}if(u&&u!=='null'){var m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(m)t=decodeURIComponent(m[1]);if(t!=='dark'&&t!=='light'){try{t=window.localStorage.getItem(k);}catch(e){}}}if(t==='dark'){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';}else{document.documentElement.style.colorScheme='light';}}catch(e){}})();`,
           }}
         />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />

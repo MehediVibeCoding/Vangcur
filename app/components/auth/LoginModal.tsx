@@ -149,7 +149,7 @@ function ErrMsg({ text }: { text: string }) {
 
 function FieldError({ text }: { text?: string }) {
   if (!text) return null;
-  return <p className="mt-1 pl-1 font-body text-[11.5px] font-semibold text-[#DC2626]">{text}</p>;
+  return <p className="mt-1 pl-1 font-body text-[12.5px] font-semibold text-[#DC2626]">{text}</p>;
 }
 
 function fieldClass(hasErr: boolean, extra = '') {
@@ -569,7 +569,7 @@ export default function LoginModal({
                         </svg>
                         {t('Google দিয়ে লগইন করুন')}
                       </motion.button>
-                      <div className="mt-1 text-center font-body text-[12.5px] text-muted">
+                      <div className="mt-1 text-center font-body text-[13px] text-muted">
                         {t('অ্যাকাউন্ট নেই?')} <button onClick={switchToRegister} className={linkChipClass}>{t('রেজিস্ট্রেশন করুন')}</button>
                       </div>
                     </>
@@ -659,7 +659,7 @@ export default function LoginModal({
                   </motion.button>
 
                   {!orderMode && (
-                    <div className="mt-1 text-center font-body text-[12.5px] text-muted">
+                    <div className="mt-1 text-center font-body text-[13px] text-muted">
                       {t('ইতিমধ্যে অ্যাকাউন্ট আছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
                     </div>
                   )}
@@ -716,7 +716,7 @@ export default function LoginModal({
                       >
                         {t('রিসেট লিংক পাঠান')}
                       </motion.button>
-                      <div className="mt-1 text-center font-body text-[12.5px] text-muted">
+                      <div className="mt-1 text-center font-body text-[13px] text-muted">
                         {t('মনে পড়েছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
                       </div>
                     </>

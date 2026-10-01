@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/useT';
+import useCloseWhenOffscreen from '@/lib/useCloseWhenOffscreen';
 
 export interface Faq {
   q: string;
@@ -64,6 +65,9 @@ export default function FAQ() {
   // ডিফল্ট তালিকাটাই দেখানো হবে।
   const faqs = DEFAULT_FAQS;
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
+  // খোলা প্রশ্নটা স্ক্রলে পুরোপুরি স্ক্রিনের বাইরে চলে গেলে অটো-বন্ধ
+  useCloseWhenOffscreen(openIndex, itemRefs, () => setOpenIndex(null));
 
   const toggleFAQ = (i: number) => {
     setOpenIndex((prev) => (prev === i ? null : i));
@@ -98,6 +102,7 @@ export default function FAQ() {
           return (
             <div
               key={i}
+              ref={(el) => { itemRefs.current[i] = el; }}
               className={`overflow-hidden rounded-[16px] border transition-colors duration-200 [contain:paint_layout] [transform:translateZ(0)] ${
                 open
                   ? 'border-brand-light/50 bg-gradient-to-br from-[#F0F7FF] via-white to-white shadow-sh1 ring-1 ring-brand-light/20'

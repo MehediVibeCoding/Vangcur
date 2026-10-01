@@ -147,7 +147,7 @@ export default function PostReceiveInfoModal() {
             {lang === 'en' ? 'Important: What to do After Delivery' : 'প্রোডাক্ট পাওয়ার পর করণীয়'}
           </h2>
 
-          <p className="relative z-10 mb-5 font-body text-[12.5px] leading-relaxed text-ink/80">
+          <p className="relative z-10 mb-5 font-body text-[13px] leading-relaxed text-ink/80">
             {lang === 'en'
               ? 'To claim warranty or replacements seamlessly, please follow these essential instructions.'
               : 'ওয়ারেন্টি ক্লেইম নির্বিঘ্নে করতে নিচের নিয়মগুলো অবশ্যই মেনে চলুন।'}

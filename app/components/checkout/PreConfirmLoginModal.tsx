@@ -97,7 +97,7 @@ export default function PreConfirmLoginModal({
               {lang === 'en' ? 'Log in to secure your order and information' : 'আপনার তথ্য ও অর্ডার সুরক্ষার জন্য লগইন করুন'}
             </h3>
 
-            <p className="relative z-10 mt-1 font-body text-[12px] leading-relaxed text-muted">
+            <p className="relative z-10 mt-1 font-body text-[13px] leading-relaxed text-muted">
               {lang === 'en'
                 ? 'Logging in or creating an account unlocks these convenient benefits:'
                 : 'লগইন বা সাইন-আপ করলে কেনাকাটায় আপনার জন্য যা যা সহজ হবে:'}
@@ -106,7 +106,7 @@ export default function PreConfirmLoginModal({
             <div className="relative z-10 my-3.5 rounded-[14px] border border-white/90 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
               <div className="flex items-start gap-2.5">
                 <CheckPerkIcon />
-                <div className="min-w-0 flex-1 font-body text-[12px] leading-snug text-ink/85">
+                <div className="min-w-0 flex-1 font-body text-[13px] leading-snug text-ink/85">
                   <strong>{lang === 'en' ? 'Live Order Tracking & Invoices:' : 'লাইভ অর্ডার ট্র্যাকিং ও মেমো:'}</strong>{' '}
                   {lang === 'en' ? 'Track order status live from any device & save invoice history.' : 'যেকোনো ডিভাইস থেকে অর্ডার ট্র্যাক ও আজীবন মেমো সংরক্ষণ।'}
                 </div>
@@ -114,7 +114,7 @@ export default function PreConfirmLoginModal({
 
               <div className="flex items-start gap-2.5">
                 <CheckPerkIcon />
-                <div className="min-w-0 flex-1 font-body text-[12px] leading-snug text-ink/85">
+                <div className="min-w-0 flex-1 font-body text-[13px] leading-snug text-ink/85">
                   <strong>{lang === 'en' ? 'Coupons & Free Delivery Deals:' : 'কুপন ডিসকাউন্ট ও ফ্রি ডেলিভারি:'}</strong>{' '}
                   {lang === 'en' ? 'Get special coupon discounts and free delivery deals on future orders.' : 'ভবিষ্যতে কেনাকাটায় বিশেষ কুপন ছাড় ও ফ্রি ডেলিভারি সুবিধা।'}
                 </div>
@@ -122,7 +122,7 @@ export default function PreConfirmLoginModal({
 
               <div className="flex items-start gap-2.5">
                 <CheckPerkIcon />
-                <div className="min-w-0 flex-1 font-body text-[12px] leading-snug text-ink/85">
+                <div className="min-w-0 flex-1 font-body text-[13px] leading-snug text-ink/85">
                   <strong>{lang === 'en' ? 'Language Toggle & Priority Support:' : 'ভাষা পরিবর্তন ও দ্রুত সাপোর্ট:'}</strong>{' '}
                   {lang === 'en' ? 'Switch between Bangla & English easily with priority customer care.' : 'বাংলা/English মোড পরিবর্তন ও দ্রুত কাস্টমার কেয়ার সহায়তা।'}
                 </div>

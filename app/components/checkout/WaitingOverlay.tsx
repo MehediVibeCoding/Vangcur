@@ -391,7 +391,7 @@ export default function WaitingOverlay() {
               </h2>
 
               {/* ক্লাসিক মূল বাক্য */}
-              <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
+              <p className="relative z-10 mb-4 font-body text-[13px] leading-relaxed text-ink/80">
                 {lang === 'en' ? (
                   <>Your order is pending. We are verifying your ৳{advanceAmount.toLocaleString('en-US')} payment. You will usually get confirmation <strong className="text-ink font-bold">within 5–10 minutes</strong> (maximum 30 minutes).</>
                 ) : (
@@ -416,7 +416,7 @@ export default function WaitingOverlay() {
               {isGuest && (
                 <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[12px] border border-amber-200/80 bg-amber-50/90 p-3 text-left shadow-xs">
                   <IconWarningShield />
-                  <div className="font-body text-[11.5px] leading-[1.65] text-amber-900">
+                  <div className="font-body text-[12.5px] leading-[1.65] text-amber-900">
                     {lang === 'en' ? (
                       <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
                     ) : (

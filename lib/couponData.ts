@@ -17,6 +17,12 @@ export interface CouponValidationResult {
   ok: boolean;
   coupon?: AppliedCoupon;
   error?: string;
+  /**
+   * true = এটা কুপন কোডটা ভুল/অবৈধ হওয়ার রায় নয় — সাময়িক সমস্যা (রেট-লিমিট, নেটওয়ার্ক,
+   * সার্ভার এরর)। UI তাই এই ক্ষেত্রে কোডটাকে "ব্যর্থ কোড" হিসেবে আটকায় না (বাটন "প্রয়োগ"ই
+   * থাকে, ব্যবহারকারী পরে আবার চেষ্টা করতে পারে)। শুধু "মুছুন ↔ প্রয়োগ" লজিকের জন্য।
+   */
+  transient?: boolean;
 }
 
 /**
@@ -76,7 +82,7 @@ export async function validateCoupon(
   try {
     return await validateCouponAction(cleanCode, subtotal, phone, userId, fingerprintId);
   } catch (err: any) {
-    return { ok: false, error: err?.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।' };
+    return { ok: false, error: err?.message || 'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।', transient: true };
   }
 }
 

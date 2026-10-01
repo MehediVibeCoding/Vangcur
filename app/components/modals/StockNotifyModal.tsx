@@ -255,7 +255,7 @@ export default function StockNotifyModal() {
                     }`}
                   />
                 </div>
-                {nameErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{nameErr}</p>}
+                {nameErr && <p className="mt-1 pl-1 font-body text-[12px] font-semibold text-red-600">{nameErr}</p>}
               </div>
 
               <div>
@@ -280,7 +280,7 @@ export default function StockNotifyModal() {
                     }`}
                   />
                 </div>
-                {phoneErr && <p className="mt-1 pl-1 font-body text-[11px] font-semibold text-red-600">{phoneErr}</p>}
+                {phoneErr && <p className="mt-1 pl-1 font-body text-[12px] font-semibold text-red-600">{phoneErr}</p>}
               </div>
 
               <div className="pt-2">

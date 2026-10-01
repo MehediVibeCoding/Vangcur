@@ -139,7 +139,7 @@ export default function OrderRateLimitModal() {
             {lang === 'en' ? 'Daily Order Limit Reached' : 'দৈনিক অর্ডার সীমা পূর্ণ হয়েছে'}
           </h3>
 
-          <p className="relative z-10 mt-2 font-body text-[12.5px] leading-relaxed text-ink/80">
+          <p className="relative z-10 mt-2 font-body text-[13px] leading-relaxed text-ink/80">
             {lang === 'en' ? (
               <>You have completed the maximum of <strong className="font-bold text-brand-light">3 orders within the last 24 hours</strong>. To prevent spam and fake bookings, a maximum of 3 orders are permitted per device or number per day.</>
             ) : (
@@ -148,7 +148,7 @@ export default function OrderRateLimitModal() {
           </p>
 
           <div className="relative z-10 my-4 rounded-[12px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
-            <p className="font-body text-[12px] leading-relaxed text-ink/85">
+            <p className="font-body text-[13px] leading-relaxed text-ink/85">
               {lang === 'en' ? (
                 <>💡 Need to order more items urgently? Please contact our official WhatsApp support directly for immediate processing.</>
               ) : (

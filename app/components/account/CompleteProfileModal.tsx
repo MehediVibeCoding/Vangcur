@@ -249,7 +249,7 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
                 </button>
 
                 {complete && (
-                  <p className="text-center font-body text-[11px] font-semibold text-emerald-600">
+                  <p className="text-center font-body text-[12px] font-semibold text-emerald-600">
                     {t('✓ আপনার প্রোফাইল সম্পূর্ণ — ভেরিফিকেশন ব্যাজ পাবেন')}
                   </p>
                 )}

@@ -282,6 +282,12 @@ export default function CheckoutPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [showCouponInputBox, setShowCouponInputBox] = useState(false);
   const [couponError, setCouponError] = useState('');
+  // 🔁 শেষ যে কুপন কোডটা সার্ভার রিজেক্ট করেছে (এবং তার এরর মেসেজ)। ইনপুটে হুবহু
+  // এই কোডটাই থাকলে বাটনে "প্রয়োগ"-এর বদলে "মুছুন" দেখায়; একটা অক্ষর বদলালেই
+  // (যোগ/বাদ/পরিবর্তন) আবার "প্রয়োগ" ফিরে আসে।
+  const [failedCoupon, setFailedCoupon] = useState<{ code: string; msg: string } | null>(null);
+  const isFailedCouponShown = !!failedCoupon && couponInput === failedCoupon.code;
+  const shownCouponError = couponError || (isFailedCouponShown && failedCoupon ? failedCoupon.msg : '');
 
   const [step1BtnStatus, setStep1BtnStatus] = useState<'idle' | 'verifying' | 'success'>('idle');
 
@@ -695,6 +701,19 @@ export default function CheckoutPage() {
 
   const balance = Math.max(0, total - advanceInfo.totalAdvance);
 
+  // সাবটোটাল বা ফোন নম্বর বদলালে আগের ব্যর্থ-কুপনের ফলাফল বাসি হয়ে যায় (যেমন "মিনিমাম
+  // অর্ডার"-এর কারণে ফেল করা কুপন এখন পাস করতে পারে) — তাই আবার "প্রয়োগ" করতে দিই।
+  useEffect(() => {
+    setFailedCoupon(null);
+    setCouponError('');
+  }, [sub, phone]);
+
+  const handleClearFailedCoupon = () => {
+    setCouponInput('');
+    setCouponError('');
+    setFailedCoupon(null);
+  };
+
   const handleApplyCoupon = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setCouponError('');
@@ -718,7 +737,13 @@ export default function CheckoutPage() {
 
     if (!res.ok || !res.coupon) {
       const errMsg = res.error || (lang === 'en' ? 'Invalid coupon code' : 'কুপন কোডটি সঠিক নয়');
-      setCouponError(errMsg);
+      if (res.transient) {
+        // রেট-লিমিট/নেটওয়ার্ক/সার্ভার সমস্যা — কোডটা ভুল প্রমাণিত হয়নি, তাই বাটন "প্রয়োগ"ই থাকে
+        setCouponError(errMsg);
+      } else {
+        setCouponError('');
+        setFailedCoupon({ code: clean, msg: errMsg });
+      }
       showToast(errMsg, 'error');
       return false;
     }
@@ -727,6 +752,7 @@ export default function CheckoutPage() {
     setAppliedCoupon(res.coupon);
     setCouponInput('');
     setCouponError('');
+    setFailedCoupon(null);
     setShowCouponInputBox(false);
     showToast(lang === 'en' ? `Coupon "${res.coupon.code}" applied successfully!` : `কুপন "${res.coupon.code}" সফলভাবে যুক্ত হয়েছে!`);
     return true;
@@ -1134,7 +1160,14 @@ export default function CheckoutPage() {
 
               {!appliedCoupon && showCouponInputBox && (
                 <div className="mt-3 pt-2.5 border-t border-border-base/70">
-                  <form onSubmit={handleApplyCoupon} className="relative flex flex-col gap-1">
+                  <form
+                    onSubmit={(e) => {
+                      // রিজেক্টেড কোড ইনপুটে থাকা অবস্থায় Enter চাপলে একই ভুল কোড আবার সার্ভারে পাঠানো হবে না
+                      if (isFailedCouponShown) { e.preventDefault(); return; }
+                      handleApplyCoupon(e);
+                    }}
+                    className="relative flex flex-col gap-1"
+                  >
                     <div className="relative flex items-center">
                       <input
                         type="text"
@@ -1147,19 +1180,22 @@ export default function CheckoutPage() {
                         }}
                         placeholder={lang === 'en' ? 'Coupon' : 'কুপন কোড লিখুন...'}
                         className={`w-full rounded-[10px] border bg-white py-2 pl-3 pr-20 font-body text-xs uppercase text-ink outline-none transition-brand placeholder:text-muted/60 ${
-                          couponError ? 'border-red-400 bg-red-50/40 focus:border-red-500' : 'border-ink/20 focus:border-brand-light'
+                          shownCouponError ? 'border-red-400 bg-red-50/40 focus:border-red-500' : 'border-ink/20 focus:border-brand-light'
                         }`}
                       />
                       <button
-                        type="submit"
+                        type={isFailedCouponShown ? 'button' : 'submit'}
+                        onClick={isFailedCouponShown ? handleClearFailedCoupon : undefined}
                         disabled={couponLoading || !couponInput.trim()}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold text-brand-light transition-colors hover:text-brand-light-hover disabled:opacity-40 active:scale-95"
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold transition-colors disabled:opacity-40 active:scale-95 ${
+                          isFailedCouponShown ? 'text-red-500 hover:text-red-600' : 'text-brand-light hover:text-brand-light-hover'
+                        }`}
                       >
-                        {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
+                        {couponLoading ? (lang === 'en' ? 'Applying...' : 'যাচাই...') : isFailedCouponShown ? (lang === 'en' ? 'Clear' : 'মুছুন') : (lang === 'en' ? 'Apply' : 'প্রয়োগ')}
                       </button>
                     </div>
-                    {couponError && (
-                      <p className="pl-1 font-body text-[11px] font-semibold text-red-500">{couponError}</p>
+                    {shownCouponError && (
+                      <p className="pl-1 font-body text-[12px] font-semibold text-red-500">{shownCouponError}</p>
                     )}
                   </form>
                 </div>

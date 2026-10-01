@@ -270,7 +270,7 @@ export default function BgConfirmPopup() {
             </h2>
 
             {/* সাবটাইটেল */}
-            <p className="relative z-10 mb-4 font-body text-[12.5px] leading-relaxed text-ink/80">
+            <p className="relative z-10 mb-4 font-body text-[13px] leading-relaxed text-ink/80">
               {lang === 'en' ? (
                 <>Your payment has been verified and the order has been successfully confirmed.</>
               ) : (
@@ -293,7 +293,7 @@ export default function BgConfirmPopup() {
             </div>
 
             {/* ট্র্যাক অর্ডার তথ্য */}
-            <p className="relative z-10 mb-5 text-center font-body text-[11.5px] text-muted">
+            <p className="relative z-10 mb-5 text-center font-body text-[12.5px] text-muted">
               {lang === 'en' ? (
                 <>To track your order, use the website&apos;s &quot;Track Order&quot; option.</>
               ) : (

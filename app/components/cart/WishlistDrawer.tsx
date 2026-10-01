@@ -195,7 +195,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                   <h3 className="font-body text-[17px] font-extrabold text-ink">
                     ❤️ {lang === 'en' ? 'My Wishlist' : 'আপনার Wishlist'}
                   </h3>
-                  <p className="mt-0.5 font-body text-[12px] font-semibold text-muted">
+                  <p className="mt-0.5 font-body text-[13px] font-semibold text-muted">
                     {lang === 'en'
                       ? `${items.length} favorite item(s)`
                       : `${items.length}টি পছন্দের পণ্য`}
@@ -222,7 +222,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                   <p className="mb-1 font-body text-[15px] font-bold text-ink">
                     {t('আপনার Wishlist খালি')}
                   </p>
-                  <p className="mb-5 max-w-xs font-body text-[12.5px] text-muted">
+                  <p className="mb-5 max-w-xs font-body text-[13px] text-muted">
                     {t('পছন্দের প্রোডাক্ট হার্ট আইকনে ট্যাপ করে সেভ করুন')}
                   </p>
                   <motion.button

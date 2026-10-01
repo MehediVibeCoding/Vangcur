@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import InvoiceClient from './InvoiceClient';
+import { InvoiceLoadingSkeleton } from '@/app/components/ui/Skeletons';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function CheckoutInvoicePage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<InvoiceLoadingSkeleton />}>
       <InvoiceClient />
     </Suspense>
   );

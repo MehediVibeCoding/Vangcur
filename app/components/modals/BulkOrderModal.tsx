@@ -178,7 +178,7 @@ export default function BulkOrderModal() {
           </p>
 
           <div className="relative z-10 my-4 rounded-[12px] border border-brand-light/35 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md">
-            <div className="font-body text-[12px] leading-relaxed text-ink/85">
+            <div className="font-body text-[13px] leading-relaxed text-ink/85">
               {lang === 'en' ? (
                 <>✨ Our dedicated support manager will immediately assist you on WhatsApp to confirm your items, apply bulk deals, and arrange secure fast home delivery.</>
               ) : (
