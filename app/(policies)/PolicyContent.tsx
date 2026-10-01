@@ -225,11 +225,11 @@ export function PolicyContact() {
         </a>
 
         <a
-          href="mailto:vangcurgadgets@gmail.com"
+          href="mailto:support@vangcur.com"
           className="flex items-center gap-2.5 rounded-[12px] border border-border-base bg-white/80 p-3 font-body text-[12.5px] font-bold text-ink transition-colors hover:border-brand-light hover:bg-white"
         >
           <MailLetterIcon />
-          <span>vangcurgadgets@gmail.com</span>
+          <span>support@vangcur.com</span>
         </a>
       </div>
 

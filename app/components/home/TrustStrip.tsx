@@ -22,7 +22,7 @@ const iconProps = {
 const TRUST_ITEMS: TrustItem[] = [
   {
     label: 'দ্রুত ডেলিভারি',
-    sub: 'ঢাকা ১–৩ দিন',
+    sub: 'ঢাকা ১–২ দিন',
     tint: 'text-brand-light bg-brand-light/10',
     icon: (
       <svg {...iconProps}>
@@ -103,11 +103,11 @@ export default function TrustStrip() {
             >
               {item.icon}
             </div>
-            <div className="min-w-0">
-              <div className="truncate text-[11px] font-bold text-ink md:text-[12.5px]">
+            <div className="min-w-0 font-body">
+              <div className="truncate font-body text-[11px] font-bold text-ink md:text-[12.5px]">
                 {t(item.label)}
               </div>
-              <div className="truncate text-[10px] text-muted md:text-[11px]">
+              <div className="truncate font-body text-[10px] text-muted md:text-[11px]">
                 {t(item.sub)}
               </div>
             </div>

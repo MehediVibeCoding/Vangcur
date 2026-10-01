@@ -38,11 +38,13 @@ export default function useCloseWhenOffscreen(
       const entry = entries[entries.length - 1];
       if (!entry || entry.isIntersecting) return;
 
+      // আইটেমটা স্ক্রিনের নিচে থাকলে বন্ধ করব না — ব্যবহারকারী ম্যানুয়ালি বন্ধ না করা পর্যন্ত
+      // খোলা থাকবে (বন্ধ করলে কনটেন্ট কমে গিয়ে হঠাৎ ঝাঁকুনি লাগে)।
       const wasAbove = entry.boundingClientRect.bottom <= 0;
+      if (!wasAbove) return;
+
       let lastHeight = el.offsetHeight;
       onCloseRef.current();
-
-      if (!wasAbove) return; // নিচে থাকলে স্ক্রল পজিশনে কোনো প্রভাব পড়ে না
 
       const startedAt = performance.now();
       const tick = () => {

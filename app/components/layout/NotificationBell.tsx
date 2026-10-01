@@ -118,6 +118,7 @@ function NotificationRow({
   onNavigate: (item: NotificationItem) => void;
   onDismiss: (id: string) => void;
 }) {
+  const { t } = useT();
   const [dragX, setDragX] = useState(0);
   const [removing, setRemoving] = useState(false);
   const DELETE_THRESHOLD = 64;
@@ -181,8 +182,8 @@ function NotificationRow({
           {!isMobile && (
             <button
               type="button"
-              title="মুছুন"
-              aria-label="মুছুন"
+              title={t('মুছুন')}
+              aria-label={t('মুছুন')}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

@@ -218,7 +218,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
     const authorName = isAdmin
       ? 'Vangcur Team'
-      : (currentUser?.name || replyTarget.question.user_name || 'প্রশ্নকর্তা');
+      : (currentUser?.name || replyTarget.question.user_name || t('প্রশ্নকর্তা'));
 
     const res = await submitProductAnswer(supabase, {
       questionId: replyTarget.question.id,
@@ -255,7 +255,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
   };
 
   const handleDeleteQuestion = async (qId: number | string) => {
-    if (!window.confirm('আপনি কি নিশ্চিতভাবে এই প্রশ্নটি মুছে ফেলতে চান?')) return;
+    if (!window.confirm(t('আপনি কি নিশ্চিতভাবে এই প্রশ্নটি মুছে ফেলতে চান?'))) return;
     try {
       const { error } = await supabase.from('product_questions').delete().eq('id', qId);
       if (error) throw error;
@@ -267,7 +267,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
   };
 
   const handleDeleteAnswer = async (ansId: number | string, qId: number | string) => {
-    if (!window.confirm('আপনি কি এই উত্তরটি মুছে ফেলতে চান?')) return;
+    if (!window.confirm(t('আপনি কি এই উত্তরটি মুছে ফেলতে চান?'))) return;
     try {
       const { error } = await supabase.from('product_question_answers').delete().eq('id', ansId);
       if (error) throw error;

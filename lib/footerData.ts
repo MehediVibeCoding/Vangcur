@@ -17,7 +17,7 @@ export const DEFAULT_FOOTER = {
     phoneLabel: '01897-804055',
     phoneHref: 'tel:01897804055',
     waHref: 'https://wa.me/8801897804055',
-    email: 'vangcurgadgets@gmail.com',
+    email: 'support@vangcur.com',
     fb: 'https://facebook.com/vangcurgadgets',
     addr: 'Dhaka, Bangladesh',
   },

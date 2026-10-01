@@ -355,7 +355,7 @@ export default function ProductReviews({
 
   const handleDeleteReview = async (e: React.MouseEvent, reviewId: number | string) => {
     e.stopPropagation();
-    if (!window.confirm('আপনি কি নিশ্চিতভাবে এই রিভিউটি মুছে ফেলতে চান?')) return;
+    if (!window.confirm(t('আপনি কি নিশ্চিতভাবে এই রিভিউটি মুছে ফেলতে চান?'))) return;
 
     const res = await deleteProductReview(supabase, reviewId, currentUser?.id);
     if (res.ok) {
@@ -1087,7 +1087,7 @@ export default function ProductReviews({
                     <label className="flex cursor-pointer flex-col items-center gap-1 text-center font-body text-xs text-muted hover:text-brand-light">
                       <span className="text-xl">📷</span>
                       <span className="font-semibold">{t('ছবি ড্র্যাগ করে আনুন অথবা ব্রাউজ করুন')}</span>
-                      <span className="text-[10.5px] text-muted/70">(JPG, PNG, WEBP — সর্বোচ্চ ৫MB)</span>
+                      <span className="text-[10.5px] text-muted/70">{t('(JPG, PNG, WEBP — সর্বোচ্চ ৫MB)')}</span>
                       <input
                         type="file"
                         multiple

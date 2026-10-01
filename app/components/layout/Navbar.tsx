@@ -239,7 +239,6 @@ function SearchDefaultPanel({
         <>
           <div className="flex items-center justify-between px-3.5 pb-2 pt-1.5 text-[10.5px] font-bold uppercase tracking-[.5px] text-muted">
             <span>{t('জনপ্রিয় ক্যাটাগরি')}</span>
-            <a className="cursor-pointer text-[11px] font-semibold text-brand-light hover:underline" onClick={() => onGoToCat('all')}>{t('সব দেখুন →')}</a>
           </div>
           <div className="grid grid-cols-4 gap-2 px-3.5 pb-3">
             {popularCategories.map((c) => (
