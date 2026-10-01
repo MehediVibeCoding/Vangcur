@@ -39,6 +39,13 @@ const SITE_URL = 'https://vangcur.com';
 // Mehediadmin সেভ/পাবলিশ করলে on-demand revalidation-ও হয় (app/api/revalidate-guide দেখুন)
 export const revalidate = 300;
 
+// ⚡ খালি generateStaticParams: বিল্ডের সময় কিছু প্রি-রেন্ডার হয় না, কিন্তু প্রথম ভিজিটে পেজ
+// বানিয়ে CDN-এ ক্যাশ হয় এবং `revalidate` অনুযায়ী ব্যাকগ্রাউন্ডে নবায়ন হয় (on-demand ISR)।
+export async function generateStaticParams() {
+  return [];
+}
+
+
 function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 }
