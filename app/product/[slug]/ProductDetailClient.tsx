@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
-  prodInCat, fetchCustomProducts, mergeCustomProducts, fetchProductsByIds,
+  fetchCustomProducts, mergeCustomProducts, fetchProductsByIds,
   findProdBySlug, productHref,
   startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
@@ -323,6 +323,7 @@ function GalleryImg({ val, name, isThumb }: { val?: string; name: string; isThum
   return <span className={isThumb ? 'text-2xl' : 'text-[90px]'}>{val || '📦'}</span>;
 }
 
+// 🏷️ পিউর মিনিমাল টেক্সট ট্যাবলেট (কোনো কাঁচা ইমোজি বা আইকন ছাড়া)
 const TABS = [
   { id: 'ppSecDesc', label: 'বিবরণ' },
   { id: 'ppSecFeatures', label: 'ফিচারস' },
@@ -407,10 +408,6 @@ export default function ProductDetailClient({
 
   useEffect(() => {
     router.prefetch('/checkout');
-    // 🛠️ ব্যাক করলে হোমপেজে স্কেলেটন ঝলক: প্রোডাক্ট পেজে রিফ্রেশ দিলে ব্রাউজারের রাউটার-ক্যাশ
-    // খালি হয়ে যায়, তখন ব্যাক করলে হোমপেজ সার্ভার থেকে আবার আনতে হয় (এবং app/loading.tsx
-    // স্কেলেটন দেখায়)। এখানে আগেভাগেই '/' প্রিফেচ করে রাখলে ব্যাক করার আগেই হোমপেজ
-    // ক্যাশে তৈরি থাকে, তাই ব্যাকে তাৎক্ষণিক খোলে।
     router.prefetch('/');
   }, [router]);
 
@@ -430,11 +427,7 @@ export default function ProductDetailClient({
     };
   }, [supabase, initialProducts]);
 
-  // 🔒 ফিক্স (audit P1-15): আগে এখানে পুরো custom_products টেবিলের Realtime
-  // WebSocket সাবস্ক্রিপশন ছিল (কোনো ফিল্টার ছাড়া) — ভিজিটর বাড়লে Supabase-এর
-  // concurrent-connection সীমা ছাড়িয়ে যেত। এখন বদলে হালকা পোলিং — প্রতি ৩০
-  // সেকেন্ডে শুধু এই পেজে দেখানো প্রোডাক্টগুলোর (এই + রিলেটেড) সর্বশেষ দাম/স্টক
-  // চেক করে, ট্যাব ব্যাকগ্রাউন্ডে থাকলে স্কিপ করে।
+  // 🔒 স্মার্ট মার্জ পোলিং: প্রতি ৩০ সেকেন্ডে দাম/স্টক রিকোয়েস্ট হলেও বিবরণ/ফিচারস কখনো মুছবে না
   const prodsRef = useRef(prods);
   useEffect(() => { prodsRef.current = prods; }, [prods]);
 
@@ -451,7 +444,29 @@ export default function ProductDetailClient({
       const freshById = new Map(fresh.map((p) => [String(p.id), p]));
       setProds((prev) => prev
         .filter((p) => freshById.has(String(p.id)))
-        .map((p) => ({ ...p, ...freshById.get(String(p.id))! })));
+        .map((p) => {
+          const freshItem = freshById.get(String(p.id))!;
+          return {
+            ...p,
+            price: freshItem.price,
+            old: freshItem.old,
+            stock: freshItem.stock,
+            badge: freshItem.badge,
+            imgs: freshItem.imgs && freshItem.imgs.length ? freshItem.imgs : p.imgs,
+            // 🛡️ স্মার্ট মার্জ: যদি নতুন অবজেক্টে বিস্তারিত বিবরণ থাকে তবেই আপডেট হবে, অন্যথায় বিদ্যমান সমৃদ্ধ বিবরণ বজায় থাকবে
+            ...(freshItem._detailLoaded ? {
+              longDesc: freshItem.longDesc || p.longDesc,
+              desc: freshItem.desc || p.desc,
+              features: freshItem.features && freshItem.features.length ? freshItem.features : p.features,
+              faqs: freshItem.faqs && freshItem.faqs.length ? freshItem.faqs : p.faqs,
+              specs: freshItem.specs && Object.keys(freshItem.specs).length ? freshItem.specs : p.specs,
+              infoBoxes: freshItem.infoBoxes && freshItem.infoBoxes.length ? freshItem.infoBoxes : p.infoBoxes,
+              powerInfo: freshItem.powerInfo || p.powerInfo,
+              packagingContent: freshItem.packagingContent || p.packagingContent,
+              _detailLoaded: true,
+            } : {}),
+          };
+        }));
     };
 
     const timer = setInterval(tick, POLL_MS);
@@ -484,7 +499,20 @@ export default function ProductDetailClient({
     return () => { cancelled = true; };
   }, [baseProd?.id, supabase]);
 
-  const prod = useMemo(() => (baseProd ? { ...baseProd, ...(detail || {}) } : null), [baseProd, detail]);
+  const prod = useMemo(() => {
+    if (!baseProd) return null;
+    return {
+      ...baseProd,
+      ...(detail || {}),
+      longDesc: detail?.longDesc || baseProd.longDesc || baseProd.desc || '',
+      features: (detail?.features && detail.features.length) ? detail.features : baseProd.features || [],
+      faqs: (detail?.faqs && detail.faqs.length) ? detail.faqs : baseProd.faqs || [],
+      specs: (detail?.specs && Object.keys(detail.specs).length) ? detail.specs : baseProd.specs || {},
+      infoBoxes: (detail?.infoBoxes && detail.infoBoxes.length) ? detail.infoBoxes : baseProd.infoBoxes || [],
+      powerInfo: detail?.powerInfo || baseProd.powerInfo || '',
+      packagingContent: detail?.packagingContent || baseProd.packagingContent || '',
+    };
+  }, [baseProd, detail]);
 
   const quickSpecPills = useMemo(
     () => (prod ? getQuickSpecPills(prod.quickSpecsText, prod.specs) : []),
@@ -499,7 +527,6 @@ export default function ProductDetailClient({
   const [activeTab, setActiveTab] = useState('ppSecDesc');
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
   const faqItemRefs = useRef<(HTMLElement | null)[]>([]);
-  // খোলা FAQ স্ক্রলে পুরোপুরি স্ক্রিনের বাইরে চলে গেলে অটো-বন্ধ
   useCloseWhenOffscreen(openFaqIdx, faqItemRefs, () => setOpenFaqIdx(null));
   const [warrantyOpen, setWarrantyOpen] = useState(false);
   const [stickyShown, setStickyShown] = useState(false);
@@ -839,9 +866,6 @@ export default function ProductDetailClient({
 
   const discountPct = prod.old && prod.old > prod.price ? Math.round((1 - prod.price / prod.old) * 100) : 0;
 
-  // কালার ভেরিয়েশন: একই color_group_id-ওয়ালা প্রোডাক্টগুলো (নিজেকে সহ) —
-  // prods-এ পুরো ক্যাটালগ আগে থেকেই আছে বলে আলাদা কোনো কোয়েরি লাগে না।
-  // স্টক শেষ থাকা সিবলিং একদম বাদ, কিন্তু বর্তমান প্রোডাক্ট নিজে সবসময় থাকবে।
   const colorVariants = useMemo(() => {
     if (!prod.colorGroupId) return [];
     const currentIdStr = String(prod.id);
@@ -1213,23 +1237,31 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      <div className="sticky top-0 z-30 border-b border-brand-light/20 bg-gradient-to-b from-brand-bg/90 to-white/95 shadow-xs backdrop-blur-md" ref={tabsWrapRef}>
-        {/* 🛠️ ফিক্স: আগে এখানে [touch-action:pan-x] ছিল — এতে ট্যাব বারের ওপর আঙুল
-            রেখে উপর-নিচে টানলে ব্রাউজার উল্লম্ব স্ক্রলই বন্ধ করে দিত। এখন pan-x pan-y
-            দুটোই খোলা: বামে-ডানে টানলে ট্যাব সরে, উপর-নিচে টানলে পুরো পেজ স্ক্রল হয়। */}
-        <div
-          className="no-scrollbar mx-auto flex max-w-[1100px] gap-1.5 overflow-x-auto px-4 py-2 [overscroll-behavior-x:contain] [touch-action:pan-x_pan-y] md:px-8"
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        >
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              className={`whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-bold transition-brand duration-brand ${activeTab === tab.id ? 'border-brand-light bg-brand-light text-white shadow-sh1' : 'border-transparent bg-white/60 text-muted hover:border-brand-light/30 hover:bg-brand-bg hover:text-brand-light'}`}
-              onClick={() => scrollToSection(tab.id)}
-            >
-              {t(tab.label)}
-            </button>
-          ))}
+      {/* 🌟 নতুন Apple-স্টাইল পিউর টেক্সট সেগমেন্টেড ফ্রস্টেড গ্লাস পিল বার (কোনো ইমোজি/আইকন ছাড়া) */}
+      <div className="sticky top-0 z-30 border-b border-border-base/70 bg-white/85 shadow-xs backdrop-blur-md" ref={tabsWrapRef}>
+        <div className="mx-auto max-w-[1100px] px-3 py-2 sm:px-6 md:px-8">
+          <div
+            className="no-scrollbar flex items-center gap-1.5 overflow-x-auto rounded-full border border-border-base/80 bg-surface-muted/65 p-1.5 shadow-2xs backdrop-blur-md [overscroll-behavior-x:contain] [touch-action:pan-x_pan-y]"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`relative shrink-0 whitespace-nowrap rounded-full px-4 py-2 font-body text-[13px] font-bold transition-all duration-200 outline-none select-none ${
+                    isActive
+                      ? 'bg-brand-light text-white shadow-xs'
+                      : 'text-ink/75 hover:bg-white/90 hover:text-brand-light'
+                  }`}
+                  onClick={() => scrollToSection(tab.id)}
+                >
+                  {t(tab.label)}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
