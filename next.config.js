@@ -12,7 +12,17 @@ const nextConfig = {
   // puppeteer-core/@sparticuz/chromium do their own path resolution to find
   // the bundled Chromium binary, which breaks if webpack bundles them — so
   // they're kept external and required natively at runtime instead.
-  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
+  // isomorphic-dompurify/jsdom are also kept external: jsdom's
+  // html-encoding-sniffer dependency pulls in an ESM-only module
+  // (@exodus/bytes), which webpack's bundled require() can't load —
+  // "Error: require() of ES Module ... not supported" at runtime on any
+  // page that calls sanitizeSvgHtml() server-side (ERR_REQUIRE_ESM).
+  serverExternalPackages: [
+    '@sparticuz/chromium',
+    'puppeteer-core',
+    'isomorphic-dompurify',
+    'jsdom',
+  ],
   // Next's file tracer doesn't know the invoice route needs the Chromium
   // binary (it's loaded dynamically), so without this the Vercel function
   // deploys without it and fails at runtime with a missing-binary error.
