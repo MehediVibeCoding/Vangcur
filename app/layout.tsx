@@ -66,11 +66,6 @@ export default async function RootLayout({
       className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}
     >
       <head>
-        {/* 🛠️ ফিক্স (ডার্ক → লাইট বাড়ি): ডার্ক মোড শুধু লগইন করা ইউজারের জন্য (themeStore.ts
-            দেখুন)। আগে এই স্ক্রিপ্ট কোনো সেভ করা থিম না পেলে ডিভাইসের prefers-color-scheme
-            দেখে প্রথম ফ্রেমেই `dark` ক্লাস বসিয়ে দিত, তারপর হাইড্রেশনে themeStore সেটা সরিয়ে
-            লাইট করত — এটাই ঝলক। এখন লগইন করা (localStorage-এ vc_user আছে) না হলে কখনো ডার্ক
-            বসানো হয় না, তাই গেস্টের প্রথম পেইন্ট থেকেই লাইট। */}
         <Script
           id="theme-flicker-guard"
           strategy="beforeInteractive"
@@ -80,15 +75,13 @@ export default async function RootLayout({
         />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        {/* বাংলা সংখ্যার ফন্ট (globals.css-এর @font-face-এর একই URL) — CSS ডাউনলোডের জন্য অপেক্ষা না করে সাথে সাথে আনা শুরু */}
+        {/* বাংলা সংখ্যা ও ডিজিটের জন্য নির্ভরযোগ্য গুগল ফন্ট স্টাইলশীট (জিরো 404 এরর) */}
         <link
-          rel="preload"
-          as="font"
-          type="font/woff2"
-          href="https://fonts.gstatic.com/s/notosansbengali/v27/flU0RhA2x2WflAh38D3Mm4CRNmSEWcc7kJHSgE-V1syq6kXGsY7C2s4.woff2"
-          crossOrigin="anonymous"
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&text=%E0%A7%A6%E0%A7%A7%E0%A7%A8%E0%A7%A9%E0%A7%AA%E0%A7%AB%E0%A7%AC%E0%A7%AD%E0%A7%AE%E0%A7%AF&display=swap"
         />
         {gtmId && (
           <Script
