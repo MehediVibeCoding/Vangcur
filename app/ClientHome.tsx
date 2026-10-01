@@ -10,6 +10,7 @@ import ProductGrid from './components/home/ProductGrid';
 import CustomerGallery from './components/home/CustomerGallery';
 import FAQ from './components/home/FAQ';
 import ProductNotice from './components/home/ProductNotice';
+import BrandMarquee from './components/home/BrandMarquee';
 import About from './components/home/About';
 import Footer from './components/layout/Footer';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
@@ -66,6 +67,7 @@ export default function ClientHome({
       <Categories initialCategories={initialCategories} />
       <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} initialHasMore={initialHasMore} />
       <ProductNotice />
+      <BrandMarquee />
       <CustomerGallery />
       <FAQ />
       <About />
