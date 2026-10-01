@@ -3,6 +3,8 @@
 import { createServiceClient } from '@/lib/supabase/serviceClient';
 import { createClient } from '@/lib/supabase/server';
 import { logWarn } from '@/lib/logger';
+import { headers } from 'next/headers';
+import { getClientIp, slidingWindowLimit, tokenBucketLimit } from '@/lib/limiter';
 import type { CouponValidationResult } from '@/lib/couponData';
 import { MEMBERSHIP_TIERS } from '@/lib/membershipData';
 
@@ -25,6 +27,19 @@ export async function validateCouponAction(
   }
 
   try {
+    // 🛡️ রেট লিমিট (কোড অনুমান/ব্রুট-ফোর্স ঠেকাতে) — দুই স্তর:
+    //  ১) টোকেন-বাকেট: একবারে ৮টা চেষ্টা চলে, তারপর প্রতি ৬ সেকেন্ডে ১টা করে ফিরে আসে
+    //  ২) ব্যর্থ-চেষ্টার হার্ড ক্যাপ: প্রতি ঘণ্টায় সর্বোচ্চ ২০টি ভুল/অকার্যকর চেষ্টা (শুধু ব্যর্থতা গণনা হয়)
+    const clientIp = getClientIp(await headers());
+    const bucket = await tokenBucketLimit(`coupon:${clientIp}`, 8, 1 / 6);
+    if (!bucket.allowed) {
+      return { ok: false, error: `অনেকবার চেষ্টা করা হয়েছে। ${bucket.retryAfterSec} সেকেন্ড পরে আবার চেষ্টা করুন।` };
+    }
+    const failPeek = await slidingWindowLimit(`coupon-fail:${clientIp}`, 20, 3600, 0);
+    if (!failPeek.allowed) {
+      return { ok: false, error: 'অনেকবার ভুল কুপন দেওয়া হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।' };
+    }
+
     // ইউজার আইডি ক্লায়েন্টের পাঠানো মান থেকে নয়, লগইন সেশন থেকে নেওয়া হয় —
     // মেম্বারশিপ-লেভেলের কুপন যাচাইয়ে এটাই একমাত্র বিশ্বস্ত পরিচয়।
     const cookieClient = await createClient();
@@ -46,6 +61,8 @@ export async function validateCouponAction(
     }
 
     if (!data.ok) {
+      // ব্যর্থ চেষ্টা গণনায় যোগ (সফল চেষ্টা কখনো গণনায় ধরা হয় না)
+      await slidingWindowLimit(`coupon-fail:${clientIp}`, 20, 3600, 1);
       return { ok: false, error: data.error || 'অবৈধ কুপন কোড' };
     }
 

@@ -105,12 +105,22 @@ export default function GlobalOverlays() {
   }, [lang]);
 
   // ইনস্ট্যান্ট চেকআউট ট্রানজিশনের জন্য প্রি-ফেচ
+  // শুধু ব্রাউজার idle হলে প্রি-ফেচ — প্রথম লোডের (LCP/হাইড্রেশন) সাথে নেটওয়ার্ক-প্রতিযোগিতা এড়াতে
   useEffect(() => {
-    router.prefetch('/checkout');
-    router.prefetch('/');
+    const run = () => {
+      router.prefetch('/checkout');
+      router.prefetch('/');
+    };
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(run, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = setTimeout(run, 2500);
+    return () => clearTimeout(t);
   }, [router]);
 
   useEffect(() => {
+    useLanguageStore.getState().hydrateLanguage();
     useAuthStore.getState().hydrate();
     useCartStore.getState().hydrate();
     useWishlistStore.getState().hydrate();

@@ -77,6 +77,14 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        {/* বাংলা সংখ্যার ফন্ট (globals.css-এর @font-face-এর একই URL) — CSS ডাউনলোডের জন্য অপেক্ষা না করে সাথে সাথে আনা শুরু */}
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          href="https://fonts.gstatic.com/s/notosansbengali/v27/flU0RhA2x2WflAh38D3Mm4CRNmSEWcc7kJHSgE-V1syq6kXGsY7C2s4.woff2"
+          crossOrigin="anonymous"
+        />
         {gtmId && (
           <Script
             id="gtm-script"

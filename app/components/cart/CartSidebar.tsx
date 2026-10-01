@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { fetchCustomProducts, QUICK_CART_EVENT } from '@/lib/productData';
+import { fetchCatalogIndex, QUICK_CART_EVENT } from '@/lib/productData';
 import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
@@ -188,7 +188,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
         return;
       }
       try {
-        const customRows = await fetchCustomProducts(supabase);
+        const customRows = await fetchCatalogIndex(supabase);
         if (!cancelled && customRows.length) {
           prodsRef.current = customRows;
           try {
@@ -236,7 +236,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           prodsRef.current = cached;
         } else {
           try {
-            const rows = await fetchCustomProducts(supabase);
+            const rows = await fetchCatalogIndex(supabase);
             if (rows.length) prodsRef.current = rows;
           } catch {
             // ignore

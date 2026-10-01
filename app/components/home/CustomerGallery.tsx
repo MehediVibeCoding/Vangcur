@@ -580,7 +580,7 @@ export default function CustomerGallery() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           className="block h-full w-full object-cover select-none"
-                          src={optimizeCloudinaryUrl(imgUrl, 900)}
+                          src={optimizeCloudinaryUrl(imgUrl, 720)}
                           alt="Customer Review"
                           loading="lazy"
                           draggable={false}

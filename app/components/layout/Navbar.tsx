@@ -8,7 +8,7 @@ import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
-import { fetchCustomProducts, productHref } from '@/lib/productData';
+import { fetchCatalogIndex, productHref } from '@/lib/productData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
 import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT } from '@/lib/categoryData';
@@ -407,12 +407,21 @@ export default function Navbar({
   );
   const popularSearches = DEFAULT_POPULAR_SEARCHES;
 
+  // প্রি-ফেচ শুধু ব্রাউজার idle হলে — প্রথম লোডে LCP ও হাইড্রেশনের সাথে নেটওয়ার্ক-প্রতিযোগিতা এড়াতে
   useEffect(() => {
-    router.prefetch('/checkout');
-    router.prefetch('/search');
-    router.prefetch('/track-order');
-    router.prefetch('/account');
-    router.prefetch('/account/orders');
+    const run = () => {
+      router.prefetch('/checkout');
+      router.prefetch('/search');
+      router.prefetch('/track-order');
+      router.prefetch('/account');
+      router.prefetch('/account/orders');
+    };
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(run, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = setTimeout(run, 3000);
+    return () => clearTimeout(t);
   }, [router]);
 
   const initSearchData = useCallback(async () => {
@@ -430,7 +439,7 @@ export default function Navbar({
     searchDataLoadingRef.current = true;
     try {
       const [customRows, catList] = await Promise.all([
-        fetchCustomProducts(supabase),
+        fetchCatalogIndex(supabase),
         fetchCategories(supabase),
       ]);
 

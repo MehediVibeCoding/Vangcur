@@ -1,49 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logWarn } from '@/lib/logger';
-
-const RATE_LIMIT_WINDOW_MS = 10 * 1000;
-const MAX_VERIFY_PER_WINDOW = 10;
-const ipVerifyTracker = new Map<string, { count: number; resetAt: number }>();
-
-function checkVerifyRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = ipVerifyTracker.get(ip);
-
-  if (ipVerifyTracker.size > 3000) {
-    for (const [key, val] of ipVerifyTracker.entries()) {
-      if (now > val.resetAt) ipVerifyTracker.delete(key);
-    }
-  }
-
-  if (!record || now > record.resetAt) {
-    ipVerifyTracker.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (record.count >= MAX_VERIFY_PER_WINDOW) {
-    return false;
-  }
-
-  record.count += 1;
-  return true;
-}
+import { slidingWindowLimit, getClientIp } from '@/lib/limiter';
 
 export async function POST(req: NextRequest) {
   try {
-    // 🔒 ফিক্স (audit P1-13): Vercel-এর এজ-সেট হেডার আগে ট্রাই হয় (স্পুফ-প্রুফ)
-    const vercelForwardedFor = req.headers.get('x-vercel-forwarded-for');
-    const realIp = req.headers.get('x-real-ip');
-    const forwardedFor = req.headers.get('x-forwarded-for');
-    const clientIp =
-      (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
-      (realIp ? realIp.trim() : '') ||
-      (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
-      '127.0.0.1';
+    const clientIp = getClientIp(req.headers);
 
-    if (!checkVerifyRateLimit(clientIp)) {
+    // শেয়ার্ড স্লাইডিং-উইন্ডো: প্রতি ১০ সেকেন্ডে সর্বোচ্চ ১০টি যাচাই
+    const rl = await slidingWindowLimit(`turnstile:${clientIp}`, 10, 10);
+    if (!rl.allowed) {
       return NextResponse.json(
         { success: false, error: 'rate_limited' },
-        { status: 429 }
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
       );
     }
 

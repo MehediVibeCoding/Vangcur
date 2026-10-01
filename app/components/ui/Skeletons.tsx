@@ -326,8 +326,8 @@ export function LogoSkeleton({ className = '' }: { className?: string }) {
       aria-hidden="true"
       className={`shrink-0 animate-pulse bg-muted/40 ${className}`}
       style={{
-        WebkitMaskImage: "url('/vangcur-logo.png')",
-        maskImage: "url('/vangcur-logo.png')",
+        WebkitMaskImage: "url('/vangcur-logo-sm.png')",
+        maskImage: "url('/vangcur-logo-sm.png')",
         WebkitMaskRepeat: 'no-repeat',
         maskRepeat: 'no-repeat',
         WebkitMaskSize: 'contain',

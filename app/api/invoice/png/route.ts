@@ -6,6 +6,7 @@ import { DEFAULT_FOOTER } from '@/lib/footerData';
 import { renderInvoiceHtmlDocument, INVOICE_CARD_ELEMENT_ID } from '@/lib/invoice/renderInvoiceHtml';
 import { launchInvoiceBrowser } from '@/lib/invoice/browser';
 import { logError, logWarn } from '@/lib/logger';
+import { slidingWindowLimit, getClientIp } from '@/lib/limiter';
 
 // 🖨️ এই রুটটা headless Chromium চালায় (Puppeteer) — এটা তুলনামূলক ভারী একটা
 // অপারেশন, তাই এখানে সাধারণ API রুটের চেয়ে কড়া রেট-লিমিট রাখা হয়েছে।
@@ -13,44 +14,16 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30; // Hosting প্ল্যান অনুযায়ী প্রয়োজনে বাড়ান।
 
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 8;
-const ipRequestMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = ipRequestMap.get(ip);
-
-  if (ipRequestMap.size > 5000) {
-    for (const [key, val] of ipRequestMap.entries()) {
-      if (now > val.resetAt) ipRequestMap.delete(key);
-    }
-  }
-
-  if (!record || now > record.resetAt) {
-    ipRequestMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (record.count >= MAX_REQUESTS_PER_WINDOW) return false;
-
-  record.count += 1;
-  return true;
-}
-
 export async function GET(req: NextRequest) {
-  // 🔒 ফিক্স (audit P1-13): Vercel-এর এজ-সেট হেডার আগে ট্রাই হয় (স্পুফ-প্রুফ)
-  const vercelForwardedFor = req.headers.get('x-vercel-forwarded-for');
-  const realIp = req.headers.get('x-real-ip');
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  const clientIp =
-    (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
-    (realIp ? realIp.trim() : '') ||
-    (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
-    '127.0.0.1';
+  const clientIp = getClientIp(req.headers);
 
-  if (!checkRateLimit(clientIp)) {
-    return NextResponse.json({ ok: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
+  // শেয়ার্ড স্লাইডিং-উইন্ডো: প্রতি মিনিটে সর্বোচ্চ ৮টি (প্রতিটায় headless Chromium চলে — ভারী কাজ)
+  const rl = await slidingWindowLimit(`invoice:${clientIp}`, 8, 60);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { ok: false, error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
+    );
   }
 
   const orderId = req.nextUrl.searchParams.get('id') || req.nextUrl.searchParams.get('orderId');

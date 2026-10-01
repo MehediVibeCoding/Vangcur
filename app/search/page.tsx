@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
-import { fetchCustomProducts } from '@/lib/productData';
+import { createClient } from '@supabase/supabase-js';
+import { getCachedCatalogIndex } from '@/lib/catalogIndex';
 import { fetchCategories } from '@/lib/categoryData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 import SearchClient from './SearchClient';
@@ -23,10 +23,12 @@ export async function generateMetadata({
 }
 
 export default async function SearchPage() {
-  const supabase = await createClient();
+  // কুকি-ছাড়া anon ক্লায়েন্ট + ৫ মিনিট-ক্যাশ করা হালকা ইনডেক্স (পুরো ক্যাটালগ প্রতিবার আনা হয় না)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const [initialProducts, initialCategories] = await Promise.all([
-    fetchCustomProducts(supabase),
-    fetchCategories(supabase),
+    getCachedCatalogIndex(),
+    url && key ? fetchCategories(createClient(url, key)) : Promise.resolve([]),
   ]);
 
   return (

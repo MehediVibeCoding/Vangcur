@@ -2,13 +2,21 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { idFromSlug, makeSlug, fetchProductById, fetchCustomProducts } from '@/lib/productData';
+import { idFromSlug, makeSlug, fetchProductById, fetchRelatedProducts } from '@/lib/productData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
+import type { Product } from '@/types';
 import ProductDetailClient from './ProductDetailClient';
 
 const SITE_URL = 'https://vangcur.com';
 
 export const revalidate = 300;
+
+// ⚡ খালি generateStaticParams: বিল্ডের সময় কিছু প্রি-রেন্ডার হয় না, কিন্তু প্রথম ভিজিটে পেজ
+// বানিয়ে CDN-এ ক্যাশ হয় এবং `revalidate` অনুযায়ী ব্যাকগ্রাউন্ডে নবায়ন হয় (on-demand ISR)।
+export async function generateStaticParams() {
+  return [];
+}
+
 
 const getProduct = cache(async (id: string) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,12 +26,13 @@ const getProduct = cache(async (id: string) => {
   return fetchProductById(supabase, id);
 });
 
-const getAllProducts = cache(async () => {
+// পুরো ক্যাটালগ নয় — শুধু এই প্রোডাক্টের রিলেটেড + কালার-সিবলিং (৫০০+ প্রোডাক্টেও পেজ হালকা থাকে)
+const getRelatedProducts = cache(async (product: Product) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) return [];
   const supabase = createClient(supabaseUrl, supabaseKey);
-  return fetchCustomProducts(supabase);
+  return fetchRelatedProducts(supabase, product);
 });
 
 const getProductReviewsSummary = cache(async (id: string) => {
@@ -112,10 +121,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const initialProduct = await getProduct(id);
   if (!initialProduct) notFound();
 
-  const [liveReviewsSummary, initialProducts] = await Promise.all([
+  const [liveReviewsSummary, relatedProducts] = await Promise.all([
     getProductReviewsSummary(id),
-    getAllProducts(),
+    getRelatedProducts(initialProduct),
   ]);
+  // ক্লায়েন্টের `prods` তালিকায় বর্তমান প্রোডাক্ট নিজেও থাকতে হয় (baseProd এখান থেকেই খোঁজা হয়)
+  const initialProducts = [initialProduct, ...relatedProducts];
 
   const canonicalSlug = `${makeSlug(initialProduct.name)}-${initialProduct.id}`;
   const validImgs = (initialProduct.imgs || []).filter(

@@ -9,7 +9,7 @@ import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { OPEN_QUICK_CART_MODAL_EVENT, OPEN_BULK_ORDER_EVENT } from '@/lib/uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from '@/lib/checkoutData';
-import { fetchCustomProducts } from '@/lib/productData';
+import { fetchCatalogIndex } from '@/lib/productData';
 import { createClient } from '@/lib/supabase/client';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
@@ -150,7 +150,7 @@ export default function QuickOrderModal() {
         return;
       }
       try {
-        const rows = await fetchCustomProducts(supabase);
+        const rows = await fetchCatalogIndex(supabase);
         if (!cancelled && rows.length) {
           prodsRef.current = rows;
           try {

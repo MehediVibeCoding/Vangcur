@@ -203,6 +203,23 @@ export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Pro
   return [];
 }
 
+/**
+ * ব্রাউজার-সাইডে সার্চ/কার্ট/কুইক-অর্ডারের জন্য হালকা ক্যাটালগ ইনডেক্স (CDN-ক্যাশ করা,
+ * `/api/search-index`)। ব্যর্থ হলে আগের মতো সরাসরি Supabase থেকে ফলব্যাক — কিছু ভাঙে না।
+ */
+export async function fetchCatalogIndex(supabase: SupabaseClient): Promise<Product[]> {
+  try {
+    const res = await fetch('/api/search-index', { headers: { Accept: 'application/json' } });
+    if (res.ok) {
+      const json = (await res.json()) as { products?: Product[] };
+      if (Array.isArray(json.products) && json.products.length) return json.products;
+    }
+  } catch {
+    // নিচের ফলব্যাকে যাবে
+  }
+  return fetchCustomProducts(supabase);
+}
+
 export interface ProductsPageResult {
   products: Product[];
   hasMore: boolean;
@@ -274,6 +291,63 @@ export async function fetchProductsPage(
   } catch (e) {
     logWarn('[Vangcur] fetchProductsPage exception:', e);
     return { products: [], hasMore: false, total: 0 };
+  }
+}
+
+/**
+ * প্রোডাক্ট পেজের জন্য ছোট সাবসেট: একই ক্যাটাগরির রিলেটেড প্রোডাক্ট + একই color_group_id-র
+ * কালার-সিবলিং। আগে পেজ পুরো ক্যাটালগ (fetchCustomProducts) এনে ক্লায়েন্টে পাঠাত — ৫০০
+ * প্রোডাক্টে প্রতিটা প্রোডাক্ট-পেজের HTML ৭০০ KB+ হয়ে যেত এবং ক্লায়েন্ট প্রতি ৩০ সেকেন্ডে
+ * ৫০০ আইডির `.in()` কোয়েরি চালাত। এখন ক্রম আগের মতোই (অ্যাডমিনের কাস্টম অর্ডার, স্টক-আউট
+ * শেষে) — fetchOrderedFilteredIds একই ফাংশন — শুধু সংখ্যা সীমিত।
+ */
+export async function fetchRelatedProducts(
+  supabase: SupabaseClient,
+  product: Pick<Product, 'id' | 'cat' | 'colorGroupId'>,
+  relatedLimit = 8,
+): Promise<Product[]> {
+  try {
+    const currentId = String(product.id);
+    const catId = String(product.cat || '').trim().toLowerCase() || 'all';
+
+    const orderedIds = await fetchOrderedFilteredIds(supabase, catId);
+    const relatedIds = orderedIds.filter((id) => String(id) !== currentId).slice(0, relatedLimit);
+
+    const [relatedRows, siblingRows] = await Promise.all([
+      relatedIds.length ? fetchProductsByIds(supabase, relatedIds) : Promise.resolve([] as Product[]),
+      product.colorGroupId
+        ? (async () => {
+            const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+            const { data, error } = await supabase
+              .from('custom_products')
+              .select(GRID_COLS)
+              .eq('color_group_id', product.colorGroupId as string)
+              .limit(40)
+              .abortSignal(signal as any);
+            if (error || !data) return [] as Product[];
+            return (data as unknown as RawCustomProduct[]).map(mapCustomProduct);
+          })()
+        : Promise.resolve([] as Product[]),
+    ]);
+
+    // রিলেটেডগুলো orderedIds-এর ক্রমে সাজানো (`.in()` ক্রম গ্যারান্টি দেয় না)
+    const relatedById = new Map(relatedRows.map((p) => [String(p.id), p]));
+    const orderedRelated = relatedIds
+      .map((id) => relatedById.get(String(id)))
+      .filter((p): p is Product => !!p);
+
+    const seen = new Set<string>();
+    const out: Product[] = [];
+    for (const p of [...orderedRelated, ...siblingRows]) {
+      const k = String(p.id);
+      if (k === currentId || seen.has(k)) continue;
+      seen.add(k);
+      out.push(p);
+    }
+    return out;
+  } catch (e) {
+    logWarn('[Vangcur] fetchRelatedProducts exception:', e);
+    return [];
   }
 }
 

@@ -1,23 +1,23 @@
-import { cookies } from 'next/headers';
 import type { Language } from '@/lib/store/languageStore';
 
 export const LANG_COOKIE = 'vc_lang';
 
 /**
- * Reads the user's language preference on the SERVER, from the `vc_lang`
- * cookie (written client-side by `useLanguageStore` whenever the person
- * toggles the language — see lib/store/languageStore.ts).
+ * সার্ভারে ভাষা সবসময় বাংলা ('bn') ধরা হয়।
  *
- * Used in `generateMetadata()` and the root layout so that page titles,
- * descriptions, and `<html lang>` are correct even before any client-side
- * JavaScript runs (important for SEO crawlers and social-share previews).
+ * ⚠️ আগে এখানে `cookies()` পড়া হতো। রুট layout-এ `cookies()` পড়লে Next.js পুরো সাইটকে
+ * "ডায়নামিক" বানিয়ে দেয় — ফলে `export const revalidate = ...` (ISR) কাজ করত না, প্রতিটা
+ * ভিজিটে পেজ নতুন করে রেন্ডার হতো ও Supabase-এ কোয়েরি যেত (TTFB ~১.৫ সেকেন্ড)।
  *
- * Calling this opts the route into dynamic rendering, which is expected —
- * this app already personalizes nearly every page (auth, cart, wishlist).
+ * এখন সার্ভারের HTML সবার জন্য এক (বাংলা) এবং CDN-এ ক্যাশ হয়। যারা ইংরেজি বেছে নিয়েছেন
+ * তাদের ভাষা ক্লায়েন্টে `vc_lang` কুকি থেকে হাইড্রেশনের পর প্রয়োগ হয়
+ * (lib/store/languageStore.ts → hydrateLanguage, app/components/GlobalOverlays.tsx)।
+ * সার্চ ইঞ্জিন বট কুকি পাঠায় না, তাই SEO-তে আগের মতোই বাংলা মেটাডেটা যায়।
+ *
+ * ফাংশনের সিগনেচার (async) অপরিবর্তিত রাখা হয়েছে যাতে কলারদের কোনো ফাইল বদলাতে না হয়।
  */
 export async function getServerLang(): Promise<Language> {
-  const store = await cookies();
-  return store.get(LANG_COOKIE)?.value === 'en' ? 'en' : 'bn';
+  return 'bn';
 }
 
 /** Small helper for building a bn/en pair inline in metadata exports. */

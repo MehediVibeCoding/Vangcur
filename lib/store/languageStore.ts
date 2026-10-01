@@ -4,18 +4,20 @@ export type Language = 'bn' | 'en';
 
 const LANG_KEY = 'vc_lang';
 
-// 🔒 ফিক্স (audit P1-17, hydration #418 সন্দেহ): আগে এখানে localStorage থেকে
-// ভাষা পড়া হতো — কিন্তু সার্ভার (generateMetadata/layout, দ্রষ্টব্য:
-// lib/i18n/getServerLang.ts) ভাষা ঠিক করে `vc_lang` কুকি থেকে, localStorage
-// থেকে না। localStorage আর কুকি আলাদা হয়ে গেলে (browser storage-clear
-// আচরণ ভিন্ন, বা প্রথমবার সেট হওয়ার টাইমিং) ক্লায়েন্টের প্রথম রেন্ডার সার্ভারের
-// সাথে না মিলে হাইড্রেশন এরর দিত। এখন ক্লায়েন্টও ঠিক একই কুকি পড়ে — সার্ভার
-// যা রেন্ডার করেছে, ক্লায়েন্টের প্রথম পাসও ঠিক সেটাই পড়বে, mismatch হবে না।
-function loadLanguage(): Language {
+// 🔒 হাইড্রেশন-নিরাপদ নকশা: সার্ভারের HTML এখন সবসময় বাংলা (lib/i18n/getServerLang.ts)
+// এবং ক্যাশ হয়ে সবার কাছে যায়। তাই ক্লায়েন্টের প্রথম রেন্ডারও অবশ্যই 'bn' হতে হবে,
+// নইলে হাইড্রেশন mismatch (React #418) হবে। সংরক্ষিত ভাষা (`vc_lang` কুকি) হাইড্রেশনের
+// পরে `hydrateLanguage()` দিয়ে প্রয়োগ হয় — GlobalOverlays মাউন্ট হলে একবার কল হয়।
+function readSavedLanguage(): Language {
   if (typeof document === 'undefined') return 'bn';
   try {
     const match = document.cookie.match(/(?:^|;\s*)vc_lang=([^;]*)/);
-    return match && decodeURIComponent(match[1]) === 'en' ? 'en' : 'bn';
+    if (match) return decodeURIComponent(match[1]) === 'en' ? 'en' : 'bn';
+  } catch {
+    // ignore
+  }
+  try {
+    return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'bn';
   } catch {
     return 'bn';
   }
@@ -28,10 +30,6 @@ function persist(lang: Language): void {
     // storage unavailable, ignore
   }
   try {
-    // Mirrored into a cookie (1 year) so server components / generateMetadata
-    // can read the same preference via lib/i18n/getServerLang.ts — the
-    // page title, meta description, and <html lang> need this on the very
-    // first server-rendered response, before any client JS has run.
     document.cookie = `${LANG_KEY}=${lang}; path=/; max-age=31536000; samesite=lax`;
   } catch {
     // cookies unavailable, ignore — client-side language switching still works
@@ -41,12 +39,18 @@ function persist(lang: Language): void {
 interface LanguageState {
   lang: Language;
   setLanguage: (lang: Language) => void;
+  /** হাইড্রেশনের পর একবার কল করুন — সংরক্ষিত ভাষা (কুকি/localStorage) প্রয়োগ করে। */
+  hydrateLanguage: () => void;
 }
 
-export const useLanguageStore = create<LanguageState>((set) => ({
-  lang: loadLanguage(),
+export const useLanguageStore = create<LanguageState>((set, get) => ({
+  lang: 'bn',
   setLanguage: (lang) => {
     persist(lang);
     set({ lang });
+  },
+  hydrateLanguage: () => {
+    const saved = readSavedLanguage();
+    if (saved !== get().lang) set({ lang: saved });
   },
 }));

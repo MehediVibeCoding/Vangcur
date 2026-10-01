@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { logWarn } from '@/lib/logger';
 import { normalizeBdPhone } from '@/lib/security';
 import { validatePhone } from '@/lib/checkoutData';
+import { slidingWindowLimit, getClientIp } from '@/lib/limiter';
 
 // 🛡️ স্প্রেডশিট ফর্মুলা ইনজেকশন ফিল্টার ও কঠোর সাইজ গার্ড
 function sanitizeSpreadsheetValue(val: unknown, maxLen = 100): string {
@@ -12,52 +13,16 @@ function sanitizeSpreadsheetValue(val: unknown, maxLen = 100): string {
   return clamped.replace(/^[=+\-@]+/, '').trim();
 }
 
-// 🛡️ সার্ভারলেস ইনস্ট্যান্স আইপি রেট লিমিটার (প্রতি ১০ মিনিটে সর্বোচ্চ ২০টি রিকোয়েস্ট)
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 20;
-const ipRequestMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = ipRequestMap.get(ip);
-
-  // মেমোরি পরিষ্কার রাখা (পুরাতন আইপি ডিলিট)
-  if (ipRequestMap.size > 5000) {
-    for (const [key, val] of ipRequestMap.entries()) {
-      if (now > val.resetAt) ipRequestMap.delete(key);
-    }
-  }
-
-  if (!record || now > record.resetAt) {
-    ipRequestMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
-  }
-
-  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
-    return false;
-  }
-
-  record.count += 1;
-  return true;
-}
-
 export async function POST(req: NextRequest) {
   try {
-    // ১. আইপি এক্সট্র্যাক্ট ও দ্রুত রেট লিমিট যাচাই
-    // 🔒 ফিক্স (audit P1-13): Vercel-এর এজ-সেট হেডার আগে ট্রাই হয় (স্পুফ-প্রুফ)
-    const vercelForwardedFor = req.headers.get('x-vercel-forwarded-for');
-    const realIp = req.headers.get('x-real-ip');
-    const forwardedFor = req.headers.get('x-forwarded-for');
-    const clientIp =
-      (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
-      (realIp ? realIp.trim() : '') ||
-      (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
-      '127.0.0.1';
-
-    if (!checkRateLimit(clientIp)) {
+    // ১. আইপি এক্সট্র্যাক্ট ও রেট লিমিট — শেয়ার্ড (Upstash) স্লাইডিং-উইন্ডো: প্রতি ১০ মিনিটে সর্বোচ্চ ২০টি।
+    // (আগে প্রতি সার্ভার-ইনস্ট্যান্সের আলাদা মেমোরি-Map ছিল, যা সহজেই এড়ানো যেত।)
+    const clientIp = getClientIp(req.headers);
+    const rl = await slidingWindowLimit(`lead:${clientIp}`, 20, 600);
+    if (!rl.allowed) {
       return NextResponse.json(
         { ok: false, error: 'Too many requests. Please try again later.' },
-        { status: 429 }
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
       );
     }
 

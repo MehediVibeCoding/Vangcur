@@ -1,3 +1,4 @@
+import { slidingWindowLimit } from '@/lib/limiter';
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
@@ -103,14 +104,28 @@ export async function middleware(request: NextRequest) {
   const isKnownSearchBot = KNOWN_SEARCH_BOT_UA_REGEX.test(userAgent);
   const shouldSkipRateLimit = isKnownSearchBot && !isApiRoute;
 
-  if (!shouldSkipRateLimit && !checkEdgeRateLimit(clientIp, isApiRoute)) {
-    return new NextResponse('Too many requests. Please slow down.', {
-      status: 429,
-      headers: {
-        'Retry-After': '10',
-        'Content-Type': 'text/plain; charset=utf-8',
-      },
-    });
+  // • API রুট: শেয়ার্ড (Upstash) স্লাইডিং-উইন্ডো — সব সার্ভার-ইনস্ট্যান্সের জন্য এক কাউন্টার।
+  // • সাধারণ পেজ: হালকা ইনস্ট্যান্স-মেমোরি লিমিট (শুধু মোটা ফ্লাড-সুরক্ষা)। পেজ ভিউতে Redis কল
+  //   করলে প্রতিটা ভিজিটে অতিরিক্ত নেটওয়ার্ক-দেরি হতো; আসল DDoS সুরক্ষা Cloudflare/Vercel Firewall-এর কাজ।
+  if (!shouldSkipRateLimit) {
+    let blocked = false;
+    let retryAfter = 10;
+    if (isApiRoute) {
+      const rl = await slidingWindowLimit(`mw:api:${clientIp}`, MAX_API_REQUESTS, RATE_LIMIT_WINDOW_MS / 1000);
+      blocked = !rl.allowed;
+      retryAfter = rl.retryAfterSec || 10;
+    } else {
+      blocked = !checkEdgeRateLimit(clientIp, false);
+    }
+    if (blocked) {
+      return new NextResponse('Too many requests. Please slow down.', {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    }
   }
 
   // ৩. Supabase সেশন আপডেট — শুধু auth-নির্ভর রুটে (উপরের ব্যাখ্যা দেখুন)।
