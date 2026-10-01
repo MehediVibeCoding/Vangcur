@@ -235,8 +235,8 @@ export async function submitProductReview(
       if (error.code === '23505') {
         return { ok: false, error: 'আপনি ইতিমধ্যে এই প্রোডাক্টটিতে একটি রিভিউ দিয়েছেন।' };
       }
-      logWarn('[Review] submitProductReview error:', error);
-      return { ok: false, error: 'রিভিউ জমা দেওয়া সম্ভব হয়নি। আবার চেষ্টা করুন।' };
+      logWarn('[Review] submitProductReview error:', { code: error.code, message: error.message, details: error.details, hint: error.hint });
+      return { ok: false, error: `রিভিউ জমা দেওয়া সম্ভব হয়নি। আবার চেষ্টা করুন। (ত্রুটি কোড: ${error.code || 'অজানা'})` };
     }
 
     return { ok: true, data: data as ProductReview };

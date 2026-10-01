@@ -50,24 +50,6 @@ export const DEFAULT_FAQS: Faq[] = [
     qEn: 'How do I track my order?',
     aEn: 'Once your parcel is booked with the courier, Pathao sends a tracking SMS to your phone. You can also open "Track Order" on our website to see the live status at any time, and from any device if you are logged in.',
   },
-  {
-    q: '২০,০০০ টাকার বেশি দামের অর্ডার কীভাবে করব?',
-    a: 'নিরাপত্তা, বিশেষ প্যাকেজিং ও বাল্ক ডিসকাউন্ট সুবিধার জন্য ২০,০০০ টাকার বেশি মূল্যের অর্ডার সাধারণ চেকআউটে নেওয়া হয় না। এ ধরনের অর্ডারের জন্য সরাসরি আমাদের অফিসিয়াল WhatsApp সাপোর্টে (01897-804055) মেসেজ দিন, আমরা বিশেষ গুরুত্ব দিয়ে অর্ডারটি সম্পন্ন করব।',
-    qEn: 'How do I place an order above ৳20,000?',
-    aEn: 'For security, special packaging and bulk-discount benefits, orders above ৳20,000 are not accepted through the regular checkout. Please message our official WhatsApp support (01897-804055) directly and we will handle your order with priority.',
-  },
-  {
-    q: 'আমার ব্যক্তিগত ও পেমেন্ট তথ্য কি নিরাপদ?',
-    a: 'হ্যাঁ। Vangcur কখনো আপনার বিকাশ পিন, ওটিপি বা কার্ড পাসওয়ার্ড চায় না বা সংরক্ষণ করে না। আপনার তথ্য শুধু অর্ডার প্রক্রিয়া, ডেলিভারি ও সাপোর্টের কাজে ব্যবহার হয় এবং কোনো তৃতীয় পক্ষের কাছে বিক্রি করা হয় না। ওয়েবসাইটের সব ডেটা এনক্রিপ্টেড HTTPS সংযোগে আদান-প্রদান হয়।',
-    qEn: 'Is my personal and payment information safe?',
-    aEn: 'Yes. Vangcur never asks for or stores your bKash PIN, OTP or card password. Your information is used only for order processing, delivery and support, and is never sold to any third party. All data on the website is transferred over an encrypted HTTPS connection.',
-  },
-  {
-    q: 'কাস্টমার সাপোর্টে কীভাবে যোগাযোগ করব?',
-    a: 'আমাদের অফিসিয়াল WhatsApp হেল্পলাইনে (01897-804055) প্রতিদিন সকাল ৯:০০ টা থেকে রাত ১০:০০ টা পর্যন্ত সরাসরি মেসেজ দিতে পারেন। ইমেইলেও যোগাযোগ করতে পারেন: support@vangcur.com',
-    qEn: 'How can I contact customer support?',
-    aEn: 'You can message our official WhatsApp helpline (01897-804055) directly every day from 9:00 AM to 10:00 PM. You can also email us at support@vangcur.com',
-  },
 ];
 
 export async function fetchFAQs(supabase: SupabaseClient): Promise<Faq[]> {

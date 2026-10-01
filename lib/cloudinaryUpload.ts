@@ -84,15 +84,24 @@ export async function uploadReviewImageToCloudinary(file: File): Promise<string>
 
   const endpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    body: formData,
-    signal: AbortSignal.timeout(15000),
-  });
+  let res: Response;
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      body: formData,
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (netErr) {
+    // নেটওয়ার্ক/টাইমআউট/CSP ব্লক — ব্রাউজার কনসোলে আসল কারণ থাকবে
+    console.error('[Review upload] Cloudinary-তে পৌঁছানো যায়নি:', netErr);
+    const timedOut = netErr instanceof DOMException && (netErr.name === 'TimeoutError' || netErr.name === 'AbortError');
+    throw new Error(timedOut ? 'আপলোডে অনেক সময় লাগছে (১৫ সেকেন্ড পার)' : 'নেটওয়ার্ক সমস্যা, সংযোগ যাচাই করুন');
+  }
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
-    throw new Error(errorData?.error?.message || 'ছবি আপলোড ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+    console.error('[Review upload] Cloudinary ত্রুটি:', res.status, errorData);
+    throw new Error(errorData?.error?.message || `ছবি আপলোড ব্যর্থ হয়েছে (HTTP ${res.status})`);
   }
 
   const data = await res.json();

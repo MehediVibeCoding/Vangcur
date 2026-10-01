@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { isModalOpen } from '@/lib/bodyScrollLock';
 import {
   type HeroCard,
   DUO_TOTAL,
@@ -150,7 +151,8 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
   const startAuto = useCallback((intervalMs = AUTOPLAY_MS) => {
     if (autoTimerRef.current) clearInterval(autoTimerRef.current);
     autoTimerRef.current = setInterval(() => {
-      if (!isInteractingRef.current && isVisibleRef.current) {
+      // মডাল/ড্রয়ার খোলা থাকলে অটো-স্লাইড হবে না (ব্যাটারি ও ফোকাস)
+      if (!isInteractingRef.current && isVisibleRef.current && !isModalOpen()) {
         duoStep(1);
       }
     }, intervalMs);

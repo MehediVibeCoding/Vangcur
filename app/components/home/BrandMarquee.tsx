@@ -1,13 +1,16 @@
 'use client';
 
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { useT } from '@/lib/i18n/useT';
 import { BRANDS_ROW_1, BRANDS_ROW_2, type Brand } from '@/lib/brandData';
 
 /**
  * ব্র্যান্ড লোগো মার্কি — দুই সারি:
  *  • প্রথম সারি বাম → ডানে, দ্বিতীয় সারি ডান → বামে, অনন্ত লুপে ঘোরে।
- *  • শুধু CSS অ্যানিমেশন (JavaScript নেই), মাউস রাখলে থেমে যায়,
- *    "reduce motion" সেটিং থাকলে ঘোরা বন্ধ থাকে।
+ *  • ঘোরা CSS অ্যানিমেশনে; খুব ধীর গতি (নিচে SPEED_ROW_* দেখুন)।
+ *  • যেকোনো এক সারিতে মাউস/আঙ্গুল রাখলে দুই সারিই একসাথে থামে।
+ *  • সেকশন স্ক্রিনের বাইরে গেলে, বা কোনো মডাল/ড্রয়ার খোলা থাকলে ঘোরা থেমে থাকে।
+ *  • "reduce motion" সেটিং থাকলে ঘোরা বন্ধ থাকে।
  *  • লোগো ট্রান্সপারেন্ট, কোনো বক্স/বর্ডার নেই। ডার্ক মোডে কালো লোগোর সাদা ভার্সন দেখায়।
  *  • ব্র্যান্ড যোগ/বাদ দিতে lib/brandData.ts এডিট করুন।
  *
@@ -19,6 +22,12 @@ import { BRANDS_ROW_1, BRANDS_ROW_2, type Brand } from '@/lib/brandData';
 
 const REPEAT = 3;
 
+// ঘোরার গতি: সংখ্যা যত বড়, তত ধীর (একটা পূর্ণ গ্রুপ ঘুরতে কত সেকেন্ড লাগবে)।
+// আগে ৫৫/৪৮ সেকেন্ড ছিল (≈৭০px/সেকেন্ড, খুব দ্রুত); এখন ≈২০px/সেকেন্ড।
+// আরও ধীর চাইলে দুটোই বাড়ান, দ্রুত চাইলে কমান।
+const SPEED_ROW_1 = 200;
+const SPEED_ROW_2 = 170;
+
 const CSS = `
 .vc-brand-sec{--vc-s:.78;--vc-gap:38px;--vc-rows:26px}
 @media(min-width:640px){.vc-brand-sec{--vc-s:1;--vc-gap:64px;--vc-rows:34px}}
@@ -29,7 +38,15 @@ const CSS = `
 .vc-brand-group{display:flex;flex-shrink:0;align-items:center}
 .vc-brand-item{display:flex;flex-shrink:0;align-items:center;height:calc(38px * var(--vc-s));padding-right:var(--vc-gap)}
 .vc-brand-item img{display:block;max-width:none;height:auto;-webkit-user-drag:none;user-select:none}
-.vc-brand-row:hover .vc-brand-track{animation-play-state:paused}
+/* লাইট/ডার্ক জোড়া লোগো: নির্দিষ্টতা (specificity) ইচ্ছা করে .vc-brand-item img-এর চেয়ে বেশি,
+   নইলে Tailwind-এর hidden/dark:hidden হেরে যায় আর দুটো ভার্সনই একসাথে দেখা যায় */
+.vc-brand-item img.vc-l-dark{display:none}
+.dark .vc-brand-item img.vc-l-dark{display:block}
+.dark .vc-brand-item img.vc-l-light{display:none}
+/* থামার শর্ত — একটাই নিয়মে, দুই সারিই একসাথে থামে */
+.vc-brand-sec.vc-hold .vc-brand-track,
+.vc-brand-sec.vc-offscreen .vc-brand-track,
+html.vc-modal-open .vc-brand-track{animation-play-state:paused}
 @keyframes vc-brand-left{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 @keyframes vc-brand-right{from{transform:translate3d(-50%,0,0)}to{transform:translate3d(0,0,0)}}
 @media (prefers-reduced-motion:reduce){.vc-brand-track{animation:none}}
@@ -50,9 +67,9 @@ function BrandLogo({ b, decorative }: { b: Brand; decorative: boolean }) {
     return (
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/brands/${b.file}.webp`} className="dark:hidden" {...common} />
+        <img src={`/brands/${b.file}.webp`} className="vc-l-light" {...common} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/brands/${b.file}-white.webp`} className="hidden dark:block" {...common} alt="" />
+        <img src={`/brands/${b.file}-white.webp`} className="vc-l-dark" {...common} alt="" />
       </>
     );
   }
@@ -98,9 +115,30 @@ function TagIcon() {
 export default function BrandMarquee() {
   const { lang } = useT();
   const en = lang === 'en';
+  const secRef = useRef<HTMLElement | null>(null);
+
+  // স্ক্রিনের বাইরে (উপরে বা নিচে) গেলে ঘোরা বন্ধ, কাছাকাছি এলে চালু।
+  useEffect(() => {
+    const el = secRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const obs = new IntersectionObserver(
+      ([entry]) => el.classList.toggle('vc-offscreen', !entry.isIntersecting),
+      { rootMargin: '80px 0px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // মাউস/আঙ্গুল যেকোনো সারিতে থাকলে দুই সারিই থামে; ছাড়লে (বা স্ক্রল শুরু হলে) আবার চলে।
+  // মাউসের ক্ষেত্রে শুধু enter/leave; টাচ/পেনের ক্ষেত্রে press/release (নইলে ক্লিকের পর মাউস
+  // সারির উপরে থাকা অবস্থাতেই আবার চলতে শুরু করত)।
+  const hold = (on: boolean, onlyTouch = false) => (e: ReactPointerEvent) => {
+    if (onlyTouch && e.pointerType === 'mouse') return;
+    secRef.current?.classList.toggle('vc-hold', on);
+  };
 
   return (
-    <section className="vc-brand-sec mx-auto mb-14 max-w-[1300px] px-4 sm:px-5" id="brandsSec" aria-label={en ? 'Brands we carry' : 'আমাদের ব্র্যান্ডসমূহ'}>
+    <section ref={secRef} className="vc-brand-sec mx-auto mb-14 max-w-[1300px] px-4 sm:px-5" id="brandsSec" aria-label={en ? 'Brands we carry' : 'আমাদের ব্র্যান্ডসমূহ'}>
       <style>{CSS}</style>
 
       <div className="mb-8 text-center">
@@ -124,9 +162,17 @@ export default function BrandMarquee() {
         </p>
       </div>
 
-      <div className="flex flex-col" style={{ rowGap: 'var(--vc-rows)' }}>
-        <BrandRow brands={BRANDS_ROW_1} direction="right" duration={55} />
-        <BrandRow brands={BRANDS_ROW_2} direction="left" duration={48} />
+      <div
+        className="flex flex-col"
+        style={{ rowGap: 'var(--vc-rows)' }}
+        onPointerEnter={hold(true)}
+        onPointerLeave={hold(false)}
+        onPointerDown={hold(true, true)}
+        onPointerUp={hold(false, true)}
+        onPointerCancel={hold(false, true)}
+      >
+        <BrandRow brands={BRANDS_ROW_1} direction="right" duration={SPEED_ROW_1} />
+        <BrandRow brands={BRANDS_ROW_2} direction="left" duration={SPEED_ROW_2} />
       </div>
     </section>
   );

@@ -1,3 +1,5 @@
+export const MODAL_OPEN_CLASS = 'vc-modal-open';
+
 let lockCount = 0;
 let touchStartY = 0;
 let touchStartX = 0;
@@ -96,6 +98,9 @@ export function lockBody(): void {
   // সাথে দেখা যেত — যেটাই সেই "ডাবল স্ক্রলবার / এক্সট্রা প্যাডিং" এফেক্ট তৈরি করছিল।
   document.documentElement.classList.add('no-scrollbar');
   document.body.classList.add('no-scrollbar');
+  // 🆕 মডাল/ড্রয়ার খোলা থাকার সংকেত — ব্যাকগ্রাউন্ডের অ্যানিমেশন/অটো-প্লে এই ক্লাস দেখে থেমে
+  // থাকে (globals.css-এর `html.vc-modal-open` নিয়ম, HeroSlider, CustomerGallery, Navbar সার্চ)।
+  document.documentElement.classList.add(MODAL_OPEN_CLASS);
 }
 
 export function unlockBody(): void {
@@ -108,4 +113,10 @@ export function unlockBody(): void {
   document.removeEventListener('keydown', onKeyDown);
   document.documentElement.classList.remove('no-scrollbar');
   document.body.classList.remove('no-scrollbar');
+  document.documentElement.classList.remove(MODAL_OPEN_CLASS);
+}
+
+/** কোনো মডাল/ড্রয়ার এখন খোলা আছে কি না (lockBody-র কাউন্টার ভিত্তিক)। */
+export function isModalOpen(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.classList.contains(MODAL_OPEN_CLASS);
 }

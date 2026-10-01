@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
-import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
+import { lockBody, unlockBody, isModalOpen } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
 import { prefersReducedMotion, makeHeartBurst, BurstHeart, type HeartParticle } from '@/lib/wishHeartBurst';
 
@@ -201,7 +201,7 @@ export default function CustomerGallery() {
     if (timerRef.current) clearInterval(timerRef.current);
     if (!reviewsRef.current.length || zoomImageUrl) return;
     timerRef.current = setInterval(() => {
-      if (pausedRef.current) return;
+      if (pausedRef.current || isModalOpen()) return;
       const totalCount = reviewsRef.current.length;
       if (!totalCount) return;
       setActiveIdx((cur) => (cur + 1) % totalCount);

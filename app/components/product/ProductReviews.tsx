@@ -436,16 +436,28 @@ export default function ProductReviews({
     try {
       const uploadedUrls: string[] = [];
       if (selectedFiles.length > 0) {
-        for (const file of selectedFiles) {
+        for (let idx = 0; idx < selectedFiles.length; idx += 1) {
+          const file = selectedFiles[idx];
           try {
             const url = await uploadReviewImageToCloudinary(file);
             if (url) uploadedUrls.push(url);
           } catch (uploadErr: any) {
+            // কোন ছবিতে কী কারণে আটকাল — কনসোলে পূর্ণ তথ্য, স্ক্রিনে সংক্ষিপ্ত বার্তা
+            console.error('[Review] ছবি আপলোড ব্যর্থ', {
+              imageNo: idx + 1,
+              total: selectedFiles.length,
+              fileType: file.type,
+              fileSizeKB: Math.round(file.size / 1024),
+              error: uploadErr,
+            });
             setSubmitting(false);
+            const reason = uploadErr?.message?.includes('preset')
+              ? t('ক্লাউডিনারি প্রিসেট সেট করা হয়নি। ছবি ছাড়া রিভিউ সাবমিট করতে পারেন।')
+              : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'));
             setErrorMessage(
-              uploadErr?.message?.includes('preset')
-                ? t('ক্লাউডিনারি প্রিসেট সেট করা হয়নি। ছবি ছাড়া রিভিউ সাবমিট করতে পারেন।')
-                : (uploadErr?.message || t('ছবি আপলোড ব্যর্থ হয়েছে'))
+              selectedFiles.length > 1
+                ? `${t('ছবি')} ${idx + 1}/${selectedFiles.length}: ${reason}`
+                : reason
             );
             return;
           }
@@ -464,6 +476,7 @@ export default function ProductReviews({
       setSubmitting(false);
 
       if (!res.ok || !res.data) {
+        console.error('[Review] সাবমিট ব্যর্থ (ডাটাবেজ ধাপ)', { imageCount: uploadedUrls.length, result: res });
         if (res.limitExceeded) {
           setWriteModalOpen(false);
           setLimitModalOpen(true);

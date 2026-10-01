@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/lib/store/cartStore';
-import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
+import { lockBody, unlockBody, isModalOpen } from '@/lib/bodyScrollLock';
 import { fetchCatalogIndex, productHref } from '@/lib/productData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
@@ -582,6 +582,11 @@ export default function Navbar({
     function onWindowMouseMove(e: MouseEvent) {
       const box = desktopSearchBoxRef.current;
       if (!box) return;
+      // মডাল/ড্রয়ার খোলা থাকলে পেছনের সার্চ বক্স hover-এ বড়-ছোট হবে না
+      if (isModalOpen()) {
+        setDesktopSearchHovered((prev) => (prev ? false : prev));
+        return;
+      }
       const rect = box.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
       const fullyInside = (
