@@ -2,21 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ══════════════════════════════════════════════════════════════════════
-   🔢 ডিজিট-অনলি ফন্ট অপটিমাইজেশন (Zero Render-Blocking Font Face)
-   শুধুমাত্র বাংলা সংখ্যা (০-৯) রেন্ডার করার জন্য Noto Sans Bengali-র
-   নির্দিষ্ট ইউনিকোড-রেঞ্জ (U+09E6-09EF)। বাকি সব বাংলা টেক্সট শতভাগ
-   Hind Siliguri ফন্টেই থাকবে — কোনো ফন্ট বা লেখার রূপ ভাঙবে না।
-   ══════════════════════════════════════════════════════════════════════ */
-@font-face {
-  font-family: 'Noto Sans Bengali';
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url('https://fonts.gstatic.com/s/notosansbengali/v27/flU0RhA2x2WflAh38D3Mm4CRNmSEWcc7kJHSgE-V1syq6kXGsY7C2s4.woff2') format('woff2');
-  unicode-range: U+09E6-09EF;
-}
-
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
@@ -567,7 +552,7 @@ html.dark {
   --vc-page-bg: #0B111E;
 }
 
-/* মসৃণ থিম-ট্রানজিশন (ফ্লিকার-ফ্রি ফিল) */
+/* মসৃণ থিম-ট্রানজিশন */
 html,
 body,
 .navbar-glass,
@@ -594,7 +579,7 @@ body,
   .dark .search-dropdown-glass { background-color: rgba(19, 29, 49, 0.98) !important; }
 }
 
-/* বেস (নন-অপাসিটি) টোকেন ওভাররাইড */
+/* বেস টোকেন ওভাররাইড */
 .dark .bg-white { background-color: #131D31; }
 .dark .text-ink { color: #F8FAFC; }
 .dark .text-muted { color: #94A3B8; }
@@ -608,7 +593,7 @@ body,
 .dark .hover\:bg-surface-muted:hover { background-color: #182339; }
 .dark .hover\:bg-border-base:hover { background-color: #22324D; }
 
-/* bg-white/N — সাদা ফ্রস্টেড কার্ড → ডার্ক ফ্রস্টেড কার্ড */
+/* bg-white/N */
 .dark .bg-white\/15 { background-color: rgba(19, 29, 49, 0.15); }
 .dark .bg-white\/20 { background-color: rgba(19, 29, 49, 0.20); }
 .dark .bg-white\/25 { background-color: rgba(19, 29, 49, 0.25); }
@@ -625,7 +610,7 @@ body,
 .dark .bg-white\/90 { background-color: rgba(19, 29, 49, 0.90); }
 .dark .bg-white\/95 { background-color: rgba(19, 29, 49, 0.95); }
 
-/* border-white/N — হালকা হেয়ারলাইন বর্ডার */
+/* border-white/N */
 .dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.10); }
 .dark .border-white\/25 { border-color: rgba(255, 255, 255, 0.10); }
 .dark .border-white\/30 { border-color: rgba(255, 255, 255, 0.10); }
@@ -637,7 +622,7 @@ body,
 .dark .border-white\/85 { border-color: rgba(255, 255, 255, 0.10); }
 .dark .border-white\/90 { border-color: rgba(255, 255, 255, 0.10); }
 
-/* bg-brand-bg/N — হালকা নীল টিন্ট → ডার্ক নেভি টিন্ট */
+/* bg-brand-bg/N */
 .dark .bg-brand-bg\/10 { background-color: rgba(15, 23, 42, 0.10); }
 .dark .bg-brand-bg\/20 { background-color: rgba(15, 23, 42, 0.20); }
 .dark .bg-brand-bg\/25 { background-color: rgba(15, 23, 42, 0.25); }
@@ -649,7 +634,7 @@ body,
 .dark .bg-brand-bg\/60 { background-color: rgba(15, 23, 42, 0.60); }
 .dark .bg-brand-bg\/70 { background-color: rgba(15, 23, 42, 0.70); }
 
-/* text-ink/N — সেকেন্ডারি টেক্সট অপাসিটি */
+/* text-ink/N */
 .dark .text-ink\/10 { color: rgba(248, 250, 252, 0.10); }
 .dark .text-ink\/60 { color: rgba(248, 250, 252, 0.60); }
 .dark .text-ink\/75 { color: rgba(248, 250, 252, 0.75); }
@@ -657,7 +642,7 @@ body,
 .dark .text-ink\/85 { color: rgba(248, 250, 252, 0.85); }
 .dark .text-ink\/90 { color: rgba(248, 250, 252, 0.90); }
 
-/* border-border-base/N — সফট বর্ডার */
+/* border-border-base/N */
 .dark .border-border-base\/50 { border-color: rgba(34, 50, 77, 0.70); }
 .dark .border-border-base\/60 { border-color: rgba(34, 50, 77, 0.70); }
 .dark .border-border-base\/70 { border-color: rgba(34, 50, 77, 0.70); }
@@ -669,11 +654,7 @@ body,
 .dark .bg-surface-muted\/60 { background-color: rgba(24, 35, 57, 0.60); }
 .dark .bg-surface-muted\/70 { background-color: rgba(24, 35, 57, 0.70); }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 স্ট্যাটাস-কালার টিন্ট ফিক্স
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* লাল — এরর ইনপুট/ব্যানার */
+/* স্ট্যাটাস কালারস */
 .dark .bg-red-50 { background-color: rgba(127, 29, 29, 0.28); }
 .dark .bg-red-50\/40 { background-color: rgba(127, 29, 29, 0.20); }
 .dark .bg-red-50\/50 { background-color: rgba(127, 29, 29, 0.24); }
@@ -689,7 +670,6 @@ body,
 .dark .text-red-600 { color: #F87171; }
 .dark .text-red-800 { color: #FCA5A5; }
 
-/* সবুজ — সাকসেস/কনফার্মেশন */
 .dark .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.30); }
 .dark .bg-emerald-50\/70 { background-color: rgba(6, 78, 59, 0.22); }
 .dark .bg-emerald-50\/80 { background-color: rgba(6, 78, 59, 0.26); }
@@ -707,7 +687,6 @@ body,
 .dark .text-emerald-900 { color: #A7F3D0; }
 .dark .text-emerald-950 { color: #D1FAE5; }
 
-/* অ্যাম্বার — ওয়ার্নিং/অফার হাইলাইট */
 .dark .bg-amber-50 { background-color: rgba(120, 53, 15, 0.30); }
 .dark .bg-amber-50\/60 { background-color: rgba(120, 53, 15, 0.20); }
 .dark .bg-amber-50\/90 { background-color: rgba(120, 53, 15, 0.30); }
@@ -726,7 +705,6 @@ body,
 .dark .text-amber-900\/90 { color: rgba(254, 243, 199, 0.90); }
 .dark .text-amber-950 { color: #FFFBEB; }
 
-/* নীল/স্কাই — ইনফো ব্যানার */
 .dark .bg-blue-50 { background-color: rgba(12, 74, 110, 0.30); }
 .dark .bg-sky-50 { background-color: rgba(12, 74, 110, 0.30); }
 .dark .bg-sky-50\/95 { background-color: rgba(12, 74, 110, 0.34); }
@@ -737,14 +715,11 @@ body,
 .dark .text-sky-800 { color: #7DD3FC; }
 .dark .text-sky-950 { color: #E0F2FE; }
 
-/* গোলাপি/রোজ — বিশেষ অফার ব্যাজ */
 .dark .bg-rose-50\/95 { background-color: rgba(76, 5, 25, 0.34); }
 .dark .border-rose-300\/80 { border-color: rgba(251, 113, 133, 0.35); }
 .dark .text-rose-950 { color: #FFE4E6; }
 
-/* ══════════════════════════════════════════════════════════════════════
-   🩹 পেজ-ওয়াইড গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড ফিক্স
-   ══════════════════════════════════════════════════════════════════════ */
+/* গ্রেডিয়েন্ট ব্যাকগ্রাউন্ড */
 .dark .from-brand-bg,
 .dark .from-brand-bg\/25,
 .dark .from-brand-bg\/35,
