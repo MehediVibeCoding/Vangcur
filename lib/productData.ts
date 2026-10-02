@@ -351,6 +351,25 @@ export async function fetchRelatedProducts(
   }
 }
 
+/** একই color_group_id-র সব প্রোডাক্ট (কালার-ভ্যারিয়েন্ট সোয়াচের জন্য) */
+export async function fetchColorSiblings(supabase: SupabaseClient, groupId: string): Promise<Product[]> {
+  if (!groupId) return [];
+  try {
+    const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+    const { data, error } = await supabase
+      .from('custom_products')
+      .select(GRID_COLS)
+      .eq('color_group_id', groupId)
+      .limit(40)
+      .abortSignal(signal as any);
+    if (error || !data) return [];
+    return (data as unknown as RawCustomProduct[]).map(mapCustomProduct);
+  } catch (e) {
+    logWarn('[Vangcur] fetchColorSiblings exception:', e);
+    return [];
+  }
+}
+
 // 🔒 ফিক্স (audit P1-15): Realtime WebSocket-এর বদলে হালকা পোলিং — নির্দিষ্ট
 // কিছু আইডির জন্য সর্বশেষ ডেটা আনে (পুরো ক্যাটালগ না), তাই ভিজিটর অনেক বাড়লেও
 // এটা সাধারণ রিকোয়েস্টের মতোই (কোনো "খোলা কানেকশন" ধরে রাখে না)।

@@ -31,7 +31,7 @@ const SPEED_ROW_2 = 170;
 const CSS = `
 .vc-brand-sec{--vc-s:.78;--vc-gap:38px;--vc-rows:26px}
 @media(min-width:640px){.vc-brand-sec{--vc-s:1;--vc-gap:64px;--vc-rows:34px}}
-.vc-brand-row{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%)}
+.vc-brand-row{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 3%,#000 97%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 3%,#000 97%,transparent 100%)}
 .vc-brand-track{display:flex;width:max-content;will-change:transform;animation-duration:var(--vc-dur,50s);animation-timing-function:linear;animation-iteration-count:infinite}
 .vc-brand-track.vc-to-left{animation-name:vc-brand-left}
 .vc-brand-track.vc-to-right{animation-name:vc-brand-right}

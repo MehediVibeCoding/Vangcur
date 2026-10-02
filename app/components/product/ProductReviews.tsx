@@ -21,6 +21,7 @@ import {
   deleteProductReview,
   toggleReviewLike,
   getLikedReviews,
+  syncLikedReviews,
   calculateReviewSummary,
   checkIsReviewAdminOrMod,
 } from '@/lib/productReviewData';
@@ -175,6 +176,7 @@ export default function ProductReviews({
     setReviews(data);
     setIsAdmin(adminStatus);
     setLikedList(getLikedReviews());
+    syncLikedReviews(supabase).then((all) => setLikedList(all));
 
     // 🆕 এই প্রোডাক্টের রিভিউকারীদের প্রোফাইল-সম্পূর্ণতা একবারে ব্যাচ-চেক
     fetchProfileCompletionMap(supabase, data.map((r) => r.user_id)).then(setVerifiedMap);
@@ -315,7 +317,14 @@ export default function ProductReviews({
       likeBurstTimersRef.current.set(idStr, timer);
     }
 
-    await toggleReviewLike(supabase, reviewId);
+    const likeResult = await toggleReviewLike(supabase, reviewId);
+    if (!likeResult.ok) {
+      // নেটওয়ার্ক/সার্ভার ব্যর্থতা — লাভ ও কাউন্ট আগের অবস্থায় ফেরত
+      setLikedList((prev) => prev.filter((x) => x !== idStr));
+      setReviews((prev) => prev.map((r) => (
+        String(r.id) === idStr ? { ...r, like_count: Math.max(0, (r.like_count || 0) - 1) } : r
+      )));
+    }
   };
 
   const handleAdminApprove = async (e: React.MouseEvent, reviewId: number | string) => {
@@ -839,7 +848,7 @@ export default function ProductReviews({
                           <button
                             type="button"
                             onClick={(e) => handleLikeClick(e, item.reviewId)}
-                            className={`flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
+                            className={`relative flex h-7 items-center gap-1 rounded-full bg-black/40 px-2.5 backdrop-blur-md transition-transform before:absolute before:-inset-2.5 before:content-[''] [touch-action:manipulation] active:scale-90 ${isLiked ? 'text-[#FF5A6E]' : 'text-white'}`}
                           >
                             <AnimatedLikeHeart reviewId={item.reviewId} filled={isLiked} />
                             <span className="font-body text-[10.5px] font-bold text-white">
@@ -887,7 +896,7 @@ export default function ProductReviews({
                           <button
                             type="button"
                             onClick={(e) => handleLikeClick(e, item.reviewId)}
-                            className={`flex h-7 items-center gap-1 rounded-full px-2 transition-transform active:scale-90 ${isLiked ? 'bg-red-50 text-[#FF5A6E]' : 'bg-surface-muted text-muted'}`}
+                            className={`relative flex h-7 items-center gap-1 rounded-full px-2 transition-transform before:absolute before:-inset-2.5 before:content-[''] [touch-action:manipulation] active:scale-90 ${isLiked ? 'bg-red-50 text-[#FF5A6E]' : 'bg-surface-muted text-muted'}`}
                           >
                             <AnimatedLikeHeart reviewId={item.reviewId} filled={isLiked} />
                             <span className="font-body text-[10.5px] font-bold">

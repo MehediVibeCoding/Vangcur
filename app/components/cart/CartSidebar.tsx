@@ -18,6 +18,7 @@ import {
   saveAppliedCoupon,
   removeAppliedCoupon,
   validateCoupon,
+  localizeCouponError,
   recalculateDiscount,
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
@@ -286,7 +287,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     if (appliedCoupon && (!cart.length || (!isCouponStillValid && couponInvalidReason))) {
       removeAppliedCoupon();
       if (cart.length && couponInvalidReason) {
-        showToast(couponInvalidReason, 'warning');
+        showToast(localizeCouponError(couponInvalidReason, lang), 'warning');
       }
     }
   }, [isOpen, cart.length, appliedCoupon, isCouponStillValid, couponInvalidReason]);
@@ -298,7 +299,9 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
     setCouponError('');
   }, [subtotal, currentUser?.id]);
 
+  const couponClearedAtRef = useRef(0);
   const handleClearFailedCoupon = () => {
+    couponClearedAtRef.current = Date.now();
     setCouponCode('');
     setCouponError('');
     setFailedCoupon(null);
@@ -315,6 +318,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       .slice(0, MAX_COUPON_LEN);
 
     if (!clean) {
+      // "মুছুন"/Clear চাপার ঠিক পরপরই আসা ফাঁকা সাবমিটে ভুয়া ওয়ার্নিং দেখানো হবে না
+      if (Date.now() - couponClearedAtRef.current < 800) return false;
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       return false;
@@ -447,7 +452,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               </h3>
               <p className="mt-0.5 font-body text-[13px] font-semibold text-muted">
                 {lang === 'en'
-                  ? `${totalCount} item(s) selected`
+                  ? `${totalCount} ${totalCount === 1 ? 'item' : 'items'} selected`
                   : `${totalCount}টি প্রোডাক্ট নির্বাচিত`}
               </p>
             </div>
@@ -649,7 +654,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         />
                         <button
                           type={isFailedCouponShown ? 'button' : 'submit'}
-                          onClick={isFailedCouponShown ? handleClearFailedCoupon : undefined}
+                          onClick={isFailedCouponShown ? (e) => { e.preventDefault(); e.stopPropagation(); handleClearFailedCoupon(); } : undefined}
                           disabled={couponLoading}
                           className={`absolute right-3.5 top-1/2 -translate-y-1/2 font-body text-[12.5px] font-bold transition-opacity active:scale-95 ${
                             isFailedCouponShown ? 'text-red-500' : 'text-brand-light'

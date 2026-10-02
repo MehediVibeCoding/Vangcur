@@ -197,7 +197,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                   </h3>
                   <p className="mt-0.5 font-body text-[13px] font-semibold text-muted">
                     {lang === 'en'
-                      ? `${items.length} favorite item(s)`
+                      ? `${items.length} favorite ${items.length === 1 ? 'item' : 'items'}`
                       : `${items.length}টি পছন্দের পণ্য`}
                   </p>
                 </div>

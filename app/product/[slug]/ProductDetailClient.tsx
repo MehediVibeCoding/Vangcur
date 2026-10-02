@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import {
-  fetchCustomProducts, mergeCustomProducts, fetchProductsByIds,
+  fetchCustomProducts, mergeCustomProducts, fetchProductsByIds, fetchColorSiblings,
   findProdBySlug, productHref,
   startQuickOrder, QUICK_CART_EVENT, STOCK_NOTIFY_EVENT,
 } from '@/lib/productData';
@@ -442,6 +442,21 @@ export default function ProductDetailClient({
       const fresh = await fetchProductsByIds(supabase, ids);
       if (cancelled) return;
       const freshById = new Map(fresh.map((p) => [String(p.id), p]));
+
+      // 🎨 পুরনো ক্যাশ করা পেজে কালার-সিবলিং না থাকলে (পরে লিংক করা হয়েছে) তাদের এনে যোগ করা
+      const currentId = initialProduct ? String(initialProduct.id) : '';
+      const currentGroup = currentId ? freshById.get(currentId)?.colorGroupId : null;
+      if (currentGroup) {
+        const have = new Set(prodsRef.current.map((p) => String(p.id)));
+        const siblings = await fetchColorSiblings(supabase, currentGroup);
+        if (cancelled) return;
+        const missing = siblings.filter((s) => !have.has(String(s.id)));
+        if (missing.length) {
+          setProds((prev) => mergeCustomProducts(prev, missing));
+          missing.forEach((s) => freshById.set(String(s.id), s));
+        }
+      }
+
       setProds((prev) => prev
         .filter((p) => freshById.has(String(p.id)))
         .map((p) => {
@@ -452,6 +467,10 @@ export default function ProductDetailClient({
             old: freshItem.old,
             stock: freshItem.stock,
             badge: freshItem.badge,
+            // 🎨 কালার-গ্রুপের তথ্যও রিফ্রেশ — পেজ পুরনো ক্যাশ থেকে এলেও কয়েক সেকেন্ডে ঠিক হয়ে যায়
+            colorGroupId: freshItem.colorGroupId,
+            colorName: freshItem.colorName,
+            colorSwatch: freshItem.colorSwatch,
             imgs: freshItem.imgs && freshItem.imgs.length ? freshItem.imgs : p.imgs,
             // 🛡️ স্মার্ট মার্জ: যদি নতুন অবজেক্টে বিস্তারিত বিবরণ থাকে তবেই আপডেট হবে, অন্যথায় বিদ্যমান সমৃদ্ধ বিবরণ বজায় থাকবে
             ...(freshItem._detailLoaded ? {
@@ -470,12 +489,15 @@ export default function ProductDetailClient({
     };
 
     const timer = setInterval(tick, POLL_MS);
+    // পেজ খোলার কিছুক্ষণ পর একবার — ক্যাশ করা পুরনো পেজের কালার/স্টক ঠিক করতে
+    const firstTick = setTimeout(tick, 3000);
     const onVisible = () => { if (!document.hidden) tick(); };
     document.addEventListener('visibilitychange', onVisible);
 
     return () => {
       cancelled = true;
       clearInterval(timer);
+      clearTimeout(firstTick);
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [supabase]);

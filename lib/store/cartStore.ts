@@ -13,6 +13,11 @@ function loadCart(): CartItem[] {
 }
 
 function persist(cart: CartItem[]): void {
+  if (pendingCart && pendingCart !== cart) {
+    // নতুন সরাসরি সেভ এলে পুরনো অপেক্ষমাণ সেভ বাতিল
+    pendingCart = null;
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  }
   try {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
   } catch {
@@ -21,9 +26,33 @@ function persist(cart: CartItem[]): void {
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingCart: CartItem[] | null = null;
+
+function flushPendingCart(): void {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  if (pendingCart) {
+    const c = pendingCart;
+    pendingCart = null;
+    persist(c);
+  }
+}
+
 function persistDebounced(cart: CartItem[]): void {
+  pendingCart = cart;
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => persist(cart), 300);
+  saveTimer = setTimeout(flushPendingCart, 300);
+}
+
+// ট্যাব বন্ধ/অ্যাপ বদল/পেজ ছাড়ার মুহূর্তে অপেক্ষমাণ ৩০০ms-এর সেভ সাথে সাথে লিখে ফেলা —
+// নইলে পরিমাণ বদলে দ্রুত বেরিয়ে গেলে পুরনো পরিমাণ লোকাল স্টোরেজে থেকে যেত।
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushPendingCart);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPendingCart();
+  });
 }
 
 interface AddResult {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
+import { getDeviceId, fetchMyLikedIds } from '@/lib/deviceId';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { lockBody, unlockBody, isModalOpen } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
@@ -169,6 +170,12 @@ export default function CustomerGallery() {
       setReviews(withLiked);
       setActiveIdx(0);
       setLoaded(true);
+      fetchMyLikedIds(supabase, 'customer_gallery').then((ids) => {
+        if (cancelled || !ids.length) return;
+        ids.forEach((sid) => markGalleryLiked(sid));
+        const all = getLikedGalleryIds();
+        setReviews((prev) => prev.map((r) => ({ ...r, liked: r.liked || all.has(String(r.id)) })));
+      });
       return;
     }
 
@@ -181,6 +188,9 @@ export default function CustomerGallery() {
           .limit(30);
 
         if (!cancelled && !error && data && data.length > 0) {
+          // সার্ভারে এই ডিভাইসের আগের লাইকও মিলিয়ে নেওয়া (লোকাল স্টোরেজ মুছে গেলেও লাভ ফিরে আসবে)
+          const serverLiked = await fetchMyLikedIds(supabase, 'customer_gallery');
+          serverLiked.forEach((sid) => markGalleryLiked(sid));
           const likedIds = getLikedGalleryIds();
           const mapped = (data as Review[]).map((r) => ({ ...r, liked: likedIds.has(String(r.id)) }));
           setReviews(mapped);
@@ -342,6 +352,7 @@ export default function CustomerGallery() {
         try {
           const { error } = await supabase.rpc('increment_gallery_like', {
             p_review_id: review.id,
+            p_device_id: getDeviceId(),
           });
           if (error) logWarn('Like update failed:', error);
         } catch (err) {
@@ -601,7 +612,7 @@ export default function CustomerGallery() {
                         <div className="relative h-[36px] w-[36px]">
                           <button
                             type="button"
-                            className="flex h-full w-full items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-md shadow-md transition-transform duration-200 [-webkit-tap-highlight-color:transparent] hover:bg-black/65 active:scale-90"
+                            className="relative flex h-full w-full items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-md shadow-md transition-transform duration-200 before:absolute before:-inset-3 before:content-[''] [touch-action:manipulation] [-webkit-tap-highlight-color:transparent] hover:bg-black/65 active:scale-90"
                             onClick={(e) => handleHeart(e, r)}
                             aria-label={t('লাইক')}
                           >

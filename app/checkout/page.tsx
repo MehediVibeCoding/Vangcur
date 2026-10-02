@@ -21,6 +21,7 @@ import {
   saveAppliedCoupon,
   removeAppliedCoupon,
   validateCoupon,
+  localizeCouponError,
   recalculateDiscount,
   COUPON_CHANGE_EVENT,
   type AppliedCoupon,
@@ -708,7 +709,9 @@ export default function CheckoutPage() {
     setCouponError('');
   }, [sub, phone]);
 
+  const couponClearedAtRef = useRef(0);
   const handleClearFailedCoupon = () => {
+    couponClearedAtRef.current = Date.now();
     setCouponInput('');
     setCouponError('');
     setFailedCoupon(null);
@@ -725,6 +728,8 @@ export default function CheckoutPage() {
       .slice(0, MAX_COUPON_LEN);
 
     if (!clean) {
+      // "মুছুন"/Clear চাপার ঠিক পরপরই আসা ফাঁকা সাবমিটে ভুয়া ওয়ার্নিং দেখানো হবে না
+      if (Date.now() - couponClearedAtRef.current < 800) return false;
       setCouponError(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       showToast(lang === 'en' ? 'Enter a coupon code' : 'কুপন কোড লিখুন');
       return false;
@@ -1185,7 +1190,7 @@ export default function CheckoutPage() {
                       />
                       <button
                         type={isFailedCouponShown ? 'button' : 'submit'}
-                        onClick={isFailedCouponShown ? handleClearFailedCoupon : undefined}
+                        onClick={isFailedCouponShown ? (e) => { e.preventDefault(); e.stopPropagation(); handleClearFailedCoupon(); } : undefined}
                         disabled={couponLoading || !couponInput.trim()}
                         className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center font-body text-[12.5px] font-bold transition-colors disabled:opacity-40 active:scale-95 ${
                           isFailedCouponShown ? 'text-red-500 hover:text-red-600' : 'text-brand-light hover:text-brand-light-hover'

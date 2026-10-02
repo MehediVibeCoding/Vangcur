@@ -122,3 +122,37 @@ export function recalculateDiscount(
 
   return { discountAmount: discount, isValid: true };
       }
+
+
+/**
+ * সার্ভার/ডাটাবেজ থেকে আসা কুপন এরর বাংলায় আসে — ইংরেজি মোডে সেটাকে ইংরেজিতে রূপান্তর।
+ * চেনা মেসেজ না হলে যেমন আছে তেমনই ফেরত দেয় (কিছু হারায় না)।
+ */
+export function localizeCouponError(msg: string | undefined | null, lang: string): string {
+  const m = (msg || '').trim();
+  if (lang !== 'en' || !m) return m;
+
+  const exact: Record<string, string> = {
+    'অনুগ্রহ করে একটি কুপন কোড লিখুন': 'Please enter a coupon code',
+    'কুপন কোড লিখুন': 'Please enter a coupon code',
+    'অনেকবার ভুল কুপন দেওয়া হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।': 'Too many incorrect coupon attempts. Please try again later.',
+    'কুপন যাচাই করা সম্ভব হয়নি': 'Could not verify the coupon. Please try again.',
+    'অবৈধ কুপন কোড': 'Invalid coupon code',
+    'কুপন কোডটি সঠিক নয়': 'Invalid coupon code',
+    'কুপন কোডটি সঠিক নয় অথবা প্রযোজ্য নয়': 'This coupon code is invalid or not applicable',
+    'নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।': 'Network problem. Please try again.',
+    'আপনি ইতিমধ্যে এই কুপনটি ব্যবহার করে ফেলেছেন': 'You have already used this coupon',
+  };
+  if (exact[m]) return exact[m];
+
+  let r = m.match(/^অনেকবার চেষ্টা করা হয়েছে। (.+) সেকেন্ড পরে আবার চেষ্টা করুন।$/);
+  if (r) return `Too many attempts. Please try again in ${r[1]}s.`;
+
+  r = m.match(/^এই কুপনটি পেতে সর্বনিম্ন ৳(.+) টাকার পণ্য অর্ডার করতে হবে$/);
+  if (r) return `A minimum order of ৳${r[1].replace(/\.0+$/, '')} is required for this coupon`;
+
+  r = m.match(/^এই কুপনের জন্য সর্বনিম্ন ৳(.+) টাকার অর্ডার প্রয়োজন$/);
+  if (r) return `A minimum order of ৳${r[1].replace(/\.0+$/, '')} is required for this coupon`;
+
+  return m;
+}

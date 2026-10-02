@@ -505,7 +505,7 @@ export default function MembershipModal({
                 ) : (
                   <div className="mt-2.5 rounded-[12px] border border-amber-300/80 bg-amber-50/90 px-3 py-1.5 font-body text-[11px] font-extrabold text-amber-900 shadow-2xs">
                     {lang === 'en'
-                      ? `Complete ${Math.max(0, selectedTier.min - effectiveCount)} more order(s) to unlock these rewards!`
+                      ? `Complete ${Math.max(0, selectedTier.min - effectiveCount)} more ${Math.max(0, selectedTier.min - effectiveCount) === 1 ? 'order' : 'orders'} to unlock these rewards!`
                       : `এই রিওয়ার্ডগুলো আনলক করতে আপনার আর মাত্র ${Math.max(0, selectedTier.min - effectiveCount)}টি সফল অর্ডার প্রয়োজন!`}
                   </div>
                 )}

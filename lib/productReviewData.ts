@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ProductReview, ReviewRatingSummary } from '@/types';
 import { sanitizeInput, sanitizePlainName, MAX_NAME_LEN } from './security';
 import { logWarn } from './logger';
+import { getDeviceId, fetchMyLikedIds } from './deviceId';
 
 const MIN_REVIEW_LEN = 20;
 const MAX_REVIEW_LEN = 500;
@@ -280,6 +281,21 @@ export function getLikedReviews(): string[] {
   }
 }
 
+/** সার্ভারে থাকা এই ডিভাইসের লাইক + লোকাল লাইক মিলিয়ে ফেরত দেয় এবং লোকালে আবার লিখে রাখে */
+export async function syncLikedReviews(supabase: SupabaseClient): Promise<string[]> {
+  const local = getLikedReviews();
+  const remote = await fetchMyLikedIds(supabase, 'product_review');
+  const merged = Array.from(new Set([...local, ...remote]));
+  if (merged.length !== local.length) {
+    try {
+      localStorage.setItem(LIKED_REVIEWS_KEY, JSON.stringify(merged));
+    } catch {
+      // ignore
+    }
+  }
+  return merged;
+}
+
 export async function toggleReviewLike(
   supabase: SupabaseClient,
   reviewId: number | string,
@@ -290,25 +306,33 @@ export async function toggleReviewLike(
     return { ok: false };
   }
 
+  // ❤️ আগে ব্রাউজারে "লাইক দেওয়া হয়েছে" লিখে রাখা হয় — নেটওয়ার্ক কলের ফলাফলের অপেক্ষায় নয়।
+  // (আগে লেখা হতো কল সফল হওয়ার পরে; কল শেষ হওয়ার আগে পেজ ছাড়লে/কল ব্যর্থ হলে লাভ আবার ফাঁকা হয়ে যেত।)
+  const writeLiked = (list: string[]) => {
+    try {
+      localStorage.setItem(LIKED_REVIEWS_KEY, JSON.stringify(list));
+    } catch {
+      // ignore
+    }
+  };
+  writeLiked([...liked, idStr]);
+
   try {
     const { data, error } = await supabase.rpc('increment_review_like', {
       p_review_id: Number(reviewId),
+      p_device_id: getDeviceId(),
     });
 
     if (error) {
       logWarn('[Review] toggleReviewLike RPC error:', error);
+      writeLiked(liked); // সত্যিকারের ব্যর্থতা — লাইক ফিরিয়ে নেওয়া হলো, যাতে আবার চেষ্টা করা যায়
       return { ok: false };
-    }
-
-    try {
-      localStorage.setItem(LIKED_REVIEWS_KEY, JSON.stringify([...liked, idStr]));
-    } catch {
-      // ignore
     }
 
     return { ok: true, newCount: Number(data) };
   } catch (e) {
     logWarn('[Review] toggleReviewLike exception:', e);
+    writeLiked(liked);
     return { ok: false };
   }
 }
