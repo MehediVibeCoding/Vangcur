@@ -68,6 +68,25 @@ export async function GET(req: NextRequest) {
     // প্রথম ফ্রেমে fallback ফন্ট দিয়ে বাংলা টেক্সট আঁকা হয়ে যেতে পারে।
     await page.evaluate(() => (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready);
 
+    // 🖼️ প্রোডাক্টের ছবিসহ সব <img> পুরোপুরি লোড (বা ব্যর্থ) না হওয়া পর্যন্ত অপেক্ষা (সর্বোচ্চ ৮ সেকেন্ড)
+    await page.evaluate(
+      (maxMs: number) =>
+        Promise.race([
+          Promise.all(
+            Array.from(document.images).map((img) =>
+              img.complete
+                ? Promise.resolve()
+                : new Promise<void>((res) => {
+                    img.addEventListener('load', () => res(), { once: true });
+                    img.addEventListener('error', () => res(), { once: true });
+                  })
+            )
+          ),
+          new Promise<void>((res) => setTimeout(res, maxMs)),
+        ]),
+      8000
+    );
+
     const cardHandle = await page.$(`#${INVOICE_CARD_ELEMENT_ID}`);
     if (!cardHandle) {
       throw new Error('Invoice card element not found in rendered page');

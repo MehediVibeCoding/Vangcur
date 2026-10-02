@@ -9,6 +9,7 @@ import {
   QUICK_CART_EVENT,
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
+import { refreshWishlistImages } from '@/lib/freshImages';
 import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -98,6 +99,11 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
     router.prefetch('/checkout');
     router.prefetch('/');
   }, [router]);
+
+  // 🖼️ উইশলিস্ট খোলার সময় আইটেমের ছবি সর্বশেষ ছবিতে হালনাগাদ (৫ মিনিট ক্যাশসহ)
+  useEffect(() => {
+    if (isOpen) refreshWishlistImages();
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) lockBody();

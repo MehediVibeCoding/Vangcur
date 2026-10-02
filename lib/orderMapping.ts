@@ -10,6 +10,15 @@ export function mapSupabaseOrderRow(row: Record<string, unknown>): Order {
     items = [];
   }
 
+  // অর্ডার তৈরির সময় ছবির লিংক আইটেমের `emoji` ফিল্ডে সেভ হয় (app/actions/checkout.ts),
+  // কিন্তু ইনভয়েস, অর্ডার কার্ড ইত্যাদি `imgs[0]` থেকে ছবি পড়ে — তাই এখানে দুটো মিলিয়ে দেওয়া হয়।
+  items = (Array.isArray(items) ? items : []).map((it) => {
+    const raw = it as OrderItem & { emoji?: string };
+    const hasImgs = Array.isArray(raw.imgs) && raw.imgs.length > 0 && !!raw.imgs[0];
+    if (hasImgs || !raw.emoji) return it;
+    return { ...it, imgs: [raw.emoji] };
+  });
+
   const customer = (row.customer as Order['customer']) || {
     name: (row.customer_name as string) || '',
     phone: (row.customer_phone as string) || '',

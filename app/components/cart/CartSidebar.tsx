@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { fetchCatalogIndex, QUICK_CART_EVENT } from '@/lib/productData';
 import { useCartStore, cartTotal, cartCount } from '@/lib/store/cartStore';
+import { refreshCartImages } from '@/lib/freshImages';
 import { useAuthStore } from '@/lib/store/authStore';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { showToast } from '@/lib/toast';
@@ -182,6 +183,11 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   useEffect(() => {
     prodsRef.current = getCachedProds();
   }, []);
+
+  // 🖼️ কার্ট খোলার সময় আইটেমের ছবি সর্বশেষ ছবিতে হালনাগাদ (৫ মিনিট ক্যাশসহ, খুব হালকা কোয়েরি)
+  useEffect(() => {
+    if (isOpen) refreshCartImages();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen && prodsRef.current.length > 0) return;
