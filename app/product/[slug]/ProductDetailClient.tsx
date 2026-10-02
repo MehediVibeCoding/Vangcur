@@ -27,6 +27,7 @@ import { prefersReducedMotion, makeHeartBurst, BurstHeart, type HeartParticle } 
 import Navbar from '@/app/components/layout/Navbar';
 import ProductCard from '@/app/components/home/ProductCard';
 import WarrantyModal from '@/app/components/modals/WarrantyModal';
+import { hasWarranty, formatWarrantyLabel } from '@/lib/warrantyData';
 import useCloseWhenOffscreen from '@/lib/useCloseWhenOffscreen';
 import LoginModal from '@/app/components/auth/LoginModal';
 import ProductQnA from '@/app/components/product/ProductQnA';
@@ -762,9 +763,9 @@ export default function ProductDetailClient({
     const pageUrl = window.location.href.split('?')[0].split('#')[0];
     const productRef = `${pageUrl}#prod-${prod.id}`;
     if (lang === 'en') {
-      return `Hello Vangcur! I want to order:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 Quantity: ${qty}\n🛡️ Warranty: ${prod.warranty}\n\n🔗 Product Ref: ${productRef}\n\nPlease share the details.`;
+      return `Hello Vangcur! I want to order:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 Quantity: ${qty}${hasWarranty(prod.warranty) ? `\n🛡️ Warranty: ${formatWarrantyLabel(prod.warranty, 'en')}` : ''}\n\n🔗 Product Ref: ${productRef}\n\nPlease share the details.`;
     }
-    return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 পরিমাণ: ${qty}\n🛡️ ওয়ারেন্টি: ${prod.warranty}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
+    return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 পরিমাণ: ${qty}${hasWarranty(prod.warranty) ? `\n🛡️ ওয়ারেন্টি: ${formatWarrantyLabel(prod.warranty, 'bn')}` : ''}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
   }
   const waOrder = () => { if (prod) window.open(`${waLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
 
@@ -1018,21 +1019,23 @@ export default function ProductDetailClient({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => setWarrantyOpen(true)}
-            className="mb-5 flex w-full items-center justify-between gap-2 rounded-[10px] border border-success/30 bg-success/10 px-3.5 py-2.5 text-left transition-brand duration-brand hover:border-success/50"
-          >
-            <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-success">
-              <ShieldIcon className="text-success" /> {t(prod.warranty)}
-            </span>
-            <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-success/40 text-[10.5px] font-bold text-success"
-              title={t('ওয়ারেন্টি বিস্তারিত')}
+          {hasWarranty(prod.warranty) && (
+            <button
+              type="button"
+              onClick={() => setWarrantyOpen(true)}
+              className="mb-5 flex w-full items-center justify-between gap-2 rounded-[10px] border border-success/30 bg-success/10 px-3.5 py-2.5 text-left transition-brand duration-brand hover:border-success/50"
             >
-              ?
-            </span>
-          </button>
+              <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-success">
+                <ShieldIcon className="text-success" /> {formatWarrantyLabel(prod.warranty, lang === 'en' ? 'en' : 'bn')}
+              </span>
+              <span
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-success/40 text-[10.5px] font-bold text-success"
+                title={t('ওয়ারেন্টি বিস্তারিত')}
+              >
+                ?
+              </span>
+            </button>
+          )}
 
           {quickSpecPills.length > 0 && (
             <div className="mb-5">

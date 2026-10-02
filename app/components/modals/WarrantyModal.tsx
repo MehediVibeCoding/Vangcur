@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { getWarrantyModalContent } from '@/lib/warrantyData';
+import { getWarrantyModalContent, formatWarrantyLabel } from '@/lib/warrantyData';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import { useT } from '@/lib/i18n/useT';
 import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
@@ -79,7 +79,7 @@ function WorkflowIcon() {
 export default function WarrantyModal({ isOpen, onClose, warrantyText }: WarrantyModalProps) {
   const { t, lang } = useT();
   const router = useRouter();
-  const rawContent = useMemo(() => getWarrantyModalContent(warrantyText), [warrantyText]);
+  const rawContent = useMemo(() => getWarrantyModalContent(warrantyText, lang === 'en' ? 'en' : 'bn'), [warrantyText, lang]);
 
   const content = useMemo(() => {
     let title = t(rawContent.title);
@@ -168,7 +168,7 @@ export default function WarrantyModal({ isOpen, onClose, warrantyText }: Warrant
                       {lang === 'en' ? 'Official Warranty Coverage' : 'অফিসিয়াল ওয়ারেন্টি নীতিমালা'}
                     </h3>
                     <p className="font-body text-[12px] font-bold text-brand-light">
-                      {warrantyText || (lang === 'en' ? 'Brand Replacement Guarantee' : 'ব্র্যান্ড রিপ্লেসমেন্ট গ্যারান্টি')}
+                      {formatWarrantyLabel(warrantyText, lang === 'en' ? 'en' : 'bn') || (lang === 'en' ? 'Brand Replacement Guarantee' : 'ব্র্যান্ড রিপ্লেসমেন্ট গ্যারান্টি')}
                     </p>
                   </div>
                 </div>

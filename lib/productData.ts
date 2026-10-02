@@ -118,7 +118,7 @@ export function mapCustomProduct(p: RawCustomProduct): Product {
     stock: p.stock !== undefined && p.stock !== null ? Number(p.stock) : 0,
     badge: p.badge || '',
     discountColor,
-    warranty: p.warranty || '৭ দিন',
+    warranty: (p.warranty || '').trim(), // খালি = ওয়ারেন্টি নেই → সাইটে ওয়ারেন্টি অংশ দেখাবে না
     rating: Number(p.rating) || 4.5,
     imgs: imgs as string[],
     specs,
