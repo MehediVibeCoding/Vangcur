@@ -417,6 +417,14 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
           animation: heroCardIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
           will-change: opacity, transform;
         }
+        /* সার্চ রেজাল্ট পেজের ক্যাটাগরি বাটন থেকে হোমে এলে (SearchClient.tsx <html>-এ এই অ্যাট্রিবিউট
+           বসায়) কার্ডের এন্ট্রি অ্যানিমেশন বন্ধ — স্বাভাবিকভাবে হোমে ঢুকলে আগের মতোই চলবে */
+        html[data-skip-home-anim] .hero-card-anim-in {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+          will-change: auto;
+        }
         @media (max-width: 767.98px) {
           .hero-card-anim-in[data-hero-desktop-extra='true'] {
             animation: none !important;

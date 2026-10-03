@@ -432,6 +432,12 @@ export default function SearchClient({ initialQuery, initialResults, initialTota
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   const goToHomeCategory = useCallback((catId: string) => {
+    // হোমে গিয়ে ক্যাটাগরির পণ্য দেখানোর সময় হিরো কার্ডের এন্ট্রি অ্যানিমেশন যেন না চলে —
+    // <html>-এ সাময়িক একটা অ্যাট্রিবিউট বসাই (HeroSlider-এর CSS এটা দেখে অ্যানিমেশন বন্ধ রাখে),
+    // কয়েক সেকেন্ড পর সরিয়ে দিই, যাতে পরের স্বাভাবিক হোম-ভিজিটে অ্যানিমেশন আগের মতো চলে।
+    const root = document.documentElement;
+    root.setAttribute('data-skip-home-anim', '');
+    window.setTimeout(() => root.removeAttribute('data-skip-home-anim'), 3000);
     router.push(`/?cat=${encodeURIComponent(catId)}`);
   }, [router]);
 

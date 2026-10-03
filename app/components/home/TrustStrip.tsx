@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useT } from '@/lib/i18n/useT';
 
@@ -85,6 +86,12 @@ const TRUST_ITEMS: TrustItem[] = [
 
 export default function TrustStrip() {
   const { t } = useT();
+  // সার্চ পেজের ক্যাটাগরি বাটন থেকে হোমে এলে (SearchClient.tsx <html>-এ data-skip-home-anim বসায়)
+  // এন্ট্রি অ্যানিমেশন বাদ — আইটেমগুলো শুরু থেকেই পুরো দৃশ্যমান। সরাসরি/রিলোডে অ্যাট্রিবিউট
+  // থাকে না, তাই সার্ভার-HTML-এর সাথে মিলে যায় আর অ্যানিমেশন আগের মতোই চলে।
+  const [skipAnim] = useState(
+    () => typeof document !== 'undefined' && document.documentElement.hasAttribute('data-skip-home-anim'),
+  );
 
   return (
     <div className="mx-auto mb-[26px] mt-4 max-w-[1300px] px-5">
@@ -92,7 +99,7 @@ export default function TrustStrip() {
         {TRUST_ITEMS.map((item, i) => (
           <motion.div
             key={item.label}
-            initial={{ opacity: 0, scale: 0.94, y: 8 }}
+            initial={skipAnim ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.94, y: 8 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true, margin: '-20px' }}
             transition={{ duration: 0.42, delay: i * 0.07, ease: [0.4, 0, 0.2, 1] }}
