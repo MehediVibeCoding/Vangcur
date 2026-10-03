@@ -98,12 +98,23 @@ export default function FloatContactButtons() {
 
   useEffect(() => () => clearCloseTimer(), []);
 
+  // 🛡️ iOS Safari / মোবাইল ফার্স্ট-ট্যাপ ফিক্স: আগে onMouseEnter/onMouseLeave
+  // সরাসরি wrapper div-এ বসানো ছিল। WebKit-এ কোনো element-এর (বা তার parent-এর)
+  // mouse hover handler থাকলে টাচ ডিভাইসে প্রথম ট্যাপে সেটাকে শুধু "hover" হিসেবে
+  // ধরে নেয় (click fire হয় না) — দ্বিতীয় ট্যাপে গিয়ে আসল ক্লিক কাজ করে। তাই
+  // মেসেঞ্জার বাটনে প্রথমবার ট্যাপ করলে কিছু হতো না। এখন শুধু hover-সাপোর্টেড
+  // ডিভাইসে (আসল মাউস থাকা ডেস্কটপ) hover handler অ্যাটাচ করা হচ্ছে — টাচ
+  // ডিভাইসে পুরোপুরি বাটনের নিজের onClick-এর ওপর নির্ভর করবে।
+  const supportsHover = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover)').matches;
+  const hoverHandlers = supportsHover
+    ? { onMouseEnter: handleEnter, onMouseLeave: handleLeave }
+    : {};
+
   return (
     <div
       ref={wrapRef}
       className="fixed bottom-5 right-5 z-40"
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
+      {...hoverHandlers}
     >
       <div
         className={`absolute bottom-0 right-[68px] flex flex-col items-end gap-2 transition-all duration-brand ease-brand ${

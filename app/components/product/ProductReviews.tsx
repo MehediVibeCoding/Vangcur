@@ -13,6 +13,7 @@ import { prefersReducedMotion, makeHeartBurst, BurstHeart, type HeartParticle } 
 import UserAvatar from './UserAvatar';
 import { VerifiedCustomerBadge } from './VerifiedBadges';
 import { fetchProfileCompletionMap } from '@/lib/profileData';
+import { formatSafeDate } from '@/lib/safeLocaleDate';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { ReviewGallerySkeleton } from '@/app/components/ui/Skeletons';
 import {
@@ -727,11 +728,9 @@ export default function ProductReviews({
 
                 const isOwnPending = !item.isApproved && item.userId === currentUser?.id;
                 const isLiked = likedList.includes(String(item.reviewId));
-                const dateStr = item.createdAt
-                  ? new Date(item.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
-                    year: 'numeric', month: 'short', day: 'numeric',
-                  })
-                  : '';
+                // 🛡️ Safari-তে malformed/invalid createdAt থাকলে toLocaleDateString()
+                // RangeError থ্রো করতে পারে (Chrome-এ করে না) — safe helper ব্যবহার করা হচ্ছে
+                const dateStr = formatSafeDate(item.createdAt, lang);
 
                 let transformStyle = '';
                 let zIndex = 0;

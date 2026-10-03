@@ -176,8 +176,8 @@ export default function TermsClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Tiered Advance Policy: To prevent fake bookings, orders below ৳8,000 require a fixed ৳200 advance. Orders between ৳8,000–৳20,000 require a 5% advance + 1.5% bKash transaction fee via bKash Send Money.'
-              : 'অগ্রিম পেমেন্ট নীতিমালা: ফেক অর্ডার ও পার্সেল রিটার্ন রোধে ৮,০০০ টাকার নিচের অর্ডারে ফিক্সড ২০০ টাকা এবং ৮,০০০ থেকে ২০,০০০ টাকার অর্ডারে মোট বিলের ৫% অগ্রিম ও ১.৫% বিকাশ ফি অগ্রিম পরিশোধ করতে হবে।'}
+              ? 'Tiered Advance Policy: To prevent fake bookings, orders below ৳4,000 require a fixed ৳200 advance. Orders between ৳4,000–৳20,000 require a 5% advance + 1.5% bKash transaction fee via bKash Send Money.'
+              : 'অগ্রিম পেমেন্ট নীতিমালা: ফেক অর্ডার ও পার্সেল রিটার্ন রোধে ৪,০০০ টাকার নিচের অর্ডারে ফিক্সড ২০০ টাকা এবং ৪,০০০ থেকে ২০,০০০ টাকার অর্ডারে মোট বিলের ৫% অগ্রিম ও ১.৫% বিকাশ ফি অগ্রিম পরিশোধ করতে হবে।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'

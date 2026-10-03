@@ -174,7 +174,7 @@ export function shipPrice(shipKey: string, shipCfg: ShipConfig = DEFAULT_SHIP_CF
 // =========================================================================
 // 🌟 ৩-টায়ার ডায়নামিক অগ্রিম পেমেন্ট ও বাল্ক লিমিট কনফিগারেশন
 // =========================================================================
-export const HIGH_VALUE_THRESHOLD = 8000; // ৮,০০০ টাকা বা তার বেশি মোট বিল হলে ৫% অগ্রিম
+export const HIGH_VALUE_THRESHOLD = 4000; // ৪,০০০ টাকা বা তার বেশি মোট বিল হলে ৫% অগ্রিম
 export const MAX_ONLINE_ORDER_TOTAL = 20000; // ২০,০০০ টাকার বেশি মোট বিল হলে WhatsApp বাল্ক অর্ডার
 
 export interface AdvancePaymentBreakdown {
@@ -182,7 +182,7 @@ export interface AdvancePaymentBreakdown {
   baseAdvance: number;       // ৫% মূল অগ্রিম বা ফিক্সড ২০০
   bkashFee: number;          // ১.৫% বিকাশ ট্রানজেকশন ফি (টায়ার ২ ও ৩ এর জন্য)
   totalAdvance: number;      // কাস্টমারকে মোট যত টাকা অগ্রিম সেন্ড মানি করতে হবে
-  isHighValue: boolean;      // ৮,০০০ - ২০,০০০ টাকার মধ্যে কি না
+  isHighValue: boolean;      // ৪,০০০ - ২০,০০০ টাকার মধ্যে কি না
   isBulkOrder: boolean;      // ২০,০০০ টাকার বেশি কি না
   percentage: number;        // অগ্রিমের শতকরা হার (৫%)
 }
@@ -208,7 +208,7 @@ export function calculateAdvancePayment(effectiveTotal: number): AdvancePaymentB
     };
   }
 
-  // টায়ার ২: ৮,০০০ থেকে ২০,০০০ টাকা (হাই-ভ্যালু অর্ডার: ৫% অগ্রিম + ১.৫% বিকাশ ট্রানজেকশন ফি)
+  // টায়ার ২: ৪,০০০ থেকে ২০,০০০ টাকা (হাই-ভ্যালু অর্ডার: ৫% অগ্রিম + ১.৫% বিকাশ ট্রানজেকশন ফি)
   if (safeTotal >= HIGH_VALUE_THRESHOLD) {
     const baseAdvance = Math.round(safeTotal * 0.05);
     const bkashFee = Math.round(baseAdvance * 0.015);
@@ -223,7 +223,7 @@ export function calculateAdvancePayment(effectiveTotal: number): AdvancePaymentB
     };
   }
 
-  // টায়ার ১: ৮,০০০ টাকার নিচে (স্বাভাবিক অর্ডার: ফিক্সড ২০০ টাকা)
+  // টায়ার ১: ৪,০০০ টাকার নিচে (স্বাভাবিক অর্ডার: ফিক্সড ২০০ টাকা)
   return {
     tier: 1,
     baseAdvance: 200,

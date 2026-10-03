@@ -104,13 +104,13 @@ export default function ShippingClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders below ৳8,000: A nominal advance of ৳200 is verified via bKash Send Money to confirm customer intent.'
-              : '৮,০০০ টাকার নিচে অর্ডার: ফিক্সড ২০০ টাকা বিকাশ সেন্ড মানির মাধ্যমে অগ্রিম যাচাই করে অর্ডার কনফার্ম করা হয়।'}
+              ? 'Orders below ৳4,000: A nominal advance of ৳200 is verified via bKash Send Money to confirm customer intent.'
+              : '৪,০০০ টাকার নিচে অর্ডার: ফিক্সড ২০০ টাকা বিকাশ সেন্ড মানির মাধ্যমে অগ্রিম যাচাই করে অর্ডার কনফার্ম করা হয়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders ৳8,000 – ৳20,000: A 5% base advance on the total bill + 1.5% bKash transaction fee is required.'
-              : '৮,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ট্রানজেকশন ফি অগ্রিম পরিশোধ করতে হয়।'}
+              ? 'Orders ৳4,000 – ৳20,000: A 5% base advance on the total bill + 1.5% bKash transaction fee is required.'
+              : '৪,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ট্রানজেকশন ফি অগ্রিম পরিশোধ করতে হয়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'

@@ -15,6 +15,7 @@ import { useLanguageStore, type Language } from '@/lib/store/languageStore';
 import { useThemeStore } from '@/lib/store/themeStore';
 import { useT } from '@/lib/i18n/useT';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
+import { formatSafeDate } from '@/lib/safeLocaleDate';
 import { logout } from '@/lib/authData';
 import {
   OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT,
@@ -317,11 +318,9 @@ export default function AccountClient() {
     ? currentUser.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
-  const createdStr = currentUser?.createdAt
-    ? new Date(currentUser.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
-      year: 'numeric', month: 'long', day: 'numeric',
-    })
-    : '';
+  // 🛡️ Safari-তে malformed/invalid date থাকলে toLocaleDateString() RangeError থ্রো করতে পারে
+  // (Chrome-এ করে না) — safe helper ব্যবহার করা হচ্ছে
+  const createdStr = formatSafeDate(currentUser?.createdAt, lang, { year: 'numeric', month: 'long', day: 'numeric' });
 
   const doLogout = async () => {
     setShowLogoutConfirm(false);
@@ -896,10 +895,9 @@ export default function AccountClient() {
                       {drafts.map((draft) => {
                         const items = Array.isArray(draft.items) ? draft.items : [];
                         const firstItem = items[0] || null;
-                        const d = new Date(draft.createdAt);
-                        const dateStr = d.toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
-                          year: 'numeric', month: 'short', day: 'numeric',
-                        });
+                        // 🛡️ Safari-তে malformed/invalid date থাকলে toLocaleDateString() RangeError
+                        // থ্রো করতে পারে (Chrome-এ করে না) — safe helper ব্যবহার করা হচ্ছে
+                        const dateStr = formatSafeDate(draft.createdAt, lang);
                         const prodName = firstItem ? firstItem.name : t('প্রোডাক্ট');
                         const tot = items.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
 

@@ -12,6 +12,7 @@ import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { InvoiceLoadingSkeleton } from '@/app/components/ui/Skeletons';
 import { InvoiceCardBody, INVOICE_FIXED_WIDTH, type InvoiceContact } from '@/lib/invoice/InvoiceCardBody';
 import { buildInvoiceViewModel } from '@/lib/invoice/invoiceViewModel';
+import { OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import type { Order } from '@/types';
 
 const MAX_DOWNLOAD_LIMIT = 3;
@@ -212,6 +213,21 @@ export default function InvoiceClient() {
 
     if (from === 'track') {
       router.replace('/track-order');
+      return;
+    }
+
+    // 🆕 অ্যান-লগইন ইউজার যখন কোনো পেজের ওপর খোলা "অর্ডার ট্র্যাক করুন" পপআপ থেকে
+    // ইনভয়েস খুলেছিলেন (পুরো /track-order পেজ থেকে নয়) — তখন সেই আগের পেজেই ফিরিয়ে
+    // নিয়ে popup আবার খুলে দেওয়া হচ্ছে, যাতে /track-order পুরো পেজে চলে না যায়।
+    // এখানে ইচ্ছাকৃতভাবে history.back()/useHistoryModal-এর স্ট্যাক স্পর্শ করা হচ্ছে না
+    // (সেটা অন্য অনেক ফ্লো শেয়ার করে) — শুধু সরাসরি রিপ্লেস + একটা গ্লোবাল ইভেন্ট দিয়ে
+    // পপআপ রিওপেন করা হচ্ছে, তাই অন্য কোনো back-navigation ফ্লো ভাঙার ঝুঁকি নেই।
+    if (from === 'track-modal') {
+      const returnTo = searchParams.get('returnTo') || '/';
+      router.replace(returnTo);
+      if (typeof window !== 'undefined') {
+        setTimeout(() => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT)), 150);
+      }
       return;
     }
 

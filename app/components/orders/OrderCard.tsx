@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { useT } from '@/lib/i18n/useT';
+import { formatSafeDate } from '@/lib/safeLocaleDate';
 import type { Order, OrderStatus } from '@/types';
 
 export const ORDER_STATUS_CLASS: Record<OrderStatus, string> = {
@@ -224,7 +225,8 @@ function OrderStatusTimeline({ status, lang }: { status: OrderStatus; lang: 'en'
 interface OrderCardProps {
   order: Order;
   onInvoice?: (orderId: string | number) => void;
-  from?: 'account' | 'track';
+  // 'track-modal' = অ্যান-লগইন ইউজার যেকোনো পেজ থেকে খোলা "অর্ডার ট্র্যাক করুন" পপআপ থেকে এসেছে
+  from?: 'account' | 'track' | 'track-modal';
 }
 
 export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps) {
@@ -232,11 +234,9 @@ export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps)
   const router = useRouter();
   const pathname = usePathname();
 
-  const dateStr = new Date(o.date).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  // 🛡️ Safari-তে malformed/invalid date থাকলে toLocaleDateString() RangeError থ্রো করতে পারে
+  // (Chrome-এ করে না) — safe helper ব্যবহার করা হচ্ছে
+  const dateStr = formatSafeDate(o.date, lang);
 
   const statusLabel = lang === 'en'
     ? (ORDER_STATUS_LABEL_EN[o.status] || ORDER_STATUS_LABEL_EN.pending)
@@ -245,13 +245,22 @@ export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps)
   const dotClass = ORDER_STATUS_DOT[o.status] || 'bg-amber-500';
 
   const handleInvoiceNavigation = () => {
+    // 🛡️ "track-modal" কেসে onInvoice(o.id) (TrackOrderModal-এর openInvoice) কল হওয়ার
+    // *আগেই* বর্তমান URL (window.location) ক্যাপচার করে নেওয়া হচ্ছে — এটাই popup যে
+    // পেজের ওপর খোলা ছিল সেই পেজ, কারণ popup বন্ধ হওয়া শুধু React state, URL বদলায় না।
+    // এটাই ইনভয়েস থেকে "ফিরে যান" চাপলে popup আবার যে পেজে খুলতে হবে তার ঠিকানা।
+    const detectedFrom = from || (pathname?.includes('/account') ? 'account' : pathname?.includes('/track') ? 'track' : undefined);
+    const returnTo = detectedFrom === 'track-modal' && typeof window !== 'undefined'
+      ? window.location.pathname + window.location.search
+      : null;
+
     if (onInvoice) {
       onInvoice(o.id);
     }
     const phoneParam = o.customer?.phone ? `&phone=${encodeURIComponent(o.customer.phone)}` : '';
-    const detectedFrom = from || (pathname?.includes('/account') ? 'account' : pathname?.includes('/track') ? 'track' : undefined);
     const fromParam = detectedFrom ? `&from=${encodeURIComponent(detectedFrom)}` : '';
-    router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}${fromParam}`);
+    const returnToParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : '';
+    router.push(`/checkout/invoice?id=${encodeURIComponent(String(o.id))}${phoneParam}${fromParam}${returnToParam}`);
   };
 
   // টাইমলাইন-ভিত্তিক স্ট্যাটাসে (pending/confirmed/shipped/delivered) নিচে স্টেপ-বার আছে,

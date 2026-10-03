@@ -16,9 +16,9 @@ export interface Faq {
 export const DEFAULT_FAQS: Faq[] = [
   {
     q: 'পেমেন্ট কীভাবে করব এবং অগ্রিম কত দিতে হবে?',
-    a: 'অর্ডার নিশ্চিত করতে বিকাশ সেন্ড মানির মাধ্যমে সামান্য অগ্রিম দিতে হয়, বাকি টাকা পার্সেল হাতে পেয়ে ক্যাশ অন ডেলিভারিতে (COD) পরিশোধ করবেন। ৮,০০০ টাকার নিচের অর্ডারে অগ্রিম ফিক্সড ২০০ টাকা। ৮,০০০ থেকে ২০,০০০ টাকার অর্ডারে মোট বিলের ৫% এবং সাথে ১.৫% বিকাশ ফি অগ্রিম দিতে হবে।',
+    a: 'অর্ডার নিশ্চিত করতে বিকাশ সেন্ড মানির মাধ্যমে সামান্য অগ্রিম দিতে হয়, বাকি টাকা পার্সেল হাতে পেয়ে ক্যাশ অন ডেলিভারিতে (COD) পরিশোধ করবেন। ৪,০০০ টাকার নিচের অর্ডারে অগ্রিম ফিক্সড ২০০ টাকা। ৪,০০০ থেকে ২০,০০০ টাকার অর্ডারে মোট বিলের ৫% এবং সাথে ১.৫% বিকাশ ফি অগ্রিম দিতে হবে।',
     qEn: 'How do I pay, and how much is the advance?',
-    aEn: 'To confirm your order, you pay a small advance via bKash Send Money and settle the rest in cash when the parcel arrives (Cash on Delivery). For orders below ৳8,000 the advance is a fixed ৳200. For orders between ৳8,000 and ৳20,000 it is 5% of the total bill plus a 1.5% bKash fee.',
+    aEn: 'To confirm your order, you pay a small advance via bKash Send Money and settle the rest in cash when the parcel arrives (Cash on Delivery). For orders below ৳4,000 the advance is a fixed ৳200. For orders between ৳4,000 and ৳20,000 it is 5% of the total bill plus a 1.5% bKash fee.',
   },
   {
     q: 'ডেলিভারি পেতে কতদিন লাগে এবং চার্জ কত?',

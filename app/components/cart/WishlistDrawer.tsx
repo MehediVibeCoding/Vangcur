@@ -302,7 +302,11 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                             onClick={() => handleOrderNow(item)}
-                            className="shimmer-sheen flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-[filter] hover:brightness-[1.03]"
+                            // 🛡️ পারফরম্যান্স ফিক্স: `shimmer-sheen` ক্লাস (6s infinite animation)
+                            // ইচ্ছাকৃতভাবে বাদ দেওয়া হলো — wishlist-এ একাধিক আইটেম থাকলে প্রতিটা
+                            // বাটনে আলাদা infinite GPU animation একসাথে চলায় লো-এন্ড ডিভাইসে
+                            // মেমোরি/GPU-তে বাড়তি চাপ পড়ছিল। অন্য কোথাও shimmer-sheen অক্ষত আছে।
+                            className="flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-[filter] hover:brightness-[1.03]"
                           >
                             <span>{lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}</span>
                           </motion.button>

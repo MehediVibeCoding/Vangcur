@@ -1336,10 +1336,17 @@ export default function ProductDetailClient({
           </SectionHeading>
           <div className="w-full overflow-hidden rounded-[18px] border border-border-base/80 bg-white shadow-xs">
             <table className="w-full border-collapse text-[14px]">
+              {/*
+                🛡️ Safari/WebKit ফিক্স: border-collapse থাকা অবস্থায় <tr>-এ সরাসরি
+                bg-gradient দিলে Safari প্রতিটা <th> আলাদা করে পেইন্ট করে, ফলে মাঝে
+                সিম/দাগ দেখা যায় (Android/Chrome-এ ঠিক থাকে কারণ ওরা পুরো row একসাথে
+                আঁকে)। গ্র্যাডিয়েন্টটা <tr>-এর বদলে প্রতিটা <th>-এ আলাদাভাবে বসানো হলো,
+                তাতে দুই ব্রাউজারেই একই রকম দেখাবে।
+              */}
               <thead>
-                <tr className="border-b border-brand-light/35 bg-gradient-to-br from-[#F0F7FF] via-white to-[#EFF6FE]/75">
-                  <th className="w-[38%] px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{t('বিবরণ')}</th>
-                  <th className="px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
+                <tr className="border-b border-brand-light/35">
+                  <th className="w-[38%] bg-gradient-to-br from-[#F0F7FF] via-white to-[#EFF6FE]/75 px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{t('বিবরণ')}</th>
+                  <th className="bg-gradient-to-br from-[#F0F7FF] via-white to-[#EFF6FE]/75 px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>
               </thead>
               <tbody>

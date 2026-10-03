@@ -309,8 +309,10 @@ export default function TrackOrderModal({ isOpen, onClose }: TrackOrderModalProp
                         </div>
                       ) : (
                         <div className="space-y-3.5">
+                          {/* from="track-modal" (পপআপ) ↔ from="track" (পুরো /track-order পেজ) — আলাদা
+                              রাখা হচ্ছে, যাতে ইনভয়েস পেজ থেকে "ফিরে যান" চাপলে সঠিক জায়গায় ফেরত যায় */}
                           {filteredOrders.map((o) => (
-                            <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track" />
+                            <OrderCard key={o.id} order={o} onInvoice={openInvoice} from="track-modal" />
                           ))}
                         </div>
                       )}

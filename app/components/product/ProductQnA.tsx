@@ -16,6 +16,7 @@ import {
   checkIsUserAdmin,
 } from '@/lib/productQnaData';
 import { fetchProfileCompletionMap } from '@/lib/profileData';
+import { formatSafeDate } from '@/lib/safeLocaleDate';
 import { TeamVerifiedBadge, VerifiedCustomerBadge } from './VerifiedBadges';
 import type { ProductQuestion, ProductQuestionAnswer } from '@/types';
 
@@ -342,11 +343,9 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
       ) : (
         <div className="flex flex-col gap-4">
           {questions.map((q) => {
-            const dateStr = q.created_at
-              ? new Date(q.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'bn-BD', {
-                year: 'numeric', month: 'short', day: 'numeric',
-              })
-              : '';
+            // 🛡️ Safari-তে malformed/invalid created_at থাকলে toLocaleDateString()
+            // RangeError থ্রো করতে পারে (Chrome-এ করে না) — safe helper ব্যবহার করা হচ্ছে
+            const dateStr = formatSafeDate(q.created_at, lang);
 
             const isAuthor = Boolean(currentUser?.id) && q.user_id === currentUser?.id;
             const canDeleteQuestion = isAdmin || isAuthor;

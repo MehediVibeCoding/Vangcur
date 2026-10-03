@@ -261,13 +261,13 @@ export default function GuideClient() {
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders below ৳8,000: Send Money a fixed ৳200 advance to our official bKash number (01816-365504) or scan the on-screen QR code.'
-              : '৮,০০০ টাকার নিচে অর্ডার: ফিক্সড ২০০ টাকা বিকাশ সেন্ড মানি করুন (01816-365504) অথবা স্ক্রিনের কিউআর কোড স্ক্যান করুন।'}
+              ? 'Orders below ৳4,000: Send Money a fixed ৳200 advance to our official bKash number (01816-365504) or scan the on-screen QR code.'
+              : '৪,০০০ টাকার নিচে অর্ডার: ফিক্সড ২০০ টাকা বিকাশ সেন্ড মানি করুন (01816-365504) অথবা স্ক্রিনের কিউআর কোড স্ক্যান করুন।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders ৳8,000 – ৳20,000: Send Money a 5% advance + 1.5% bKash transaction fee on the total bill (live breakdown viewable in the dropdown).'
-              : '৮,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ফি অগ্রিম পরিশোধ করুন (ড্রপডাউনে বিস্তারিত হিসাব দেখা যাবে)।'}
+              ? 'Orders ৳4,000 – ৳20,000: Send Money a 5% advance + 1.5% bKash transaction fee on the total bill (live breakdown viewable in the dropdown).'
+              : '৪,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ফি অগ্রিম পরিশোধ করুন (ড্রপডাউনে বিস্তারিত হিসাব দেখা যাবে)।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
