@@ -38,7 +38,7 @@ function HeaderDecor() {
 
 function IconDocList() {
   return (
-    <svg {...lineIcon} width="16" height="16" strokeWidth={2} className="text-brand-light">
+    <svg {...lineIcon} width="16" height="16" strokeWidth={2} className="text-white">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -167,9 +167,9 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 10 }}
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            className="sleek-scrollbar relative z-10 flex h-full min-h-dvh sm:min-h-0 sm:h-auto max-h-dvh sm:max-h-[92vh] w-full sm:max-w-[520px] flex-col overflow-y-auto rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80"
+            className="sleek-scrollbar relative z-10 flex h-full min-h-dvh sm:min-h-0 sm:h-auto max-h-dvh sm:max-h-[92vh] w-full sm:max-w-[520px] flex-col overflow-y-auto sm:overflow-hidden rounded-none sm:rounded-[20px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-none sm:shadow-sh3 sm:ring-1 sm:ring-white/80"
           >
-            <div className="sticky top-0 z-[20] flex items-center justify-between border-b border-ink/10 bg-white/95 px-5 sm:px-6 py-3.5 backdrop-blur-md">
+            <div className="sticky top-0 z-[20] flex shrink-0 items-center justify-between border-b border-ink/10 bg-white/95 px-5 sm:px-6 py-3.5 backdrop-blur-md">
               <div className="flex items-center gap-2">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs">
                   <IconDocList />
@@ -189,7 +189,7 @@ export default function PolicyModal({ open, onClose, onAgreeAndConfirm }: Policy
               </motion.button>
             </div>
 
-            <div className="relative flex-1 px-5 sm:px-6 pb-8 sm:pb-6 pt-4">
+            <div className="sleek-scrollbar relative flex-1 px-5 sm:px-6 pb-8 sm:pb-6 pt-4 sm:min-h-0 sm:overflow-y-auto">
               <HeaderDecor />
 
               <Section

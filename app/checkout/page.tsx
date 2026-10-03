@@ -1047,14 +1047,6 @@ export default function CheckoutPage() {
     }, 150);
   };
 
-  const preConfirmGoRegister = () => {
-    setShowPreConfirm(false);
-    setTimeout(() => {
-      setLoginInitialMode('register');
-      setShowLoginModal(true);
-    }, 150);
-  };
-
   const preConfirmGoGoogle = async () => {
     const pendingData = {
       items: cartItems, ship: selectedShip, name, phone, dist, addr, email, txn, l4: last4, savedAt: Date.now(),
@@ -1844,7 +1836,6 @@ export default function CheckoutPage() {
         isOpen={showPreConfirm}
         onClose={() => setShowPreConfirm(false)}
         onLogin={preConfirmGoLogin}
-        onRegister={preConfirmGoRegister}
         onGoogle={preConfirmGoGoogle}
         onSkip={preConfirmSkip}
       />
@@ -1856,10 +1847,6 @@ export default function CheckoutPage() {
         onAuthSuccess={() => {
           setShowLoginModal(false);
           submitOrderNow();
-        }}
-        onBackFromOrder={() => {
-          setShowLoginModal(false);
-          setTimeout(() => setShowPreConfirm(true), 150);
         }}
       />
       <PolicyModal

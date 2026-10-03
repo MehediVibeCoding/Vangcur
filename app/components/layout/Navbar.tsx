@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { useCartStore } from '@/lib/store/cartStore';
 import { lockBody, unlockBody, isModalOpen } from '@/lib/bodyScrollLock';
+import { scrollToProductsSection } from '@/lib/scrollToProducts';
 import { fetchCatalogIndex, productHref } from '@/lib/productData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
@@ -352,11 +353,21 @@ function SearchDropdown({
           </div>
           <div className="shrink-0 border-t border-border-base px-3.5 py-2.5 text-center">
             <button
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-light py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-brand-light-hover"
+              className="flex w-full min-w-0 items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-brand-light px-3 py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-brand-light-hover"
               onClick={onGoToSearch}
             >
-              <SearchIcon />
-              {lang === 'en' ? <>See all results for &quot;{searchQuery}&quot;</> : <>&quot;{searchQuery}&quot; এর সব ফলাফল দেখুন</>}
+              <span className="shrink-0"><SearchIcon /></span>
+              {lang === 'en' ? (
+                <span className="flex min-w-0 items-baseline whitespace-nowrap">
+                  <span className="shrink-0">See all results for&nbsp;</span>
+                  <span className="min-w-0 truncate">&quot;{searchQuery}&quot;</span>
+                </span>
+              ) : (
+                <span className="flex min-w-0 items-baseline whitespace-nowrap">
+                  <span className="min-w-0 truncate">&quot;{searchQuery}&quot;</span>
+                  <span className="shrink-0">&nbsp;এর সব ফলাফল দেখুন</span>
+                </span>
+              )}
             </button>
           </div>
         </>
@@ -683,12 +694,7 @@ export default function Navbar({
         // ignore
       }
       window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId } }));
-      const prodSec = document.getElementById('prodSec');
-      if (prodSec) {
-        const navbarOffset = 85;
-        const targetY = prodSec.getBoundingClientRect().top + window.scrollY - navbarOffset;
-        window.scrollTo({ top: targetY, behavior: 'smooth' });
-      }
+      scrollToProductsSection();
     } else {
       router.push(catId === 'all' ? '/' : `/?cat=${encodeURIComponent(catId)}`);
     }

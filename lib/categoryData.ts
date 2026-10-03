@@ -219,3 +219,4 @@ export function subscribeCategories(
 }
 
 export const CATEGORY_FILTER_EVENT = 'vc:categoryFilter';
+export const FOCUS_PRODUCT_EVENT = 'vc:focusProduct';

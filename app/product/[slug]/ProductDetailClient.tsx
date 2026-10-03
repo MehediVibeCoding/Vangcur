@@ -17,7 +17,7 @@ import { trackProductView } from '@/lib/visitorTracking';
 import { trackViewItem, trackAddToCart } from '@/lib/analytics';
 import { renderLinkedText } from '@/lib/linkedText';
 import {
-  DEFAULT_WA_LINK, DEFAULT_MSG_LINK, computeWaLink, computeMsgLink, fetchContactSettings, subscribeContactSettings,
+  DEFAULT_MSG_LINK, computeMsgLink, fetchContactSettings, subscribeContactSettings,
 } from '@/lib/floatButtonsData';
 import { showToast } from '@/lib/toast';
 import { useCartStore, cartCount } from '@/lib/store/cartStore';
@@ -284,7 +284,7 @@ function FeatureItem({ text }: { text: string }) {
   if (boldMatch) {
     const [, pre, title, rest] = boldMatch;
     return (
-      <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
+      <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-brand-bg/60">
         <div className="mt-0.5 shrink-0 text-base leading-none">{pre.trim() || <CheckBadgeIcon />}</div>
         <div className="font-body text-[15px] leading-[1.75] text-ink"><strong>{title}</strong>{renderLinkedText(rest)}</div>
       </div>
@@ -293,14 +293,14 @@ function FeatureItem({ text }: { text: string }) {
   const emojiMatch = text.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*(.*)/u);
   if (emojiMatch) {
     return (
-      <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
+      <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-brand-bg/60">
         <div className="mt-0.5 shrink-0 text-base leading-none">{emojiMatch[1]}</div>
         <div className="font-body text-[15px] leading-[1.75] text-ink">{renderLinkedText(emojiMatch[2])}</div>
       </div>
     );
   }
   return (
-    <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-surface-muted">
+    <div className="flex items-start gap-3 rounded-[10px] px-2.5 py-2.5 transition-brand duration-brand hover:bg-brand-bg/60">
       <div className="mt-0.5 shrink-0"><CheckBadgeIcon /></div>
       <div className="font-body text-[15px] leading-[1.75] text-ink">{text}</div>
     </div>
@@ -557,7 +557,6 @@ export default function ProductDetailClient({
   const [cartButtonState, setCartButtonState] = useState<'idle' | 'animating' | 'added'>('idle');
   const [isStockNotified, setIsStockNotified] = useState(false);
 
-  const [waLink, setWaLink] = useState(DEFAULT_WA_LINK);
   const [msgLink, setMsgLink] = useState<string | null>(DEFAULT_MSG_LINK);
 
   const cartQty = useCartStore((s) => cartCount(s.cart));
@@ -619,11 +618,9 @@ export default function ProductDetailClient({
     (async () => {
       const contact = await fetchContactSettings(supabase);
       if (cancelled) return;
-      setWaLink(computeWaLink(contact));
       setMsgLink(computeMsgLink(contact));
     })();
     const channel = subscribeContactSettings(supabase, (contact) => {
-      setWaLink(computeWaLink(contact));
       setMsgLink(computeMsgLink(contact));
     });
     return () => { cancelled = true; supabase.removeChannel(channel); };
@@ -758,16 +755,32 @@ export default function ProductDetailClient({
     }
   };
 
-  function buildOrderMsg(): string {
-    if (!prod) return '';
-    const pageUrl = window.location.href.split('?')[0].split('#')[0];
-    const productRef = `${pageUrl}#prod-${prod.id}`;
-    if (lang === 'en') {
-      return `Hello Vangcur! I want to order:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 Quantity: ${qty}${hasWarranty(prod.warranty) ? `\n🛡️ Warranty: ${formatWarrantyLabel(prod.warranty, 'en')}` : ''}\n\n🔗 Product Ref: ${productRef}\n\nPlease share the details.`;
+  const shareProduct = async () => {
+    if (typeof window === 'undefined') return;
+    const url = window.location.href;
+    const title = prod?.name || document.title;
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && window.matchMedia('(pointer: coarse)').matches) {
+        await navigator.share({ title, url });
+        return;
+      }
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return; // ইউজার নিজেই শেয়ার বন্ধ করেছে
     }
-    return `হ্যালো Vangcur! অর্ডার করতে চাই:\n\n📦 ${prod.name}\n💰 ৳${prod.price.toLocaleString('en-US')}\n🔢 পরিমাণ: ${qty}${hasWarranty(prod.warranty) ? `\n🛡️ ওয়ারেন্টি: ${formatWarrantyLabel(prod.warranty, 'bn')}` : ''}\n\n🔗 পণ্য রেফ: ${productRef}\n\nবিস্তারিত জানান।`;
-  }
-  const waOrder = () => { if (prod) window.open(`${waLink}?text=${encodeURIComponent(buildOrderMsg())}`, '_blank'); };
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast(lang === 'en' ? 'Link copied' : 'লিংক কপি হয়েছে');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast(lang === 'en' ? 'Link copied' : 'লিংক কপি হয়েছে'); } catch { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+  };
 
   const goImg = (i: number) => { setCurImgIdx(i); setZoomed(false); };
   const galleryArrow = (dir: number) => {
@@ -998,7 +1011,7 @@ export default function ProductDetailClient({
                       key={v.id}
                       href={productHref(v)}
                       prefetch
-                      className="flex items-center gap-1.5 rounded-full border border-border-base bg-white px-3 py-1.5 text-[12.5px] font-semibold text-ink transition-brand duration-brand hover:border-brand-light/50 hover:bg-brand-bg/10"
+                      className="flex items-center gap-1.5 rounded-full border border-brand-light/25 bg-white/60 px-3 py-1.5 text-[12.5px] font-semibold text-ink shadow-2xs backdrop-blur-[6px] transition-brand duration-brand hover:border-brand-light/60 hover:bg-brand-bg/40 hover:shadow-xs"
                     >
                       {dot}
                       {label}
@@ -1139,11 +1152,18 @@ export default function ProductDetailClient({
                 </AnimatePresence>
               </div>
               <button
-                onClick={waOrder}
-                title={t('WhatsApp এ অর্ডার করুন')}
-                className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#25D366] transition-brand duration-brand hover:brightness-95"
+                type="button"
+                onClick={shareProduct}
+                title={t('শেয়ার করুন')}
+                aria-label={t('শেয়ার করুন')}
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-brand-light/45 bg-brand-light/10 text-brand-light transition-brand duration-brand hover:border-brand-light hover:bg-brand-light/15 active:scale-90"
               >
-                <svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="2.6" />
+                  <circle cx="6" cy="12" r="2.6" />
+                  <circle cx="18" cy="19" r="2.6" />
+                  <path d="M8.3 10.7l7.4-4.3M8.3 13.3l7.4 4.3" />
+                </svg>
               </button>
             </div>
           </div>
@@ -1262,31 +1282,20 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* 🌟 নতুন Apple-স্টাইল পিউর টেক্সট সেগমেন্টেড ফ্রস্টেড গ্লাস পিল বার (কোনো ইমোজি/আইকন ছাড়া) */}
-      <div className="sticky top-0 z-30 border-b border-border-base/70 bg-white/85 shadow-xs backdrop-blur-md" ref={tabsWrapRef}>
-        <div className="mx-auto max-w-[1100px] px-3 py-2 sm:px-6 md:px-8">
-          <div
-            className="no-scrollbar flex items-center gap-1.5 overflow-x-auto rounded-full border border-border-base/80 bg-surface-muted/65 p-1.5 shadow-2xs backdrop-blur-md [overscroll-behavior-x:contain] [touch-action:pan-x_pan-y]"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {TABS.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  className={`relative shrink-0 whitespace-nowrap rounded-full px-4 py-2 font-body text-[13px] font-bold transition-all duration-200 outline-none select-none ${
-                    isActive
-                      ? 'bg-brand-light text-white shadow-xs'
-                      : 'text-ink/75 hover:bg-white/90 hover:text-brand-light'
-                  }`}
-                  onClick={() => scrollToSection(tab.id)}
-                >
-                  {t(tab.label)}
-                </button>
-              );
-            })}
-          </div>
+      <div className="sticky top-0 z-30 border-b border-border-base bg-white/95 backdrop-blur-md" ref={tabsWrapRef}>
+        <div
+          className="no-scrollbar mx-auto flex max-w-[1100px] gap-1 overflow-x-auto px-4 [overscroll-behavior-x:contain] [touch-action:pan-x_pan-y] md:px-8"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`whitespace-nowrap border-b-2 px-3.5 py-3.5 text-[13px] font-semibold transition-brand duration-brand ${activeTab === tab.id ? 'border-brand-light text-brand-light' : 'border-transparent text-muted hover:text-ink'}`}
+              onClick={() => scrollToSection(tab.id)}
+            >
+              {t(tab.label)}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -1328,7 +1337,7 @@ export default function ProductDetailClient({
           <div className="w-full overflow-hidden rounded-[18px] border border-border-base/80 bg-white shadow-xs">
             <table className="w-full border-collapse text-[14px]">
               <thead>
-                <tr className="border-b border-border-base/80 bg-surface-muted/60">
+                <tr className="border-b border-brand-light/20 bg-brand-bg/50">
                   <th className="w-[38%] px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{t('বিবরণ')}</th>
                   <th className="px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>
@@ -1357,7 +1366,7 @@ export default function ProductDetailClient({
           )}
 
           {pkg && (
-            <SpecCalloutBox icon={<BoxIcon />} title={t('Packaging Content')} tone="blue">
+            <SpecCalloutBox icon={<BoxIcon />} title={lang === 'en' ? 'Packaging Content' : 'প্যাকেজিং কন্টেন্ট'} tone="blue">
               {pkg.split('\n').filter((l) => l.trim()).map((l, i) => (
                 <div key={i}>{renderLinkedText(l.trim())}</div>
               ))}

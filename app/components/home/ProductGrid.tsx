@@ -1,9 +1,10 @@
 'use client';
 
+import { scrollToProductsSection } from '@/lib/scrollToProducts';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
-  CATEGORY_FILTER_EVENT, makeCatSlug, DEFAULT_CATEGORIES,
+  CATEGORY_FILTER_EVENT, FOCUS_PRODUCT_EVENT, makeCatSlug, DEFAULT_CATEGORIES,
 } from '@/lib/categoryData';
 import { PRODUCTS_PAGE_SIZE, PRODUCTS_LOAD_MORE_BATCHES } from '@/lib/productData';
 import { fetchProductsPageAction } from '@/app/actions/products';
@@ -64,6 +65,9 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
   const hasMoreRef = useRef(!!initialHasMore);
   const loadingRef = useRef(false);
   const batchIdxRef = useRef(0);
+  const catFetchInFlightRef = useRef(false);
+  const pendingFocusRef = useRef<string | null>(null);
+  const [focusTick, setFocusTick] = useState(0);
 
   useEffect(() => { activeCatRef.current = activeCat; }, [activeCat]);
   useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
@@ -78,10 +82,12 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
     batchIdxRef.current = 0;
     setSwitching(true);
     setLoadingMore(false);
+    catFetchInFlightRef.current = true;
 
     fetchProductsPageAction(activeCat, 0, PRODUCTS_PAGE_SIZE)
       .then((res) => {
         if (reqIdRef.current !== myReqId) return; // ইতিমধ্যে আরেকবার ক্যাটাগরি বদলেছে — পুরনো রেসপন্স উপেক্ষা
+        catFetchInFlightRef.current = false;
         setItems(res.products);
         setTotal(res.total);
         setHasMore(res.hasMore);
@@ -91,6 +97,7 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
       })
       .catch(() => {
         if (reqIdRef.current !== myReqId) return;
+        catFetchInFlightRef.current = false;
         setItems([]);
         setTotal(0);
         setHasMore(false);
@@ -166,6 +173,42 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
     return () => window.removeEventListener(CATEGORY_FILTER_EVENT, onFilter);
   }, []);
 
+  // হিরো কার্ড (লিংক ধরন: প্রোডাক্ট গ্রিডে) — ক্যাটাগরি ফিল্টার হওয়ার পর ওই প্রোডাক্ট কার্ডে স্ক্রল ও হাইলাইট
+  useEffect(() => {
+    const onFocus = (e: Event) => {
+      const detail = (e as CustomEvent<{ productId?: string }>).detail;
+      if (!detail?.productId) return;
+      pendingFocusRef.current = String(detail.productId);
+      setFocusTick((n) => n + 1);
+    };
+    window.addEventListener(FOCUS_PRODUCT_EVENT, onFocus);
+    return () => window.removeEventListener(FOCUS_PRODUCT_EVENT, onFocus);
+  }, []);
+
+  useEffect(() => {
+    const pid = pendingFocusRef.current;
+    if (!pid || switching || catFetchInFlightRef.current) return;
+    const el = document.querySelector<HTMLElement>(`[data-pid="${pid}"]`);
+    if (el) {
+      pendingFocusRef.current = null;
+      const t = setTimeout(() => {
+        const targetY = el.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2 + el.offsetHeight / 2;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        const cls = ['ring-4', 'ring-brand-light/60'];
+        el.classList.add(...cls);
+        setTimeout(() => el.classList.remove(...cls), 2200);
+      }, 120);
+      void t;
+      return undefined;
+    }
+    if (hasMore) {
+      appendNextBatch(); // প্রোডাক্টটা এখনো লোড হয়নি — পরের ব্যাচ আনা হচ্ছে
+    } else {
+      pendingFocusRef.current = null; // গ্রিডে নেই — গ্রিডের শুরুতে নিয়ে যাওয়া হচ্ছে
+      scrollToProductsSection();
+    }
+  }, [items, switching, hasMore, focusTick, appendNextBatch]);
+
   useEffect(() => {
     const catFromUrl = searchParams.get('cat');
     if (!catFromUrl) return;
@@ -176,14 +219,7 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
     } catch {
       // ignore
     }
-    const t = setTimeout(() => {
-      const prodSec = document.getElementById('prodSec');
-      if (prodSec) {
-        const targetY = prodSec.getBoundingClientRect().top + window.scrollY - 85;
-        window.scrollTo({ top: targetY, behavior: 'smooth' });
-      }
-    }, 60);
-    return () => clearTimeout(t);
+    scrollToProductsSection();
   }, [searchParams]);
 
   const handleShowAll = () => {

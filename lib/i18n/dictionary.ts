@@ -209,6 +209,7 @@ export const staticDictionary: Record<string, string> = {
   'শিপিং সহ': 'incl. shipping',
   'Wishlist এ যোগ করুন': 'Add to Wishlist',
   'WhatsApp এ অর্ডার করুন': 'Order via WhatsApp',
+  'শেয়ার করুন': 'Share',
   'স্টকে আসলে আমাকে জানান': 'Notify Me When in Stock',
   'এখনই অর্ডার করুন': 'Order Now',
   'প্রোডাক্টের': 'Product',
@@ -316,8 +317,8 @@ export const staticDictionary: Record<string, string> = {
   'অনুমোদনের অপেক্ষায়': 'Pending Approval',
   'রেটিং সিলেক্ট করুন': 'Select Rating',
   'আপনার মূল্যবান মতামত': 'Your Feedback',
-  'প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ২০ অক্ষর)...': 'Write detailed feedback about product quality and usage (at least 20 chars)...',
-  'প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ২০ অক্ষর)...': 'Write detailed feedback about product quality and usage (at least 20 chars)...',
+  'প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ১০ অক্ষর)...': 'Write detailed feedback about product quality and usage (at least 10 chars)...',
+  'প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ১০ অক্ষর)...': 'Write detailed feedback about product quality and usage (at least 10 chars)...',
   'প্রোডাক্টের ছবি যুক্ত করুন': 'Add Product Photo',
   'ঐচ্ছিক, সর্বোচ্চ ৩টি ছবি': 'Optional, up to 3 photos',
   'ছবি ড্র্যাগ করে আনুন অথবা ব্রাউজ করুন': 'Drag & drop photos or browse',
@@ -350,6 +351,8 @@ export const staticDictionary: Record<string, string> = {
   'WhatsApp: 01897-804055': 'WhatsApp: 01897-804055',
   'রিটার্ন পলিসি': 'Return Policy',
   '৭ দিনের মধ্যে': 'Within 7 Days',
+  'সহজ রিপ্লেসমেন্ট': 'Easy Replacement',
+  'ত্রুটি পেলে ৭ দিনে': 'Within 7 days if defective',
 
   // Search & Navigation
   'পুনরায় সার্চ করুন...': 'Search again...',

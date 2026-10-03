@@ -38,7 +38,6 @@ interface LoginModalProps {
   orderMode?: boolean;
   initialMode?: Mode;
   onAuthSuccess?: (user: CurrentUser) => void;
-  onBackFromOrder?: () => void;
 }
 
 const lineIcon = {
@@ -170,16 +169,13 @@ const fieldLabelClass = 'mb-1.5 block font-body text-[12.5px] font-bold text-ink
 const primaryBtnClass =
   'w-full rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover py-[13px] font-body text-[15px] font-bold text-white shadow-[0_4px_14px_rgba(0,88,199,.28)] transition-[filter,box-shadow] duration-brand hover:brightness-[1.03] disabled:pointer-events-none disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light/50 focus-visible:ring-offset-2';
 
-const backBtnClass =
-  'mt-2.5 w-full rounded-full border-[1.5px] border-border-base bg-transparent py-[11px] font-body text-[13px] font-semibold text-muted transition-brand duration-brand hover:border-brand-light/30 hover:bg-brand-light/5 hover:text-brand-light';
-
 const linkChipClass =
   'bg-transparent p-0 border-0 font-bold text-brand-light transition-brand duration-brand hover:opacity-75';
 
 const rememberLabelClass = 'flex items-center gap-1.5 text-ink';
 
 export default function LoginModal({
-  isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess, onBackFromOrder,
+  isOpen, onClose, orderMode = false, initialMode = 'login', onAuthSuccess,
 }: LoginModalProps) {
   const { t, lang } = useT();
   const router = useRouter();
@@ -443,11 +439,6 @@ export default function LoginModal({
     }
   };
 
-  const handleOrderBack = () => {
-    onClose();
-    if (onBackFromOrder) onBackFromOrder();
-  };
-
   const showLoginTitle = t('স্বাগতম!');
   const showLoginSub = t('আপনার একাউন্টে প্রবেশ করুন।');
   const title = mode === 'login'
@@ -569,21 +560,11 @@ export default function LoginModal({
                         </svg>
                         {t('Google দিয়ে লগইন করুন')}
                       </motion.button>
-                      <div className="mt-1 text-center font-body text-[13px] text-muted">
-                        {t('অ্যাকাউন্ট নেই?')} <button onClick={switchToRegister} className={linkChipClass}>{t('রেজিস্ট্রেশন করুন')}</button>
-                      </div>
                     </>
                   )}
-
-                  {orderMode && (
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      onClick={handleOrderBack}
-                      className={backBtnClass}
-                    >
-                      {t('← ফিরে যান')}
-                    </motion.button>
-                  )}
+                  <div className="mt-1 text-center font-body text-[13px] text-muted">
+                    {t('অ্যাকাউন্ট নেই?')} <button onClick={switchToRegister} className={linkChipClass}>{t('রেজিস্ট্রেশন করুন')}</button>
+                  </div>
                 </div>
               ) : mode === 'register' ? (
                 <div className="flex flex-col gap-3.5">
@@ -658,20 +639,9 @@ export default function LoginModal({
                     {t('অ্যাকাউন্ট তৈরি করুন')}
                   </motion.button>
 
-                  {!orderMode && (
-                    <div className="mt-1 text-center font-body text-[13px] text-muted">
-                      {t('ইতিমধ্যে অ্যাকাউন্ট আছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
-                    </div>
-                  )}
-                  {orderMode && (
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      onClick={handleOrderBack}
-                      className={backBtnClass}
-                    >
-                      {t('← ফিরে যান')}
-                    </motion.button>
-                  )}
+                  <div className="mt-1 text-center font-body text-[13px] text-muted">
+                    {t('ইতিমধ্যে অ্যাকাউন্ট আছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3.5">

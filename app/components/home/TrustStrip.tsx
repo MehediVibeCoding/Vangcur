@@ -71,8 +71,8 @@ const TRUST_ITEMS: TrustItem[] = [
     ),
   },
   {
-    label: 'রিটার্ন পলিসি',
-    sub: '৭ দিনের মধ্যে',
+    label: 'সহজ রিপ্লেসমেন্ট',
+    sub: 'ত্রুটি পেলে ৭ দিনে',
     tint: 'text-info bg-info/10',
     icon: (
       <svg {...iconProps}>

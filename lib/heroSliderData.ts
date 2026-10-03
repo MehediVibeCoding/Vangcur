@@ -2,12 +2,18 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseSupabaseVal } from './categoryData';
 import { logWarn } from './logger';
 
+export type HeroLinkType = 'category' | 'grid' | 'product';
+
 export interface HeroCard {
   label: string;
   catId: string;
   emoji: string;
   img: string;
   bg: string;
+  // ক্লিকে কোথায় যাবে: category (ডিফল্ট, পুরনো কার্ডও এটাই) | grid (হোমের প্রোডাক্ট গ্রিডে ওই প্রোডাক্টে) | product (সরাসরি ডিটেলস পেজ)
+  linkType?: HeroLinkType;
+  productId?: number | string;
+  productName?: string;
 }
 
 // মোবাইল (২) ও ডেস্কটপ (৬) উভয়ের জন্য আদর্শ গুণিতক ১২

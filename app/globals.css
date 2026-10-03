@@ -901,3 +901,7 @@ body,
 .dark .hover\:bg-brand-bg\/40:hover { background-color: rgba(15, 23, 42, 0.40); }
 .dark .hover\:bg-brand-bg\/55:hover { background-color: rgba(15, 23, 42, 0.55); }
 .dark .hover\:text-amber-800:hover { color: #FDE68A; }
+
+/* প্রোডাক্ট পেজ: লাইট মোডে হালকা স্কাই ব্লু হোভার/হেডার — ডার্ক মোড আগের মতোই */
+.dark .hover\:bg-brand-bg\/60:hover { background-color: #182339; }
+.dark .bg-brand-bg\/50 { background-color: rgba(24, 35, 57, 0.60); }

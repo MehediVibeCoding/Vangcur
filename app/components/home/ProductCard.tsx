@@ -121,7 +121,6 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   const sold = p.stock <= 0;
   const discPct = p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0;
   const showDiscBadge = discPct >= 5 && !sold;
-  const reviewCount = Math.floor((Number(p.id) || 1) * 37 + p.stock * 13) % 80 + 20;
   const href = productHref(p);
 
   const handleWish = (e: React.MouseEvent) => {
@@ -174,6 +173,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
 
   return (
     <div
+      data-pid={p.id}
       onMouseEnter={() => router.prefetch('/checkout')}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [contain:content] [transform:translateZ(0)]"
     >
@@ -246,7 +246,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
           </Link>
           <div className="mt-0.5 flex items-center gap-1 font-body text-[9px] sm:mt-1 sm:text-[11px]">
             <StarRating rating={p.rating || 4.5} />
-            <span className="text-white/75">{(p.rating || 4.5).toFixed(1)} ({reviewCount})</span>
+            <span className="text-white/75">{(p.rating || 4.5).toFixed(1)}</span>
           </div>
           <div className="mt-0.5 flex items-baseline gap-1 sm:gap-1.5 font-body">
             <span className="text-sm font-extrabold text-white sm:text-lg xl:text-sm">৳{p.price.toLocaleString('en-US')}</span>

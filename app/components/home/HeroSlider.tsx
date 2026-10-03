@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { logWarn } from '@/lib/logger';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { isModalOpen } from '@/lib/bodyScrollLock';
+import { productHref } from '@/lib/productData';
+import { scrollToProductsSection } from '@/lib/scrollToProducts';
+import { CATEGORY_FILTER_EVENT, FOCUS_PRODUCT_EVENT } from '@/lib/categoryData';
 import {
   type HeroCard,
   DUO_TOTAL,
@@ -53,6 +57,7 @@ function HeroCardImage({
 
 export default function HeroSlider({ initialCards, onCategoryClick }: HeroSliderProps) {
   const supabase = useRef(createClient()).current;
+  const router = useRouter();
 
   const [cards, setCards] = useState<HeroCard[]>(() =>
     padCards(initialCards && initialCards.length ? initialCards : DEFAULT_HERO_CARDS)
@@ -366,18 +371,37 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
     }, 2500);
   };
 
+  const scrollToProdSec = () => scrollToProductsSection();
+
   const goCategory = (catId: string) => {
     if (typeof onCategoryClick === 'function') {
       onCategoryClick(catId);
-    } else if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('vc:cathCategoryClick', { detail: { catId } }));
     }
-    const prodSec = document.getElementById('prodSec');
-    if (prodSec) {
-      const navbarOffset = 85;
-      const targetY = prodSec.getBoundingClientRect().top + window.scrollY - navbarOffset;
-      window.scrollTo({ top: targetY, behavior: 'smooth' });
+    try {
+      const url = catId === 'all' ? '/' : `/?cat=${encodeURIComponent(catId)}`;
+      window.history.replaceState({ homeCurrent: true, vcCat: catId }, '', url);
+    } catch {
+      // ignore
     }
+    window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId } }));
+    scrollToProdSec();
+  };
+
+  // কার্ডের লিংক ধরন অনুযায়ী: category / grid (গ্রিডে ওই প্রোডাক্ট) / product (ডিটেলস পেজ)
+  const handleCardClick = (card: HeroCard) => {
+    const type = card.linkType || 'category';
+    const pid = card.productId;
+    if (type === 'product' && pid) {
+      router.push(productHref({ id: pid, name: card.productName || String(pid) }));
+      return;
+    }
+    if (type === 'grid' && pid) {
+      const catId = card.catId || 'all';
+      window.dispatchEvent(new CustomEvent(CATEGORY_FILTER_EVENT, { detail: { catId } }));
+      window.dispatchEvent(new CustomEvent(FOCUS_PRODUCT_EVENT, { detail: { productId: String(pid), catId } }));
+      return;
+    }
+    goCategory(card.catId || 'all');
   };
 
   const tripled = [...cards, ...cards, ...cards];
@@ -431,7 +455,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
                     background: bg,
                     animationDelay: isInitialCard ? `${staggerDelay}s` : undefined,
                   }}
-                  onClick={() => goCategory(catId)}
+                  onClick={() => handleCardClick(card)}
                 >
                   {card.img ? (
                     <HeroCardImage
@@ -460,7 +484,7 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
                   <div className="relative z-[2] flex flex-col items-start gap-[5px] px-3 pb-[14px]">
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/[.16] px-2.5 py-[4px] text-[10.5px] font-bold uppercase tracking-[.3px] text-white shadow-[0_2px_10px_rgba(0,0,0,.2)] backdrop-blur-[8px] transition-[background,border-color,transform] duration-200 group-hover:translate-x-0.5 group-hover:border-white/50 group-hover:bg-white/[.26]">
-                      {label} <span className="text-[12px] transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+                      {label}
                     </span>
                   </div>
                 </div>

@@ -1069,7 +1069,7 @@ export default function ProductReviews({
                   maxLength={500}
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
-                  placeholder={t('প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ২০ অক্ষর)...')}
+                  placeholder={t('প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ১০ অক্ষর)...')}
                   className="w-full rounded-xl border border-border-base bg-white p-3 font-body text-[13.5px] text-ink outline-none transition-brand focus:border-brand-light"
                 />
               </div>
@@ -1130,7 +1130,7 @@ export default function ProductReviews({
 
               <button
                 type="submit"
-                disabled={submitting || reviewText.trim().length < 20}
+                disabled={submitting || reviewText.trim().length < 10}
                 className="mt-1 w-full rounded-full bg-brand-light py-3 font-body text-sm font-bold text-white shadow-sh1 transition-brand hover:bg-brand-light-hover disabled:opacity-50"
               >
                 {submitting ? t('প্রসেসিং ও আপলোড হচ্ছে...') : t('রিভিউ সাবমিট করুন')}

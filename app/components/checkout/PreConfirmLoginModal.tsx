@@ -8,7 +8,6 @@ interface PreConfirmLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: () => void;
-  onRegister: () => void;
   onGoogle?: () => void;
   onSkip: () => void;
 }
@@ -57,7 +56,7 @@ function CheckPerkIcon() {
 }
 
 export default function PreConfirmLoginModal({
-  isOpen, onClose, onLogin, onRegister, onSkip,
+  isOpen, onClose, onLogin, onGoogle, onSkip,
 }: PreConfirmLoginModalProps) {
   const { lang } = useT();
 
@@ -80,30 +79,30 @@ export default function PreConfirmLoginModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 8 }}
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 flex max-h-[92vh] w-full max-w-[430px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center shadow-sh3 ring-1 ring-white/80"
+            className="relative z-10 flex max-h-[92vh] w-full max-w-[430px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white px-6 pb-7 pt-8 sm:px-8 sm:pb-8 sm:pt-9 text-center shadow-sh3 ring-1 ring-white/80"
           >
             <HeaderDecor />
 
-            <div className="relative z-10 mx-auto mb-2.5 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-sm">
+            <div className="relative z-10 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-brand-light/35 bg-white text-brand-light shadow-sm">
               <SecurityShieldIcon />
             </div>
 
-            <div className="relative z-10 mx-auto mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/90 px-3 py-1 font-body text-[11px] font-bold text-amber-900 shadow-2xs">
+            <div className="relative z-10 mx-auto mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-amber-300/80 bg-amber-50/90 px-3 py-1 font-body text-[11px] font-bold text-amber-900 shadow-2xs">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
               <span>{lang === 'en' ? 'Currently Not Logged In' : 'আপনি এই মুহূর্তে আনলগইন অবস্থায় আছেন'}</span>
             </div>
 
-            <h3 className="relative z-10 font-body text-[17.5px] font-extrabold text-ink leading-snug">
+            <h3 className="relative z-10 font-body text-[18px] font-extrabold text-ink leading-snug">
               {lang === 'en' ? 'Log in to secure your order and information' : 'আপনার তথ্য ও অর্ডার সুরক্ষার জন্য লগইন করুন'}
             </h3>
 
-            <p className="relative z-10 mt-1 font-body text-[13px] leading-relaxed text-muted">
+            <p className="relative z-10 mt-2.5 font-body text-[13px] leading-relaxed text-muted">
               {lang === 'en'
                 ? 'Logging in or creating an account unlocks these convenient benefits:'
                 : 'লগইন বা সাইন-আপ করলে কেনাকাটায় আপনার জন্য যা যা সহজ হবে:'}
             </p>
 
-            <div className="relative z-10 my-3.5 rounded-[14px] border border-white/90 bg-white/85 p-3.5 text-left shadow-xs backdrop-blur-md space-y-2.5">
+            <div className="relative z-10 my-5 rounded-[14px] border border-white/90 bg-white/85 p-4 text-left shadow-xs backdrop-blur-md space-y-3.5">
               <div className="flex items-start gap-2.5">
                 <CheckPerkIcon />
                 <div className="min-w-0 flex-1 font-body text-[13px] leading-snug text-ink/85">
@@ -129,26 +128,32 @@ export default function PreConfirmLoginModal({
               </div>
             </div>
 
-            <div className="relative z-10 flex flex-col gap-2.5 pt-1">
-              <div className="grid grid-cols-2 gap-2.5">
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                  onClick={onRegister}
-                  className="shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[12px] font-body text-[13.5px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
-                >
-                  {lang === 'en' ? 'Sign Up' : 'সাইন-আপ করুন'}
-                </motion.button>
+            <div className="relative z-10 flex flex-col gap-3 pt-1">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                onClick={onLogin}
+                className="shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13px] font-body text-[14px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03]"
+              >
+                {lang === 'en' ? 'Login / Sign Up' : 'লগইন / সাইন আপ করুন'}
+              </motion.button>
 
+              {onGoogle && (
                 <motion.button
-                  whileTap={{ scale: 0.96 }}
+                  whileTap={{ scale: 0.97 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                  onClick={onLogin}
-                  className="w-full rounded-full border border-brand-light/40 bg-white/90 py-[12px] font-body text-[13.5px] font-bold text-brand-light shadow-2xs transition-colors duration-brand hover:bg-white hover:border-brand-light"
+                  onClick={onGoogle}
+                  className="flex w-full items-center justify-center gap-2.5 rounded-full border border-brand-light/40 bg-white/90 py-[12.5px] font-body text-[13.5px] font-bold text-ink shadow-2xs transition-colors duration-brand hover:border-brand-light hover:bg-white"
                 >
-                  {lang === 'en' ? 'Login' : 'লগইন করুন'}
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  {lang === 'en' ? 'Sign Up with Google' : 'Google দিয়ে সাইন আপ করুন'}
                 </motion.button>
-              </div>
+              )}
 
               <motion.button
                 whileTap={{ scale: 0.98 }}
