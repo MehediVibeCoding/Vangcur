@@ -108,10 +108,12 @@ function CheckStepIcon() {
 function TruckStepIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1.5 7h11v9h-11z" />
-      <path d="M12.5 10.5H17l4 3v2.5h-8.5" />
-      <circle cx="5.5" cy="19" r="1.7" />
-      <circle cx="17" cy="19" r="1.7" />
+      <g transform="translate(0.9 -1.9)">
+        <path d="M1.5 7h11v9h-11z" />
+        <path d="M12.5 10.5H17l4 3v2.5h-8.5" />
+        <circle cx="5.5" cy="19" r="1.7" />
+        <circle cx="17" cy="19" r="1.7" />
+      </g>
     </svg>
   );
 }

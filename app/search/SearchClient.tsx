@@ -226,6 +226,26 @@ export default function SearchClient({ initialProducts, initialCategories }: Sea
     }
   }, [supabase, initialCategories]);
 
+  // নেভবারের সার্চ ড্রপডাউন /api/search-index থেকে ডেটা নেয়, আর এই পেজ পেত শুধু সার্ভার-রেন্ডারের (আলাদা ক্যাশের)
+  // কপি — দুটো কপি আলাদা হলে ড্রপডাউনে প্রোডাক্ট দেখালেও এখানে "০টি পণ্য" আসত। তাই ড্রপডাউনের সোর্স থেকেও
+  // এনে (নাম অনুযায়ী) মিলিয়ে নেওয়া হচ্ছে, যাতে কোনো কপিতে থাকা প্রোডাক্ট বাদ না পড়ে।
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/search-index')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { products?: Product[] } | null) => {
+        if (cancelled || !d || !Array.isArray(d.products) || d.products.length === 0) return;
+        const incoming = d.products;
+        setProds((prev) => {
+          const byId = new Map(prev.map((p) => [String(p.id), p]));
+          for (const p of incoming) byId.set(String(p.id), p);
+          return Array.from(byId.values());
+        });
+      })
+      .catch(() => { /* নেটওয়ার্ক সমস্যা — সার্ভারের কপিই থাকবে */ });
+    return () => { cancelled = true; };
+  }, []);
+
   // 🔒 ফিক্স (audit P1-15): Realtime WebSocket-এর বদলে হালকা পোলিং — সার্চ
   // পেজে লোড হওয়া প্রোডাক্টগুলোর দাম/স্টক প্রতি ৩০ সেকেন্ডে যাচাই করে,
   // ট্যাব ব্যাকগ্রাউন্ডে থাকলে স্কিপ করে (দ্রষ্টব্য: ProductDetailClient.tsx-এও

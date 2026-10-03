@@ -481,13 +481,24 @@ export default function AccountClient() {
                   ),
                   onSelect: () => window.dispatchEvent(new CustomEvent(OPEN_TRACK_ORDER_EVENT)),
                 },
+                {
+                  id: 'theme',
+                  noActive: true,
+                  label: theme === 'dark'
+                    ? (lang === 'en' ? 'Light Mode' : 'লাইট মোড')
+                    : (lang === 'en' ? 'Dark Mode' : 'ডার্ক মোড'),
+                  icon: theme === 'dark' ? <IconSun /> : <IconMoon />,
+                  onSelect: toggleTheme,
+                },
               ];
 
               return (
                 <>
                   <div className="hidden items-center gap-2 md:flex">
                     <AccountNavTabs tabs={navTabs} />
-                    <NotificationBell />
+                    <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full border border-border-base/70 bg-surface-muted/50 shadow-2xs backdrop-blur-md">
+                      <NotificationBell className="[&>button]:!h-8 [&>button]:!w-8 [&>button]:!rounded-full" />
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 md:hidden">
@@ -500,7 +511,7 @@ export default function AccountClient() {
                       >
                         <span className="[&_svg]:!h-5 [&_svg]:!w-5">{tab.icon}</span>
                         {!!tab.badge && tab.badge > 0 && (
-                          <span className="absolute right-[3px] top-[3px] flex h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-light text-[9px] font-bold text-white animate-badge-hot-glow">
+                          <span className="absolute right-[1px] top-[1px] inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-brand-light px-[3px] pt-px text-[9px] font-bold leading-none tabular-nums text-white animate-badge-hot-glow">
                             {tab.badge}
                           </span>
                         )}

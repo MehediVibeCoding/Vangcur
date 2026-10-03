@@ -317,6 +317,7 @@ export default function CheckoutPage() {
   const CONFIRM_ANIM_MIN_MS = 500;
 
   const [showPreConfirm, setShowPreConfirm] = useState(false);
+  const [preConfirmGoogleLoading, setPreConfirmGoogleLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const submitOrderNowRef = useRef<(() => void) | null>(null);
@@ -1048,6 +1049,8 @@ export default function CheckoutPage() {
   };
 
   const preConfirmGoGoogle = async () => {
+    if (preConfirmGoogleLoading) return;
+    setPreConfirmGoogleLoading(true);
     const pendingData = {
       items: cartItems, ship: selectedShip, name, phone, dist, addr, email, txn, l4: last4, savedAt: Date.now(),
     };
@@ -1057,9 +1060,17 @@ export default function CheckoutPage() {
     } catch {
       // ignore
     }
-    setShowPreConfirm(false);
-    const { error } = await signInWithGoogle(supabase, '/checkout');
-    if (error) {
+    // ⚠️ পপআপ এখানে বন্ধ করা হচ্ছে না: useHistoryModal বন্ধের সময় deferred history.back() চালায়,
+    // যা গুগলে রিডাইরেক্টকে উল্টে দিত (বাটনে ক্লিক করলে শুধু পপআপ উধাও হতো)। রিডাইরেক্টে পেজ ছেড়ে গেলে পপআপ এমনিতেই যাবে।
+    let failed = false;
+    try {
+      const { error } = await signInWithGoogle(supabase, '/checkout');
+      failed = !!error;
+    } catch {
+      failed = true;
+    }
+    if (failed) {
+      setPreConfirmGoogleLoading(false);
       showToast(t('Google লগইন ব্যর্থ হয়েছে'));
       try {
         localStorage.removeItem('vc_pending_order_data');
@@ -1837,6 +1848,7 @@ export default function CheckoutPage() {
         onClose={() => setShowPreConfirm(false)}
         onLogin={preConfirmGoLogin}
         onGoogle={preConfirmGoGoogle}
+        googleLoading={preConfirmGoogleLoading}
         onSkip={preConfirmSkip}
       />
       <LoginModal

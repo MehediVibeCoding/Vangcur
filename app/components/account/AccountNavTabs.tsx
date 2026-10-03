@@ -8,6 +8,8 @@ export interface AccountNavTabItem {
   label: string;
   icon: ReactNode;
   badge?: number;
+  /** true হলে ক্লিকে সক্রিয় পিল বসে না (যেমন থিম টগল — এটা কোনো "পেজ" নয়) */
+  noActive?: boolean;
   onSelect: () => void;
 }
 
@@ -26,7 +28,7 @@ export const AccountNavTabs: FC<AccountNavTabsProps> = ({ tabs, className = '' }
   const [active, setActive] = useState<string | null>(null);
 
   const handleSelect = (tab: AccountNavTabItem) => {
-    setActive(tab.id);
+    if (!tab.noActive) setActive(tab.id);
     tab.onSelect();
   };
 
@@ -73,7 +75,7 @@ export const AccountNavTabs: FC<AccountNavTabsProps> = ({ tabs, className = '' }
               {!!tab.badge && tab.badge > 0 && (
                 <motion.span
                   layout="position"
-                  className="relative z-10 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white"
+                  className="relative z-10 inline-flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-red-500 px-[5px] pt-px text-[10px] font-bold leading-none tabular-nums text-white"
                 >
                   {tab.badge}
                 </motion.span>
