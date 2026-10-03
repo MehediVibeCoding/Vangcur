@@ -1065,7 +1065,7 @@ export default function AccountClient() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-4">
-                        {orders.slice(0, 5).map((o) => (
+                        {orders.slice(0, 3).map((o) => (
                           <OrderCard key={o.id} order={o} />
                         ))}
                       </div>

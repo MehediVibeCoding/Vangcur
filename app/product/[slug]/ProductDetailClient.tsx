@@ -1337,7 +1337,7 @@ export default function ProductDetailClient({
           <div className="w-full overflow-hidden rounded-[18px] border border-border-base/80 bg-white shadow-xs">
             <table className="w-full border-collapse text-[14px]">
               <thead>
-                <tr className="border-b border-brand-light/20 bg-brand-bg/50">
+                <tr className="border-b border-brand-light/35 bg-gradient-to-br from-[#F0F7FF] via-white to-[#EFF6FE]/75">
                   <th className="w-[38%] px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{t('বিবরণ')}</th>
                   <th className="px-4 py-3 text-left font-body text-[13.5px] font-bold text-ink">{lang === 'en' ? 'Details' : 'তথ্য'}</th>
                 </tr>

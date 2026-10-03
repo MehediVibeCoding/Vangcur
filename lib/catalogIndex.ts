@@ -7,7 +7,8 @@
 import { unstable_cache } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 import { fetchCustomProducts } from '@/lib/productData';
-import type { Product } from '@/types';
+import { fetchCategories } from '@/lib/categoryData';
+import type { Category, Product } from '@/types';
 
 export const getCachedCatalogIndex = unstable_cache(
   async (): Promise<Product[]> => {
@@ -24,5 +25,18 @@ export const getCachedCatalogIndex = unstable_cache(
     }));
   },
   ['catalog-index-v1'],
+  { revalidate: 300, tags: ['catalog'] },
+);
+
+// সার্চ পেজের ক্যাটাগরি তালিকা — আগে প্রতিটা সার্চ-ভিজিটে সরাসরি ডাটাবেস থেকে আনা হতো।
+// এখন একই ৫ মিনিটের ক্যাশ + একই 'catalog' ট্যাগ (অ্যাডমিন বদলালে একসাথে মুছে যায়)।
+export const getCachedCategories = unstable_cache(
+  async (): Promise<Category[]> => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return [];
+    return fetchCategories(createClient(url, key));
+  },
+  ['catalog-categories-v1'],
   { revalidate: 300, tags: ['catalog'] },
 );

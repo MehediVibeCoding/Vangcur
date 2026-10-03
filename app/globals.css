@@ -257,17 +257,20 @@
   content: '';
   position: absolute;
   inset: 0;
-  left: -150%;
+  left: 0;
   width: 55%;
   background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-  transform: skewX(-20deg);
+  /* আগে left প্রপার্টি অ্যানিমেট হতো (প্রতি ফ্রেমে লেআউট হিসাব) — এখন শুধু transform,
+     যেটা GPU-তে চলে, তাই ডেস্কটপে অনেক বাটন থাকলেও ল্যাগ হয় না */
+  transform: translateX(-272%) skewX(-20deg);
+  will-change: transform;
   animation: shimmerSweep 6s ease-in-out infinite;
   pointer-events: none;
 }
 @keyframes shimmerSweep {
-  0% { left: -150%; }
-  16% { left: 150%; }
-  100% { left: 150%; }
+  0% { transform: translateX(-272%) skewX(-20deg); }
+  16% { transform: translateX(272%) skewX(-20deg); }
+  100% { transform: translateX(272%) skewX(-20deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .shimmer-sheen::after { animation: none; display: none; }

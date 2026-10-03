@@ -114,9 +114,9 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full max-w-[440px] rounded-[22px] bg-white p-6 shadow-sh3"
+            className="flex max-h-[calc(100dvh-2rem)] w-full max-w-[440px] flex-col rounded-[22px] bg-white p-6 shadow-sh3"
           >
-            <div className="mb-4 flex items-center justify-between border-b border-border-base pb-3">
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b border-border-base pb-3">
               <h3 className="flex items-center gap-2 font-body text-base font-bold text-ink">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white">
                   <ShieldCheckIcon />
@@ -136,7 +136,7 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
             {loading ? (
               <div className="py-8 text-center font-body text-xs text-muted">{t('লোড হচ্ছে...')}</div>
             ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+              <form onSubmit={handleSubmit} className="sleek-scrollbar -mr-2 flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto overscroll-contain pr-2">
                 {/* 🛠️ ফিক্স: আগে এই বক্সটা সবসময় দেখাত, প্রোফাইল আগে থেকে
                     সম্পূর্ণ থাকলেও — যেটা ইতিমধ্যে ভেরিফায়েড ইউজারের কাছে
                     অপ্রাসঙ্গিক (সে তো সুবিধাটা আগেই পেয়ে গেছে)। এখন নিচের
@@ -230,7 +230,7 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
                     className="w-full cursor-not-allowed rounded-xl border border-border-base bg-surface-muted px-3.5 py-2.5 font-body text-[13.5px] text-muted outline-none"
                   />
                   <p className="mt-1 font-body text-[10.5px] text-muted">
-                    {t('আপনার লগইন অ্যাকাউন্টের সাথে যুক্ত, পরিবর্তন করা যায় না')}
+                    {t('আপনার লগইন অ্যাকাউন্টের সাথে যুক্ত, পরিবর্তন করা যাবে না')}
                   </p>
                 </div>
 
@@ -250,7 +250,7 @@ export default function CompleteProfileModal({ isOpen, onClose, onSaved }: Compl
 
                 {complete && (
                   <p className="text-center font-body text-[12px] font-semibold text-emerald-600">
-                    {t('✓ আপনার প্রোফাইল সম্পূর্ণ — ভেরিফিকেশন ব্যাজ পাবেন')}
+                    {t('✓ আপনার প্রোফাইল সম্পূর্ণ — ভেরিফিকেশন ব্যাজ পেয়েছেন')}
                   </p>
                 )}
               </form>

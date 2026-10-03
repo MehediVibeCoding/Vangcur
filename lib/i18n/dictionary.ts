@@ -470,8 +470,8 @@ export const staticDictionary: Record<string, string> = {
   'একটি সবুজ ভেরিফাইড ব্যাজ, যা আপনার প্রশ্ন ও রিভিউয়ের পাশে সবাই দেখতে পাবে — আর পরের যেকোনো অর্ডারে আপনার তথ্য নিজে থেকেই পূরণ হয়ে যাবে, তাই বারবার টাইপ করতে হবে না।': "A green verified badge that everyone will see next to your questions and reviews — plus your details will fill in automatically on future orders, so you won't have to type them again.",
   'সংরক্ষণ হচ্ছে...': 'Saving...',
   'সংরক্ষণ করুন': 'Save Profile',
-  'আপনার লগইন অ্যাকাউন্টের সাথে যুক্ত, পরিবর্তন করা যায় না': 'Linked to your login account, cannot be changed',
-  '✓ আপনার প্রোফাইল সম্পূর্ণ — ভেরিফিকেশন ব্যাজ পাবেন': '✓ Profile complete — verified badge unlocked',
+  'আপনার লগইন অ্যাকাউন্টের সাথে যুক্ত, পরিবর্তন করা যাবে না': 'Linked to your login account, cannot be changed',
+  '✓ আপনার প্রোফাইল সম্পূর্ণ — ভেরিফিকেশন ব্যাজ পেয়েছেন': '✓ Profile complete — verified badge unlocked',
 
   // VIP Spin Wheel
   'চাকা ঘুরছে...': 'Spinning...',

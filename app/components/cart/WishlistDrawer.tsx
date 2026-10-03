@@ -234,7 +234,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={goToProducts}
-                    className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
+                    className="rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-6 py-2.5 font-body text-xs font-bold text-white shadow-sh2 transition-[filter] hover:brightness-[1.03]"
                   >
                     {t('প্রোডাক্ট দেখুন')} →
                   </motion.button>
@@ -292,7 +292,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                             onClick={() => addToCart(item)}
-                            className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-all hover:bg-brand-light hover:text-white hover:border-brand-light"
+                            className="flex-1 h-9 inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 font-body text-xs font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white hover:border-brand-light"
                           >
                             <CartPlusIcon />
                             <span>{lang === 'en' ? 'Add to Cart' : 'কার্টে যোগ'}</span>
@@ -302,7 +302,7 @@ export default function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps)
                             whileTap={{ scale: 0.95 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                             onClick={() => handleOrderNow(item)}
-                            className="shimmer-sheen flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-all hover:brightness-[1.03]"
+                            className="shimmer-sheen flex-1 h-9 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-info to-brand-light font-body text-xs font-bold text-white shadow-sh2 transition-[filter] hover:brightness-[1.03]"
                           >
                             <span>{lang === 'en' ? 'Order Now' : 'অর্ডার করুন'}</span>
                           </motion.button>

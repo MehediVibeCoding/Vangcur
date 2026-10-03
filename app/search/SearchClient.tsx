@@ -9,7 +9,7 @@ import Footer from '@/app/components/layout/Footer';
 import ProductCard from '@/app/components/home/ProductCard';
 import { searchProducts, matchCategories } from '@/lib/searchData';
 import { fetchProductsByIds } from '@/lib/productData';
-import { DEFAULT_CATEGORIES, fetchCategories } from '@/lib/categoryData';
+import { DEFAULT_CATEGORIES } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
@@ -25,7 +25,8 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
   const [value, setValue] = useState(query);
   const lastLimitToastRef = useRef(0);
 
-  useEffect(() => { setValue(query); }, [query]);
+  // ইউজার শব্দের শেষে স্পেস টাইপ করলে URL-এর (trim করা) মান যেন সেই স্পেস মুছে না দেয়
+  useEffect(() => { setValue((prev) => (prev.trim() === query ? prev : query)); }, [query]);
 
   const handleBackToHome = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -203,113 +204,27 @@ function EndOfResults() {
   );
 }
 
-interface SearchClientProps {
-  initialProducts: Product[];
-  initialCategories?: Category[];
+function cleanQuery(raw: string): string {
+  return raw.replace(/[<>`]/g, '').trim().slice(0, MAX_SEARCH_LEN);
 }
 
-export default function SearchClient({ initialProducts, initialCategories }: SearchClientProps) {
-  const { t, lang } = useT();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = (searchParams.get('q') || '').trim();
-
+// ফলাফলের তালিকা + "আরো লোড" লজিক। `key={query}` দিয়ে বসানো হয়, তাই শুধু সার্চ শব্দ বদলালেই
+// এটা নতুন করে শুরু হয় — দাম/স্টকের আপডেট বা ইনডেক্স লোড হওয়ায় তালিকা আর খালি/রিসেট হয় না।
+function ResultsList({ results, total }: { results: Product[]; total: number }) {
+  const { t } = useT();
   const supabase = useRef(createClient()).current;
-  const [prods, setProds] = useState<Product[]>(initialProducts);
-  const [cats, setCats] = useState<Category[]>(
-    initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES
-  );
 
-  useEffect(() => {
-    if (!initialCategories || initialCategories.length === 0) {
-      fetchCategories(supabase).then((c) => { if (c.length) setCats(c); });
-    }
-  }, [supabase, initialCategories]);
-
-  // নেভবারের সার্চ ড্রপডাউন /api/search-index থেকে ডেটা নেয়, আর এই পেজ পেত শুধু সার্ভার-রেন্ডারের (আলাদা ক্যাশের)
-  // কপি — দুটো কপি আলাদা হলে ড্রপডাউনে প্রোডাক্ট দেখালেও এখানে "০টি পণ্য" আসত। তাই ড্রপডাউনের সোর্স থেকেও
-  // এনে (নাম অনুযায়ী) মিলিয়ে নেওয়া হচ্ছে, যাতে কোনো কপিতে থাকা প্রোডাক্ট বাদ না পড়ে।
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/search-index')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { products?: Product[] } | null) => {
-        if (cancelled || !d || !Array.isArray(d.products) || d.products.length === 0) return;
-        const incoming = d.products;
-        setProds((prev) => {
-          const byId = new Map(prev.map((p) => [String(p.id), p]));
-          for (const p of incoming) byId.set(String(p.id), p);
-          return Array.from(byId.values());
-        });
-      })
-      .catch(() => { /* নেটওয়ার্ক সমস্যা — সার্ভারের কপিই থাকবে */ });
-    return () => { cancelled = true; };
-  }, []);
-
-  // 🔒 ফিক্স (audit P1-15): Realtime WebSocket-এর বদলে হালকা পোলিং — সার্চ
-  // পেজে লোড হওয়া প্রোডাক্টগুলোর দাম/স্টক প্রতি ৩০ সেকেন্ডে যাচাই করে,
-  // ট্যাব ব্যাকগ্রাউন্ডে থাকলে স্কিপ করে (দ্রষ্টব্য: ProductDetailClient.tsx-এও
-  // একই প্যাটার্ন)
-  const prodsRef = useRef(prods);
-  useEffect(() => { prodsRef.current = prods; }, [prods]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const POLL_MS = 30000;
-
-    const tick = async () => {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      const ids = prodsRef.current.map((p) => p.id);
-      if (!ids.length) return;
-      const fresh = await fetchProductsByIds(supabase, ids);
-      if (cancelled) return;
-      const freshById = new Map(fresh.map((p) => [String(p.id), p]));
-      setProds((prev) => prev
-        .filter((p) => freshById.has(String(p.id)))
-        .map((p) => ({ ...p, ...freshById.get(String(p.id))! })));
-    };
-
-    const timer = setInterval(tick, POLL_MS);
-    const onVisible = () => { if (!document.hidden) tick(); };
-    document.addEventListener('visibilitychange', onVisible);
-
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, [supabase]);
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleQueryChange = useCallback((value: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const clean = value.replace(/[<>`]/g, '').trim().slice(0, MAX_SEARCH_LEN);
-      const url = clean ? `/search?q=${encodeURIComponent(clean)}` : '/search';
-      router.replace(url, { scroll: false });
-    }, 300);
-  }, [router]);
-
-  const goToHomeCategory = useCallback((catId: string) => {
-    router.push(`/?cat=${encodeURIComponent(catId)}`);
-  }, [router]);
-
-  const matchedCats = useMemo(() => matchCategories(cats, query, 8), [cats, query]);
-  const hasCategoryMatch = matchedCats.length > 0;
-
-  const results = useMemo(() => searchProducts(prods, query), [prods, query]);
-
-  const [renderedCount, setRenderedCount] = useState(0);
+  // প্রথম রেন্ডারেই (সার্ভার HTML-এও) প্রথম ব্যাচ থাকে — আগের মতো useEffect/setTimeout-এর অপেক্ষা নেই
+  const [renderedCount, setRenderedCount] = useState(() => Math.min(PRODS_PER_PAGE, results.length));
   const [showLoadMoreBtn, setShowLoadMoreBtn] = useState(false);
-  const [showSpinner, setShowSpinner] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(results.length > PRODS_PER_PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const batchCountRef = useRef(0);
+  const batchCountRef = useRef(1);
   const loadMorePausedRef = useRef(false);
-  const renderedCountRef = useRef(0);
-  const listRef = useRef<Product[]>([]);
+  const renderedCountRef = useRef(Math.min(PRODS_PER_PAGE, results.length));
+  const listRef = useRef<Product[]>(results);
 
   useEffect(() => { listRef.current = results; }, [results]);
-  useEffect(() => { renderedCountRef.current = renderedCount; }, [renderedCount]);
 
   const appendNextBatch = useCallback(() => {
     const currentList = listRef.current;
@@ -336,17 +251,6 @@ export default function SearchClient({ initialProducts, initialCategories }: Sea
   }, []);
 
   useEffect(() => {
-    batchCountRef.current = 0;
-    loadMorePausedRef.current = false;
-    renderedCountRef.current = 0;
-    setShowLoadMoreBtn(false);
-    setShowSpinner(false);
-    setRenderedCount(0);
-    const t = setTimeout(() => appendNextBatch(), 0);
-    return () => clearTimeout(t);
-  }, [results, appendNextBatch]);
-
-  useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const obs = new IntersectionObserver((entries) => {
@@ -358,6 +262,21 @@ export default function SearchClient({ initialProducts, initialCategories }: Sea
     return () => obs.disconnect();
   }, [appendNextBatch]);
 
+  // সার্ভার থেকে প্রথমে সীমিত ম্যাচ এলে, পরে পুরো ইনডেক্স লোড হয়ে তালিকা বড় হলে —
+  // আমরা যদি আগের তালিকার শেষে এসে অপেক্ষা করতে থাকি, তাহলে পরের ব্যাচ চালু করি
+  const prevLenRef = useRef(results.length);
+  useEffect(() => {
+    const prevLen = prevLenRef.current;
+    prevLenRef.current = results.length;
+    if (results.length <= prevLen) return;
+    if (renderedCountRef.current >= prevLen && !loadMorePausedRef.current) {
+      const el = sentinelRef.current;
+      const nearView = !!el && el.getBoundingClientRect().top < window.innerHeight + 300;
+      if (nearView) appendNextBatch();
+      else setShowSpinner(false);
+    }
+  }, [results.length, appendNextBatch]);
+
   const handleLoadMoreClick = () => {
     setShowLoadMoreBtn(false);
     batchCountRef.current = 0;
@@ -365,12 +284,163 @@ export default function SearchClient({ initialProducts, initialCategories }: Sea
     appendNextBatch();
   };
 
-  const visibleItems = results.slice(0, renderedCount);
-  const hasQuery = query.length > 0;
-  const isDone = renderedCount >= results.length;
+  // 🔒 দাম/স্টক আপডেট (প্রতি ৩০ সেকেন্ডে, ট্যাব দৃশ্যমান থাকলে) — শুধু যে প্রোডাক্টগুলো
+  // এখন স্ক্রিনে আছে সেগুলোর জন্য। ফলাফল আলাদা `fresh` ম্যাপে থাকে; ব্যর্থ হলে বা ফাঁকা
+  // এলে কিছুই মোছা হয় না (আগে ব্যর্থ হলে পুরো তালিকা মুছে "০টি পণ্য" হয়ে যেত)।
+  const [fresh, setFresh] = useState<Map<string, Product>>(() => new Map());
+  const visibleIdsRef = useRef<(number | string)[]>([]);
+  visibleIdsRef.current = results.slice(0, renderedCount).map((p) => p.id);
 
-  const showCategorySection = hasCategoryMatch;
-  const showCountLine = hasCategoryMatch || results.length > 0;
+  useEffect(() => {
+    let cancelled = false;
+    const POLL_MS = 30000;
+    const MAX_POLL_IDS = 60;
+
+    const tick = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const ids = visibleIdsRef.current.slice(0, MAX_POLL_IDS);
+      if (!ids.length) return;
+      const rows = await fetchProductsByIds(supabase, ids);
+      if (cancelled || !rows.length) return;
+      setFresh((prev) => {
+        const next = new Map(prev);
+        for (const r of rows) next.set(String(r.id), r);
+        return next;
+      });
+    };
+
+    const timer = setInterval(tick, POLL_MS);
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [supabase]);
+
+  const visibleItems = useMemo(
+    () => results.slice(0, renderedCount).map((p) => {
+      const f = fresh.get(String(p.id));
+      return f ? { ...p, ...f } : p;
+    }),
+    [results, renderedCount, fresh],
+  );
+
+  const pending = results.length < total; // বাকি ম্যাচ ইনডেক্স থেকে আসছে
+  const isDone = renderedCount >= results.length && !pending;
+  const spinnerOn = showSpinner || (pending && renderedCount >= results.length);
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        {visibleItems.map((p, i) => (
+          <ProductCard key={p.id} prod={p} isFirst={i === 0} />
+        ))}
+        {isDone && !spinnerOn && !showLoadMoreBtn && <EndOfResults />}
+      </div>
+      <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
+        {spinnerOn && (
+          <div className="flex items-center gap-2 text-[13px] text-muted">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+            </svg>
+            {t('লোড হচ্ছে...')}
+          </div>
+        )}
+        {showLoadMoreBtn && (
+          <button
+            onClick={handleLoadMoreClick}
+            className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-colors duration-brand hover:brightness-[1.03]"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+            {t('আরো প্রোডাক্ট দেখুন')}
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ResultsSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)]">
+          <div className="aspect-[0.57] animate-pulse rounded-[14px] bg-brand-bg/30" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface SearchClientProps {
+  initialQuery: string;
+  initialResults: Product[];
+  initialTotal: number;
+  initialCategories?: Category[];
+}
+
+export default function SearchClient({ initialQuery, initialResults, initialTotal, initialCategories }: SearchClientProps) {
+  const { t, lang } = useT();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const query = cleanQuery(searchParams.get('q') || '');
+
+  const cats = initialCategories && initialCategories.length ? initialCategories : DEFAULT_CATEGORIES;
+
+  // সার্ভার শুধু প্রথম সার্চের মিলে যাওয়া প্রোডাক্ট পাঠায়। ব্যবহারকারী এই পেজেই নতুন শব্দ লিখলে
+  // (অথবা ম্যাচ অনেক হলে) তখনই — একবার — হালকা ইনডেক্স আনা হয় (/api/search-index, সার্ভারের
+  // একই ক্যাশ), আর পরের সব সার্চ ব্রাউজারেই চলে।
+  const truncated = initialTotal > initialResults.length;
+  const needIndex = query !== initialQuery || truncated;
+  const [index, setIndex] = useState<Product[] | null>(null);
+  const fetchingRef = useRef(false);
+
+  useEffect(() => {
+    if (!needIndex || index || fetchingRef.current) return;
+    fetchingRef.current = true;
+    fetch('/api/search-index')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { products?: Product[] } | null) => {
+        const list = d && Array.isArray(d.products) && d.products.length ? d.products : initialResults;
+        setIndex(list);
+      })
+      .catch(() => setIndex(initialResults))
+      .finally(() => { fetchingRef.current = false; });
+  }, [needIndex, index, initialResults]);
+
+  // null = এখনো লোড হচ্ছে
+  const results = useMemo<Product[] | null>(() => {
+    if (!query) return [];
+    if (index) return searchProducts(index, query);
+    if (query === initialQuery) return initialResults;
+    return null;
+  }, [query, index, initialQuery, initialResults]);
+
+  // URL আপডেট শুধু ব্রাউজারের history-তে — Next.js-এর সার্ভার-রিকোয়েস্ট ছাড়া (router.replace
+  // প্রতিবার সার্ভার থেকে পুরো পেজ আবার আনত)। useSearchParams এটা নিজে ধরে নেয়।
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleQueryChange = useCallback((value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const clean = cleanQuery(value);
+      const url = clean ? `/search?q=${encodeURIComponent(clean)}` : '/search';
+      window.history.replaceState(window.history.state, '', url);
+    }, 300);
+  }, []);
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+
+  const goToHomeCategory = useCallback((catId: string) => {
+    router.push(`/?cat=${encodeURIComponent(catId)}`);
+  }, [router]);
+
+  const matchedCats = useMemo(() => matchCategories(cats, query, 8), [cats, query]);
+  const hasQuery = query.length > 0;
+  const count = results === null ? null : (index || query !== initialQuery ? results.length : initialTotal);
+  const total = count ?? 0;
+  const showCategorySection = matchedCats.length > 0;
+  const showCountLine = count !== null && (matchedCats.length > 0 || count > 0);
 
   return (
     <>
@@ -401,39 +471,15 @@ export default function SearchClient({ initialProducts, initialCategories }: Sea
             )}
 
             {showCountLine && (
-              <p className="mb-4 text-[13px] text-muted">{lang === 'en' ? `${results.length} products found` : `${results.length}টি পণ্য পাওয়া গেছে`}</p>
+              <p className="mb-4 text-[13px] text-muted">{lang === 'en' ? `${count} products found` : `${count}টি পণ্য পাওয়া গেছে`}</p>
             )}
 
-            {results.length === 0 ? (
+            {results === null ? (
+              <ResultsSkeleton />
+            ) : results.length === 0 ? (
               <ZeroResultsState query={query} />
             ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                  {visibleItems.map((p, i) => (
-                    <ProductCard key={p.id} prod={p} isFirst={i === 0} />
-                  ))}
-                  {isDone && !showSpinner && !showLoadMoreBtn && <EndOfResults />}
-                </div>
-                <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
-                  {showSpinner && (
-                    <div className="flex items-center gap-2 text-[13px] text-muted">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                      </svg>
-                      {t('লোড হচ্ছে...')}
-                    </div>
-                  )}
-                  {showLoadMoreBtn && (
-                    <button
-                      onClick={handleLoadMoreClick}
-                      className="inline-flex items-center gap-2 rounded-full border-none bg-gradient-to-r from-info to-brand-light px-8 py-[13px] font-body text-sm font-bold text-white shadow-sh2 transition-colors duration-brand hover:brightness-[1.03]"
-                    >
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
-                      {t('আরো প্রোডাক্ট দেখুন')}
-                    </button>
-                  )}
-                </div>
-              </>
+              <ResultsList key={query} results={results} total={total} />
             )}
           </>
         )}
