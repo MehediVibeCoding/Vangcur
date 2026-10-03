@@ -4,8 +4,8 @@ import { sanitizeInput, sanitizePlainName, MAX_NAME_LEN } from './security';
 import { logWarn } from './logger';
 import { getDeviceId, fetchMyLikedIds } from './deviceId';
 
-const MIN_REVIEW_LEN = 20;
-const MAX_REVIEW_LEN = 500;
+const MIN_REVIEW_LEN = 10;
+const MAX_REVIEW_LEN = 200;
 const MAX_UNVERIFIED_REVIEWS_PER_DAY = 2;
 const LIKED_REVIEWS_KEY = 'vc_liked_reviews';
 

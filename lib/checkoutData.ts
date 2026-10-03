@@ -245,7 +245,8 @@ export function validatePhone(ph: string): boolean {
 }
 
 export function validateAddress(addr: string): boolean {
-  return addr.length >= 8 && addr.length <= 300 && /\s/.test(addr) && !/(.)\1{4,}/.test(addr);
+  const a = (addr || '').trim();
+  return a.length >= 8 && a.length <= 200 && /\s/.test(a) && !/(.)\1{4,}/.test(a);
 }
 
 export function validateEmail(em: string): boolean {

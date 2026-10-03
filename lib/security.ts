@@ -70,7 +70,12 @@ export function sanitizePlainName(value: string): string {
   const lettersOnly = Array.from(value)
     .filter((ch) => /[\p{L}\p{M}\s]/u.test(ch))
     .join('');
-  return lettersOnly.replace(/\s{2,}/g, ' ').replace(/^\s+/, '').slice(0, MAX_NAME_LEN);
+  // কাটার পর শেষে যেন একা কোনো মাত্রা/চিহ্ন (\p{M}) না থাকে — নাহলে অক্ষরটা ভেঙে যায়
+  return lettersOnly
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^\s+/, '')
+    .slice(0, MAX_NAME_LEN)
+    .replace(/\p{M}+$/u, '');
 }
 
 export function validateName(name: string): boolean {
@@ -82,12 +87,13 @@ export function sanitizeEmailInput(value: string): string {
   return value.replace(/[^\x21-\x7E]/g, '').slice(0, 254);
 }
 
-export function validateAddress(address: string): boolean {
-  const trimmed = address.trim();
-  return trimmed.length >= 8 && trimmed.length <= 300;
-}
+// 🛡️ একটাই ঠিকানা-নিয়ম সব জায়গায় (প্রোফাইল, চেকআউট, সার্ভার অ্যাকশন, DB):
+// আগে এখানে দুর্বল ভ্যালিডেটর ছিল (শুধু দৈর্ঘ্য দেখত), ফলে প্রোফাইল "aaaaaaaa"
+// গ্রহণ করে সম্পূর্ণ বলত, কিন্তু চেকআউট সেটা বাতিল করত। এখন checkoutData-এর
+// কড়া নিয়মই ব্যবহৃত হয়।
+export { validateAddress } from './checkoutData';
 
-export const MAX_ADDR_LEN = 300;
+export const MAX_ADDR_LEN = 200;
 
 // 🛡️ পূর্ণাঙ্গ সেনিটাইজেশন: HTML/স্ক্রিপ্ট ট্যাগ ডিলিমিটার, কন্ট্রোল ক্যারেক্টার, এবং
 // CSV/এক্সেল ফর্মুলা-ইনজেকশন (=, +, -, @ দিয়ে শুরু হওয়া ইনপুট — অ্যাডমিন পরে অর্ডার

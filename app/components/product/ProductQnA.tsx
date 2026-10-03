@@ -537,12 +537,12 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="font-body text-xs font-bold text-ink">{t('আপনার প্রশ্ন')}</label>
-                  <span className="font-body text-[11px] text-muted">{askQuestion.length}/300</span>
+                  <span className="font-body text-[11px] text-muted">{askQuestion.length}/100</span>
                 </div>
                 <textarea
                   required
                   rows={3}
-                  maxLength={300}
+                  maxLength={100}
                   value={askQuestion}
                   onChange={(e) => setAskQuestion(e.target.value)}
                   placeholder={t('প্রোডাক্ট সম্পর্কে আপনি কী জানতে চান? (কমপক্ষে ১০ অক্ষর)')}

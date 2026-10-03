@@ -4,7 +4,7 @@ import { sanitizeInput, sanitizePlainName, MAX_NAME_LEN } from './security';
 import { logWarn } from './logger';
 
 const MIN_QUESTION_LEN = 10;
-const MAX_QUESTION_LEN = 300;
+const MAX_QUESTION_LEN = 100;
 const MIN_ANSWER_LEN = 5;
 const MAX_ANSWER_LEN = 500;
 

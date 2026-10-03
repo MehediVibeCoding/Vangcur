@@ -1061,12 +1061,12 @@ export default function ProductReviews({
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="font-body text-xs font-bold text-ink">{t('আপনার মূল্যবান মতামত')}</label>
-                  <span className="font-body text-[11px] text-muted">{reviewText.length}/500</span>
+                  <span className="font-body text-[11px] text-muted">{reviewText.length}/200</span>
                 </div>
                 <textarea
                   required
                   rows={4}
-                  maxLength={500}
+                  maxLength={200}
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}
                   placeholder={t('প্রোডাক্টের কোয়ালিটি ও ব্যবহারিক অভিজ্ঞতা বিস্তারিত লিখুন (কমপক্ষে ১০ অক্ষর)...')}
