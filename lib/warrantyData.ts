@@ -54,21 +54,24 @@ export function parseWarranty(text?: string | null): ParsedWarranty | null {
   let amount: number | null = null;
   let unitWord = '';
 
-  let m = s.match(new RegExp('(?<![\\d.])(\\d+(?:\\.\\d+)?)\\s*' + UNIT_RE));
+  // ⚠️ iOS 15 / Safari <16.4 রেজেক্স lookbehind (?<!...) সাপোর্ট করে না — লিটারেল থাকলে
+  // পুরো প্রোডাক্ট পেজের JS chunk লোড-ই হয় না। তাই (^|[^...]) প্রিফিক্স গ্রুপ ব্যবহার
+  // করা হয়েছে (একই অর্থ); ফলে সংখ্যা/ইউনিট গ্রুপ ২ ও ৩।
+  let m = s.match(new RegExp('(^|[^\\d.])(\\d+(?:\\.\\d+)?)\\s*' + UNIT_RE));
   if (m) {
-    amount = parseFloat(m[1]);
-    unitWord = m[2];
+    amount = parseFloat(m[2]);
+    unitWord = m[3];
   } else {
     const keys = Object.keys(WORD_NUMBERS).join('|');
-    m = s.match(new RegExp('(?<![a-z])(' + keys + ')\\s*' + UNIT_RE));
+    m = s.match(new RegExp('(^|[^a-z])(' + keys + ')\\s*' + UNIT_RE));
     if (m) {
-      amount = WORD_NUMBERS[m[1]];
-      unitWord = m[2];
+      amount = WORD_NUMBERS[m[2]];
+      unitWord = m[3];
     } else {
-      m = s.match(/(?<![\d.])(\d+)(m|y)(?![a-z])/);
+      m = s.match(/(^|[^\d.])(\d+)(m|y)(?![a-z])/);
       if (m) {
-        amount = Number(m[1]);
-        unitWord = m[2] === 'm' ? 'month' : 'year';
+        amount = Number(m[2]);
+        unitWord = m[3] === 'm' ? 'month' : 'year';
       }
     }
   }
