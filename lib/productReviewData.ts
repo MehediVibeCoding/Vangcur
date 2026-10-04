@@ -3,6 +3,7 @@ import type { ProductReview, ReviewRatingSummary } from '@/types';
 import { sanitizeInput, sanitizePlainName, MAX_NAME_LEN } from './security';
 import { logWarn } from './logger';
 import { getDeviceId, fetchMyLikedIds } from './deviceId';
+import { withTimeout } from './withTimeout';
 
 const MIN_REVIEW_LEN = 10;
 const MAX_REVIEW_LEN = 200;
@@ -44,7 +45,10 @@ export async function checkIsReviewAdminOrMod(
   userId?: string | null,
 ): Promise<boolean> {
   try {
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    // 🛡️ withTimeout: নেটওয়ার্ক/ডিভাইস দুর্বল হলে এই কলটা ঝুলে থাকতে পারে —
+    // ১২ সেকেন্ডের মধ্যে রেসপন্স না এলে reject করে catch ব্লকে চলে যাবে
+    // (নাহলে caller-এর loading state চিরকাল আটকে থাকত)
+    const { data: { user }, error: authErr } = await withTimeout(supabase.auth.getUser());
     if (authErr || !user) return false;
 
     // যদি নির্দিষ্ট কোনো userId দিয়ে ভেরিফাই করতে বলা হয় এবং বর্তমান সেশন আইডির সাথে না মিলে
@@ -55,11 +59,13 @@ export async function checkIsReviewAdminOrMod(
     // প্রোফাইল টেবিল থেকে অ্যাডমিন বা অনুমোদিত রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
     // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে —
     // এখন সবাই একই DB role চেকের মধ্য দিয়ে যায়)
-    const { data: profile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('is_admin, role')
-      .eq('id', user.id)
-      .maybeSingle();
+    const { data: profile, error: profileErr } = await withTimeout(
+      supabase
+        .from('profiles')
+        .select('is_admin, role')
+        .eq('id', user.id)
+        .maybeSingle(),
+    );
 
     if (profileErr || !profile) return false;
 
@@ -80,11 +86,15 @@ export async function fetchProductReviews(
   currentUserId?: string | null,
 ): Promise<ProductReview[]> {
   try {
-    const { data, error } = await supabase
-      .from('product_reviews')
-      .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
-      .eq('product_id', productId)
-      .order('created_at', { ascending: false });
+    // 🛡️ withTimeout: ঝুলে থাকা নেটওয়ার্ক কল আটকাতে — না হলে caller-এর
+    // loading state চিরকাল true-ই থেকে যেত (infinite loading skeleton)
+    const { data, error } = await withTimeout(
+      supabase
+        .from('product_reviews')
+        .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false }),
+    );
 
     if (error || !data) return [];
 

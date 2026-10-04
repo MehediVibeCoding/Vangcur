@@ -17,6 +17,7 @@ import {
 } from '@/lib/productQnaData';
 import { fetchProfileCompletionMap } from '@/lib/profileData';
 import { formatSafeDate } from '@/lib/safeLocaleDate';
+import { withTimeout } from '@/lib/withTimeout';
 import { TeamVerifiedBadge, VerifiedCustomerBadge } from './VerifiedBadges';
 import type { ProductQuestion, ProductQuestionAnswer } from '@/types';
 
@@ -111,12 +112,19 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
   const loadQuestionsData = useCallback(async () => {
     setLoading(true);
     try {
+      // 🛡️ withTimeout: নেটওয়ার্ক/ডিভাইস দুর্বল হলে এই কলগুলো ঝুলে থাকতে
+      // পারে — ১২ সেকেন্ডের মধ্যে রেসপন্স না এলে reject করে catch ব্লকে
+      // চলে যাবে (নাহলে loading চিরকাল আটকে থাকত, এমনকি try/catch থাকা
+      // সত্ত্বেও — কারণ একটা promise যেটা কখনোই settle হয় না তাকে কোনো
+      // try/catch আটকাতে পারে না)
       const [qData, adminStatus] = await Promise.all([
-        supabase
-          .from('product_questions')
-          .select('id, product_id, user_id, user_name, question, created_at')
-          .eq('product_id', productId)
-          .order('created_at', { ascending: false }),
+        withTimeout(
+          supabase
+            .from('product_questions')
+            .select('id, product_id, user_id, user_name, question, created_at')
+            .eq('product_id', productId)
+            .order('created_at', { ascending: false }),
+        ),
         checkIsUserAdmin(supabase, currentUser?.id),
       ]);
 
@@ -124,11 +132,13 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
 
       if (qData.data && qData.data.length > 0) {
         const qIds = qData.data.map((q) => q.id);
-        const { data: answersData } = await supabase
-          .from('product_question_answers')
-          .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
-          .in('question_id', qIds)
-          .order('created_at', { ascending: true });
+        const { data: answersData } = await withTimeout(
+          supabase
+            .from('product_question_answers')
+            .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
+            .in('question_id', qIds)
+            .order('created_at', { ascending: true }),
+        );
 
         const mapped: QuestionWithThread[] = qData.data.map((q) => ({
           ...q,
@@ -142,7 +152,7 @@ export default function ProductQnA({ productId, productName }: ProductQnAProps) 
           ...mapped.map((q) => q.user_id),
           ...mapped.flatMap((q) => q.answers.filter((a) => !a.is_admin).map((a) => a.user_id)),
         ];
-        fetchProfileCompletionMap(supabase, customerIds).then(setVerifiedMap);
+        fetchProfileCompletionMap(supabase, customerIds).then(setVerifiedMap).catch(() => {});
       } else {
         setQuestions([]);
       }

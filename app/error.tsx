@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useT } from '@/lib/i18n/useT';
 import { logError } from '@/lib/logger';
+import { createClient } from '@/lib/supabase/client';
 
 const lineIcon = {
   viewBox: '0 0 24 24',
@@ -99,7 +100,28 @@ export default function GlobalError({
 
   useEffect(() => {
     logError('[Vangcur Global Error Boundary]:', error);
-  }, [error]);
+
+    // 🛡️ ডায়াগনস্টিক লগিং: আগে এই error-টা শুধু ডিভাইসের নিজের কনসোলে
+    // (console.error) যেত, যেটা ডেভেলপার রিমোটলি কখনো দেখতে পেত না — বিশেষ
+    // করে iPhone-এ কোন exact error হচ্ছে সেটা জানার কোনো উপায় ছিল না। এখন
+    // best-effort হিসেবে (কখনো UI ব্লক করবে না, ব্যর্থ হলেও নিঃশব্দে ignore করা
+    // হবে) এটা `client_error_logs` টেবিলে পাঠানো হচ্ছে, যাতে ভবিষ্যতে কোনো
+    // ক্র্যাশ হলে আন্দাজ না করে সরাসরি আসল error message/stack দেখে ফিক্স
+    // করা যায়।
+    try {
+      const supabase = createClient();
+      supabase.from('client_error_logs').insert({
+        message: error?.message || null,
+        digest: error?.digest || null,
+        stack: error?.stack ? String(error.stack).slice(0, 4000) : null,
+        url: typeof window !== 'undefined' ? window.location.href : null,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        lang,
+      }).then(() => {}, () => {});
+    } catch {
+      // ignore — ডায়াগনস্টিক লগিং কখনো ইউজার-ফেসিং এরর স্ক্রিনকে প্রভাবিত করবে না
+    }
+  }, [error, lang]);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-brand-bg/35 via-[#DCEBFD]/45 to-white flex flex-col items-center justify-center p-4">

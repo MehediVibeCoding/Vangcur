@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ProductQuestion, ProductQuestionAnswer } from '@/types';
 import { sanitizeInput, sanitizePlainName, MAX_NAME_LEN } from './security';
 import { logWarn } from './logger';
+import { withTimeout } from './withTimeout';
 
 const MIN_QUESTION_LEN = 10;
 const MAX_QUESTION_LEN = 100;
@@ -17,7 +18,9 @@ export async function checkIsUserAdmin(
   userId?: string | null,
 ): Promise<boolean> {
   try {
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    // 🛡️ withTimeout: নেটওয়ার্ক/ডিভাইস দুর্বল হলে এই কলটা ঝুলে থাকতে পারে —
+    // ১২ সেকেন্ডের মধ্যে রেসপন্স না এলে reject করে catch ব্লকে চলে যাবে
+    const { data: { user }, error: authErr } = await withTimeout(supabase.auth.getUser());
     if (authErr || !user) return false;
 
     // যদি নির্দিষ্ট কোনো userId দিয়ে ভেরিফাই করতে বলা হয় এবং বর্তমান সেশন আইডির সাথে না মিলে
@@ -28,11 +31,13 @@ export async function checkIsUserAdmin(
     // প্রোফাইল টেবিল থেকে অ্যাডমিন বা অনুমোদিত রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
     // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে —
     // এখন সবাই একই DB role চেকের মধ্য দিয়ে যায়)
-    const { data: profile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('is_admin, role')
-      .eq('id', user.id)
-      .maybeSingle();
+    const { data: profile, error: profileErr } = await withTimeout(
+      supabase
+        .from('profiles')
+        .select('is_admin, role')
+        .eq('id', user.id)
+        .maybeSingle(),
+    );
 
     if (profileErr || !profile) return false;
 

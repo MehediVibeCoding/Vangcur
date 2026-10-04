@@ -14,6 +14,7 @@ import UserAvatar from './UserAvatar';
 import { VerifiedCustomerBadge } from './VerifiedBadges';
 import { fetchProfileCompletionMap } from '@/lib/profileData';
 import { formatSafeDate } from '@/lib/safeLocaleDate';
+import { logWarn } from '@/lib/logger';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { ReviewGallerySkeleton } from '@/app/components/ui/Skeletons';
 import {
@@ -170,28 +171,38 @@ export default function ProductReviews({
 
   const loadReviewsData = useCallback(async () => {
     setLoading(true);
-    const [data, adminStatus] = await Promise.all([
-      fetchProductReviews(supabase, productId, currentUser?.id),
-      checkIsReviewAdminOrMod(supabase, currentUser?.id),
-    ]);
-    setReviews(data);
-    setIsAdmin(adminStatus);
-    setLikedList(getLikedReviews());
-    syncLikedReviews(supabase).then((all) => setLikedList(all));
+    // 🛡️ try/finally: fetchProductReviews/checkIsReviewAdminOrMod নিজেরাই
+    // try/catch + withTimeout দিয়ে সুরক্ষিত (কখনো থ্রো/ঝুলে থাকবে না), কিন্তু
+    // নিচের sync কোড (calculateReviewSummary ইত্যাদি) কোনো কারণে থ্রো করলেও
+    // যেন loading চিরকাল আটকে না থাকে — সেই defense-in-depth হিসেবে finally।
+    try {
+      const [data, adminStatus] = await Promise.all([
+        fetchProductReviews(supabase, productId, currentUser?.id),
+        checkIsReviewAdminOrMod(supabase, currentUser?.id),
+      ]);
+      setReviews(data);
+      setIsAdmin(adminStatus);
+      setLikedList(getLikedReviews());
+      syncLikedReviews(supabase).then((all) => setLikedList(all)).catch(() => {});
 
-    // 🆕 এই প্রোডাক্টের রিভিউকারীদের প্রোফাইল-সম্পূর্ণতা একবারে ব্যাচ-চেক
-    fetchProfileCompletionMap(supabase, data.map((r) => r.user_id)).then(setVerifiedMap);
+      // 🆕 এই প্রোডাক্টের রিভিউকারীদের প্রোফাইল-সম্পূর্ণতা একবারে ব্যাচ-চেক
+      fetchProfileCompletionMap(supabase, data.map((r) => r.user_id)).then(setVerifiedMap).catch(() => {});
 
-    if (currentUser?.id) {
-      const rejected = data.find((r) => r.user_id === currentUser.id && r.is_rejected);
-      if (rejected) {
-        setRejectedReviewNotice(rejected);
+      if (currentUser?.id) {
+        const rejected = data.find((r) => r.user_id === currentUser.id && r.is_rejected);
+        if (rejected) {
+          setRejectedReviewNotice(rejected);
+        }
       }
-    }
 
-    const sum = calculateReviewSummary(data, defaultRating);
-    if (onSummaryChange) onSummaryChange(sum);
-    setLoading(false);
+      const sum = calculateReviewSummary(data, defaultRating);
+      if (onSummaryChange) onSummaryChange(sum);
+    } catch (e) {
+      logWarn('[Review] loadReviewsData exception:', e);
+      setReviews([]);
+    } finally {
+      setLoading(false);
+    }
   }, [productId, currentUser?.id, defaultRating, onSummaryChange, supabase]);
 
   useEffect(() => {

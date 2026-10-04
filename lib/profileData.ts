@@ -6,6 +6,7 @@ import {
 } from './security';
 import { DISTRICTS } from './checkoutData';
 import { logWarn } from './logger';
+import { withTimeout } from './withTimeout';
 
 export interface MyProfileData {
   name: string;
@@ -175,7 +176,9 @@ export async function fetchProfileCompletionMap(
   if (ids.length === 0) return {};
 
   try {
-    const { data, error } = await supabase.rpc('get_profile_completion_status', { user_ids: ids });
+    const { data, error } = await withTimeout(
+      supabase.rpc('get_profile_completion_status', { user_ids: ids }),
+    );
 
     if (error || !data) return {};
 
