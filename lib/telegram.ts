@@ -96,3 +96,51 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
     logWarn('[Telegram] Failed to send order notification:', err, '| order:', order.orderNum);
   }
 }
+
+// ✅ বিকাশ পেমেন্ট অটো-ভেরিফাই হয়ে অর্ডার কনফার্ম হলে ছোট একটা অ্যালার্ট।
+// (নতুন অর্ডারের মূল নোটিফিকেশন checkout.ts আগেই পাঠায় — এটা শুধু অটো-কনফার্মের খবর,
+// তাই দ্বিতীয়বার পুরো অর্ডারের বিবরণ পাঠানো হয় না।)
+export interface TelegramAutoConfirm {
+  orderNum: string;
+  name: string;
+  phone: string;
+  method: 'auto_trxid' | 'auto_last4';
+  receivedAmount: number;
+  advanceRequired: number;
+  overpaid: number;
+  sender: string;
+  trxId?: string | null;
+  total: number;
+}
+
+export async function sendTelegramPaymentAutoConfirm(info: TelegramAutoConfirm): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+
+  const e = escapeTelegramHtml;
+  const tag = info.method === 'auto_trxid' ? 'Tnx Confirm' : 'LD Confirm';
+  const dueCod = Math.max(0, (info.total || 0) - info.advanceRequired);
+  const fmt = (n: number) => `৳${Number(n || 0).toLocaleString('en-US')}`;
+
+  const message = `<b>অটো কনফার্ম (${e(tag)})</b>\n` +
+    `<b>অর্ডার নং:</b> ${e(info.orderNum)}\n` +
+    `<b>কাস্টমার:</b> ${e(info.name)} (<code>${e(info.phone)}</code>)\n` +
+    `<b>প্রেরক:</b> <code>${e(info.sender)}</code>\n` +
+    `${info.trxId ? `<b>TrxID:</b> <code>${e(info.trxId)}</code>\n` : ''}` +
+    `<b>পেয়েছি:</b> ${fmt(info.receivedAmount)} (প্রয়োজন ${fmt(info.advanceRequired)})\n` +
+    `${info.overpaid > 0 ? `<b>এক্সট্রা পাঠিয়েছে:</b> ${fmt(info.overpaid)}\n` : ''}` +
+    `<b>বাকি (COD):</b> ${fmt(dueCod)}`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) logWarn('[Telegram] auto-confirm sendMessage failed:', res.status, '| order:', info.orderNum);
+  } catch (err) {
+    logWarn('[Telegram] auto-confirm notification error:', err, '| order:', info.orderNum);
+  }
+}

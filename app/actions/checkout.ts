@@ -16,7 +16,7 @@ import {
 } from '@/lib/security';
 import { logWarn, logError } from '@/lib/logger';
 import { staticDictionary } from '@/lib/i18n/dictionary';
-import { sendTelegramOrderNotification } from '@/lib/telegram';
+import { sendTelegramOrderNotification, sendTelegramPaymentAutoConfirm } from '@/lib/telegram';
 import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 
 const MAX_ITEMS = 30;
@@ -545,6 +545,26 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   // atomically reserve হয়ে গেছে (reserve_coupon_usage) — এখানে আবার
   // increment_coupon_usage কল করলে একই অর্ডারে দুইবার গোনা হতো, তাই বাদ।
 
+  // ⚡ বিকাশ এসএমএস আগেই জমা থাকলে (কাস্টমার আগে টাকা পাঠিয়েছে) এখনই অটো-কনফার্ম।
+  // না মিললে বা এরর হলে অর্ডার pending-ই থাকে — পরে webhook বা অ্যাডমিন কনফার্ম করবে।
+  let autoConfirm: { method: 'auto_trxid' | 'auto_last4'; amount: number; overpaid: number; sender: string; trxId: string | null } | null = null;
+  if (advancePaidAmount > 0 && (safeTxn || last4)) {
+    try {
+      const { data: matchRes } = await service.rpc('match_bkash_payment', { p_order_id: insResult.data.id });
+      if (matchRes?.success) {
+        autoConfirm = {
+          method: matchRes.method,
+          amount: Number(matchRes.amount) || advancePaidAmount,
+          overpaid: Number(matchRes.overpaid) || 0,
+          sender: String(matchRes.sender ?? ''),
+          trxId: matchRes.trx_id ?? null,
+        };
+      }
+    } catch (e) {
+      logWarn('[checkout] instant bkash match failed (order stays pending):', e);
+    }
+  }
+
   after(async () => {
     try {
       await sendTelegramOrderNotification({
@@ -561,6 +581,18 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         paymentTxn: safeTxn || undefined,
         paymentLast4: last4 || undefined,
       });
+      if (autoConfirm) {
+        await sendTelegramPaymentAutoConfirm({
+          orderNum, name, phone,
+          method: autoConfirm.method,
+          receivedAmount: autoConfirm.amount,
+          advanceRequired: advancePaidAmount,
+          overpaid: autoConfirm.overpaid,
+          sender: autoConfirm.sender,
+          trxId: autoConfirm.trxId,
+          total: vTotal,
+        });
+      }
     } catch (err) {
       logWarn('[checkout] telegram background notification error:', err);
     }

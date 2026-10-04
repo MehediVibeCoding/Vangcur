@@ -17,6 +17,21 @@ import { SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 
+// ⏱️ ৫ মিনিটের বেশি পেন্ডিং থাকলে আশ্বস্তকারী স্ক্রিন। সময় গোনা হয় অর্ডার সাবমিটের
+// টাইমস্ট্যাম্প (vc_pending_ts) থেকে — setTimeout একা ভরসাযোগ্য না, কারণ ব্যাকগ্রাউন্ড/মিনিমাইজ
+// করলে ব্রাউজার টাইমার থামিয়ে দেয়। তাই ফিরে এলে (visibilitychange) সময় আবার হিসাব হয়।
+const WAIT_TIMEOUT_MS = 5 * 60 * 1000;
+// স্ক্রিনটা একবার দেখানো হয়েছে — রিলোড/পরে ফিরে এলে আর না দেখিয়ে সব মুছে হোমে পাঠানোর চিহ্ন।
+const TIMEOUT_SEEN_KEY = 'vc_status_timeout_seen';
+
+function readPendingTs(): number {
+  try {
+    return parseInt(localStorage.getItem('vc_pending_ts') || '0', 10) || 0;
+  } catch {
+    return 0;
+  }
+}
+
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 
 const lineIcon = {
@@ -179,6 +194,15 @@ function IconWarningShield() {
   );
 }
 
+function IconClockCheck() {
+  return (
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9.5" />
+      <polyline points="12 6.5 12 12 15.5 14" />
+    </svg>
+  );
+}
+
 function IconHome() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
@@ -218,6 +242,9 @@ export default function StatusClient() {
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<OrderStatus>('pending');
   const [copyLabel, setCopyLabel] = useState<string>(() => (lang === 'en' ? 'Copy' : 'কপি'));
+  const [timedOut, setTimedOut] = useState(false);
+  const timedOutRef = useRef(false);
+  const submittedAtRef = useRef<number>(0);
   const phoneRef = useRef<string>('');
   const orderRef = useRef<Order | null>(null);
 
@@ -240,16 +267,26 @@ export default function StatusClient() {
       return;
     }
     let justSubmitted = false;
+    let timeoutSeen = false;
     try {
       justSubmitted = sessionStorage.getItem('vc_just_submitted') === '1';
       sessionStorage.removeItem('vc_just_submitted');
+      timeoutSeen = sessionStorage.getItem(TIMEOUT_SEEN_KEY) === '1';
+      sessionStorage.removeItem(TIMEOUT_SEEN_KEY);
     } catch {
       justSubmitted = false;
     }
+    const pendingTs = readPendingTs();
     if (!justSubmitted) {
+      // রিলোড বা পরে ফিরে আসা: ৫ মিনিটের স্ক্রিন আগে দেখানো হয়ে থাকলে বা ৫ মিনিট পেরিয়ে গেলে
+      // সব (পেন্ডিং অর্ডারের লোকাল তথ্য) মুছে সোজা হোমে। তার আগে হলে আগের মতোই হোমে — তথ্য থাকে।
+      if (timeoutSeen || (pendingTs > 0 && Date.now() - pendingTs >= WAIT_TIMEOUT_MS)) {
+        clearPendingOrder();
+      }
       router.replace('/');
       return;
     }
+    submittedAtRef.current = pendingTs || Date.now();
     phoneRef.current = pending.phone;
     setOrderId(pending.id);
     (async () => {
@@ -298,6 +335,48 @@ export default function StatusClient() {
     return stop;
   }, [orderId, supabase, router]);
 
+  const showTimedOut = useCallback(() => {
+    if (timedOutRef.current) return;
+    timedOutRef.current = true;
+    setTimedOut(true);
+    try { sessionStorage.setItem(TIMEOUT_SEEN_KEY, '1'); } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (!checked || status !== 'pending') return undefined;
+    const check = () => {
+      const startedAt = submittedAtRef.current;
+      if (startedAt && Date.now() - startedAt >= WAIT_TIMEOUT_MS) {
+        showTimedOut();
+        return true;
+      }
+      return false;
+    };
+    if (check()) return undefined;
+    const remaining = Math.max(0, WAIT_TIMEOUT_MS - (Date.now() - submittedAtRef.current));
+    const timer = setTimeout(check, remaining + 50);
+    const onVisible = () => { if (document.visibilityState === 'visible') check(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [checked, status, showTimedOut]);
+
+  // টাইমড-আউট স্ক্রিন দেখানোর পর কাস্টমার যেভাবেই পেজ ছাড়ুক (ব্যাক/অন্য লিংক) — সব মুছে যাবে।
+  useEffect(() => () => {
+    if (timedOutRef.current) {
+      clearPendingOrder();
+      try { sessionStorage.removeItem(TIMEOUT_SEEN_KEY); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const leaveToHome = () => {
+    clearPendingOrder();
+    try { sessionStorage.removeItem(TIMEOUT_SEEN_KEY); } catch { /* ignore */ }
+    router.replace('/');
+  };
+
   const copyOrderNum = useCallback(async () => {
     if (!order) return;
     try {
@@ -337,7 +416,7 @@ export default function StatusClient() {
         <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
 
-          {isPending && (
+          {isPending && !timedOut && (
             <>
               <div className="relative z-10 mx-auto mb-3.5 flex h-[76px] w-[76px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_6px_22px_rgba(245,158,11,0.22)]">
                 <AnimatedLiveHourglass />
@@ -483,6 +562,92 @@ export default function StatusClient() {
                 <span>{t('ওয়েবসাইটে ফিরে যান')}</span>
               </Link>
             </>
+          )}
+
+          {isPending && timedOut && (
+            <div role="status" aria-live="polite" className="relative z-10 animate-soft-fade-in">
+              <div className="relative mx-auto mb-4 flex h-[84px] w-[84px] items-center justify-center">
+                <span className="absolute inset-0 animate-pulse rounded-full bg-brand-light/15" aria-hidden="true" />
+                <span className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full border border-brand-light/40 bg-white text-brand-light shadow-sh2">
+                  <IconClockCheck />
+                </span>
+              </div>
+
+              <h1 className="mb-2 font-body text-[19px] font-extrabold leading-snug text-ink">
+                {lang === 'en' ? 'Your payment needs a little more time' : 'পেমেন্ট নিশ্চিত হতে একটু বাড়তি সময় লাগছে'}
+              </h1>
+
+              <p className="mb-4 font-body text-[12.5px] leading-[1.75] text-ink/80">
+                {lang === 'en' ? (
+                  <>Please don&apos;t worry! We won&apos;t keep you waiting on this screen. As soon as our team verifies your payment, we will send a confirmation <strong className="font-bold text-ink">SMS and invoice link</strong> to your mobile.</>
+                ) : (
+                  <>অনুগ্রহ করে দুশ্চিন্তা করবেন না! আমরা আপনাকে স্ক্রিনে বসিয়ে রেখে বিরক্ত করতে চাই না। আমাদের টিম পেমেন্টটি যাচাই করামাত্র আপনার মোবাইলে <strong className="font-bold text-ink">কনফার্মেশন এসএমএস ও ইনভয়েস লিংক</strong> পাঠিয়ে দেবে।</>
+                )}
+              </p>
+
+              <div className="mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
+                <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
+                <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
+                <button
+                  type="button"
+                  onClick={copyOrderNum}
+                  className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
+                >
+                  {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
+                  <span>{copyLabel}</span>
+                </button>
+              </div>
+
+              <div className="mb-4 space-y-2.5 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md">
+                <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-xs">
+                    <IconCheck />
+                  </span>
+                  <div>
+                    <strong className="block font-body text-[12.5px] font-bold text-ink">{t('অর্ডার রিসিভড')}</strong>
+                    <span className="font-body text-[11px] text-muted">{t('সিস্টেমে সফলভাবে জমা হয়েছে')}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-light/50 bg-brand-bg text-brand-light shadow-xs">
+                    <IconSearch />
+                  </span>
+                  <div>
+                    <strong className="block font-body text-[12.5px] font-bold text-ink">{lang === 'en' ? 'Team verification' : 'টিম ভেরিফিকেশন'}</strong>
+                    <span className="font-body text-[11px] text-muted">{lang === 'en' ? 'Our team is checking your payment' : 'আমাদের টিম আপনার পেমেন্ট যাচাই করছে'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pt-0.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border-base bg-white text-muted shadow-xs">
+                    <IconCircleTarget />
+                  </span>
+                  <div>
+                    <strong className="block font-body text-[12.5px] font-bold text-ink">{lang === 'en' ? 'SMS & invoice' : 'এসএমএস ও ইনভয়েস'}</strong>
+                    <span className="font-body text-[11px] text-muted">{lang === 'en' ? 'Sent to your mobile after verification' : 'যাচাইয়ের পর আপনার মোবাইলে যাবে'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={leaveToHome}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
+                >
+                  <IconHome />
+                  <span>{lang === 'en' ? 'OK, back to home' : 'ঠিক আছে (হোমে ফিরে যান)'}</span>
+                </button>
+                <a
+                  href={DEFAULT_FOOTER.social.wa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-full border border-border-base bg-white py-[12px] font-body text-[13px] font-bold text-ink no-underline transition-all duration-brand hover:bg-surface-muted active:scale-95"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+                  <span>{lang === 'en' ? 'Ask on WhatsApp' : 'WhatsApp-এ জানুন'}</span>
+                </a>
+              </div>
+            </div>
           )}
 
           {isRejected && (
