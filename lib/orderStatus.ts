@@ -23,14 +23,56 @@ function getTimeoutSignal(ms: number): AbortSignal | undefined {
   return undefined;
 }
 
+export const PENDING_QUIET_KEY = 'vc_pending_quiet';
+
 export function clearPendingOrder(): void {
   try {
     localStorage.removeItem('vc_pending_ls');
     localStorage.removeItem('vc_pending_num_ls');
     localStorage.removeItem('vc_pending_ts');
     localStorage.removeItem('vc_pending_phone_ls');
+    localStorage.removeItem(PENDING_QUIET_KEY);
   } catch {
     // ignore
+  }
+}
+
+// কাস্টমার ৫ মিনিটের স্ক্রিন পেরিয়ে "ঠিক আছে" চাপলে অর্ডারের ট্র্যাকিং মার্কার মোছা হয় না;
+// শুধু "কোয়াইট" চিহ্ন বসে। তখন পেন্ডিং থাকা পর্যন্ত কোনো UI দেখানো হয় না,
+// কিন্তু কনফার্ম/রিজেক্ট হলে (১-২ ঘণ্টা পরে ঢুকলেও) সঠিক পপআপ দেখানো হয়।
+export function softenPendingOrder(): void {
+  try {
+    if (localStorage.getItem('vc_pending_ls')) localStorage.setItem(PENDING_QUIET_KEY, '1');
+  } catch {
+    // ignore
+  }
+}
+
+export function isPendingQuiet(): boolean {
+  try {
+    return localStorage.getItem(PENDING_QUIET_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function resetPendingQuiet(): void {
+  try {
+    localStorage.removeItem(PENDING_QUIET_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+export function readPendingLockInfo(): { id: string; orderNum: string; phone: string; ts: number } | null {
+  const pending = readPendingOrder();
+  if (!pending) return null;
+  try {
+    const ts = parseInt(localStorage.getItem('vc_pending_ts') || '0', 10);
+    if (!ts) return null;
+    return { ...pending, ts };
+  } catch {
+    return null;
   }
 }
 
@@ -119,13 +161,14 @@ export function watchOrderStatus(
   let timer: ReturnType<typeof setTimeout> | null = null;
   let channel: RealtimeChannel | null = null;
   const startTime = Date.now();
-  const MAX_POLL_DURATION_MS = 30 * 60 * 1000;
+  const MAX_POLL_DURATION_MS = PENDING_ORDER_MAX_AGE_MS;
 
   function getNextInterval(): number {
     const elapsed = Date.now() - startTime;
     if (elapsed < 60 * 1000) return 6000;
     if (elapsed < 5 * 60 * 1000) return 15000;
-    return 30000;
+    if (elapsed < 30 * 60 * 1000) return 30000;
+    return 120000;
   }
 
   async function checkStatus() {

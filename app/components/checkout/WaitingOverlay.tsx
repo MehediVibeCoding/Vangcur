@@ -8,7 +8,8 @@ import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
 import { lockBody, unlockBody } from '@/lib/bodyScrollLock';
 import {
-  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES, readLatestGuestOrder,
+  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, softenPendingOrder, isPendingQuiet,
+  RESOLVED_ORDER_STATUSES, readLatestGuestOrder,
 } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -18,6 +19,18 @@ import {
 } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
+
+// অর্ডারের বয়স এর বেশি হলে "প্রসেস হচ্ছে" বাবল/কার্ড আর দেখানো হয় না (কোয়াইট মোড) — শুধু কনফার্ম/রিজেক্টে পপআপ আসে।
+const QUIET_AFTER_MS = 30 * 60 * 1000;
+
+function readPendingAgeMs(): number {
+  try {
+    const ts = parseInt(localStorage.getItem('vc_pending_ts') || '0', 10);
+    return ts ? Date.now() - ts : 0;
+  } catch {
+    return 0;
+  }
+}
 
 const lineIcon = {
   viewBox: '0 0 24 24',
@@ -202,7 +215,7 @@ export default function WaitingOverlay() {
 
   useEffect(() => { orderRef.current = order; }, [order]);
 
-  const openForPending = useCallback(async (id: string, orderNum: string, phone: string, opts?: { startMinimized?: boolean }) => {
+  const openForPending = useCallback(async (id: string, orderNum: string, phone: string, opts?: { startMinimized?: boolean; quiet?: boolean }) => {
     if (typeof window !== 'undefined') {
       const alreadySeen = localStorage.getItem(`vc_confirm_seen_${id}`);
       const alreadyRejected = localStorage.getItem(`vc_reject_seen_${id}`);
@@ -238,6 +251,18 @@ export default function WaitingOverlay() {
 
     setOrder(mapped);
     setStatus(mapped.status);
+
+    const resolvedNegative = mapped.status === 'cancelled' || mapped.status === 'rejected';
+    if (resolvedNegative) {
+      setVisible(true);
+      setMinimized(false);
+      return;
+    }
+    if (opts?.quiet) {
+      setVisible(false);
+      setMinimized(false);
+      return;
+    }
     setVisible(true);
     setMinimized(!!opts?.startMinimized);
   }, [supabase]);
@@ -253,7 +278,8 @@ export default function WaitingOverlay() {
         clearPendingOrder();
         return;
       }
-      openForPending(pending.id, pending.orderNum, pending.phone, { startMinimized: true });
+      const quiet = isPendingQuiet() || readPendingAgeMs() >= QUIET_AFTER_MS;
+      openForPending(pending.id, pending.orderNum, pending.phone, { startMinimized: true, quiet });
     }
   }, [pathname, orderId, openForPending]);
 
@@ -304,6 +330,17 @@ export default function WaitingOverlay() {
     });
     return stop;
   }, [orderId, supabase, pathname]);
+
+  useEffect(() => {
+    if (!visible || status !== 'pending') return undefined;
+    const remaining = Math.max(0, QUIET_AFTER_MS - readPendingAgeMs());
+    const timer = setTimeout(() => {
+      softenPendingOrder();
+      setVisible(false);
+      setMinimized(false);
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [visible, status]);
 
   useEffect(() => {
     if (visible && !minimized) lockBody();

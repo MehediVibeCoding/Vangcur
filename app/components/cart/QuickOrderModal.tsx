@@ -25,6 +25,7 @@ import {
   type AppliedCoupon,
 } from '@/lib/couponData';
 import type { Product } from '@/types';
+import { guardPendingLock } from '@/lib/pendingLock';
 
 const MAX_COUPON_LEN = 25;
 
@@ -318,7 +319,9 @@ export default function QuickOrderModal() {
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = () => guardPendingLock(() => { void proceedConfirmOrder(); });
+
+  const proceedConfirmOrder = async () => {
     if (!cart.length || orderStatus !== 'idle') return;
 
     try {

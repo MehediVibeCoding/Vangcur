@@ -213,11 +213,17 @@ export interface ServiceLink {
 
 export type InfoType = 'shipping' | 'returns' | 'privacy' | 'terms';
 
+export interface PendingLockInfo {
+  orderNum: string;
+  ageSeconds: number;
+}
+
 export interface ActionResponse<T = unknown> {
   ok: boolean;
   data?: T;
   reason?: string;
   error?: string;
+  lock?: PendingLockInfo;
 }
 
 export interface OrderPayloadItem {

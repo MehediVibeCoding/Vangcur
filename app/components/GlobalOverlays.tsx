@@ -16,6 +16,7 @@ import { RESERVED_URL_PREFIXES } from '@/types/guides';
 const CartSidebar = dynamic(() => import('./cart/CartSidebar'), { ssr: false });
 const WishlistDrawer = dynamic(() => import('./cart/WishlistDrawer'), { ssr: false });
 const TrackOrderModal = dynamic(() => import('./cart/TrackOrderModal'), { ssr: false });
+const PendingLockModal = dynamic(() => import('./modals/PendingLockModal'), { ssr: false });
 const FloatContactButtons = dynamic(() => import('./layout/FloatContactButtons'), { ssr: false });
 const BackToTopButton = dynamic(() => import('./layout/BackToTopButton'), { ssr: false });
 const RareOverlays = dynamic(() => import('./RareOverlays'), { ssr: false });
@@ -235,6 +236,7 @@ export default function GlobalOverlays() {
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <WishlistDrawer isOpen={wishOpen} onClose={() => setWishOpen(false)} />
       <TrackOrderModal isOpen={trackOpen} onClose={() => setTrackOpen(false)} />
+      <PendingLockModal />
       
       {!hideFloatingBadges && !isGuidePage && <FloatCartBadge />}
 

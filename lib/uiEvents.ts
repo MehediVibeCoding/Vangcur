@@ -18,3 +18,4 @@ export const PROFILE_UPDATED_EVENT = 'vc:profileUpdated';
 export const OPEN_QUICK_CART_MODAL_EVENT = 'vc:openQuickCartModal';
 export const OPEN_ORDER_LIMIT_EVENT = 'vc:openOrderLimitModal';
 export const OPEN_BULK_ORDER_EVENT = 'vc:openBulkOrderModal';
+export const OPEN_PENDING_LOCK_EVENT = 'vc:openPendingLockModal';

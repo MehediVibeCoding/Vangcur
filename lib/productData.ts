@@ -5,6 +5,7 @@ import { useCartStore, cartTotal } from './store/cartStore';
 import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
 import { suppressHistoryCleanup } from './useHistoryModal';
+import { guardPendingLock } from './pendingLock';
 
 function getTimeoutSignal(ms: number): AbortSignal | undefined {
   if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
@@ -460,6 +461,15 @@ export function recordLocalOrderTimestamp(): void {
 }
 
 export function startQuickOrder(
+  router: { push: (href: string) => void },
+  prod: Product,
+  qty = 1,
+): void {
+  if (!prod || prod.stock <= 0) return;
+  guardPendingLock(() => proceedQuickOrder(router, prod, qty));
+}
+
+function proceedQuickOrder(
   router: { push: (href: string) => void },
   prod: Product,
   qty = 1,

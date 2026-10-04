@@ -38,6 +38,7 @@ import OrderCard from '@/app/components/orders/OrderCard';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { CompactOrderListSkeleton } from '@/app/components/ui/Skeletons';
 import type { Order, DraftOrder, StockNotification } from '@/types';
+import { guardPendingLock } from '@/lib/pendingLock';
 
 const LoginModal = dynamic(() => import('@/app/components/auth/LoginModal'));
 const MembershipModal = dynamic(() => import('@/app/components/modals/MembershipModal'), { ssr: false });
@@ -391,7 +392,9 @@ export default function AccountClient() {
     setDrafts([]);
   };
 
-  const continueFromDraft = (draft: DraftOrder) => {
+  const continueFromDraft = (draft: DraftOrder) => guardPendingLock(() => proceedFromDraft(draft));
+
+  const proceedFromDraft = (draft: DraftOrder) => {
     try {
       if (Array.isArray(draft.items) && draft.items.length) {
         sessionStorage.setItem('vc_quick_order_items', JSON.stringify(draft.items));

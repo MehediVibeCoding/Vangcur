@@ -27,6 +27,24 @@ function fail(error: string): ActionResponse<CreateOrderResult> {
   return { ok: false, error };
 }
 
+// ক্লায়েন্টের আসল আইপি — Vercel-এর নিজস্ব এজ-সেট হেডার আগে (ক্লায়েন্ট বদলাতে পারে না),
+// `x-forwarded-for` শুধু শেষ ব্যাকআপ। পেন্ডিং-লক ও অর্ডারে আইপি সংরক্ষণে ব্যবহৃত হয়।
+async function readClientIp(): Promise<string> {
+  try {
+    const hdrs = await headers();
+    const vercelForwardedFor = hdrs.get('x-vercel-forwarded-for');
+    const realIp = hdrs.get('x-real-ip');
+    const forwardedFor = hdrs.get('x-forwarded-for');
+    const ip =
+      (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
+      (realIp ? realIp.trim() : '') ||
+      (forwardedFor ? forwardedFor.split(',')[0].trim() : '');
+    return ip.slice(0, 64);
+  } catch {
+    return '';
+  }
+}
+
 function parseJsonish<T>(val: unknown, fallback: T): T {
   if (val === null || val === undefined) return fallback;
   if (typeof val !== 'string') return val as T;
@@ -168,6 +186,39 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       }
     } catch (e) {
       logWarn('[checkout] idempotency lookup failed (continuing normally):', e);
+    }
+  }
+
+  // ⏳ পেন্ডিং-অর্ডার লক: একই ডিভাইস (ফিঙ্গারপ্রিন্ট) থেকে, অথবা একই ফোন + একই আইপি থেকে
+  // গত ৩০ মিনিটে করা কোনো অর্ডার এখনো পেন্ডিং থাকলে নতুন অর্ডার আটকানো হয়।
+  // শুধু ফোন নম্বর মিললে আটকানো হয় না — যাতে অন্যের নম্বর দিয়ে অর্ডার করা ভুয়া ব্যক্তি আসল মালিককে আটকাতে না পারে।
+  // অর্ডার কনফার্ম/রিজেক্ট/ক্যানসেল হলেই status বদলায়, ফলে লক সাথে সাথে খুলে যায়।
+  // এটা নিরাপত্তা-সীমা নয় (সেগুলো নিচের রেট-লিমিট), তাই RPC ব্যর্থ হলে ফেইল-ওপেন।
+  const clientIp = await readClientIp();
+  if (!isPrivilegedUser) {
+    try {
+      const { data: lockRows, error: lockErr } = await service.rpc('get_pending_order_lock', {
+        p_phone: phone,
+        p_fingerprint: fingerprintId,
+        p_ip: clientIp,
+      });
+      if (lockErr) {
+        logWarn('[checkout] pending lock RPC error (continuing; rate limits still apply):', lockErr.message);
+      } else if (Array.isArray(lockRows) && lockRows.length > 0) {
+        const lockRow = lockRows[0] as { order_num?: string; age_seconds?: number };
+        return {
+          ok: false,
+          error: lang === 'en'
+            ? 'Your previous order payment is still being verified. You can place a new order once it is done.'
+            : 'আপনার পূর্বের অর্ডারের পেমেন্ট যাচাই চলছে। যাচাই শেষ হলে নতুন অর্ডার করতে পারবেন।',
+          lock: {
+            orderNum: String(lockRow.order_num || ''),
+            ageSeconds: Math.max(0, Number(lockRow.age_seconds) || 0),
+          },
+        };
+      }
+    } catch (e) {
+      logWarn('[checkout] pending lock check failed (continuing):', e);
     }
   }
 
@@ -491,6 +542,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     payment_txn: safeTxn,
     payment_last4: last4,
     fingerprint_id: fingerprintId || null,
+    client_ip: clientIp || null,
     idempotency_key: idemKeyForInsert,
     status: 'pending',
     ...(currentUserId ? { user_id: currentUserId } : {}),

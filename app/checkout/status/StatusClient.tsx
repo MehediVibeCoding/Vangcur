@@ -8,7 +8,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 import {
-  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, RESOLVED_ORDER_STATUSES, readLatestGuestOrder,
+  fetchFullOrder, watchOrderStatus, readPendingOrder, clearPendingOrder, softenPendingOrder, RESOLVED_ORDER_STATUSES, readLatestGuestOrder,
 } from '@/lib/orderStatus';
 import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
@@ -21,6 +21,8 @@ import type { Order, OrderStatus } from '@/types';
 // টাইমস্ট্যাম্প (vc_pending_ts) থেকে — setTimeout একা ভরসাযোগ্য না, কারণ ব্যাকগ্রাউন্ড/মিনিমাইজ
 // করলে ব্রাউজার টাইমার থামিয়ে দেয়। তাই ফিরে এলে (visibilitychange) সময় আবার হিসাব হয়।
 const WAIT_TIMEOUT_MS = 5 * 60 * 1000;
+// ৫ মিনিটের স্ক্রিনে কাস্টমার ফোন ফেলে রাখলেও পুরো ৩০ মিনিট পূর্ণ হলে স্ক্রিন বন্ধ করে হোমে পাঠানো হয়।
+const HARD_LIMIT_MS = 30 * 60 * 1000;
 // স্ক্রিনটা একবার দেখানো হয়েছে — রিলোড/পরে ফিরে এলে আর না দেখিয়ে সব মুছে হোমে পাঠানোর চিহ্ন।
 const TIMEOUT_SEEN_KEY = 'vc_status_timeout_seen';
 
@@ -72,6 +74,31 @@ function HeaderDecor() {
         <rect x="7" y="2.5" width="10" height="15" rx="3" />
         <path d="M10 5.5h4" />
         <circle cx="12" cy="20" r="1.6" />
+      </svg>
+    </div>
+  );
+}
+
+function GadgetDecor() {
+  const deco = { ...lineIcon, strokeWidth: 1.5 };
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden text-brand-light/[0.12]" aria-hidden="true">
+      <svg {...deco} width="30" height="30" className="absolute left-3 top-[30%] -rotate-12" viewBox="0 0 24 24">
+        <path d="M4 14.5a8 8 0 0 1 16 0" />
+        <rect x="2.7" y="14.5" width="4.3" height="7" rx="1.6" />
+        <rect x="17" y="14.5" width="4.3" height="7" rx="1.6" />
+      </svg>
+      <svg {...deco} width="26" height="26" className="absolute right-3 top-[46%] rotate-12" viewBox="0 0 24 24">
+        <rect x="7" y="6.2" width="10" height="11.6" rx="3" />
+        <path d="M9.2 6.2V3.6h5.6v2.6M9.2 17.8v2.6h5.6v-2.6" />
+      </svg>
+      <svg {...deco} width="28" height="28" className="absolute left-4 bottom-[16%] rotate-6" viewBox="0 0 24 24">
+        <rect x="5" y="2" width="14" height="20" rx="3.2" />
+        <circle cx="12" cy="8.3" r="3.1" />
+        <circle cx="12" cy="17" r="1.4" />
+      </svg>
+      <svg {...deco} width="26" height="26" className="absolute right-4 bottom-[8%] -rotate-6" viewBox="0 0 24 24">
+        <path d="M9 18.2h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.1 1 1.85v.75h5v-.75c0-.75.4-1.4 1-1.85A6 6 0 0 0 12 3Z" />
       </svg>
     </div>
   );
@@ -279,9 +306,9 @@ export default function StatusClient() {
     const pendingTs = readPendingTs();
     if (!justSubmitted) {
       // রিলোড বা পরে ফিরে আসা: ৫ মিনিটের স্ক্রিন আগে দেখানো হয়ে থাকলে বা ৫ মিনিট পেরিয়ে গেলে
-      // সব (পেন্ডিং অর্ডারের লোকাল তথ্য) মুছে সোজা হোমে। তার আগে হলে আগের মতোই হোমে — তথ্য থাকে।
+      // অর্ডারের ট্র্যাকিং মার্কার রেখে (কোয়াইট মোডে) সোজা হোমে। পরে কনফার্ম/রিজেক্ট হলে সঠিক পপআপ আসবে।
       if (timeoutSeen || (pendingTs > 0 && Date.now() - pendingTs >= WAIT_TIMEOUT_MS)) {
-        clearPendingOrder();
+        softenPendingOrder();
       }
       router.replace('/');
       return;
@@ -363,19 +390,42 @@ export default function StatusClient() {
     };
   }, [checked, status, showTimedOut]);
 
-  // টাইমড-আউট স্ক্রিন দেখানোর পর কাস্টমার যেভাবেই পেজ ছাড়ুক (ব্যাক/অন্য লিংক) — সব মুছে যাবে।
+  // টাইমড-আউট স্ক্রিন দেখানোর পর কাস্টমার যেভাবেই পেজ ছাড়ুক (ব্যাক/অন্য লিংক) — স্ক্রিনের তথ্য যাবে,
+  // কিন্তু অর্ডারের ট্র্যাকিং মার্কার কোয়াইট মোডে থেকে যাবে (দেরিতে কনফার্ম হলে পপআপ আসবে)।
   useEffect(() => () => {
     if (timedOutRef.current) {
-      clearPendingOrder();
+      softenPendingOrder();
       try { sessionStorage.removeItem(TIMEOUT_SEEN_KEY); } catch { /* ignore */ }
     }
   }, []);
 
-  const leaveToHome = () => {
-    clearPendingOrder();
+  const leaveToHome = useCallback(() => {
+    softenPendingOrder();
     try { sessionStorage.removeItem(TIMEOUT_SEEN_KEY); } catch { /* ignore */ }
     router.replace('/');
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (!timedOut) return undefined;
+    const expired = () => {
+      const startedAt = submittedAtRef.current;
+      return !!startedAt && Date.now() - startedAt >= HARD_LIMIT_MS;
+    };
+    if (expired()) {
+      leaveToHome();
+      return undefined;
+    }
+    const remaining = Math.max(0, HARD_LIMIT_MS - (Date.now() - submittedAtRef.current));
+    const timer = setTimeout(() => { if (expired()) leaveToHome(); }, remaining + 50);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && expired()) leaveToHome();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [timedOut, leaveToHome]);
 
   const copyOrderNum = useCallback(async () => {
     if (!order) return;
@@ -415,6 +465,7 @@ export default function StatusClient() {
 
         <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start">
           <HeaderDecor />
+          <GadgetDecor />
 
           {isPending && !timedOut && (
             <>
@@ -585,68 +636,25 @@ export default function StatusClient() {
                 )}
               </p>
 
-              <div className="mb-4 flex items-center justify-center gap-2 rounded-[14px] border border-brand-light/35 bg-white/85 py-2.5 px-3.5 shadow-xs backdrop-blur-md">
-                <span className="font-body text-xs font-bold text-muted">{t('অর্ডার নম্বর:')}</span>
-                <span className="font-body text-sm font-extrabold text-brand-light">{order.orderNum}</span>
-                <button
-                  type="button"
-                  onClick={copyOrderNum}
-                  className="ml-1 inline-flex items-center gap-1 rounded-full border border-brand-light/40 bg-white px-2.5 py-1 font-body text-[11px] font-bold text-brand-light shadow-xs transition-colors hover:bg-brand-light hover:text-white active:scale-95"
-                >
-                  {copyLabel === 'Copy' || copyLabel === 'কপি' ? <IconCopy /> : <IconCheck />}
-                  <span>{copyLabel}</span>
-                </button>
+              <div className="mb-5 rounded-[16px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12.5px] leading-[1.75] text-ink/85">
+                <div className="mb-1 flex items-center justify-center">
+                  <IconBulb />
+                </div>
+                <p>
+                  {lang === 'en'
+                    ? 'You can now safely leave the website, or keep browsing and look at other products.'
+                    : 'আপনি এখন নিশ্চিন্তে ওয়েবসাইট থেকে বের হয়ে যেতে পারেন অথবা ওয়েবসাইট ব্রাউজ করে অন্যান্য প্রডাক্ট দেখতে পারেন।'}
+                </p>
               </div>
 
-              <div className="mb-4 space-y-2.5 rounded-[18px] border border-white/90 bg-white/75 p-3.5 text-left shadow-xs backdrop-blur-md">
-                <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-xs">
-                    <IconCheck />
-                  </span>
-                  <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-ink">{t('অর্ডার রিসিভড')}</strong>
-                    <span className="font-body text-[11px] text-muted">{t('সিস্টেমে সফলভাবে জমা হয়েছে')}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 border-b border-border-base/70 pb-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand-light/50 bg-brand-bg text-brand-light shadow-xs">
-                    <IconSearch />
-                  </span>
-                  <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-ink">{lang === 'en' ? 'Team verification' : 'টিম ভেরিফিকেশন'}</strong>
-                    <span className="font-body text-[11px] text-muted">{lang === 'en' ? 'Our team is checking your payment' : 'আমাদের টিম আপনার পেমেন্ট যাচাই করছে'}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 pt-0.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border-base bg-white text-muted shadow-xs">
-                    <IconCircleTarget />
-                  </span>
-                  <div>
-                    <strong className="block font-body text-[12.5px] font-bold text-ink">{lang === 'en' ? 'SMS & invoice' : 'এসএমএস ও ইনভয়েস'}</strong>
-                    <span className="font-body text-[11px] text-muted">{lang === 'en' ? 'Sent to your mobile after verification' : 'যাচাইয়ের পর আপনার মোবাইলে যাবে'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2.5">
-                <button
-                  type="button"
-                  onClick={leaveToHome}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
-                >
-                  <IconHome />
-                  <span>{lang === 'en' ? 'OK, back to home' : 'ঠিক আছে (হোমে ফিরে যান)'}</span>
-                </button>
-                <a
-                  href={DEFAULT_FOOTER.social.wa}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-full border border-border-base bg-white py-[12px] font-body text-[13px] font-bold text-ink no-underline transition-all duration-brand hover:bg-surface-muted active:scale-95"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
-                  <span>{lang === 'en' ? 'Ask on WhatsApp' : 'WhatsApp-এ জানুন'}</span>
-                </a>
-              </div>
+              <button
+                type="button"
+                onClick={leaveToHome}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[14.5px] font-bold text-white shadow-sh2 transition-all duration-brand hover:brightness-[1.03] active:scale-95"
+              >
+                <IconHome />
+                <span>{lang === 'en' ? 'OK, back to home' : 'ঠিক আছে (হোমে ফিরে যান)'}</span>
+              </button>
             </div>
           )}
 

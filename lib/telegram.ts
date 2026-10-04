@@ -144,3 +144,52 @@ export async function sendTelegramPaymentAutoConfirm(info: TelegramAutoConfirm):
     logWarn('[Telegram] auto-confirm notification error:', err, '| order:', info.orderNum);
   }
 }
+
+// ⏱️ ৫ মিনিটের বেশি পেন্ডিং থাকা অর্ডারের জরুরি SLA অ্যালার্ট (ডাটাবেজ ক্রন → /api/sla-alert)।
+export interface TelegramSlaAlert {
+  orderNum: string;
+  name: string;
+  phone: string;
+  paymentTxn?: string | null;
+  paymentLast4?: string | null;
+  advance: number;
+  waitedMinutes: number;
+}
+
+export async function sendTelegramSlaAlert(info: TelegramSlaAlert): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return false;
+
+  const e = escapeTelegramHtml;
+  const payment = info.paymentTxn
+    ? `TxnID: <code>${e(info.paymentTxn)}</code>`
+    : info.paymentLast4
+    ? `Last 4 digits: <code>${e(info.paymentLast4)}</code>`
+    : 'N/A';
+
+  const message = `<b>জরুরি মনোযোগ প্রয়োজন!</b>\n` +
+    `<b>অর্ডার নং:</b> ${e(info.orderNum)}\n` +
+    `<b>কাস্টমার:</b> ${e(info.name)} (<code>${e(info.phone)}</code>)\n` +
+    `কাস্টমার গত ${info.waitedMinutes} মিনিট ধরে পেমেন্ট ভেরিফিকেশনের জন্য অপেক্ষা করছেন!\n` +
+    `<b>প্রদত্ত তথ্য:</b> ${payment}\n` +
+    `<b>টাকার অংক:</b> ৳${Number(info.advance || 0).toLocaleString('en-US')}\n` +
+    `অনুগ্রহ করে দ্রুত অ্যাডমিন প্যানেল চেক করে অর্ডারটি কনফার্ম বা রিজেক্ট করুন।`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      logWarn('[Telegram] SLA alert failed:', res.status, '| order:', info.orderNum);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    logWarn('[Telegram] SLA alert error:', err, '| order:', info.orderNum);
+    return false;
+  }
+}

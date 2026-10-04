@@ -16,6 +16,7 @@ import { showToast } from '@/lib/toast';
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics';
 import { recordLocalOrderTimestamp } from '@/lib/productData';
 import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT } from '@/lib/uiEvents';
+import { openPendingLockModal } from '@/lib/pendingLock';
 import {
   getAppliedCoupon,
   saveAppliedCoupon,
@@ -953,7 +954,12 @@ export default function CheckoutPage() {
         setSubmitting(false);
         setConfirmAnim('idle');
         confirmLockRef.current = false;
-        
+
+        if (result.lock) {
+          openPendingLockModal(result.lock);
+          return;
+        }
+
         if (!isMod && (result.error?.includes('অপেক্ষা') || result.error?.includes('wait') || result.error?.includes('সীমা') || result.error?.includes('limit'))) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));

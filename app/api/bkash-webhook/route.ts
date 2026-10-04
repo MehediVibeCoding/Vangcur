@@ -9,7 +9,10 @@ export const dynamic = 'force-dynamic';
 
 // এর বেশি টাকার মেসেজ ব্যক্তিগত লেনদেন ধরে পুরোপুরি উপেক্ষা করা হয় (ডাটাবেজেও ঢোকে না)।
 const MAX_AMOUNT = Number(process.env.BKASH_MAX_AMOUNT) || 6000;
-const PENDING_WINDOW_MS = 4 * 60 * 60 * 1000;
+// TrxID ইউনিক (একবারই হয়) তাই বেশি সময়; শেষ ৪ ডিজিট দিয়ে ম্যাচিং-এ ভুলের ঝুঁকি বেশি তাই কম সময়।
+// (ডাটাবেজের match_bkash_payment ফাংশনের উইন্ডোর সাথে মিল রাখা হয়েছে)
+const TRXID_WINDOW_MS = 10 * 60 * 60 * 1000;
+const LAST4_WINDOW_MS = 6 * 60 * 60 * 1000;
 
 // সিক্রেট শুধু এনভায়রনমেন্ট ভেরিয়েবল থেকে — কোডে কোনো ডিফল্ট রাখা হয়নি (রিপো পাবলিক)।
 function secretOk(provided: string | null): boolean {
@@ -75,8 +78,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false }, { status: 500 });
     }
 
-    // রিভার্স ম্যাচিং: গত ৪ ঘণ্টার পেন্ডিং অর্ডার, যাদের TrxID বা শেষ ৪ ডিজিট মিলে
-    const since = new Date(Date.now() - PENDING_WINDOW_MS).toISOString();
+    // রিভার্স ম্যাচিং: TrxID মিললে গত ১০ ঘণ্টার, শেষ ৪ ডিজিট মিললে গত ৬ ঘণ্টার পেন্ডিং অর্ডার
+    const sinceTrx = new Date(Date.now() - TRXID_WINDOW_MS).toISOString();
+    const sinceLast4 = new Date(Date.now() - LAST4_WINDOW_MS).toISOString();
     const cols = 'id, order_num, customer_name, customer_phone, total, advance_paid, created_at';
     const candidates: Record<string, unknown>[] = [];
 
@@ -84,13 +88,13 @@ export async function POST(req: NextRequest) {
       const { data } = await supabase
         .from('orders').select(cols)
         .eq('status', 'pending').eq('payment_verified', false)
-        .ilike('payment_txn', trxId).gte('created_at', since);
+        .ilike('payment_txn', trxId).gte('created_at', sinceTrx);
       if (data) candidates.push(...data);
     }
     const { data: byLast4 } = await supabase
       .from('orders').select(cols)
       .eq('status', 'pending').eq('payment_verified', false)
-      .eq('payment_last4', senderLast4).gte('created_at', since);
+      .eq('payment_last4', senderLast4).gte('created_at', sinceLast4);
     if (byLast4) candidates.push(...byLast4);
 
     const seen = new Set<string>();

@@ -26,6 +26,7 @@ import {
 } from '@/lib/couponData';
 import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
 import type { Product } from '@/types';
+import { guardPendingLock } from '@/lib/pendingLock';
 
 const MAX_COUPON_LEN = 25;
 
@@ -371,7 +372,9 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => guardPendingLock(() => { void proceedCheckout(); });
+
+  const proceedCheckout = async () => {
     if (!cart.length || checkoutStatus !== 'idle') {
       if (!cart.length) showToast(t('কার্ট খালি!'));
       return;
