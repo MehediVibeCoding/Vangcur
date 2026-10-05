@@ -1,8 +1,11 @@
 // GitHub পাথ: app/reset-password/loading.tsx — নতুন ফাইল হিসেবে যোগ করবে
+import { DesktopBackdrop } from '@/app/components/ui/DesktopBackdrop';
+
 export default function ResetPasswordLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-4">
-      <div className="relative w-full max-w-[400px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-4 lg:bg-none">
+      <DesktopBackdrop />
+      <div className="relative z-10 w-full max-w-[400px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 lg:shadow-[0_0_0_6px_#fff,0_0_0_7px_rgba(68,167,252,0.16),0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_0_0_6px_rgba(255,255,255,0.07),0_0_0_7px_rgba(68,167,252,0.14),0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-0">
         {/* ================= হেডার (শিরোনাম + সাবটাইটেল) ================= */}
         <div className="relative overflow-hidden px-7 pb-5 pt-8 text-center">
           <div className="mx-auto mb-2.5 h-[21px] w-[220px] max-w-full animate-pulse rounded-lg bg-white/70" />

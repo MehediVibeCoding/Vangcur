@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { checkPasswordStrength } from '@/lib/passwordStrength';
 import PasswordStrengthMeter from '@/app/components/auth/PasswordStrengthMeter';
 import { useT } from '@/lib/i18n/useT';
+import { DesktopBackdrop } from '@/app/components/ui/DesktopBackdrop';
 
 type Status = 'checking' | 'ready' | 'invalid' | 'done';
 
@@ -160,8 +161,10 @@ export default function ResetPasswordClient() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-4">
-      <div className="relative w-full max-w-[400px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-4 lg:bg-none">
+      {/* 💻 শুধু ল্যাপটপ: ফিক্সড প্রিমিয়াম ব্যাকগ্রাউন্ড */}
+      <DesktopBackdrop />
+      <div className="relative z-10 w-full max-w-[400px] overflow-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 lg:shadow-[0_0_0_6px_#fff,0_0_0_7px_rgba(68,167,252,0.16),0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_0_0_6px_rgba(255,255,255,0.07),0_0_0_7px_rgba(68,167,252,0.14),0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-0">
         <div className={`relative overflow-hidden px-7 text-center ${status === 'done' ? 'pb-2 pt-6' : 'pb-5 pt-8'}`}>
           <HeaderDecor />
           {status !== 'done' && (

@@ -15,6 +15,7 @@ import { InvoiceCardBody, INVOICE_FIXED_WIDTH, type InvoiceContact } from '@/lib
 import { buildInvoiceViewModel } from '@/lib/invoice/invoiceViewModel';
 import { OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import type { Order } from '@/types';
+import { DesktopBackdrop } from '@/app/components/ui/DesktopBackdrop';
 
 const MAX_DOWNLOAD_LIMIT = 3;
 
@@ -258,7 +259,9 @@ export default function InvoiceClient() {
 
   return (
     <SkeletonTransition isReady skeleton={<InvoiceLoadingSkeleton />}>
-      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between">
+      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col justify-between lg:bg-none">
+        {/* 💻 শুধু ল্যাপটপ: ফিক্সড প্রিমিয়াম ব্যাকগ্রাউন্ড */}
+        <DesktopBackdrop />
         <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/95 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
           <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
             <button

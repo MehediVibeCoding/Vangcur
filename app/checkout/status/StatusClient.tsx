@@ -16,6 +16,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
+import { DesktopBackdrop } from '@/app/components/ui/DesktopBackdrop';
 
 // ⏱️ ৫ মিনিটের বেশি পেন্ডিং থাকলে আশ্বস্তকারী স্ক্রিন। সময় গোনা হয় অর্ডার সাবমিটের
 // টাইমস্ট্যাম্প (vc_pending_ts) থেকে — setTimeout একা ভরসাযোগ্য না, কারণ ব্যাকগ্রাউন্ড/মিনিমাইজ
@@ -43,25 +44,6 @@ const lineIcon = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
 };
-
-function DesktopSideDecor() {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">
-      <div className="absolute left-[8%] top-[12%] text-brand-light/[0.16] -rotate-12">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 14.5a8 8 0 0 1 16 0" /><rect x="2.7" y="14.5" width="4.3" height="7" rx="1.6" /><rect x="17" y="14.5" width="4.3" height="7" rx="1.6" /></svg>
-      </div>
-      <div className="absolute right-[8%] top-[16%] text-brand-light/[0.16] rotate-12">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="7" y="6.2" width="10" height="11.6" rx="3" /><path d="M9.2 6.2V3.6h5.6v2.6M9.2 17.8v2.6h5.6v-2.6" /></svg>
-      </div>
-      <div className="absolute left-[6%] bottom-[20%] text-brand-light/[0.16] rotate-6">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="5" y="2" width="14" height="20" rx="3.2" /><circle cx="12" cy="8.3" r="3.1" /><circle cx="12" cy="17" r="1.4" /></svg>
-      </div>
-      <div className="absolute right-[7%] bottom-[18%] text-brand-light/[0.16] -rotate-6">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9 18.2h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.45 1 1.1 1 1.85v.75h5v-.75c0-.75.4-1.4 1-1.85A6 6 0 0 0 12 3Z" /></svg>
-      </div>
-    </div>
-  );
-}
 
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
@@ -460,10 +442,11 @@ export default function StatusClient() {
 
   return (
     <>
-      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10">
-        <DesktopSideDecor />
+      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10 lg:items-stretch lg:bg-none lg:p-0">
+        {/* 💻 শুধু ল্যাপটপ: ফিক্সড প্রিমিয়াম ব্যাকগ্রাউন্ড — স্ক্রলে নড়ে না */}
+        <DesktopBackdrop />
 
-        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start">
+        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start lg:mx-auto lg:min-h-dvh lg:max-w-[480px] lg:rounded-none lg:px-9 lg:pt-14 lg:shadow-[0_0_0_6px_#fff,0_0_0_7px_rgba(68,167,252,0.16),0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_0_0_6px_rgba(255,255,255,0.07),0_0_0_7px_rgba(68,167,252,0.14),0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-0">
           <HeaderDecor />
           <GadgetDecor />
 
