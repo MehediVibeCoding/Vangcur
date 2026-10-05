@@ -5,8 +5,22 @@ import { createClient } from '@/lib/supabase/server';
 import { logWarn } from '@/lib/logger';
 import { headers } from 'next/headers';
 import { getClientIp, slidingWindowLimit, tokenBucketLimit } from '@/lib/limiter';
+import { recordLimitHit, type LimitEventType } from '@/lib/limitEvents';
 import type { CouponValidationResult } from '@/lib/couponData';
 import { MEMBERSHIP_TIERS } from '@/lib/membershipData';
+
+// কুপনের লিমিট ছোঁয়ার রেকর্ড (অর্ডার ট্রাস্ট স্কোরের জন্য)। পরিচয় হিসেবে শুধু আইপি ও লগইন-সেশনের
+// ইউজার আইডি — ফোন/ডিভাইস-আইডি ক্লায়েন্ট নিজে পাঠায়, তাই অন্যের নম্বর দিয়ে ফাঁসানো ঠেকাতে ব্যবহার হয় না।
+// কখনো throw করে না, কুপন ফ্লো আটকায় না।
+async function recordCouponLimit(type: LimitEventType, ip: string): Promise<void> {
+  try {
+    const cookieClient = await createClient();
+    const { data } = await cookieClient.auth.getUser();
+    await recordLimitHit(createServiceClient(), { type, ip, userId: data?.user?.id ?? null });
+  } catch (e) {
+    logWarn('[Vangcur] coupon limit record skipped:', e);
+  }
+}
 
 /**
  * কুপন যাচাই — service-role ক্লায়েন্ট দিয়ে সার্ভার-সাইডে চলে।
@@ -33,10 +47,12 @@ export async function validateCouponAction(
     const clientIp = getClientIp(await headers());
     const bucket = await tokenBucketLimit(`coupon:${clientIp}`, 8, 1 / 6);
     if (!bucket.allowed) {
+      await recordCouponLimit('coupon_burst', clientIp);
       return { ok: false, error: `অনেকবার চেষ্টা করা হয়েছে। ${bucket.retryAfterSec} সেকেন্ড পরে আবার চেষ্টা করুন।`, transient: true };
     }
     const failPeek = await slidingWindowLimit(`coupon-fail:${clientIp}`, 20, 3600, 0);
     if (!failPeek.allowed) {
+      await recordCouponLimit('coupon_fail_hourly', clientIp);
       return { ok: false, error: 'অনেকবার ভুল কুপন দেওয়া হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।', transient: true };
     }
 

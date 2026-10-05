@@ -16,6 +16,9 @@ import {
 } from '@/lib/security';
 import { logWarn, logError } from '@/lib/logger';
 import { staticDictionary } from '@/lib/i18n/dictionary';
+import { recordLimitHit, classifyPhoneLimit } from '@/lib/limitEvents';
+import { scoreAndSaveOrderRisk, waitForRisk } from '@/lib/riskScoring';
+import { topRiskReasons } from '@/lib/riskEngine';
 import { sendTelegramOrderNotification, sendTelegramPaymentAutoConfirm } from '@/lib/telegram';
 import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 
@@ -42,6 +45,28 @@ async function readClientIp(): Promise<string> {
     return ip.slice(0, 64);
   } catch {
     return '';
+  }
+}
+
+// ক্লায়েন্টের আইপি-লোকেশন — Vercel-এর নিজস্ব এজ-সেট হেডার (ক্লায়েন্ট বদলাতে পারে না)।
+// শুধু অর্ডার ট্রাস্ট স্কোরের জন্য; ব্যর্থ বা খালি হলে চেকআউটে কোনো প্রভাব নেই।
+async function readClientGeo(): Promise<{ city: string; country: string; region: string }> {
+  try {
+    const hdrs = await headers();
+    const dec = (v: string | null): string => {
+      try {
+        return decodeURIComponent(v || '');
+      } catch {
+        return v || '';
+      }
+    };
+    return {
+      city: dec(hdrs.get('x-vercel-ip-city')).slice(0, 80),
+      country: (hdrs.get('x-vercel-ip-country') || '').slice(0, 2),
+      region: (hdrs.get('x-vercel-ip-country-region') || '').slice(0, 16),
+    };
+  } catch {
+    return { city: '', country: '', region: '' };
   }
 }
 
@@ -141,6 +166,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   }
 
   let currentUserId: string | null = null;
+  let currentUserEmail: string | null = null;
   let isPrivilegedUser = false;
 
   try {
@@ -148,6 +174,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     const { data: userData } = await cookieClient.auth.getUser();
     if (userData?.user) {
       currentUserId = userData.user.id;
+      currentUserEmail = userData.user.email ?? null;
 
       // প্রোফাইল টেবিল থেকে অ্যাডমিন/মডারেটর রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
       // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে)
@@ -195,6 +222,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   // অর্ডার কনফার্ম/রিজেক্ট/ক্যানসেল হলেই status বদলায়, ফলে লক সাথে সাথে খুলে যায়।
   // এটা নিরাপত্তা-সীমা নয় (সেগুলো নিচের রেট-লিমিট), তাই RPC ব্যর্থ হলে ফেইল-ওপেন।
   const clientIp = await readClientIp();
+  const clientGeo = await readClientGeo();
   if (!isPrivilegedUser) {
     try {
       const { data: lockRows, error: lockErr } = await service.rpc('get_pending_order_lock', {
@@ -206,6 +234,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         logWarn('[checkout] pending lock RPC error (continuing; rate limits still apply):', lockErr.message);
       } else if (Array.isArray(lockRows) && lockRows.length > 0) {
         const lockRow = lockRows[0] as { order_num?: string; age_seconds?: number };
+        await recordLimitHit(service, {
+          type: 'pending_lock',
+          phone,
+          fingerprintId,
+          userId: currentUserId,
+          ip: clientIp,
+        });
         return {
           ok: false,
           error: lang === 'en'
@@ -270,6 +305,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         return fail(GENERIC_RETRY_MSG);
       }
       if (phoneOk === false) {
+        await recordLimitHit(service, {
+          type: await classifyPhoneLimit(service, phone),
+          phone,
+          fingerprintId,
+          userId: currentUserId,
+          ip: clientIp,
+        });
         await revertLegendaryVoucherIfNeeded();
         return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
       }
@@ -282,6 +324,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
           return fail(GENERIC_RETRY_MSG);
         }
         if (fpOk === false) {
+          await recordLimitHit(service, {
+            type: 'fingerprint_daily',
+            phone,
+            fingerprintId,
+            userId: currentUserId,
+            ip: clientIp,
+          });
           await revertLegendaryVoucherIfNeeded();
           return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
@@ -313,6 +362,13 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
           return fail(GENERIC_RETRY_MSG);
         }
         if (ipOk === false) {
+          await recordLimitHit(service, {
+            type: 'ip_daily',
+            phone,
+            fingerprintId,
+            userId: currentUserId,
+            ip: clientIp,
+          });
           await revertLegendaryVoucherIfNeeded();
           return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
         }
@@ -636,8 +692,29 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     }
   }
 
+  // 🛡️ ট্রাস্ট স্কোর (শুধু অ্যাডমিনের নীরব মার্কিং) — ব্যাকগ্রাউন্ডে, কাস্টমারের রেসপন্স আটকায় না;
+  // ব্যর্থ হলেও অর্ডারে কোনো প্রভাব নেই (scoreAndSaveOrderRisk কখনো throw করে না)।
+  // স্কোরিং এখানে একবারই শুরু হয়; সেভ শেষ হওয়ার গ্যারান্টি নিচের after() দেয়, আর Telegram মেসেজ
+  // ফলাফলের জন্য সর্বোচ্চ ২.৫ সেকেন্ড অপেক্ষা করে (না এলে ট্রাস্ট লাইন ছাড়াই আগের মতো যায়)।
+  const riskPromise = scoreAndSaveOrderRisk(service, {
+    orderId: String(insResult.data.id),
+    phone,
+    email,
+    district: dist,
+    address: addr,
+    total: vTotal,
+    items: cleanItems,
+    userId: currentUserId,
+    loginEmail: currentUserEmail,
+    fingerprintId,
+    ip: clientIp,
+    geo: clientGeo,
+  });
+  after(() => riskPromise);
+
   after(async () => {
     try {
+      const risk = await waitForRisk(riskPromise, 2500);
       await sendTelegramOrderNotification({
         orderNum,
         name,
@@ -651,6 +728,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
         shippingCost: sc,
         paymentTxn: safeTxn || undefined,
         paymentLast4: last4 || undefined,
+        risk: risk ? { level: risk.level, score: risk.score, reasons: topRiskReasons(risk) } : null,
       });
       if (autoConfirm) {
         await sendTelegramPaymentAutoConfirm({

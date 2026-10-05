@@ -201,6 +201,42 @@ Vangcur প্ল্যাটফর্মের ডাটাবেজ মডে�
 
 ---
 
+### ৮. `order_risk` (অর্ডার ট্রাস্ট স্কোর — শুধু অ্যাডমিনের জন্য)
+
+> 🔒 RLS চালু, **কোনো policy নেই**, `anon`/`authenticated`-এর সব গ্রান্ট বাতিল — শুধু service-role পড়ে/লেখে। কাস্টমার কখনো নিজের স্কোর দেখতে পায় না। (এ কারণেই স্কোর `orders`-এ কলাম হিসেবে নেই: `authenticated`-এর `orders`-এ টেবিল-লেভেল SELECT আছে, নতুন কলামও নিজের অর্ডারে পড়া যেত।)
+
+| কলাম | টাইপ | বিবরণ |
+| :--- | :--- | :--- |
+| `order_id` | `UUID PRIMARY KEY REFERENCES orders(id) ON DELETE CASCADE` | কোন অর্ডারের স্কোর। |
+| `score` | `INTEGER NOT NULL CHECK (0..100)` | ১০০ নম্বরের ট্রাস্ট স্কোর। |
+| `level` | `TEXT NOT NULL CHECK IN ('green','yellow','red')` | ≥৭৫ green (High), ৪৫–৭৪ yellow (Medium), <৪৫ বা হার্ড লিমিট red (Low)। |
+| `hard_limit` | `BOOLEAN DEFAULT false` | হার্ড লিমিট ছোঁয়ার কারণে সরাসরি লাল কিনা। |
+| `reasons` | `JSONB` | যে ফ্যাক্টরে পূর্ণ নম্বর মেলেনি, তার বাংলা কারণ। |
+| `breakdown` | `JSONB` | প্রতিটা ফ্যাক্টরের `{key,label,points,max,tone,note}`। |
+| `ip_city`, `ip_region`, `ip_country` | `TEXT` | অর্ডারের সময়ের Vercel আইপি-লোকেশন হেডার। |
+| `engine_version` | `INTEGER DEFAULT 1` | ভবিষ্যতে ফর্মুলা বদলালে রি-স্কোর চিনতে। |
+| `scored_at` | `TIMESTAMPTZ DEFAULT NOW()` | স্কোর হিসাবের সময়। |
+
+লেখে: `lib/riskScoring.ts` (`after()`-এর ভেতর, `checkout.ts` থেকে)। ফর্মুলা: `lib/riskEngine.ts`।
+
+---
+
+### ৯. `limit_events` (কে কোন লিমিট ছুঁয়েছে — অ্যাডমিন-অনলি)
+
+> 🔒 `order_risk`-এর মতোই লকড (RLS চালু, policy নেই, শুধু service-role)।
+
+| কলাম | টাইপ | বিবরণ |
+| :--- | :--- | :--- |
+| `id` | `BIGINT IDENTITY PRIMARY KEY` | রেকর্ড আইডি। |
+| `limit_type` | `TEXT NOT NULL` | `phone_daily`, `fingerprint_daily`, `coupon_fail_hourly` (হার্ড) · `phone_cooldown`, `ip_daily`, `pending_lock`, `coupon_burst` (সফট)। |
+| `severity` | `TEXT NOT NULL CHECK IN ('hard','soft')` | `lib/limitEvents.ts`-এর `LIMIT_SEVERITY` থেকে ধরন অনুযায়ী নির্ধারিত — কলার ঠিক করে না। |
+| `phone`, `fingerprint_id`, `user_id`, `ip` | `TEXT`/`UUID` | কে ছুঁয়েছে। কুপন-ঘটনায় শুধু `ip` ও `user_id` (সেশন থেকে) — ফোন/ডিভাইস ক্লায়েন্ট পাঠায়, তাই ফাঁসানো ঠেকাতে নয়। |
+| `created_at` | `TIMESTAMPTZ DEFAULT NOW()` | ঘটনার সময়। স্কোরিং গত ৩০ দিন দেখে। |
+
+নতুন কোনো লিমিট যোগ করলে ওই জায়গায় `recordLimitHit(service, { type, phone?, fingerprintId?, userId?, ip? })` কল করুন (এবং `LimitEventType`/`LIMIT_SEVERITY`-এ ধরনটা যোগ করুন) — স্কোরিং কোডে হাত দিতে হবে না। কোনো ধরন হার্ড হলে সেটা ফোন/ডিভাইস/লগইনের সাথে মিললে অর্ডার সরাসরি লাল হয়; শুধু আইপি মিললে কেবল পয়েন্ট কাটে (শেয়ার্ড মোবাইল-নেটওয়ার্ক আইপির কারণে সৎ কাস্টমারকে লাল না করার জন্য)।
+
+---
+
 ## ⚙️ ৩. সংরক্ষিত ডাটাবেজ ফাংশন ও RPCসমূহ (Stored Procedures)
 
 ### ১. `decrement_product_stock(p_items JSONB)`

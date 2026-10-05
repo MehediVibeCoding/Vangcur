@@ -15,6 +15,8 @@ interface TelegramOrderNotification {
   shippingCost: number;
   paymentTxn?: string;
   paymentLast4?: string;
+  // অর্ডার ট্রাস্ট স্কোর (lib/riskEngine.ts) — হিসাব না পেলে বা সময়মতো না এলে undefined, তখন মেসেজে এই লাইন থাকে না
+  risk?: { level: 'green' | 'yellow' | 'red'; score: number; reasons: string[] } | null;
 }
 
 // 🛡️ ফিক্স (audit P1-12): parse_mode 'HTML'-এ পাঠানোর আগে সব ডাইনামিক
@@ -56,9 +58,17 @@ export async function sendTelegramOrderNotification(order: TelegramOrderNotifica
   // ও প্রফেশনাল দেখায়।
   const DIVIDER = '─────────────────────';
 
+  // ট্রাস্ট: High (সবুজ) / Medium (হলুদ) / Low (লাল) — Medium/Low হলে সবচেয়ে বড় কারণ ১–২টা
+  const RISK_LABEL = { green: 'High', yellow: 'Medium', red: 'Low' } as const;
+  const riskText = order.risk
+    ? `<b>ট্রাস্ট:</b> ${RISK_LABEL[order.risk.level]} (${order.risk.score}/100)\n` +
+      (order.risk.level !== 'green' ? order.risk.reasons.map((r) => `• ${e(r)}\n`).join('') : '')
+    : '';
+
   const message = `<b>নতুন অর্ডার এসেছে</b>\n` +
     `${DIVIDER}\n` +
     `<b>অর্ডার নং:</b> ${e(order.orderNum)}\n` +
+    `${riskText}` +
     `<b>কাস্টমার:</b> ${e(order.name)}\n` +
     `<b>ফোন:</b> <code>${e(order.phone)}</code>\n` +
     `<b>ঠিকানা:</b> ${order.district ? `${e(order.district)}, ` : ''}${e(order.address)}\n` +
