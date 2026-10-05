@@ -18,6 +18,7 @@ import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { WISHLIST_NAV_HIT_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
+import { RippleLayer, rippleThen } from '@/lib/ripple';
 import type { Product, Category, CurrentUser } from '@/types';
 
 const MAX_SEARCH_LEN = 60;
@@ -754,13 +755,15 @@ export default function Navbar({
     }
   };
 
-  const handleBackToHome = (e: React.MouseEvent) => {
+  const handleBackToHome = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.replace('/');
-    }
+    rippleThen(e, () => {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+      } else {
+        router.replace('/');
+      }
+    });
   };
 
   useEffect(() => {
@@ -804,8 +807,9 @@ export default function Navbar({
                 onClick={handleBackToHome}
                 aria-label={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
                 title={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
-                className="group flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-brand-bg/40 active:scale-95 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
+                className="vc-press group relative before:absolute before:content-[''] before:-inset-y-[10px] before:-left-3 before:-right-1 md:before:hidden flex shrink-0 items-center gap-1.5 min-[420px]:gap-2 rounded-full border border-border-base/70 bg-white/80 py-1.5 pl-2 pr-3 min-[420px]:pr-3.5 shadow-xs backdrop-blur-md hover:border-brand-light hover:bg-brand-bg/40 no-underline max-[400px]:pr-2 max-[400px]:pl-1.5"
               >
+                <RippleLayer />
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-light text-white shadow-xs transition-transform duration-brand group-hover:scale-105">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M12 19l-7-7 7-7" />

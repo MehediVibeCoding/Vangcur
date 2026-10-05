@@ -908,3 +908,37 @@ body,
 /* প্রোডাক্ট পেজ: লাইট মোডে হালকা স্কাই ব্লু হোভার/হেডার — ডার্ক মোড আগের মতোই */
 .dark .hover\:bg-brand-bg\/60:hover { background-color: #182339; }
 .dark .bg-brand-bg\/50 { background-color: rgba(24, 35, 57, 0.60); }
+
+/* ── ব্যাক বাটনের ঢেউ (ripple) + স্প্রিং প্রেস ─────────────────────────── */
+.vc-ripple-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.vc-ripple {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.42) 0%, rgba(14, 165, 233, 0.26) 55%, rgba(14, 165, 233, 0) 72%);
+  transform: scale(0);
+  opacity: 1;
+  animation: vcRipple 620ms cubic-bezier(0.22, 0.8, 0.3, 1) forwards;
+}
+@keyframes vcRipple {
+  to { transform: scale(1); opacity: 0; }
+}
+/* চাপলে ছোট হয়, ছাড়লে একটু উপচে (overshoot) ফিরে আসে — স্প্রিংয়ের মতো */
+.vc-press {
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), border-color 200ms ease, background-color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.vc-press:active:not(:disabled) {
+  transform: scale(0.93);
+  transition-duration: 90ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vc-ripple { animation: none; opacity: 0; }
+  .vc-press, .vc-press:active:not(:disabled) { transition: none; transform: none; }
+}

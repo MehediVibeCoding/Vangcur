@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useT } from '@/lib/i18n/useT';
+import { RippleLayer, rippleThen } from '@/lib/ripple';
 
 export const policyPClass = 'mb-3 font-body text-[13.5px] sm:text-[14px] leading-[1.85] text-ink/85';
 export const policyUlClass = 'mb-3 list-none space-y-2.5 pl-0.5';
@@ -99,12 +100,14 @@ export function PolicyHeader({
   const router = useRouter();
   const { t, lang } = useT();
 
-  const handleBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/');
-    }
+  const handleBack = (e: React.MouseEvent<HTMLElement>) => {
+    rippleThen(e, () => {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+      } else {
+        router.push('/');
+      }
+    });
   };
 
   return (
@@ -116,8 +119,9 @@ export function PolicyHeader({
           type="button"
           onClick={handleBack}
           aria-label={lang === 'en' ? 'Back' : 'ফিরে যান'}
-          className="group inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/85 py-1.5 pl-2.5 pr-4 font-body text-xs font-bold text-ink shadow-xs backdrop-blur-md transition-all duration-brand hover:border-brand-light hover:bg-white hover:text-brand-light active:scale-95 cursor-pointer"
+          className="vc-press group relative before:absolute before:content-[''] before:-inset-y-[10px] before:-left-3 before:-right-1 md:before:hidden inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/85 py-1.5 pl-2.5 pr-4 font-body text-xs font-bold text-ink shadow-xs backdrop-blur-md hover:border-brand-light hover:bg-white hover:text-brand-light cursor-pointer"
         >
+          <RippleLayer />
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-light text-white shadow-2xs transition-transform duration-brand group-hover:scale-105">
             <ArrowLeftIcon />
           </div>

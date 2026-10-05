@@ -8,6 +8,7 @@ import { mapSupabaseOrderRow } from '@/lib/orderMapping';
 import { showToast } from '@/lib/toast';
 import { DEFAULT_FOOTER } from '@/lib/footerData';
 import { useT } from '@/lib/i18n/useT';
+import { RippleLayer, rippleThen } from '@/lib/ripple';
 import SkeletonTransition from '@/app/components/ui/SkeletonTransition';
 import { InvoiceLoadingSkeleton } from '@/app/components/ui/Skeletons';
 import { InvoiceCardBody, INVOICE_FIXED_WIDTH, type InvoiceContact } from '@/lib/invoice/InvoiceCardBody';
@@ -261,11 +262,12 @@ export default function InvoiceClient() {
         <div className="sticky top-0 z-20 w-full border-b border-ink/10 bg-white/95 px-4 py-2.5 sm:py-3 shadow-xs backdrop-blur-md">
           <div className="mx-auto flex max-w-[520px] items-center justify-between gap-3">
             <button
-              onClick={handleGoBack}
+              onClick={(e) => rippleThen(e, handleGoBack)}
               disabled={!canClose}
               title={canClose ? undefined : (lang === 'en' ? 'Downloading your invoice first…' : 'আগে ইনভয়েসটি ডাউনলোড হচ্ছে…')}
-              className="flex items-center gap-1.5 rounded-full border border-border-base bg-white px-4 py-2 font-body text-[13px] font-bold text-ink transition-all duration-brand disabled:cursor-default disabled:opacity-40 enabled:hover:bg-surface-muted enabled:active:scale-95 cursor-pointer"
+              className="vc-press relative flex items-center gap-1.5 rounded-full border border-border-base bg-white px-4 py-2 font-body text-[13px] font-bold text-ink disabled:cursor-default disabled:opacity-40 enabled:hover:bg-surface-muted cursor-pointer"
             >
+              <RippleLayer />
               <IconChevronLeft />
               <span>{t('ফিরে যান')}</span>
             </button>
