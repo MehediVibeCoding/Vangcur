@@ -331,14 +331,27 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   let authoritativeProds: { id: string | number; name: string; price: number; stock: number; cat: string; imgs: string[] }[] = [];
   let shipCfg = DEFAULT_SHIP_CFG;
 
+  // 🛡️ অডিট ফিক্স — প্রফিট স্ন্যাপশট: order.items (কাস্টমার নিজের account/orders
+  // পেজে দেখতে পায়) এর বাইরে, আলাদা admin-only কলামে এই মুহূর্তের unit_profit
+  // সংরক্ষণ করা হচ্ছে, যাতে ভবিষ্যতে প্রোডাক্ট রিনেম/ডিলিট হলেও পুরনো অর্ডারের
+  // প্রফিট হিসাব এক পয়সাও না বদলায় (lib/profit.ts-এ আগে নাম মিলিয়ে হিসাব হতো)।
+  let profitByProductId = new Map<string, number>();
+
   try {
-    const [productsResult, fetchedShipCfg] = await Promise.all([
+    const [productsResult, costsResult, fetchedShipCfg] = await Promise.all([
       service
         .from('custom_products')
         .select('id, cat, name, price, stock, imgs')
         .in('id', targetProductIds),
+      service.from('product_costs').select('product_id, unit_profit').in('product_id', targetProductIds),
       fetchShipConfig(service),
     ]);
+
+    if (costsResult.data) {
+      profitByProductId = new Map(
+        costsResult.data.map((c) => [String(c.product_id), Number(c.unit_profit) || 0])
+      );
+    }
 
     if (productsResult.data && productsResult.data.length > 0) {
       authoritativeProds = productsResult.data.map((p) => {
@@ -368,12 +381,17 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   }
 
   const verifiedItems: { id: string | number; name: string; emoji: string; price: number; qty: number; cat: string }[] = [];
+  const itemProfitSnapshot: { id: string | number; unit_profit: number }[] = [];
   for (const item of cleanItems) {
     const prod = authoritativeProds.find((p) => String(p.id) === item.id);
     if (!prod) {
       await revertLegendaryVoucherIfNeeded();
       return fail(t('একটি পণ্য আর পাওয়া যাচ্ছে না, পেজ রিফ্রেশ করে আবার চেষ্টা করুন'));
     }
+    itemProfitSnapshot.push({
+      id: prod.id,
+      unit_profit: profitByProductId.get(String(prod.id)) ?? 200,
+    });
     verifiedItems.push({
       id: prod.id,
       name: prod.name,
@@ -532,6 +550,7 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     customer_address: addr,
     customer_email: email,
     items: verifiedItems,
+    item_profit_snapshot: itemProfitSnapshot,
     shipping,
     shipping_cost: sc,
     subtotal: vSub,
