@@ -103,6 +103,12 @@ export function readLatestGuestOrder(): { id: string; orderNum: string; phone: s
   }
 }
 
+// কাস্টমারকে দেখানো নিরাপদ অর্ডার কলাম (DB-র get_guest_order() ফাংশনের রিটার্ন তালিকার সাথে মেলানো)
+const ORDER_PUBLIC_COLUMNS =
+  'id, order_num, date, customer_name, customer_phone, customer_district, customer_address, customer_email, ' +
+  'items, shipping, shipping_cost, subtotal, total, payment_txn, payment_last4, status, user_id, ' +
+  'created_at, coupon_code, discount_amount, advance_paid';
+
 export async function fetchFullOrder(
   supabase: SupabaseClient,
   orderId: string,
@@ -123,11 +129,14 @@ export async function fetchFullOrder(
       try {
         const { data, error } = await supabase
           .from('orders')
-          .select('*')
+          // 🔒 select('*') নয়: orders-এ অ্যাডমিন-অভ্যন্তরীণ কলাম আছে (যেমন item_profit_snapshot — প্রতি ইউনিট
+          // লাভ) যা কাস্টমারের ব্রাউজারে যাওয়া চলবে না। তালিকাটা get_guest_order RPC-র রিটার্ন কলামের হুবহু
+          // একই — তাই লগইন করা ও গেস্ট দুই পথে একই শেপ আসে।
+          .select(ORDER_PUBLIC_COLUMNS)
           .eq('id', orderId)
           .abortSignal(signal as any)
           .single();
-        if (!error && data) return data as Record<string, unknown>;
+        if (!error && data) return data as unknown as Record<string, unknown>;
       } catch {
         // fall through to phone fallback
       }

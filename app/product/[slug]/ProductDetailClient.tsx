@@ -13,7 +13,6 @@ import {
 } from '@/lib/productData';
 import { useWishlistStore } from '@/lib/store/wishlistStore';
 import { fetchProductDetail } from '@/lib/productDetailData';
-import { trackProductView } from '@/lib/visitorTracking';
 import { trackViewItem, trackAddToCart } from '@/lib/analytics';
 import { renderLinkedText } from '@/lib/linkedText';
 import {
@@ -507,11 +506,6 @@ export default function ProductDetailClient({
     () => findProdBySlug(prods, slug) || (initialId ? prods.find((x) => String(x.id) === String(initialId)) : null),
     [prods, slug, initialId],
   );
-
-  useEffect(() => {
-    if (!baseProd) return;
-    trackProductView(supabase, baseProd.id);
-  }, [baseProd?.id, supabase]);
 
   const [detail, setDetail] = useState<Partial<Product> | null>(null);
   useEffect(() => {

@@ -606,7 +606,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     customer_address: addr,
     customer_email: email,
     items: verifiedItems,
-    item_profit_snapshot: itemProfitSnapshot,
     shipping,
     shipping_cost: sc,
     subtotal: vSub,
@@ -653,6 +652,18 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       return fail(t('এই ট্রানজেকশন আইডি দিয়ে ইতিমধ্যে একটি অর্ডার হয়েছে'));
     }
     return fail(t('দুঃখিত, অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।'));
+  }
+
+  // 🔒 প্রতি ইউনিট প্রফিটের স্ন্যাপশট `orders`-এ নয় — গোপন `order_private` টেবিলে (ব্রাউজারের কোনো
+  // অনুমতি নেই, শুধু service_role)। তাই কাস্টমার API বা রিয়েলটাইমে কখনো দেখতে পায় না।
+  // ব্যর্থ হলে অর্ডার আটকায় না: অ্যাডমিন প্যানেল তখন প্রোডাক্টের বর্তমান প্রফিট দিয়ে হিসাব করে।
+  try {
+    const { error: privErr } = await service
+      .from('order_private')
+      .upsert({ order_id: insResult.data.id, item_profit_snapshot: itemProfitSnapshot }, { onConflict: 'order_id' });
+    if (privErr) logWarn('[checkout] order_private snapshot save failed:', privErr.message);
+  } catch (e) {
+    logWarn('[checkout] order_private snapshot save threw:', e);
   }
 
   // 🎖️ ভাউচার স্থায়ীভাবে ব্যবহৃত হিসেবে মার্ক (is_available ইতিমধ্যে reserve
