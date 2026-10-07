@@ -234,7 +234,7 @@ export default function WaitingGame({ variant, active }: Props) {
 
           {phase === 'playing' && game && (
             <div
-              className="fixed inset-0 z-[1310] flex items-center justify-center bg-ink/70 backdrop-blur-[3px] animate-soft-fade-in"
+              className="fixed inset-0 z-[1310] flex items-center justify-center bg-[#0B1B33]/90 animate-soft-fade-in"
               style={{ paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             >
               <div className="relative h-full w-full overflow-hidden bg-[#C3DEFC] sm:h-[min(92vh,640px)] sm:max-w-[420px] sm:rounded-[24px] sm:shadow-sh3">
@@ -242,7 +242,7 @@ export default function WaitingGame({ variant, active }: Props) {
                   ref={iframeRef}
                   src={gameUrl(game, lang)}
                   title={en ? game.titleEn : game.titleBn}
-                  allow="fullscreen"
+                  allow="fullscreen; autoplay"
                   className="h-full w-full border-0"
                   onLoad={() => iframeRef.current?.focus()}
                 />
