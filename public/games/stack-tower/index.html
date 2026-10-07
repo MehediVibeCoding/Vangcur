@@ -4,77 +4,121 @@
 <title>Vangcur Stack Tower</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700;800&family=Hind+Siliguri:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#EAF3FE;--muted:#6B7280;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#EAF3FE;--muted:#6B7280;--bs:42px;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1220;--muted:#9CA3AF}}
 :root[data-theme="dark"]{--bg:#0B1220;--muted:#9CA3AF}
 html,body{height:100%;margin:0}
 body{background:var(--bg);font-family:'DM Sans','Hind Siliguri',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 #app{position:relative;width:min(380px,calc(100% - 16px));height:clamp(480px,calc(100svh - 90px),520px);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#C3DEFC 0%,#DCEBFD 55%,#fff 100%);box-shadow:0 8px 36px rgba(0,0,0,.13);touch-action:none;cursor:pointer}
 canvas{position:absolute;inset:0;width:100%;height:100%}
-.pill{position:absolute;top:12px;border-radius:999px;background:rgba(255,255,255,.88);border:1px solid #fff;box-shadow:0 4px 18px rgba(0,0,0,.10);font-weight:800;color:#1A1A1A}
-#score{left:50%;transform:translateX(-50%);font-size:22px;min-width:64px;text-align:center;padding:4px 20px}
-#mute{left:12px;width:36px;height:34px;cursor:pointer;font-size:15px;padding:0;line-height:1}
-#gl,#fx{pointer-events:none}#gl{position:absolute;inset:0}
-#fog{position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(180deg,rgba(223,236,253,0),rgba(223,236,253,.92));pointer-events:none}
-#best{right:12px;font-size:12px;color:#0058C7;padding:6px 11px}
+#gl,#fx,#cf{pointer-events:none}#gl{position:absolute;inset:0}
+#cf{z-index:9}
+/* ── HUD: [fullscreen][sound] ·· [score | best] ·· [close] — এক সারিতে, মাঝের প্যাড সবসময় ঠিক মাঝখানে ── */
+#hud{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;z-index:7;pointer-events:none}
+#hud>*{pointer-events:auto}
+.hg{display:flex;gap:8px;align-items:center}.hg.r{justify-content:flex-end}
+.hb,#scorePill{box-sizing:border-box;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(234,243,254,.9));border:1px solid #fff;box-shadow:0 6px 18px rgba(0,88,199,.16),0 1px 0 #fff inset;color:#1A1A1A}
+.hb{width:var(--bs);height:var(--bs);border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#44A7FC;transition:transform .15s,box-shadow .2s}
+.hb svg{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hb:hover{box-shadow:0 8px 22px rgba(68,167,252,.38),0 1px 0 #fff inset}
+.hb:active{transform:scale(.92)}
+.hb:focus-visible{outline:2px solid #44A7FC;outline-offset:2px}
+#cl{color:#475569}
+#scorePill{height:var(--bs);border-radius:999px;display:flex;align-items:center;gap:9px;padding:0 5px 0 16px}
+#score{font-weight:800;font-size:22px;min-width:20px;text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+.dv{width:1px;height:18px;background:rgba(68,167,252,.45)}
+#best{display:flex;align-items:center;gap:5px;height:calc(var(--bs) - 10px);padding:0 11px 0 8px;border-radius:999px;background:linear-gradient(135deg,#FFF3C4,#FFD968);color:#7A4B00;font-weight:800;font-size:13px;box-shadow:0 1px 0 rgba(255,255,255,.75) inset,0 2px 6px rgba(214,150,0,.28)}
+.tr{width:15px;height:15px;fill:rgba(255,255,255,.55);stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#hint{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);padding:7px 15px;border-radius:999px;background:rgba(15,40,80,.55);color:#fff;font-weight:700;font-size:12.5px;white-space:nowrap;pointer-events:none;transition:opacity .4s;z-index:4}
+#hint.off{opacity:0}
 #pop{position:absolute;left:50%;top:20%;font-weight:800;font-size:24px;color:#fff;text-shadow:0 2px 12px rgba(0,88,199,.7);white-space:nowrap;pointer-events:none;opacity:0;transform:translateX(-50%)}
 #pop.go{animation:pop .9s ease-out}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-36px) scale(1)}}
 #glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(68,167,252,0) 55%,rgba(68,167,252,.45) 100%);opacity:0;transition:opacity .5s}
 #glow.on{opacity:1;transition:none}
-.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(195,222,252,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+/* গেম-ওভার ওভারলে: ইচ্ছে করেই backdrop-filter (ব্লার) নেই — চলমান ক্যানভাসের ওপর ব্লার ল্যাপটপে ল্যাগের বড় কারণ */
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at 50% 45%,rgba(195,222,252,.30),rgba(11,30,60,.42));z-index:6;animation:ovIn .35s ease-out}
 .ov.hide{display:none}
-.card{width:100%;text-align:center;padding:26px 20px;border-radius:22px;background:rgba(255,255,255,.62);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.9);box-shadow:0 8px 36px rgba(0,0,0,.13);color:#1A1A1A}
-.card h1{margin:0 0 8px;font-size:26px;font-weight:800}
-.card p{margin:0 0 16px;font-size:14px;color:#4B5563;line-height:1.55}
-.big{font-size:52px;font-weight:800;color:#0058C7;line-height:1;margin:4px 0 6px}
-.rec{color:#10B981;font-weight:800;font-size:14px;margin-bottom:12px}
-.btn{background:#44A7FC;color:#fff;border:0;border-radius:14px;padding:13px 28px;font:800 16px 'DM Sans','Hind Siliguri',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(68,167,252,.5);transition:all .25s cubic-bezier(.4,.0,.2,1)}
-.btn:hover{background:#3C93DE}
+@keyframes ovIn{from{opacity:0}to{opacity:1}}
+.card{position:relative;overflow:hidden;width:100%;max-width:340px;text-align:center;padding:24px 20px 14px;border-radius:26px;background:linear-gradient(180deg,#F1F7FF 0%,#DCEBFD 48%,#fff 100%);border:1px solid #fff;box-shadow:0 18px 50px rgba(0,40,100,.30),0 1px 0 #fff inset;color:#1A1A1A;animation:cardIn .5s cubic-bezier(.2,1.2,.3,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(.92)}to{opacity:1;transform:none}}
+.ttl{margin:0 0 6px;font-size:24px;font-weight:800}
+.lbl{font-size:13px;font-weight:700;color:#64748B}
+.big{font-size:68px;font-weight:800;color:#0058C7;line-height:1.05;margin:2px 0 12px;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;background:#fff;border:1px solid rgba(68,167,252,.38);font-weight:800;font-size:13px;color:#334155;box-shadow:0 2px 8px rgba(0,88,199,.08)}
+.chip .tr{width:16px;height:16px;color:#D69A00;fill:rgba(255,200,61,.55)}
+.btn{position:relative;overflow:hidden;display:block;width:100%;margin-top:16px;background:linear-gradient(90deg,#3B82F6,#44A7FC);color:#fff;border:0;border-radius:999px;padding:13.5px 24px;font:800 15px 'DM Sans','Hind Siliguri',sans-serif;cursor:pointer;box-shadow:0 8px 20px rgba(68,167,252,.45);transition:filter .2s,transform .15s}
+.btn::after{content:'';position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-160%) skewX(-18deg);animation:sweep 3.4s ease-in-out 1s infinite;pointer-events:none}
+.btn:hover{filter:brightness(1.04)}
 .btn:active{transform:scale(.97)}
-small{display:block;margin-top:12px;color:#6B7280;font-size:12px}
-#fs{left:12px;top:54px;width:36px;height:34px;cursor:pointer;font-size:16px;padding:0;line-height:1}
-#cl{right:12px;top:54px;width:36px;height:34px;cursor:pointer;font-size:15px;padding:0;line-height:1}
+.lnk{display:inline-block;margin-top:8px;padding:8px 12px;background:none;border:0;font:700 12.5px 'DM Sans','Hind Siliguri',sans-serif;color:#44A7FC;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.lnk:hover{color:#3C93DE}
+@keyframes sweep{0%{transform:translateX(-160%) skewX(-18deg)}55%,100%{transform:translateX(330%) skewX(-18deg)}}
+/* ── নতুন রেকর্ড: সোনালি সেলিব্রেশন ── */
+.rbadge,.rtxt{display:none}
+.card.rec{background:linear-gradient(180deg,#FFFBEA 0%,#FFF0B8 42%,#fff 100%);box-shadow:0 0 0 2px rgba(255,200,61,.95),0 0 0 7px rgba(255,200,61,.22),0 22px 60px rgba(214,150,0,.40),0 1px 0 #fff inset}
+.card.rec::after{content:'';position:absolute;top:0;bottom:0;left:0;width:55%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:translateX(-160%) skewX(-18deg);animation:sweep 3.2s ease-in-out .7s infinite;pointer-events:none}
+.card.rec .rbadge{display:block;position:relative;width:92px;height:92px;margin:0 auto 4px;animation:badgeIn .7s cubic-bezier(.2,1.4,.3,1) .1s both}
+@keyframes badgeIn{from{opacity:0;transform:scale(.3) rotate(-25deg)}to{opacity:1;transform:none}}
+.rays{position:absolute;inset:-70px;border-radius:50%;background:repeating-conic-gradient(rgba(255,206,80,.6) 0 9deg,rgba(255,206,80,0) 9deg 18deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 60%);mask:radial-gradient(circle,#000 14%,transparent 60%);animation:spin 16s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.disc{position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#FFF6BE,#FFC83D 55%,#E59A00);box-shadow:0 8px 24px rgba(229,154,0,.55),0 2px 0 rgba(255,255,255,.75) inset;display:flex;align-items:center;justify-content:center;animation:float 2.6s ease-in-out infinite}
+.disc svg{width:40px;height:40px;fill:rgba(255,255,255,.55);stroke:#8A5A00;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@keyframes float{50%{transform:translateY(-4px)}}
+.sp{position:absolute;width:14px;height:14px;background:#FFC83D;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:tw 1.6s ease-in-out infinite}
+.sp:nth-of-type(1){left:-6px;top:10px}.sp:nth-of-type(2){right:-10px;top:2px;animation-delay:.5s;width:18px;height:18px}.sp:nth-of-type(3){right:-2px;bottom:6px;animation-delay:1s}.sp:nth-of-type(4){left:-14px;bottom:0;animation-delay:.3s;width:10px;height:10px}
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.4)}50%{opacity:1;transform:scale(1.15)}}
+.card.rec .ttl{font-size:26px;background:linear-gradient(90deg,#B7791F,#F5B301 35%,#FFE27A 50%,#F5B301 65%,#B7791F);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:gshine 2.4s linear infinite}
+@keyframes gshine{to{background-position:-200% 0}}
+.card.rec .big{background:linear-gradient(180deg,#F8BE1A 10%,#B7791F 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.card.rec .rtxt{display:block;margin:-4px 0 12px;font-size:13px;font-weight:700;color:#7A4B00}
+.card.rec .chip{border-color:rgba(214,154,0,.45)}
+@media (prefers-reduced-motion:reduce){.card,.card *,.btn::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 @media (max-width:700px),(pointer:coarse){html,body{overflow:hidden}body{display:block}
 #app{position:fixed;inset:0;width:auto;height:auto;border-radius:0;box-shadow:none}
-.pill{top:calc(12px + env(safe-area-inset-top,0px))}#fs,#cl{top:calc(54px + env(safe-area-inset-top,0px))}
 }
+@media (max-width:360px){:root{--bs:38px}#hud{left:10px;right:10px;gap:6px}.hg{gap:6px}}
 </style></head>
 <body>
 <div id="app">
   <canvas id="cv"></canvas><div id="gl"></div><canvas id="fx"></canvas>
   <div id="glow"></div>
-  <button class="pill" id="mute" aria-label="sound">🔊</button>
-  <button class="pill" id="fs" aria-label="fullscreen">⛶</button>
-  <button class="pill" id="cl" aria-label="close">✕</button>
-  <div class="pill" id="score">0</div>
-  <div class="pill" id="best">🏆 0</div>
+  <div id="hud">
+    <div class="hg"><button class="hb" id="fs" aria-label="ফুল স্ক্রিন"></button><button class="hb" id="mute" aria-label="সাউন্ড"></button></div>
+    <div id="scorePill"><span id="score">0</span><i class="dv"></i><span id="best"><svg class="tr" viewBox="0 0 24 24"><use href="#i-trophy"/></svg><b id="bestN">0</b></span></div>
+    <div class="hg r"><button class="hb" id="cl" aria-label="বন্ধ করুন"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  </div>
+  <div id="hint">ব্লক ফেলতে স্ক্রিনে ট্যাপ করুন</div>
   <div id="pop"></div>
-  <div class="ov" id="ovStart"><div class="card">
-    <h1>স্ট্যাক টাওয়ার</h1>
-    <p>আপনার অর্ডার প্রসেস হচ্ছে — অপেক্ষার সময়টা মজায় কাটান! ব্লক ফেলতে স্ক্রিনে ট্যাপ করুন।</p>
-    <button class="btn" id="bStart">খেলা শুরু করুন</button>
-    <small>ডেস্কটপে Space বা ক্লিক</small></div></div>
-  <div class="ov hide" id="ovOver"><div class="card">
-    <h1>খেলা শেষ</h1><div class="big" id="fScore">0</div>
-    <p id="fBest"></p><div class="rec" id="fRec"></div>
-    <button class="btn" id="bAgain">আবার খেলুন</button></div></div>
+  <div class="ov hide" id="ovOver"><div class="card" id="card">
+    <div class="rbadge"><div class="rays"></div><div class="disc"><svg viewBox="0 0 24 24"><use href="#i-trophy"/></svg></div><i class="sp"></i><i class="sp"></i><i class="sp"></i><i class="sp"></i></div>
+    <h1 class="ttl" id="oTitle">খেলা শেষ</h1>
+    <div class="rtxt" id="fRec"></div>
+    <div class="lbl" id="oLbl">আপনার স্কোর</div>
+    <div class="big" id="fScore">0</div>
+    <div class="chip"><svg class="tr" viewBox="0 0 24 24"><use href="#i-trophy"/></svg><span id="fBest"></span></div>
+    <button class="btn" id="bAgain">আবার খেলুন</button>
+    <button class="lnk" id="bBack">ওয়েটিং পেজে ফিরে যান</button>
+  </div></div>
+  <canvas id="cf"></canvas>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol></svg>
 </div>
 <script src="../vendor/three.r128.min.js"></script>
 <script>
 (()=>{
 const $=i=>document.getElementById(i);
-const app=$('app'),cv=$('cv'),ctx=cv.getContext('2d'),fx=$('fx'),fctx=fx.getContext('2d'),gl=$('gl');
+const app=$('app'),cv=$('cv'),ctx=cv.getContext('2d'),fx=$('fx'),fctx=fx.getContext('2d'),gl=$('gl'),cf=$('cf'),cctx=cf.getContext('2d');
 const KEY='vc_stack_hs',BASE=3,BH=1.5,PH=.45,RANGE=3,TOL=.08,S=1;
 let best=0;try{best=+localStorage.getItem(KEY)||0}catch(e){}
 let W=0,HT=0,T=0,cam=0,camY=1.9,camT=1.9,AC,MG,PY=30,GO=59,muted=false,renderer;
-try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true})}catch(e){app.insertAdjacentHTML('beforeend','<div class="ov"><div class="card"><p>এই ডিভাইসে WebGL সাপোর্ট করছে না।</p></div></div>');return}
+try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true})}catch(e){app.insertAdjacentHTML('beforeend','<div class="ov"><div class="card"><p style="margin:0 0 4px;font-weight:700">এই ডিভাইসে WebGL সাপোর্ট করছে না।</p><button class="btn" onclick="try{parent.postMessage({type:\'vc-game-close\'},location.origin)}catch(e){}">ওয়েটিং পেজে ফিরে যান</button></div></div>');return}
 renderer.setClearColor(0,0);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 gl.appendChild(renderer.domElement);
 const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-4.75,4.75,5,-5,.1,200);
-function resize(){const r=app.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,1.75);W=r.width;HT=r.height;
-  for(const c of [cv,fx]){c.width=W*d;c.height=HT*d}ctx.setTransform(d,0,0,d,0,0);fctx.setTransform(d,0,0,d,0,0);
+let DPRCAP=1.75; // কোয়ালিটি গভর্নর ধীর ডিভাইসে এটা কমিয়ে দেয়
+function resize(){const r=app.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,DPRCAP);W=r.width;HT=r.height;
+  for(const c of [cv,fx,cf]){c.width=W*d;c.height=HT*d}ctx.setTransform(d,0,0,d,0,0);fctx.setTransform(d,0,0,d,0,0);cctx.setTransform(d,0,0,d,0,0);
   renderer.setPixelRatio(d);renderer.setSize(W,HT);const a=W/HT,hh=Math.max(4.75/a,6.5);camera.top=hh;camera.bottom=-hh;camera.left=-hh*a;camera.right=hh*a;camera.updateProjectionMatrix();PY=HT/(2*hh)*.8165}
 new ResizeObserver(resize).observe(app);resize();
 // lighting: key sun (casts shadows) + sky/ground bounce + cool fill on the +z face
@@ -164,7 +208,7 @@ function mkTG(){const d=1.5,h=230,c=document.createElement('canvas');c.width=W*d
     for(let i=0;i<n;i++){const x=rnd()*(W+30)-15,hh=hmin+rnd()*(hmax-hmin),lean=(rnd()-.5)*50,w=wid*(.7+rnd()*.6),gr=g.createLinearGradient(0,h,0,h-hh);gr.addColorStop(0,cols[0]);gr.addColorStop(1,cols[1]);g.fillStyle=gr;
       g.beginPath();g.moveTo(x-w,h+2);g.quadraticCurveTo(x-w*.4+lean*.2,h-hh*.55,x+lean,h-hh);g.quadraticCurveTo(x+w*.4+lean*.2,h-hh*.55,x+w,h+2);g.closePath();g.fill()}g.restore()};
   pass(Math.round(W/9),90,170,3.2,['#2c6b2e','#8cc863'],3.5,.75);pass(Math.round(W/12),70,215,4.5,['#1f5a27','#6fb04f'],1.6,.95);TG=c;TGW=W}
-function tallGrass(gy0){if(!TG||TGW!==W)mkTG();const yb=gy0+310;if(yb-230>HT)return;fctx.save();fctx.translate(0,yb);fctx.transform(1,0,Math.sin(T*.9)*.012,1,0,0);fctx.drawImage(TG,0,-230,W,230);fctx.restore()}
+function tallGrass(gy0){if(!TG||TGW!==W)mkTG();const yb=Math.max(gy0+310,HT+2);if(yb-230>HT)return;/* নিচের কিনারা সবসময় স্ক্রিনের তলা পর্যন্ত — মাঝখানে ফাঁকা সমতল জমি থাকে না */fctx.save();fctx.translate(0,yb);fctx.transform(1,0,Math.sin(T*.9)*.012,1,0,0);fctx.drawImage(TG,0,-230,W,230);fctx.restore()}
 function front(){ // foreground nature drawn OVER the 3D scene (grass overlaps the pallet = depth)
   fctx.globalAlpha=Math.max(0,1-camY/60);
   for(const l of leaves){fctx.save();fctx.translate(l.x,l.y+(camY-l.c0)*PY);fctx.rotate(l.r);fctx.fillStyle=l.col;fctx.beginPath();fctx.ellipse(0,0,7*l.s,3.2*l.s,0,0,7);fctx.fill();fctx.strokeStyle='rgba(0,60,0,.35)';fctx.lineWidth=.8;fctx.beginPath();fctx.moveTo(-7*l.s,0);fctx.lineTo(7*l.s,0);fctx.stroke();fctx.restore()}
@@ -242,15 +286,33 @@ function thud(){snd(120,.2,'sine',.22);snd(70,.25,'sine',.14);noise(.1,.05)}
 function noise(d=.12,v=.035){if(muted)return;try{AC=AC||new(window.AudioContext||webkitAudioContext)();const n=AC.createBufferSource(),b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(Math.random()*2-1)*(1-i/a.length);const g=AC.createGain(),f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=1800;g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);n.buffer=b;n.connect(f);f.connect(g);g.connect(out());n.start();n.stop(AC.currentTime+d)}catch(e){}}
 function snd(f,d,type,v){if(muted)return;try{AC=AC||new(window.AudioContext||webkitAudioContext)();if(AC.state==='suspended')AC.resume();
   const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type=type||'triangle';o.frequency.value=f;g.gain.setValueAtTime(v||.1,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(out());o.start();o.stop(t+d)}catch(e){}}
-function hud(){const e=$('score');e.textContent=score;$('best').textContent='🏆 '+best;e.animate&&e.animate([{transform:'translateX(-50%) scale(1.25)'},{transform:'translateX(-50%) scale(1)'}],{duration:200})}
-function start(){ambient();reset();st='playing';overShown=false;['ovStart','ovOver'].forEach(i=>$(i).classList.add('hide'))}
+function hud(){const e=$('score');e.textContent=score;$('bestN').textContent=best;e.animate&&e.animate([{transform:'scale(1.25)'},{transform:'scale(1)'}],{duration:200})}
+function start(){if(!muted)ambient();stopConf();reset();st='playing';overShown=false;$('ovOver').classList.add('hide');showHint()}
+let hintOn=false;
+function showHint(){const h=$('hint');if(!h)return;h.classList.remove('off');hintOn=true}
+function hideHint(){if(!hintOn)return;hintOn=false;$('hint').classList.add('off')}
+// 🎊 কনফেটি — আলাদা ক্যানভাসে (কার্ডের ওপরে), শুধু সেলিব্রেশনের সময় চলে, শেষ হলেই বন্ধ
+let conf=[],confT=0,confOn=false;const CCOL=['#FFC83D','#F5B301','#44A7FC','#FF8FB1','#B28DFF','#6BBE4E','#ffffff','#FF8A5B'];
+function celebrate(){conf=[];confT=0;confOn=true;const n=W<500?110:150;
+  for(let i=0;i<n;i++){const burst=i<n*.45,a=-Math.PI/2+(Math.random()-.5)*1.6,sp=380+Math.random()*420;
+    conf.push(burst?{x:W/2,y:HT*.55,vx:Math.cos(a)*sp*.7,vy:Math.sin(a)*sp,g:620,r:Math.random()*6,vr:(Math.random()-.5)*14,w:6+Math.random()*6,h:3+Math.random()*4,c:CCOL[i%8],ph:Math.random()*6}
+      :{x:Math.random()*W,y:-20-Math.random()*HT*.5,vx:(Math.random()-.5)*90,vy:40+Math.random()*120,g:90,r:Math.random()*6,vr:(Math.random()-.5)*9,w:6+Math.random()*6,h:3+Math.random()*4,c:CCOL[i%8],ph:Math.random()*6})}}
+function confStep(dt){if(!confOn)return;confT+=dt;cctx.clearRect(0,0,W,HT);let alive=0;
+  for(const p of conf){p.vy+=p.g*dt;p.vx*=1-1.2*dt;if(p.vy>170)p.vy=170+(p.vy-170)*.9;p.x+=(p.vx+Math.sin(confT*3+p.ph)*28)*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;if(p.y>HT+20)continue;alive++;
+    cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.r);cctx.scale(1,Math.cos(confT*7+p.ph));cctx.fillStyle=p.c;cctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cctx.restore()}
+  if(!alive||confT>8)stopConf()}
+function stopConf(){if(!confOn&&!conf.length)return;confOn=false;conf=[];cctx.clearRect(0,0,W,HT)}
+function fanfare(){if(muted)return;[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>{snd(f,.4,'triangle',.12);snd(f*2,.25,'sine',.04)},i*110))}
+function countUp(el,to,ms){if(to<3){el.textContent=to;return}const t0=performance.now();(function s(n){const k=Math.min(1,(n-t0)/ms);el.textContent=Math.round(to*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(s)})(t0)}
 function pop(t){const p=$('pop');p.textContent=t;p.className='';void p.offsetWidth;p.className='go'}
 
 const EN=new URLSearchParams(location.search).get('lang')==='en';
 const MS=EN?{10:'Earbud level 🎧',25:'Smartwatch level ⌚',50:'Drone level 🚁'}:{10:'ইয়ারবাড লেভেল 🎧',25:'স্মার্টওয়াচ লেভেল ⌚',50:'ড্রোন লেভেল 🚁'};
-if(EN){document.documentElement.lang='en';document.title='Vangcur Stack Tower';const q=(s,t)=>{const e=document.querySelector(s);if(e)e.innerHTML=t};
-  q('#ovStart h1','Stack Tower');q('#ovStart p','Your order is being processed — enjoy the wait! Tap the screen to drop each block.');q('#bStart','Start playing');q('#ovStart small','Space or click on desktop');
-  q('#ovOver h1','Game over');q('#bAgain','Play again')}
+const TX=EN?{hint:'Tap the screen to drop the block',over:'Game over',rec:'New record!',yours:'Your score',best:'Best score: ',again:'Play again',back:'Back to waiting page',first:'Your first record!',beat:'You beat your previous best of ',fs:'Fullscreen',snd:'Sound',cls:'Close'}
+  :{hint:'ব্লক ফেলতে স্ক্রিনে ট্যাপ করুন',over:'খেলা শেষ',rec:'নতুন রেকর্ড!',yours:'আপনার স্কোর',best:'সেরা স্কোর: ',again:'আবার খেলুন',back:'ওয়েটিং পেজে ফিরে যান',first:'এটাই আপনার প্রথম রেকর্ড!',beat:'আপনি আগের সেরা স্কোর ছাড়িয়ে গেছেন: ',fs:'ফুল স্ক্রিন',snd:'সাউন্ড',cls:'বন্ধ করুন'};
+if(EN){document.documentElement.lang='en';document.title='Vangcur Stack Tower'}
+$('hint').textContent=TX.hint;$('oLbl').textContent=TX.yours;$('bAgain').textContent=TX.again;$('bBack').textContent=TX.back;
+$('fs').setAttribute('aria-label',TX.fs);$('mute').setAttribute('aria-label',TX.snd);$('cl').setAttribute('aria-label',TX.cls);
 const pr=(x,y,z)=>{const v=new THREE.Vector3(x,y,z).project(camera);return[(v.x+1)/2*W,(1-v.y)/2*HT]};
 function spark(x,y,z,n,col,k){const q=pr(x,y,z);for(let i=0;i<n;i++)parts.push({x:q[0],y:q[1],vx:(Math.random()-.5)*260,vy:-Math.random()*220-40,r:0,vr:0,c:col,t:0,s:2+Math.random()*3,k,L:.55+Math.random()*.35})}
 let pendingOver=false,colEnd=1,colT=99,colDur=1,colC=1.9,st='ready',blocks=[],cur=null,debris=[],ring=null,parts=[],landings=[],score=0,combo=0,speed=3.4,shake=0,overAt=0,overShown=false,prevBest=0;
@@ -267,6 +329,7 @@ function collapse(g,a,out,w,d){ // whole tower comes down, top first
 function toDeb(g,a,out){return{g,a,out,t:0,vy:.7,s:out*(1.1+Math.random()*.8),wz:out*(2.5+Math.random()*2.5),wo:(Math.random()-.5)*3}}
 function slice(l,r,out){const a=cur.a,g=mk(a==='x'?r-l:cur.w,a==='z'?r-l:cur.d,cur.i,0);g.position.set(a==='x'?(l+r)/2:cur.x,cur.y,a==='z'?(l+r)/2:cur.z);return toDeb(g,a,out)}
 function place(){
+  hideHint();
   const t=blocks[blocks.length-1],a=cur.a,s=t[a==='x'?'w':'d'],dl=cur[a]-t[a],ad=Math.abs(dl),out=dl>=0?1:-1,i=cur.i;
   if(ad>=s){collapse(cur.g,a,out,cur.w,cur.d);cur=null;noise(.5,.08);gameOver();return}
   let nw=cur.w,nd=cur.d,nc=cur[a];const perf=ad<=TOL;
@@ -283,8 +346,15 @@ function place(){
   else{const p=debris[debris.length-1].g.position;spark(p.x,p.y+BH/2,p.z,10,'#8fb3e0',2);thud();noise(.18,.03)}
   if(MS[score])setTimeout(()=>{pop(MS[score]);snd(1175,.3,'sine',.1);noise(.18,.022)},450);
   spawn();hud()}
-function showOver(){if(st!=='over'||overShown)return;$('fScore').textContent=score;$('fBest').textContent=(EN?'Best score: ':'সেরা স্কোর: ')+best;
-  $('fRec').textContent=score>prevBest&&score>0?(EN?'🎉 New record!':'🎉 নতুন রেকর্ড!'):'';$('ovOver').classList.remove('hide');overShown=true;overAt=performance.now()}
+function showOver(){if(st!=='over'||overShown)return;
+  const rec=score>prevBest&&score>0,card=$('card');
+  card.classList.remove('rec');void card.offsetWidth; // অ্যানিমেশন প্রতিবার নতুন করে চালু
+  card.classList.toggle('rec',rec);
+  $('oTitle').textContent=rec?TX.rec:TX.over;
+  $('fBest').textContent=TX.best+best;
+  $('fRec').textContent=rec?(prevBest>0?TX.beat+prevBest:TX.first):'';
+  $('ovOver').classList.remove('hide');overShown=true;overAt=performance.now();
+  if(rec){countUp($('fScore'),score,900);celebrate();fanfare()}else $('fScore').textContent=score}
 function gameOver(){
   st='over';shake=.3;prevBest=best;
   if(score>best){best=score;try{localStorage.setItem(KEY,best)}catch(e){}}
@@ -293,7 +363,7 @@ function gameOver(){
 }
 function act(){
   if(st==='playing')place();else if(st==='ready')start();
-  else if(st==='over'&&overShown&&performance.now()-overAt>500)start();
+  else if(st==='over'&&overShown&&performance.now()-overAt>700)start();
 }
 
 function update(dt){
@@ -331,20 +401,51 @@ function render(){
     if(p.k){if(p.k===1){fctx.globalAlpha*=.3;fctx.beginPath();fctx.arc(0,0,p.s*1.3,0,7);fctx.fill();fctx.globalAlpha/=.3}fctx.beginPath();fctx.arc(0,0,p.s*.55,0,7);fctx.fill()}
     else{fctx.rotate(p.r);fctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2)}fctx.restore()}
 }
+// ⚙️ কোয়ালিটি গভর্নর: ফ্রেম টাইম লম্বা হলে (ল্যাপটপ/ধীর GPU) নিজে থেকে ধাপে ধাপে রেজোলিউশন ও শ্যাডো কমায়।
+// ফোন/শক্তিশালী ডিভাইসে এটা কিছুই বদলায় না। ধাপ: ১) রেজোলিউশন ≤১.২৫ + শ্যাডো ১০২৪  ২) রেজোলিউশন ১ + শ্যাডো ৫১২  ৩) শ্যাডো বন্ধ
+let qLvl=0,qAcc=0,qN=0,qCool=90,lastRaw=0;
+function setQuality(l){qLvl=l;
+  if(l>=1)DPRCAP=l>=2?1:1.25;
+  if(l===1){sun.shadow.mapSize.set(1024,1024)}
+  if(l===2){sun.shadow.mapSize.set(512,512);renderer.shadowMap.type=THREE.BasicShadowMap}
+  if(l>=3)renderer.shadowMap.enabled=false;
+  if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}
+  scene.traverse(o=>{if(o.material)o.material.needsUpdate=true});
+  resize()}
+function governor(raw){ // raw = আসল ফ্রেম-ব্যবধান (সেকেন্ড)
+  if(qLvl>=3||document.hidden)return;if(raw>.25){qAcc=0;qN=0;return} // ট্যাব-সুইচ/পজ বাদ
+  if(qCool>0){qCool--;return}
+  qAcc+=raw;qN++;
+  if(qN>=45){const avg=qAcc/qN;qAcc=0;qN=0;if(avg>.026){setQuality(qLvl+1);qCool=60}}}
 let last=0;
-function frame(t){T=t/1000;const dt=Math.min((t-last)/1000||0,1/30);last=t;update(dt);render();requestAnimationFrame(frame)}
+function frame(t){T=t/1000;const raw=(t-lastRaw)/1000||0;lastRaw=t;governor(raw);const dt=Math.min((t-last)/1000||0,1/30);last=t;update(dt);render();confStep(dt);requestAnimationFrame(frame)}
 
-app.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;if(e.pointerType==='touch')e.preventDefault();act()},{passive:false});
-for(const i of ['bStart','bAgain'])$(i).addEventListener('click',start);
+// ── বাটনের আইকন (SVG) ──
+const SV=p=>'<svg viewBox="0 0 24 24">'+p+'</svg>';
+const IC={
+  max:SV('<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>'),
+  min:SV('<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>'),
+  on:SV('<path d="M11 4.7 6.5 9H3v6h3.5L11 19.3z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+  off:SV('<path d="M11 4.7 6.5 9H3v6h3.5L11 19.3z"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/>')};
+const syncMute=()=>{$('mute').innerHTML=muted?IC.off:IC.on};
+const syncFs=()=>{$('fs').innerHTML=(document.fullscreenElement||document.webkitFullscreenElement)?IC.min:IC.max};
+
+app.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;if(e.pointerType==='touch')e.preventDefault();unlockAudio();act()},{passive:false});
+$('bAgain').addEventListener('click',start);
 const closeGame=()=>{try{parent.postMessage({type:'vc-game-close'},location.origin)}catch(e){}};
 $('cl').addEventListener('click',closeGame);
-if(parent===window)$('cl').style.display='none';
-addEventListener('keydown',e=>{if(e.code==='Escape'){closeGame();return}if(e.code==='Space'){e.preventDefault();if(!e.repeat)act()}});
-try{muted=localStorage.getItem('vc_stack_mute')!=='0'}catch(e){muted=true}
-$('mute').textContent=muted?'🔇':'🔊';
-$('mute').addEventListener('click',()=>{muted=!muted;if(MG)MG.gain.value=muted?0:VOL;ambient();try{localStorage.setItem('vc_stack_mute',muted?'1':'0')}catch(e){}$('mute').textContent=muted?'🔇':'🔊'});
-$('fs').addEventListener('click',()=>{const e=document.documentElement;try{document.fullscreenElement?document.exitFullscreen():(e.requestFullscreen||e.webkitRequestFullscreen).call(e)}catch(x){}});
+$('bBack').addEventListener('click',closeGame);
+if(parent===window){$('cl').style.display='none';$('bBack').style.display='none'}
+addEventListener('keydown',e=>{unlockAudio();if(e.code==='Escape'){closeGame();return}if(e.code==='Space'){e.preventDefault();if(!e.repeat)act()}});
+// 🔊 সাউন্ড ডিফল্ট চালু — শুধু ব্যবহারকারী নিজে বন্ধ করলে ('1') বন্ধ থাকে
+try{muted=localStorage.getItem('vc_stack_mute')==='1'}catch(e){muted=false}
+function unlockAudio(){if(muted)return;if(!amb)ambient();else if(AC&&AC.state==='suspended')AC.resume()} // ব্রাউজার প্রথম স্পর্শ/কী-তে অডিও চালু করতে দেয়
+syncMute();
+$('mute').addEventListener('click',()=>{muted=!muted;if(MG)MG.gain.value=muted?0:VOL;if(!muted)unlockAudio();try{localStorage.setItem('vc_stack_mute',muted?'1':'0')}catch(e){}syncMute()});
+$('fs').addEventListener('click',()=>{const e=document.documentElement;try{(document.fullscreenElement||document.webkitFullscreenElement)?(document.exitFullscreen||document.webkitExitFullscreen).call(document):(e.requestFullscreen||e.webkitRequestFullscreen).call(e)}catch(x){}});
+document.addEventListener('fullscreenchange',syncFs);document.addEventListener('webkitfullscreenchange',syncFs);
 if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))$('fs').style.display='none';
-reset();requestAnimationFrame(frame);
+syncFs();
+start();requestAnimationFrame(frame); // সরাসরি খেলা শুরু — কোনো "খেলা শুরু করুন" স্ক্রিন নেই
 })();
 </script></body></html>
