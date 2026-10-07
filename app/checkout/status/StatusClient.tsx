@@ -488,7 +488,7 @@ export default function StatusClient() {
                     {lang === 'en' ? (
                       <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
                     ) : (
-                      <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
+                      <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন। ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
                     )}
                   </div>
                 </div>
@@ -526,12 +526,12 @@ export default function StatusClient() {
                 </div>
               </div>
 
-              <div className="relative z-10 mb-4 rounded-[16px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
-                <div className="flex items-center justify-center gap-1.5">
-                  <IconBulb />
-                  <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।')}</span>
+              <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[16px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-left font-body text-[12px] leading-[1.75] text-ink/85">
+                <IconBulb />
+                <div>
+                  <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন অথবা গেম খেলতে পারেন।')}</span>
+                  <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
                 </div>
-                <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
 
               {/* 🎮 মিনি গেম — ছোট বাটন + ৪০ সেকেন্ড পর পপআপ; ৫ মিনিট পূর্ণ হলে (timedOut) এই ব্লকের সাথেই বিদায় */}

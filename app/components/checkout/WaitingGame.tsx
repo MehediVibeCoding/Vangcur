@@ -168,7 +168,7 @@ export default function WaitingGame({ variant, active }: Props) {
       <button
         type="button"
         onClick={openInvite}
-        className="relative z-10 mb-4 flex w-full items-center justify-center gap-2 rounded-[12px] border border-brand-light/40 bg-white/85 px-3.5 py-2.5 font-body text-[12.5px] font-bold text-brand-light shadow-xs backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light active:scale-[0.98]"
+        className="relative z-10 mb-4 flex w-full items-center justify-center gap-1.5 font-body text-[12.5px] font-bold text-brand-light transition-opacity duration-brand hover:opacity-80 active:scale-[0.98]"
       >
         <IconGamepad />
         <span>{en ? 'Bored? Play a quick game' : 'বিরক্ত লাগছে? একটু গেম খেলুন'}</span>

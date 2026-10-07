@@ -382,17 +382,14 @@ export default function WaitingOverlay() {
     setTimeout(() => setCopyLabel(lang === 'en' ? 'Copy' : 'কপি'), 2000);
   };
 
-  // 🌟 মিনিমাইজড অবস্থায় স্প্রিং বাবল বাটন
-  // ডান-নিচের কোণে কার্ট/যোগাযোগ/ব্যাক-টু-টপ বাটন ও পণ্য পেজের স্টিকি বার আছে — নিচে রাখলে ওগুলোর ওপর চেপে বসত।
-  // তাই নেভবারের ঠিক নিচে মাঝখানে স্থির রাখা হলো; কোনো ডিভাইসে কোনো বাটনের সাথে মেলে না।
+  // 🌟 মিনিমাইজড অবস্থায় স্প্রিং বাবল বাটন — মূল পজিশন: ডান-নিচের কোণে
   if (minimized) {
     return (
-      <div className="pointer-events-none fixed inset-x-0 top-[84px] z-[65] flex justify-center px-3">
       <motion.button
         whileTap={{ scale: 0.94 }}
         transition={{ type: 'spring', stiffness: 500, damping: 25 }}
         onClick={() => setMinimized(false)}
-        className="pointer-events-auto flex max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
+        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
       >
         <span className="relative flex h-2.5 w-2.5 items-center justify-center">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
@@ -400,7 +397,6 @@ export default function WaitingOverlay() {
         </span>
         <span>{lang === 'en' ? `${order.orderNum} processing...` : `${order.orderNum} প্রসেস হচ্ছে...`}</span>
       </motion.button>
-      </div>
     );
   }
 
@@ -462,7 +458,7 @@ export default function WaitingOverlay() {
                     {lang === 'en' ? (
                       <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
                     ) : (
-                      <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন।<br />ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
+                      <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন। ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
                     )}
                   </div>
                 </div>
@@ -505,12 +501,12 @@ export default function WaitingOverlay() {
               </div>
 
               {/* ফ্রেশ স্কাই-ব্লু টিপ বক্স — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[10px]) */}
-              <div className="relative z-10 mb-4 rounded-[10px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
-                <div className="flex items-center justify-center gap-1.5">
-                  <IconBulb />
-                  <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন।')}</span>
+              <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[10px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-left font-body text-[12px] leading-[1.75] text-ink/85">
+                <IconBulb />
+                <div>
+                  <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন অথবা গেম খেলতে পারেন।')}</span>
+                  <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
                 </div>
-                <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
 
               {/* 🎮 মিনি গেম — শুধু "গেম খেলুন" বাটন; সাবমিটের ৫ মিনিট পর আর দেখায় না */}

@@ -1127,7 +1127,7 @@ export default function ProductDetailClient({
                   className={`flex h-9 w-9 items-center justify-center rounded-[10px] border transition-brand duration-brand active:scale-90 ${
                     wished
                       ? 'border-[#FF5A6E]/40 bg-[#FF5A6E]/10 text-[#FF5A6E]'
-                      : 'border-ink/30 bg-ink/5 text-ink hover:bg-ink/10 hover:border-ink/60'
+                      : 'border-brand-light/30 bg-brand-bg/35 text-ink hover:bg-brand-bg/55 hover:border-brand-light/60'
                   }`}
                 >
                   <motion.span
@@ -1156,7 +1156,7 @@ export default function ProductDetailClient({
                 onClick={shareProduct}
                 title={t('শেয়ার করুন')}
                 aria-label={t('শেয়ার করুন')}
-                className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-ink/30 bg-ink/5 text-ink transition-brand duration-brand hover:border-ink/60 hover:bg-ink/10 active:scale-90"
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-brand-light/30 bg-brand-bg/35 text-ink transition-brand duration-brand hover:border-brand-light/60 hover:bg-brand-bg/55 active:scale-90"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="18" cy="5" r="2.6" />

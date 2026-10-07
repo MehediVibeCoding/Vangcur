@@ -91,6 +91,92 @@ const fieldInputClass = (hasError?: boolean) =>
   }`;
 const fieldIconClass = 'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-light';
 const fieldErrClass = 'mt-1.5 flex items-center gap-1 font-body text-[11.5px] font-semibold text-red-600';
+
+// 🗺️ কাস্টম জেলা ড্রপডাউন — নেটিভ <select>-এ Android/Chrome এ প্রথমবার ওপেন করলে
+// রেডিও-বাবলগুলো বাম পাশে ভুল জায়গায় ফ্ল্যাশ করে দেখানোর ব্রাউজার-নেটিভ বাগ এড়াতে
+// পুরোপুরি কাস্টম লিস্টবক্স ব্যবহার করা হচ্ছে, যাতে রেন্ডারিং সবসময় আমাদের কন্ট্রোলে থাকে।
+function DistrictSelect({
+  value,
+  onChange,
+  options,
+  getLabel,
+  placeholder,
+  hasError,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: readonly string[];
+  getLabel: (d: string) => string;
+  placeholder: string;
+  hasError?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDocDown = (e: MouseEvent | TouchEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDocDown);
+    document.addEventListener('touchstart', onDocDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocDown);
+      document.removeEventListener('touchstart', onDocDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`${fieldInputClass(hasError)} flex items-center justify-between pr-9 text-left`}
+      >
+        <span className={value ? '' : 'text-muted'}>{value ? getLabel(value) : placeholder}</span>
+      </button>
+      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">
+        <IconChevronDown open={open} />
+      </span>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.16 }}
+            role="listbox"
+            className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-[260px] overflow-y-auto rounded-[14px] border-[1.5px] border-border-base bg-white p-1.5 shadow-sh2"
+          >
+            {options.map((d) => (
+              <button
+                key={d}
+                type="button"
+                role="option"
+                aria-selected={value === d}
+                onClick={() => { onChange(d); setOpen(false); }}
+                className={`flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left font-body text-[13.5px] transition-colors ${
+                  value === d ? 'bg-brand-bg/50 font-bold text-brand-light' : 'text-ink hover:bg-brand-bg/25'
+                }`}
+              >
+                <span>{getLabel(d)}</span>
+                {value === d && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 const btnNextClass =
   'shimmer-sheen w-full rounded-full bg-gradient-to-r from-info to-brand-light py-[13.5px] font-body text-[15px] font-bold text-white shadow-sh2 transition-[filter] duration-brand hover:brightness-[1.03] disabled:opacity-60';
 
@@ -1311,21 +1397,14 @@ export default function CheckoutPage() {
                 <label className={fieldLabelClass}>{t('জেলা')}</label>
                 <div className="relative">
                   <span className={fieldIconClass}><IconPin /></span>
-                  <select
-                    className={`${fieldInputClass(!!errors.eD)} appearance-none pr-9`}
+                  <DistrictSelect
                     value={dist}
-                    onChange={(e) => setDist(e.target.value)}
-                  >
-                    <option value="">{lang === 'en' ? 'Select District' : 'জেলা সিলেক্ট করুন'}</option>
-                    {DISTRICTS.map((d) => (
-                      <option key={d} value={d}>{getDistrictLabel(d, lang)}</option>
-                    ))}
-                  </select>
-                  <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </span>
+                    onChange={setDist}
+                    options={DISTRICTS}
+                    getLabel={(d) => getDistrictLabel(d, lang)}
+                    placeholder={lang === 'en' ? 'Select District' : 'জেলা সিলেক্ট করুন'}
+                    hasError={!!errors.eD}
+                  />
                 </div>
                 {errors.eD && <div className={fieldErrClass}><IconWarning />{errors.eD}</div>}
               </div>
@@ -1608,11 +1687,10 @@ export default function CheckoutPage() {
                   <span className="mt-0.5 text-brand-light"><IconInfo /></span>
                   <span>{t('ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।')}</span>
                 </div>
-              </div>
 
-              <div className="mb-3 text-center font-body text-[12.5px] font-bold text-ink">
-                {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
-              </div>
+                <div className="my-4 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">
+                  {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
+                </div>
 
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>(10 ক্যারেক্টার, যেমন: 8N5O2A3BDE)</span></label>
@@ -1639,6 +1717,8 @@ export default function CheckoutPage() {
                     className={fieldInputClass(!!errors.eL4)}
                     value={last4}
                     maxLength={4}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     onChange={(e) => { setLast4(e.target.value.replace(/\D/g, '')); if (errors.eL4) setErrors((err) => ({ ...err, eL4: undefined })); }}
                     placeholder={t('যেমন: 5504')}
                   />
@@ -1656,6 +1736,7 @@ export default function CheckoutPage() {
                   <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
                   <IconArrowRight />
                 </motion.button>
+              </div>
               </div>
                 </>
               )}
