@@ -114,6 +114,89 @@ function IconMailCheck() {
   );
 }
 
+function IconGmail() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path fill="#fff" d="M2 6.5A2.5 2.5 0 0 1 4.5 4h15A2.5 2.5 0 0 1 22 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 17.5z" />
+      <path fill="none" stroke="#EA4335" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M3.5 6.5L12 13l8.5-6.5" />
+      <path fill="#4285F4" d="M2 8.2l2.2 1.7V20H4.5A2.5 2.5 0 0 1 2 17.5z" />
+      <path fill="#34A853" d="M22 8.2l-2.2 1.7V20h-.3a2.5 2.5 0 0 0 2.5-2.5z" />
+    </svg>
+  );
+}
+function IconArrowLeft() {
+  return (
+    <svg {...lineIcon} width="12" height="12" strokeWidth={2.4}>
+      <path d="M19 12H5M11 6l-6 6 6 6" />
+    </svg>
+  );
+}
+function IconSpinner() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" className="animate-spin" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeOpacity="0.3" strokeWidth="3" />
+      <path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ইমেইল ঠিকানা দেখে ইনবক্সের সরাসরি লিংক — Gmail হলে সেই অ্যাকাউন্টের ইনবক্সই খোলে
+function getInboxTarget(email: string): { href: string; isGmail: boolean } {
+  const em = email.trim().toLowerCase();
+  const domain = em.split('@')[1] || '';
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    return { href: `https://mail.google.com/mail/u/?authuser=${encodeURIComponent(em)}`, isGmail: true };
+  }
+  if (['outlook.com', 'hotmail.com', 'live.com', 'msn.com'].includes(domain)) {
+    return { href: 'https://outlook.live.com/mail/', isGmail: false };
+  }
+  if (domain === 'yahoo.com' || domain === 'ymail.com') {
+    return { href: 'https://mail.yahoo.com/', isGmail: false };
+  }
+  return { href: 'mailto:', isGmail: false };
+}
+
+interface CheckInboxScreenProps {
+  email: string;
+  message: React.ReactNode;
+  openLabel: string;
+  openOtherLabel: string;
+  spamHint: string;
+  backLabel?: string;
+  onBack?: () => void;
+}
+
+function CheckInboxScreen({ email, message, openLabel, openOtherLabel, spamHint, backLabel, onBack }: CheckInboxScreenProps) {
+  const target = getInboxTarget(email);
+  return (
+    <div className="pt-1 pb-3 text-center">
+      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-light/10 text-brand-light">
+        <IconMailCheck />
+      </div>
+      <p className="font-body text-[14px] leading-relaxed text-ink">{message}</p>
+      <a
+        href={target.href}
+        target={target.href.startsWith('http') ? '_blank' : undefined}
+        rel="noopener noreferrer"
+        className={`${primaryBtnClass} mt-5 flex items-center justify-center gap-2`}
+      >
+        {target.isGmail && <IconGmail />}
+        {target.isGmail ? openLabel : openOtherLabel}
+      </a>
+      <p className="mt-3 font-body text-[12px] leading-snug text-muted">{spamHint}</p>
+      {onBack && backLabel && (
+        <button
+          onClick={onBack}
+          className="mx-auto mt-3 flex items-center gap-1 bg-transparent p-0 font-body text-[12px] font-semibold text-brand-light transition-brand duration-brand hover:opacity-75"
+        >
+          <IconArrowLeft />
+          {backLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function HeaderDecor() {
   const deco = { ...lineIcon, strokeWidth: 1.4 };
   return (
@@ -210,6 +293,10 @@ export default function LoginModal({
   const [forgotEmailErr, setForgotEmailErr] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerSent, setRegisterSent] = useState(false);
+  const [registerSentEmail, setRegisterSentEmail] = useState('');
 
   useEffect(() => {
     if (isOpen) lockBody();
@@ -228,6 +315,8 @@ export default function LoginModal({
       setForgotSubmitted(false);
       setForgotEmail('');
       setRHoneypot('');
+      setRegisterSent(false);
+      setRegisterSentEmail('');
     }
   }, [isOpen, initialMode]);
 
@@ -275,24 +364,30 @@ export default function LoginModal({
     }
   }
 
-  const switchToRegister = () => { setMode('register'); setRErr(''); setREmailErr(''); setRPassErr(false); };
-  const switchToLogin = () => { setMode('login'); setLEmailErr(''); setLPassErr(''); };
+  const switchToRegister = () => { setMode('register'); setRegisterSent(false); setRErr(''); setREmailErr(''); setRPassErr(false); };
+  const switchToLogin = () => { setMode('login'); setRegisterSent(false); setLEmailErr(''); setLPassErr(''); };
   const switchToForgot = () => { setMode('forgot'); setForgotSubmitted(false); setForgotEmailErr(''); setForgotEmail(lEmail); };
 
   const handleForgotSubmit = async () => {
     const em = sanitizeEmailInput(forgotEmail.trim());
     if (!em || !validateEmail(em)) { setForgotEmailErr(t('সঠিক ইমেইল ঠিকানা দিন')); return; }
+    if (forgotLoading) return;
     setForgotEmailErr('');
     setForgotLoading(true);
-    const limit = await checkPasswordResetLimitAction(em);
-    if (!limit.allowed) {
+    try {
+      const limit = await checkPasswordResetLimitAction(em);
+      if (!limit.allowed) {
+        setForgotEmailErr(t('আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'));
+        return;
+      }
+      await requestPasswordReset(supabase, em);
+      setForgotSubmitted(true);
+    } catch {
+      setForgotEmailErr(t('কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন'));
+    } finally {
+      // 🛡️ আগে নেটওয়ার্ক ত্রুটিতে exception হলে বাটন চিরকাল disabled থেকে যেত
       setForgotLoading(false);
-      setForgotEmailErr(t('আপনি দৈনিক ৩ বার পাসওয়ার্ড রিসেটের লিমিটে পৌঁছে গেছেন। আগামীকাল আবার চেষ্টা করুন।'));
-      return;
     }
-    await requestPasswordReset(supabase, em);
-    setForgotLoading(false);
-    setForgotSubmitted(true);
   };
 
   const finishAuthSuccess = async (safeUser: CurrentUser, successMsg: string) => {
@@ -330,7 +425,7 @@ export default function LoginModal({
     return ok;
   };
 
-  const doLogin = async () => {
+  const runLogin = async () => {
     const em = sanitizeEmailInput(lEmail.trim());
     const pw = lPass;
     setLEmailErr('');
@@ -354,6 +449,8 @@ export default function LoginModal({
       if (msg.includes('invalid login')) {
         setLEmailErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
         setLPassErr(t('ইমেইল বা পাসওয়ার্ড ভুল'));
+      } else if (msg.includes('not confirmed')) {
+        setLEmailErr(t('ইমেইল ভেরিফাই করা হয়নি — ইনবক্সে পাঠানো লিংকে ক্লিক করুন'));
       } else if (msg.includes('email')) {
         setLEmailErr(t('ইমেইল ঠিকানা ভুল'));
       } else {
@@ -377,7 +474,7 @@ export default function LoginModal({
     await finishAuthSuccess(safeUser, t('লগইন সফল হয়েছে'));
   };
 
-  const doRegister = async () => {
+  const runRegister = async () => {
     if (rHoneypot) return;
 
     const nm = sanitizePlainName(rName.trim());
@@ -419,13 +516,38 @@ export default function LoginModal({
     }
 
     if (!data.session) {
-      onClose();
-      showToast(t('ইমেইল ভেরিফাই করুন — একটি লিংক পাঠানো হয়েছে'));
+      // ইমেইল ভেরিফিকেশন বাধ্যতামূলক — মডাল বন্ধ না করে "ইমেইল চেক করুন" পর্দা দেখানো হচ্ছে
+      setRegisterSentEmail(em);
+      setRegisterSent(true);
       return;
     }
 
     const safeUser: CurrentUser = { id: data.user.id, email: data.user.email, name: nm, phone: ph, createdAt: new Date().toISOString() };
     await finishAuthSuccess(safeUser, t('অ্যাকাউন্ট তৈরি হয়েছে'));
+  };
+
+  const doLogin = async () => {
+    if (loginLoading) return;
+    setLoginLoading(true);
+    try {
+      await runLogin();
+    } catch {
+      setLEmailErr(t('কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন'));
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const doRegister = async () => {
+    if (registerLoading) return;
+    setRegisterLoading(true);
+    try {
+      await runRegister();
+    } catch {
+      setRErr(t('কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন'));
+    } finally {
+      setRegisterLoading(false);
+    }
   };
 
   const loginWithGoogle = async () => {
@@ -444,14 +566,14 @@ export default function LoginModal({
   const title = mode === 'login'
     ? showLoginTitle
     : mode === 'register'
-    ? t('অ্যাকাউন্ট তৈরি করুন')
+    ? (registerSent ? t('ইমেইল চেক করুন') : t('অ্যাকাউন্ট তৈরি করুন'))
     : forgotSubmitted
     ? t('ইমেইল চেক করুন')
     : t('পাসওয়ার্ড রিসেট করুন');
   const sub = mode === 'login'
     ? showLoginSub
     : mode === 'register'
-    ? t('মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন')
+    ? (registerSent ? t('ভেরিফিকেশন লিংক পাঠানো হয়েছে') : t('মাত্র কয়েক সেকেন্ডে নতুন অ্যাকাউন্ট খুলুন'))
     : forgotSubmitted
     ? t('রিসেট লিংক পাঠানো হয়েছে')
     : t('আপনার ইমেইল দিন, আমরা লিংক পাঠাব');
@@ -476,7 +598,7 @@ export default function LoginModal({
             transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
             className="no-scrollbar relative z-10 max-h-[92vh] w-full max-w-[400px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white shadow-sh3 ring-1 ring-white/80"
           >
-            <div className={`relative overflow-hidden px-7 pt-8 text-center ${mode === 'forgot' && forgotSubmitted ? 'pb-3' : 'pb-5'}`}>
+            <div className={`relative overflow-hidden px-7 pt-8 text-center ${(mode === 'forgot' && forgotSubmitted) || (mode === 'register' && registerSent) ? 'pb-3' : 'pb-5'}`}>
               <HeaderDecor />
               <motion.button
                 whileTap={{ scale: 0.92 }}
@@ -493,7 +615,17 @@ export default function LoginModal({
 
             <div className="px-7 pb-8 pt-2">
               <TurnstileWidget ref={turnstileRef} active={isOpen} />
-              {mode === 'login' ? (
+              {mode === 'register' && registerSent ? (
+                <CheckInboxScreen
+                  email={registerSentEmail}
+                  message={lang === 'en'
+                    ? <>Vangcur (mail@vangcur.com) has sent a verification link to <strong>{registerSentEmail}</strong>. Click the link to activate your account.</>
+                    : <>Vangcur (mail@vangcur.com) থেকে আপনার <strong>{registerSentEmail}</strong> ইমেইলে একটি ভেরিফিকেশন লিংক পাঠানো হয়েছে। লিংকে ক্লিক করে আপনার অ্যাকাউন্ট চালু করুন।</>}
+                  openLabel={t('Gmail খুলুন')}
+                  openOtherLabel={t('ইমেইল অ্যাপ খুলুন')}
+                  spamHint={t('মেইল না পেলে স্প্যাম বা প্রমোশনস ফোল্ডার দেখুন')}
+                />
+              ) : mode === 'login' ? (
                 <div className="flex flex-col gap-3.5">
                   <div>
                     <label className={fieldLabelClass}>{t('ইমেইল')}</label>
@@ -539,8 +671,11 @@ export default function LoginModal({
                     transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     className={primaryBtnClass}
                     onClick={doLogin}
+                    disabled={loginLoading}
                   >
-                    {t('লগইন করুন')}
+                    {loginLoading
+                      ? <span className="inline-flex items-center justify-center gap-2"><IconSpinner />{t('লগইন হচ্ছে…')}</span>
+                      : t('লগইন করুন')}
                   </motion.button>
 
                   {!orderMode && (
@@ -635,8 +770,11 @@ export default function LoginModal({
                     transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                     className={`${primaryBtnClass} mt-1`}
                     onClick={doRegister}
+                    disabled={registerLoading}
                   >
-                    {t('অ্যাকাউন্ট তৈরি করুন')}
+                    {registerLoading
+                      ? <span className="inline-flex items-center justify-center gap-2"><IconSpinner />{t('অ্যাকাউন্ট তৈরি হচ্ছে…')}</span>
+                      : t('অ্যাকাউন্ট তৈরি করুন')}
                   </motion.button>
 
                   <div className="mt-1 text-center font-body text-[13px] text-muted">
@@ -646,23 +784,17 @@ export default function LoginModal({
               ) : (
                 <div className="flex flex-col gap-3.5">
                   {forgotSubmitted ? (
-                    <div className="pt-1 pb-3 text-center">
-                      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand-light/10 text-brand-light">
-                        <IconMailCheck />
-                      </div>
-                      <p className="font-body text-[14px] leading-relaxed text-ink">
-                        {lang === 'en'
-                          ? <>A password reset link has been sent to your <strong>{forgotEmail.trim()}</strong> email from Supabase Auth. Please check your email.</>
-                          : <>Supabase Auth থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। অনুগ্রহ করে ইমেইল চেক করুন।</>}
-                      </p>
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
-                        className={`${primaryBtnClass} mt-5`}
-                        onClick={switchToLogin}
-                      >
-                        {t('লগইনে ফিরে যান')}
-                      </motion.button>
-                    </div>
+                    <CheckInboxScreen
+                      email={forgotEmail}
+                      message={lang === 'en'
+                        ? <>Vangcur (mail@vangcur.com) has sent a password reset link to <strong>{forgotEmail.trim()}</strong>. Please check your email.</>
+                        : <>Vangcur (mail@vangcur.com) থেকে আপনার <strong>{forgotEmail.trim()}</strong> ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। অনুগ্রহ করে ইমেইল চেক করুন।</>}
+                      openLabel={t('Gmail খুলুন')}
+                      openOtherLabel={t('ইমেইল অ্যাপ খুলুন')}
+                      spamHint={t('মেইল না পেলে স্প্যাম বা প্রমোশনস ফোল্ডার দেখুন')}
+                      backLabel={t('লগইনে ফিরে যান')}
+                      onBack={switchToLogin}
+                    />
                   ) : (
                     <>
                       <div>
@@ -684,7 +816,9 @@ export default function LoginModal({
                         onClick={handleForgotSubmit}
                         disabled={forgotLoading}
                       >
-                        {t('রিসেট লিংক পাঠান')}
+                        {forgotLoading
+                          ? <span className="inline-flex items-center justify-center gap-2"><IconSpinner />{t('পাঠানো হচ্ছে…')}</span>
+                          : t('রিসেট লিংক পাঠান')}
                       </motion.button>
                       <div className="mt-1 text-center font-body text-[13px] text-muted">
                         {t('মনে পড়েছে?')} <button onClick={switchToLogin} className={linkChipClass}>{t('লগইন করুন')}</button>
