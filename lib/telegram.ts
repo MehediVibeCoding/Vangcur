@@ -203,3 +203,47 @@ export async function sendTelegramSlaAlert(info: TelegramSlaAlert): Promise<bool
     return false;
   }
 }
+
+interface TelegramUnmatchedBkash {
+  trxId: string | null;
+  senderNumber: string | null;
+  senderLast4: string | null;
+  amount: number;
+  waitedMinutes: number;
+}
+
+// বিকাশে টাকা এসেছে কিন্তু ২ ঘণ্টা পরও কোনো অর্ডারের সাথে মেলেনি — অ্যাডমিনকে একবার জানানো।
+export async function sendTelegramUnmatchedBkashAlert(info: TelegramUnmatchedBkash): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return false;
+
+  const e = escapeTelegramHtml;
+  const hours = Math.floor(info.waitedMinutes / 60);
+  const mins = info.waitedMinutes % 60;
+  const waited = hours > 0 ? `${hours} ঘণ্টা ${mins} মিনিট` : `${mins} মিনিট`;
+
+  const message = `<b>⚠️ মিলছে না এমন বিকাশ পেমেন্ট!</b>\n` +
+    `<b>TrxID:</b> <code>${e(info.trxId || 'N/A')}</code>\n` +
+    `<b>প্রেরক:</b> <code>${e(info.senderNumber || (info.senderLast4 ? `****${info.senderLast4}` : 'N/A'))}</code>\n` +
+    `<b>টাকার অংক:</b> ৳${Number(info.amount || 0).toLocaleString('en-US')}\n` +
+    `টাকা এসেছে ${waited} আগে, কিন্তু এই ট্রানজেকশনের জন্য কোনো অর্ডার খুঁজে পাওয়া যায়নি।\n` +
+    `অনুগ্রহ করে দ্রুত অ্যাডমিন প্যানেলের বিকাশ ট্রানজেকশন পেজ চেক করুন বা ম্যানুয়ালি ব্যবস্থা নিন।`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      logWarn('[Telegram] unmatched bKash alert failed:', res.status, '| trx:', info.trxId);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    logWarn('[Telegram] unmatched bKash alert error:', err, '| trx:', info.trxId);
+    return false;
+  }
+}

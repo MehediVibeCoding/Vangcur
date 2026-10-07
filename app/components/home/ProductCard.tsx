@@ -161,6 +161,8 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
       }
     } else if (res.reason === 'stock') {
       showToast(t('স্টক শেষ!'));
+    } else if (res.reason === 'limit') {
+      showToast(t('একটি পণ্য সর্বোচ্চ ১০টি নেওয়া যাবে'));
     }
   };
 

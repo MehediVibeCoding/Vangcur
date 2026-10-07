@@ -1,5 +1,6 @@
 'use server';
 
+import { MAX_QTY_PER_PRODUCT } from '@/lib/cartLimits';
 import { after } from 'next/server';
 import { headers } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -23,7 +24,7 @@ import { sendTelegramOrderNotification, sendTelegramPaymentAutoConfirm } from '@
 import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 
 const MAX_ITEMS = 30;
-const MAX_QTY_PER_ITEM = 50;
+const MAX_QTY_PER_ITEM = MAX_QTY_PER_PRODUCT;
 const GENERIC_RETRY_MSG = 'একটু পরে আবার চেষ্টা করুন';
 
 function fail(error: string): ActionResponse<CreateOrderResult> {
@@ -152,6 +153,10 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
       return fail(t('কার্টের একটি আইটেম সঠিক নয়, রিফ্রেশ করে আবার চেষ্টা করুন'));
     }
     mergedMap[id] = (mergedMap[id] || 0) + qty;
+    // একই পণ্য একাধিক লাইনে এলেও মোট পরিমাণ সীমার বেশি হতে পারবে না
+    if (mergedMap[id] > MAX_QTY_PER_ITEM) {
+      return fail(t('একটি পণ্য সর্বোচ্চ ১০টি নেওয়া যাবে'));
+    }
   }
 
   const cleanItems: { id: string; qty: number }[] = Object.entries(mergedMap).map(([id, qty]) => ({ id, qty }));

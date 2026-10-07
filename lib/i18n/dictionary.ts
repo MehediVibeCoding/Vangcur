@@ -243,6 +243,7 @@ export const staticDictionary: Record<string, string> = {
   'পিছ': 'Pcs',
   'পিস': 'Pcs',
   'স্টক শেষ!': 'Out of Stock!',
+  'একটি পণ্য সর্বোচ্চ ১০টি নেওয়া যাবে': 'You can add up to 10 of one item',
   'দুঃখিত, পণ্যটির স্টক শেষ হয়ে গেছে': 'Sorry, this product is out of stock',
   'সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে ({count}টি)': 'Reached maximum stock limit ({count})',
   'তথ্য জমা দেওয়া সম্ভব হয়নি, আবার চেষ্টা করুন': 'Could not submit information, please try again',

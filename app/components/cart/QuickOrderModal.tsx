@@ -222,6 +222,8 @@ export default function QuickOrderModal() {
     const res = useCartStore.getState().updateQty(prodsRef.current, id, delta);
     if (!res.ok && res.reason === 'stock') {
       showToast(t(`সর্বোচ্চ স্টক সীমায় পৌঁছে গেছে ({count}টি)`).replace('{count}', String(res.maxStock)));
+    } else if (!res.ok && res.reason === 'limit') {
+      showToast(t('একটি পণ্য সর্বোচ্চ ১০টি নেওয়া যাবে'));
     }
   };
 

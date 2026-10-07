@@ -1,12 +1,19 @@
 import { create } from 'zustand';
 import type { CartItem, Product } from '@/types';
+import { MAX_QTY_PER_PRODUCT } from '@/lib/cartLimits';
 
 const CART_KEY = 'vc_cart';
+
+// আগে থেকে সেভ হওয়া কার্টে সীমার বেশি পরিমাণ থাকলে নামিয়ে আনা।
+function clampCart(cart: CartItem[]): CartItem[] {
+  if (!Array.isArray(cart)) return [];
+  return cart.map((i) => (i && i.qty > MAX_QTY_PER_PRODUCT ? { ...i, qty: MAX_QTY_PER_PRODUCT } : i));
+}
 
 function loadCart(): CartItem[] {
   if (typeof window === 'undefined') return [];
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    return clampCart(JSON.parse(localStorage.getItem(CART_KEY) || '[]'));
   } catch {
     return [];
   }
@@ -57,12 +64,14 @@ if (typeof window !== 'undefined') {
 
 interface AddResult {
   ok: boolean;
-  reason?: 'stock';
+  reason?: 'stock' | 'limit';
+  // কিছু যোগ হয়েছে কিন্তু সীমার কারণে চাওয়া পরিমাণের কম
+  capped?: boolean;
 }
 
 interface QtyResult {
   ok: boolean;
-  reason?: 'stock';
+  reason?: 'stock' | 'limit';
   maxStock?: number;
 }
 
@@ -89,8 +98,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   setCart: (cart) => {
-    persist(cart);
-    set({ cart });
+    const safe = clampCart(cart);
+    persist(safe);
+    set({ cart: safe });
   },
 
   addToCart: (prods, id, qty) => {
@@ -100,13 +110,16 @@ export const useCartStore = create<CartState>((set, get) => ({
     const currentQty = cart.find((x) => String(x.id) === String(id))?.qty || 0;
     const availableStock = p.stock - currentQty;
     if (availableStock <= 0) return { ok: false, reason: 'stock' };
-    const addQty = Math.min(qty, availableStock);
+    const limitRoom = MAX_QTY_PER_PRODUCT - currentQty;
+    if (limitRoom <= 0) return { ok: false, reason: 'limit' };
+    const addQty = Math.min(qty, availableStock, limitRoom);
+    const capped = addQty < qty && limitRoom <= availableStock;
     const ex = cart.find((x) => String(x.id) === String(id));
     if (ex) ex.qty += addQty;
     else cart.push({ id: p.id, name: p.name, emoji: p.imgs[0], price: p.price, qty: addQty, cat: p.cat });
     persist(cart);
     set((s) => ({ cart, addedTick: s.addedTick + 1 }));
-    return { ok: true };
+    return capped ? { ok: true, capped: true } : { ok: true };
   },
 
   updateQty: (prods, id, delta) => {
@@ -117,6 +130,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         const prod = prods.find((p) => String(p.id) === String(id));
         const maxStock = prod ? prod.stock : 9999;
         if (i.qty >= maxStock) return { ok: false, reason: 'stock', maxStock };
+        if (i.qty >= MAX_QTY_PER_PRODUCT) return { ok: false, reason: 'limit' };
       }
       i.qty += delta;
       if (i.qty <= 0) cart = cart.filter((x) => String(x.id) !== String(id));

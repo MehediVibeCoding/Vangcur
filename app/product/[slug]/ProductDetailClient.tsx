@@ -1,5 +1,6 @@
 'use client';
 
+import { MAX_QTY_PER_PRODUCT } from '@/lib/cartLimits';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -649,7 +650,7 @@ export default function ProductDetailClient({
   }, [prod?.id]);
 
   const sold = prod ? prod.stock <= 0 : false;
-  const maxQty = prod ? (prod.stock > 0 ? Math.min(prod.stock, 99) : 1) : 1;
+  const maxQty = prod ? (prod.stock > 0 ? Math.min(prod.stock, MAX_QTY_PER_PRODUCT) : 1) : 1;
 
   const chgQty = (d: number) => {
     if (sold) return;
@@ -660,6 +661,9 @@ export default function ProductDetailClient({
     if (!prod || sold || cartButtonState === 'animating') return;
 
     const res = useCartStore.getState().addToCart([prod], prod.id, qty);
+    if (res.ok && res.capped) {
+      showToast(t('একটি পণ্য সর্বোচ্চ ১০টি নেওয়া যাবে'));
+    }
     if (res.ok) {
       setCartButtonState('animating');
 
@@ -677,6 +681,8 @@ export default function ProductDetailClient({
       }, 2150);
     } else if (res.reason === 'stock') {
       showToast(t('স্টক শেষ!'));
+    } else if (res.reason === 'limit') {
+      showToast(t('একটি পণ্য সর্বোচ্চ ১০টি নেওয়া যাবে'));
     }
     
     trackAddToCart(

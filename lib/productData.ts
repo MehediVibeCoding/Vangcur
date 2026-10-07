@@ -4,6 +4,7 @@ import { logWarn, logError } from './logger';
 import { useCartStore, cartTotal } from './store/cartStore';
 import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
 import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
+import { MAX_QTY_PER_PRODUCT } from './cartLimits';
 import { suppressHistoryCleanup } from './useHistoryModal';
 import { guardPendingLock } from './pendingLock';
 
@@ -477,7 +478,7 @@ function proceedQuickOrder(
     return;
   }
 
-  const safeQty = Math.max(1, Math.min(qty, prod.stock, 99));
+  const safeQty = Math.max(1, Math.min(qty, prod.stock, MAX_QTY_PER_PRODUCT));
   const currentCart = useCartStore.getState().cart;
 
   // ১. যদি কার্টে আগে থেকে কোনো পণ্য না থাকে (০ আইটেম) — একক পণ্যের কুইক অর্ডার সরাসরি /checkout-এ নিয়ে যাবে

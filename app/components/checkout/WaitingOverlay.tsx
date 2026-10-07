@@ -382,13 +382,16 @@ export default function WaitingOverlay() {
   };
 
   // 🌟 মিনিমাইজড অবস্থায় স্প্রিং বাবল বাটন
+  // ডান-নিচের কোণে কার্ট/যোগাযোগ/ব্যাক-টু-টপ বাটন ও পণ্য পেজের স্টিকি বার আছে — নিচে রাখলে ওগুলোর ওপর চেপে বসত।
+  // তাই নেভবারের ঠিক নিচে মাঝখানে স্থির রাখা হলো; কোনো ডিভাইসে কোনো বাটনের সাথে মেলে না।
   if (minimized) {
     return (
+      <div className="pointer-events-none fixed inset-x-0 top-[84px] z-[65] flex justify-center px-3">
       <motion.button
         whileTap={{ scale: 0.94 }}
         transition={{ type: 'spring', stiffness: 500, damping: 25 }}
         onClick={() => setMinimized(false)}
-        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
+        className="pointer-events-auto flex max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
       >
         <span className="relative flex h-2.5 w-2.5 items-center justify-center">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
@@ -396,6 +399,7 @@ export default function WaitingOverlay() {
         </span>
         <span>{lang === 'en' ? `${order.orderNum} processing...` : `${order.orderNum} প্রসেস হচ্ছে...`}</span>
       </motion.button>
+      </div>
     );
   }
 
