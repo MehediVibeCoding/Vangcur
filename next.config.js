@@ -29,6 +29,15 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/invoice/png': ['./node_modules/@sparticuz/chromium/bin/**'],
   },
+  async headers() {
+    return [
+      {
+        // ভার্সনসহ নামের ফাইল (three.r128) — একবার ডাউনলোড হলে ব্রাউজার আর নতুন করে আনবে না
+        source: '/games/vendor/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -17,6 +17,7 @@ import { SHOW_BG_CONFIRM_EVENT } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
 import type { Order, OrderStatus } from '@/types';
 import { DesktopBackdrop } from '@/app/components/ui/DesktopBackdrop';
+import WaitingGame from '@/app/components/checkout/WaitingGame';
 
 // ⏱️ ৫ মিনিটের বেশি পেন্ডিং থাকলে আশ্বস্তকারী স্ক্রিন। সময় গোনা হয় অর্ডার সাবমিটের
 // টাইমস্ট্যাম্প (vc_pending_ts) থেকে — setTimeout একা ভরসাযোগ্য না, কারণ ব্যাকগ্রাউন্ড/মিনিমাইজ
@@ -532,6 +533,9 @@ export default function StatusClient() {
                 </div>
                 <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
+
+              {/* 🎮 মিনি গেম — ছোট বাটন + ৪০ সেকেন্ড পর পপআপ; ৫ মিনিট পূর্ণ হলে (timedOut) এই ব্লকের সাথেই বিদায় */}
+              <WaitingGame variant="page" active={isPending && !timedOut} />
 
               <div className="relative z-10 mb-5">
                 <div className="mb-2.5 font-body text-[10.5px] font-bold uppercase tracking-wider text-muted">{t('আমাদের ফলো করুন')}</div>

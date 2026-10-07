@@ -18,6 +18,7 @@ import {
   OPEN_WAIT_OVERLAY_EVENT, SHOW_BG_CONFIRM_EVENT,
 } from '@/lib/uiEvents';
 import { useT } from '@/lib/i18n/useT';
+import WaitingGame from '@/app/components/checkout/WaitingGame';
 import type { Order, OrderStatus } from '@/types';
 
 // অর্ডারের বয়স এর বেশি হলে "প্রসেস হচ্ছে" বাবল/কার্ড আর দেখানো হয় না (কোয়াইট মোড) — শুধু কনফার্ম/রিজেক্টে পপআপ আসে।
@@ -511,6 +512,9 @@ export default function WaitingOverlay() {
                 </div>
                 <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
+
+              {/* 🎮 মিনি গেম — শুধু "গেম খেলুন" বাটন; সাবমিটের ৫ মিনিট পর আর দেখায় না */}
+              <WaitingGame variant="overlay" active={isPending} />
 
               {/* সোশ্যাল মিডিয়া আইকনসমূহ */}
               <div className="relative z-10 mb-5">
