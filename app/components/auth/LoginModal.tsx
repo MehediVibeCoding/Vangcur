@@ -18,7 +18,7 @@ import {
   validateEmail, validatePhone, validateName, sanitizePlainName, sanitizeEmailInput,
   sanitizePhoneInput, PHONE_INPUT_MAX_CHARS,
 } from '@/lib/security';
-import { verifyTurnstileToken } from '@/lib/turnstile';
+import { verifyTurnstileTokenDetailed } from '@/lib/turnstile';
 import { checkPasswordResetLimitAction } from '@/app/actions/rateLimit';
 import { useT } from '@/lib/i18n/useT';
 import useHistoryModal, { suppressHistoryCleanup } from '@/lib/useHistoryModal';
@@ -416,13 +416,32 @@ export default function LoginModal({
     }
   };
 
-  const runTurnstileCheck = async (): Promise<boolean> => {
-    if (!turnstileEnabled) return true;
-    const token = turnstileRef.current?.getToken() || '';
-    if (!token) return false;
-    const ok = await verifyTurnstileToken(token);
+  // ফলাফল আলাদা রাখা হয়েছে — যাতে "টোকেন আসেনি/নেট ধীর", "সার্ভার সমস্যা", "রেট লিমিট" আর
+  // "সত্যিই যাচাই ব্যর্থ" একই বার্তায় না মিশে যায়।
+  type TurnstileOutcome = 'ok' | 'unavailable' | 'rejected' | 'rate_limited' | 'error';
+
+  const runTurnstileCheck = async (): Promise<TurnstileOutcome> => {
+    if (!turnstileEnabled) return 'ok';
+    // ⏳ আগে টোকেন না থাকলে সাথে সাথে ব্যর্থ বলা হতো (ধীর মোবাইল নেটে স্ক্রিপ্ট/চ্যালেঞ্জ শেষ হওয়ার আগেই)।
+    // এখন সর্বোচ্চ ১০ সেকেন্ড অপেক্ষা করে — বাটনে স্পিনার ঘুরতে থাকে।
+    const token = await turnstileRef.current?.waitForToken(10000);
+    if (!token) return 'unavailable';
+    const result = await verifyTurnstileTokenDetailed(token);
     turnstileRef.current?.reset();
-    return ok;
+    return result;
+  };
+
+  const turnstileMessage = (outcome: Exclude<TurnstileOutcome, 'ok'>): string => {
+    switch (outcome) {
+      case 'unavailable':
+        return t('নিরাপত্তা যাচাই শেষ হয়নি — ইন্টারনেট ধীর হতে পারে। একটু পরে আবার চেষ্টা করুন (চেকবক্স এলে টিক দিন)');
+      case 'rate_limited':
+        return t('অল্প সময়ে অনেকবার চেষ্টা হয়েছে, কয়েক সেকেন্ড পরে আবার চেষ্টা করুন');
+      case 'error':
+        return t('যাচাই সার্ভারে সাময়িক সমস্যা হচ্ছে, আবার চেষ্টা করুন');
+      default:
+        return t('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন');
+    }
   };
 
   const runLogin = async () => {
@@ -438,8 +457,8 @@ export default function LoginModal({
     if (blocked) return;
 
     const verified = await runTurnstileCheck();
-    if (!verified) {
-      setLEmailErr(t('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন'));
+    if (verified !== 'ok') {
+      setLEmailErr(turnstileMessage(verified));
       return;
     }
 
@@ -497,7 +516,7 @@ export default function LoginModal({
     if (!strength.minLenOk || !strength.ok) { setRPassErr(true); return; }
 
     const verified = await runTurnstileCheck();
-    if (!verified) { setRErr(t('বট-যাচাই ব্যর্থ হয়েছে, আবার চেষ্টা করুন')); return; }
+    if (verified !== 'ok') { setRErr(turnstileMessage(verified)); return; }
 
     const { data, error } = await signUp(supabase, { name: nm, phone: ph, email: em, password: pw });
     if (error) {
