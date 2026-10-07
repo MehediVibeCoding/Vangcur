@@ -1071,19 +1071,19 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white sm:py-6 lg:bg-none lg:py-0">
+      <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-brand-bg/45 via-[#DCEBFD]/55 to-white sm:py-6 lg:bg-none lg:py-10">
         {/* 💻 শুধু ল্যাপটপ: ফিক্সড প্রিমিয়াম ব্যাকগ্রাউন্ড — স্ক্রলে নড়ে না */}
         <DesktopBackdrop />
-        
-        <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 sm:min-h-0 sm:rounded-[28px] sm:ring-1 sm:ring-white/80 lg:min-h-dvh lg:rounded-none lg:shadow-[0_0_0_6px_#fff,0_0_0_7px_rgba(68,167,252,0.16),0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_0_0_6px_rgba(255,255,255,0.07),0_0_0_7px_rgba(68,167,252,0.14),0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-0">
-          
-          <div className="rounded-b-[22px] rounded-t-none bg-gradient-to-br from-[#85C2FA] to-brand-light px-5 pb-3.5 pt-3.5 shadow-xs lg:rounded-b-none lg:border-b lg:border-brand-light/15 lg:bg-white lg:bg-none dark:lg:bg-[#131D31] lg:px-7 lg:pb-4 lg:pt-4 lg:shadow-[0_1px_0_rgba(68,167,252,0.10),0_10px_24px_-18px_rgba(0,88,199,0.35)]">
+
+        <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[580px] overflow-hidden bg-gradient-to-b from-white/95 via-[#F3F8FE]/95 to-white shadow-sh3 sm:min-h-0 sm:rounded-[28px] sm:ring-1 sm:ring-white/80 lg:min-h-0 lg:rounded-[28px] lg:shadow-[0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-1 lg:ring-white/80">
+
+          <div className="rounded-b-[22px] rounded-t-none bg-gradient-to-br from-[#85C2FA] to-brand-light px-5 pb-3.5 pt-3.5 shadow-xs">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-brand-light shadow-xs lg:h-10 lg:w-10 lg:rounded-[14px] lg:bg-gradient-to-br lg:from-[#5DB4FD] lg:to-brand-primary lg:text-white lg:shadow-[0_8px_18px_-8px_rgba(0,88,199,0.55)]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-brand-light shadow-xs">
                   <IconLock />
                 </span>
-                <h2 className="font-body text-[15.5px] font-extrabold text-white lg:text-[17px] lg:tracking-tight lg:text-ink dark:lg:text-slate-50">
+                <h2 className="font-body text-[15.5px] font-extrabold text-white">
                   {step === 1 ? t('নিরাপদ চেকআউট') : step === 2 ? t('নিরাপদ পেমেন্ট') : t('নিরাপদ নিশ্চিতকরণ')}
                 </h2>
               </div>
@@ -1109,7 +1109,7 @@ export default function CheckoutPage() {
                   }}
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45 lg:h-9 lg:w-9 lg:border-brand-light/20 lg:bg-brand-light/10 lg:text-brand-light lg:backdrop-blur-none lg:hover:bg-brand-light/20"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45"
                 >
                   <IconClose />
                 </motion.button>
@@ -1120,7 +1120,7 @@ export default function CheckoutPage() {
                   title={t('আগের ধাপে যান')}
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: 'spring', stiffness: 480, damping: 28 }}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45 lg:h-9 lg:w-9 lg:border-brand-light/20 lg:bg-brand-light/10 lg:text-brand-light lg:backdrop-blur-none lg:hover:bg-brand-light/20"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/35 text-white shadow-xs backdrop-blur-[8px] transition-brand hover:bg-white/45"
                 >
                   <IconArrowLeft />
                 </motion.button>

@@ -423,7 +423,7 @@ export default function WaitingOverlay() {
           {isPending && (
             <>
               {/* স্যান্ড-গ্লাস আইকন ব্যাজ */}
-              <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_4px_16px_rgba(245,158,11,0.20)]">
+              <div className="relative z-10 mx-auto mb-3.5 flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_4px_16px_rgba(245,158,11,0.20)]">
                 <AnimatedLiveHourglass />
               </div>
 
@@ -591,7 +591,7 @@ export default function WaitingOverlay() {
           {isRejected && (
             <>
               {/* রিজেক্ট শিল্ড ব্যাজ */}
-              <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-red-200/80 bg-red-50 text-red-600 shadow-xs">
+              <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-red-200/80 bg-red-50 text-red-600 shadow-xs">
                 <IconCrossShield />
               </div>
 

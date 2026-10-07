@@ -94,7 +94,7 @@ function AnimatedLiveHourglass() {
   const bottomClipId = `vc-sand-bottom-${uid}`;
 
   return (
-    <div className="relative flex h-10 w-10 items-center justify-center">
+    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" className="overflow-visible">
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -443,17 +443,17 @@ export default function StatusClient() {
 
   return (
     <>
-      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10 lg:items-stretch lg:bg-none lg:p-0">
+      <div className="sleek-scrollbar relative min-h-dvh sm:min-h-screen overflow-x-hidden bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white flex flex-col items-center justify-center p-0 sm:p-6 sm:py-10 lg:bg-none lg:p-10">
         {/* 💻 শুধু ল্যাপটপ: ফিক্সড প্রিমিয়াম ব্যাকগ্রাউন্ড — স্ক্রলে নড়ে না */}
         <DesktopBackdrop />
 
-        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start lg:mx-auto lg:min-h-dvh lg:max-w-[480px] lg:rounded-none lg:px-9 lg:pt-14 lg:shadow-[0_0_0_6px_#fff,0_0_0_7px_rgba(68,167,252,0.16),0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_0_0_6px_rgba(255,255,255,0.07),0_0_0_7px_rgba(68,167,252,0.14),0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-0">
+        <div className="relative z-10 w-full min-h-dvh sm:min-h-0 sm:max-w-[440px] rounded-none sm:rounded-[28px] bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white p-6 sm:p-7 text-center sm:shadow-sh3 sm:ring-1 sm:ring-white/80 animate-soft-fade-in flex flex-col justify-center sm:justify-start lg:min-h-0 lg:max-w-[480px] lg:rounded-[28px] lg:shadow-[0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-1 lg:ring-white/80">
           <HeaderDecor />
           <GadgetDecor />
 
           {isPending && !timedOut && (
             <>
-              <div className="relative z-10 mx-auto mb-3.5 flex h-[76px] w-[76px] items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_6px_22px_rgba(245,158,11,0.22)]">
+              <div className="relative z-10 mx-auto mb-3.5 flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-full border border-amber-300/80 bg-[#FEF3C7] shadow-[0_6px_22px_rgba(245,158,11,0.22)]">
                 <AnimatedLiveHourglass />
               </div>
 
@@ -604,9 +604,9 @@ export default function StatusClient() {
 
           {isPending && timedOut && (
             <div role="status" aria-live="polite" className="relative z-10 animate-soft-fade-in">
-              <div className="relative mx-auto mb-4 flex h-[84px] w-[84px] items-center justify-center">
+              <div className="relative mx-auto mb-4 flex h-[84px] w-[84px] shrink-0 items-center justify-center">
                 <span className="absolute inset-0 animate-pulse rounded-full bg-brand-light/15" aria-hidden="true" />
-                <span className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full border border-brand-light/40 bg-white text-brand-light shadow-sh2">
+                <span className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full border border-brand-light/40 bg-white text-brand-light shadow-sh2">
                   <IconClockCheck />
                 </span>
               </div>
@@ -647,7 +647,7 @@ export default function StatusClient() {
 
           {isRejected && (
             <>
-              <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 items-center justify-center rounded-full border border-red-200/80 bg-red-50 text-red-600 shadow-xs">
+              <div className="relative z-10 mx-auto mb-3.5 flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-red-200/80 bg-red-50 text-red-600 shadow-xs">
                 <IconCrossShield />
               </div>
 

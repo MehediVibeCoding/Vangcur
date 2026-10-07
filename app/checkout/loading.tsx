@@ -3,11 +3,11 @@ import { DesktopBackdrop } from '@/app/components/ui/DesktopBackdrop';
 
 export default function CheckoutLoading() {
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-[#EFF6FE] lg:bg-transparent">
+    <div className="relative min-h-dvh overflow-hidden bg-[#EFF6FE] lg:bg-transparent lg:py-10">
       <DesktopBackdrop />
-      <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-sh3 sm:ring-1 sm:ring-border-base lg:my-0 lg:min-h-dvh lg:max-w-[580px] lg:rounded-none lg:bg-white lg:shadow-[0_0_0_6px_#fff,0_0_0_7px_rgba(68,167,252,0.16),0_30px_70px_-24px_rgba(0,88,199,0.32)] dark:lg:shadow-[0_0_0_6px_rgba(255,255,255,0.07),0_0_0_7px_rgba(68,167,252,0.14),0_30px_70px_-24px_rgba(0,0,0,0.6)] lg:ring-0">
+      <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[640px] overflow-hidden bg-[#EFF6FE] sm:my-6 sm:min-h-0 sm:rounded-[22px] sm:shadow-sh3 sm:ring-1 sm:ring-border-base lg:min-h-0 lg:max-w-[580px] lg:rounded-[22px] lg:shadow-sh3 lg:ring-1 lg:ring-border-base">
         {/* ================= হেডার (গ্র্যাডিয়েন্ট + লক আইকন) ================= */}
-        <div className="rounded-t-[20px] bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-5 pb-3.5 pt-4 lg:rounded-none lg:bg-white lg:bg-none lg:shadow-[0_1px_0_rgba(68,167,252,0.12)]">
+        <div className="rounded-t-[20px] bg-gradient-to-br from-[#90C8FA] to-[#72B2F5] px-5 pb-3.5 pt-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 shrink-0 animate-pulse rounded-full bg-white/70" />
