@@ -28,24 +28,11 @@ export function prodInCat(p: Pick<Product, 'cat' | 'cats'>, catId: string): bool
   return String(p.cat || '').trim().toLowerCase() === targetCat;
 }
 
-export function applyProdOrder<T extends { id: number | string }>(prods: T[], orderArr: unknown): T[] {
-  let order: unknown = orderArr || null;
-  if (typeof order === 'string' && (order.startsWith('[') || order.startsWith('{'))) {
-    try {
-      order = JSON.parse(order);
-    } catch {
-      order = null;
-    }
-  }
-  if (!Array.isArray(order) || !order.length) return prods;
-  const orderMap: Record<string, number> = {};
-  order.forEach((id, i) => { orderMap[id] = i; });
-  return [...prods].sort((a, b) => {
-    const ia = orderMap[String(a.id)] !== undefined ? orderMap[String(a.id)] : 99999;
-    const ib = orderMap[String(b.id)] !== undefined ? orderMap[String(b.id)] : 99999;
-    return ia - ib;
-  });
-}
+// 🆕 (প্রোডাক্ট স্কেল ফিক্স, ২০২৬-১০): আগে প্রোডাক্টের সাজানো ক্রম store_settings-এর
+// `vc_prod_order` নামের একটা JSON array-তে থাকত — পড়তে হতো আলাদা কুয়েরিতে, তারপর এই
+// ফাংশন দিয়ে ব্রাউজার/সার্ভারে সাজাতে হতো। এখন custom_products টেবিলেই sort_order
+// কলাম আছে, তাই প্রোডাক্ট কুয়েরিতে সরাসরি `.order('sort_order')` দিলেই ডাটাবেজ থেকে
+// সঠিক ক্রমে আসে — আলাদা কুয়েরি বা এই ফাংশন আর লাগে না (তাই সরানো হলো)।
 
 function parseJsonish<T>(val: unknown, fallback: T): T {
   if (val === null || val === undefined) return fallback;
@@ -148,52 +135,53 @@ const DETAIL_COLS = `${GRID_COLS},desc_text,long_desc,features,faqs,closing,powe
 
 const QUERY_TIMEOUT_MS = 4000;
 const RETRY_DELAY_MS = 400;
+// 🆕 Supabase/PostgREST একবারে ডিফল্ট সর্বোচ্চ ১০০০ সারি দেয়। প্রোডাক্ট ১০০০ পার হলে
+// আগে এখানে কিছু না বলেই লিস্ট চুপচাপ ১০০০-এ কেটে যেত (ঠিক listOrders-এ যে বাগ আগে
+// ছিল, একই ধরনের)। তাই .range() দিয়ে পাতা ধরে ধরে সব সারি আনা হয়।
+const SELECT_PAGE_SIZE = 1000;
 
-async function fetchProdOrder(supabase: SupabaseClient): Promise<unknown> {
-  try {
-    const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
-    const { data } = await supabase
-      .from('store_settings')
-      .select('setting_value')
-      .eq('setting_key', 'vc_prod_order')
-      .abortSignal(signal as any)
-      .maybeSingle();
-    return data?.setting_value ?? null;
-  } catch {
-    return null;
-  }
+function isPermissionError(error: { code?: string; message?: string }): boolean {
+  return (
+    error.code === '42501' ||
+    error.code === 'PGRST116' ||
+    !!error.message?.includes('permission') ||
+    !!error.message?.includes('policy')
+  );
 }
 
 export async function fetchCustomProducts(supabase: SupabaseClient): Promise<Product[]> {
-  const orderPromise = fetchProdOrder(supabase);
   let attempt = 0;
   const MAX_ATTEMPTS = 2;
   while (attempt < MAX_ATTEMPTS) {
     attempt++;
     try {
-      const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
-      const { data: sbProds, error } = await supabase
-        .from('custom_products')
-        .select(GRID_COLS)
-        .order('id', { ascending: true })
-        .abortSignal(signal as any);
+      const rows: RawCustomProduct[] = [];
+      let from = 0;
+      for (;;) {
+        const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+        const { data: sbProds, error } = await supabase
+          .from('custom_products')
+          .select(GRID_COLS)
+          .order('sort_order', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, from + SELECT_PAGE_SIZE - 1)
+          .abortSignal(signal as any);
 
-      if (error) {
-        logWarn('[Vangcur] custom_products fetch error (attempt ' + attempt + '):', error.message, '| code:', error.code);
-        if (error.code === '42501' || error.code === 'PGRST116' || error.message?.includes('permission') || error.message?.includes('policy')) {
-          logError('[Vangcur] custom_products টেবিলে anon SELECT access নেই।');
-          return [];
+        if (error) {
+          logWarn('[Vangcur] custom_products fetch error (attempt ' + attempt + '):', error.message, '| code:', error.code);
+          if (isPermissionError(error)) {
+            logError('[Vangcur] custom_products টেবিলে anon SELECT access নেই।');
+            return [];
+          }
+          throw new Error(error.message);
         }
-        if (attempt < MAX_ATTEMPTS) {
-          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-          continue;
-        }
-        return [];
+        if (!sbProds || !sbProds.length) break;
+        rows.push(...(sbProds as unknown as RawCustomProduct[]));
+        if (sbProds.length < SELECT_PAGE_SIZE) break; // শেষ ব্যাচ — আর পরের পাতা নেই
+        from += SELECT_PAGE_SIZE;
       }
-      if (!sbProds || !sbProds.length) return [];
-      const mapped = (sbProds as unknown as RawCustomProduct[]).map(mapCustomProduct);
-      const orderArr = await orderPromise;
-      return applyProdOrder(mapped, orderArr);
+      if (!rows.length) return [];
+      return rows.map(mapCustomProduct);
     } catch (e) {
       logWarn('[Vangcur] custom_products exception (attempt ' + attempt + '):', e);
       if (attempt < MAX_ATTEMPTS) {
@@ -239,24 +227,30 @@ export const PRODUCTS_LOAD_MORE_BATCHES = [24, 36, 60, 84, 120, 180];
 // কাস্টম অর্ডার+ক্যাটাগরি-ফিল্টার করে সঠিক ID-ক্রম বের করে, তারপর ভারী
 // GRID_COLS ডেটা শুধু ওই পেজের (limit-টা) আইডির জন্যই আনে — বাকিগুলো তখনই
 // আনা হয় যখন স্ক্রল করে বা ক্যাটাগরি বদলে সেটা দরকার হয়।
+type OrderedIdRow = { id: number | string; cat: string | null; cats: string[] | null; stock: number };
+
 async function fetchOrderedFilteredIds(supabase: SupabaseClient, category: string): Promise<(number | string)[]> {
-  const orderPromise = fetchProdOrder(supabase);
-  const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
-  const { data, error } = await supabase
-    .from('custom_products')
-    .select('id, cat, cats, stock')
-    .order('id', { ascending: true })
-    .abortSignal(signal as any);
-  if (error || !data) return [];
-  const filtered = (data as { id: number | string; cat: string | null; cats: string[] | null; stock: number }[]).filter((p) =>
-    prodInCat({ cat: p.cat || '', cats: p.cats || [] }, category)
-  );
-  const orderArr = await orderPromise;
-  const ordered = applyProdOrder(filtered, orderArr);
-  // fetchCustomProducts()-এর পুরনো আচরণের সাথে মেলাতে: স্টক-আউট প্রোডাক্ট
-  // পুরো লিস্টের শেষে যাবে (নির্দিষ্ট পেজের ভেতরে না — পুরো ক্যাটাগরি জুড়ে),
-  // stable sort বলে বাকি ক্রম (prodOrder অনুযায়ী) অক্ষত থাকে
-  const stableOrdered = [...ordered].sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0));
+  const rows: OrderedIdRow[] = [];
+  let from = 0;
+  for (;;) {
+    const signal = getTimeoutSignal(QUERY_TIMEOUT_MS);
+    const { data, error } = await supabase
+      .from('custom_products')
+      .select('id, cat, cats, stock')
+      .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + SELECT_PAGE_SIZE - 1)
+      .abortSignal(signal as any);
+    if (error || !data) return [];
+    rows.push(...(data as OrderedIdRow[]));
+    if (data.length < SELECT_PAGE_SIZE) break; // শেষ পাতা
+    from += SELECT_PAGE_SIZE;
+  }
+  const filtered = rows.filter((p) => prodInCat({ cat: p.cat || '', cats: p.cats || [] }, category));
+  // sort_order অনুযায়ী ডাটাবেজ থেকেই সাজানো এসেছে (ওপরের .order()), তাই আলাদা করে
+  // কাস্টম অর্ডার বসাতে হয় না — শুধু স্টক-আউট প্রোডাক্ট পুরো ক্যাটাগরি জুড়ে শেষে নেওয়া
+  // হচ্ছে (নির্দিষ্ট পেজের ভেতরে না), stable sort বলে বাকি ক্রম অক্ষত থাকে
+  const stableOrdered = [...filtered].sort((a, b) => (a.stock <= 0 ? 1 : 0) - (b.stock <= 0 ? 1 : 0));
   return stableOrdered.map((p) => p.id);
 }
 
