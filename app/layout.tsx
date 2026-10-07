@@ -4,6 +4,7 @@ import './globals.css';
 import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
 import StaleTabReload from './components/StaleTabReload';
+import Analytics from './components/Analytics';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
 const SITE_URL = 'https://vangcur.com';
@@ -114,6 +115,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           className="fixed inset-0 -z-10 bg-gradient-to-b from-brand-bg via-[#DCEBFD] to-white dark:from-[#090D16] dark:via-[#0F172A] dark:to-[#0B0F19]"
         />
         {children}
+        <Analytics />
         <StaleTabReload />
         <GlobalOverlays />
       </body>
