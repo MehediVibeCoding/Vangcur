@@ -1,222 +1,198 @@
-import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
+// ফাইলের পাথ: lib/categoryData.ts
 import type { Category } from '@/types';
-import { logWarn } from './logger';
 
 export const DEFAULT_CATEGORIES: Category[] = [
+  // ১. অল প্রোডাক্টস (All Products) — স্মার্ট ডুও-টোন ৪-গ্রিড উইজেট
   {
     id: 'all',
-    name: 'All Products',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.9 1.45 22.2 22.2\"><g transform=\"rotate(-14 7.3 6.4)\"><rect x=\"5.2\" y=\"3.6\" width=\"4.2\" height=\"5.6\" rx=\"1.4\" fill=\"#35A25A\"/><rect x=\"5.2\" y=\"3.6\" width=\"4.2\" height=\"5.04\" rx=\"1.4\" fill=\"#34C759\"/></g><circle cx=\"17.2\" cy=\"6.2\" r=\"2.5\" fill=\"#D47244\"/><circle cx=\"17.2\" cy=\"6.03\" r=\"2.33\" fill=\"#FF8A3D\"/><ellipse cx=\"16.4\" cy=\"5.15\" rx=\"0.75\" ry=\"0.43\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 16.4 5.15)\"/><path d=\"M12.6 1.7 Q13.02 2.78 14.1 3.2 Q13.02 3.62 12.6 4.7 Q12.18 3.62 11.1 3.2 Q12.18 2.78 12.6 1.7 Z\" fill=\"#FFC933\"/><g transform=\"translate(0 1)\"><path d=\"M4.2 8.8 H19.8 L21 20 A2.4 2.4 0 0 1 18.6 22.4 H5.4 A2.4 2.4 0 0 1 3 20 Z\" fill=\"#3B6CD4\"/></g><path d=\"M4.2 8.8 H19.8 L21 20 A2.4 2.4 0 0 1 18.6 22.4 H5.4 A2.4 2.4 0 0 1 3 20 Z\" fill=\"#3B82F6\"/><rect x=\"5.4\" y=\"10.4\" width=\"1.4\" height=\"8\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.35\"/><path d=\"M9.2 9.4 V7 A2.8 2.8 0 0 1 14.8 7 V9.4\" fill=\"none\" stroke=\"#FFC933\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M12 12 Q13.01 14.59 15.6 15.6 Q13.01 16.61 12 19.2 Q10.99 16.61 8.4 15.6 Q10.99 14.59 12 12 Z\" fill=\"#FFFFFF\"/></svg>',
+    name: 'অল প্রোডাক্টস',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="5" width="9.5" height="9.5" rx="3" fill="#44A7FC" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="17.5" y="5" width="9.5" height="9.5" rx="3" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="5" y="17.5" width="9.5" height="9.5" rx="3" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="17.5" y="17.5" width="9.5" height="9.5" rx="3" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.8"/>
+      <circle cx="22.25" cy="22.25" r="1.5" fill="#44A7FC"/>
+    </svg>`,
   },
+
+  // ২. টি ডব্লিউ এস (TWS Earbuds) — ওপেন পেবল কেস ও চার্জিং বাডস
   {
     id: 'tws',
-    name: 'TWS',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.85 2.15 20.3 20.3\"><rect x=\"4.2\" y=\"2.4\" width=\"15.6\" height=\"8.2\" rx=\"3.6\" fill=\"#C79200\"/><rect x=\"4.2\" y=\"2.4\" width=\"15.6\" height=\"7.38\" rx=\"3.6\" fill=\"#F5B800\"/><circle cx=\"8.4\" cy=\"8\" r=\"3.3\" fill=\"#B7C2D3\"/><circle cx=\"8.4\" cy=\"7.77\" r=\"3.07\" fill=\"#FFFFFF\"/><ellipse cx=\"7.34\" cy=\"6.61\" rx=\"0.99\" ry=\"0.56\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 7.34 6.61)\"/><rect x=\"7.2\" y=\"9.8\" width=\"2.4\" height=\"6\" rx=\"1.2\" fill=\"#FFFFFF\" stroke=\"#B7C2D3\" stroke-width=\".5\"/><circle cx=\"7.8\" cy=\"7.4\" r=\"0.9\" fill=\"#CBD5E1\"/><circle cx=\"15.6\" cy=\"8\" r=\"3.3\" fill=\"#B7C2D3\"/><circle cx=\"15.6\" cy=\"7.77\" r=\"3.07\" fill=\"#FFFFFF\"/><ellipse cx=\"14.54\" cy=\"6.61\" rx=\"0.99\" ry=\"0.56\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 14.54 6.61)\"/><rect x=\"14.4\" y=\"9.8\" width=\"2.4\" height=\"6\" rx=\"1.2\" fill=\"#FFFFFF\" stroke=\"#B7C2D3\" stroke-width=\".5\"/><circle cx=\"15\" cy=\"7.4\" r=\"0.9\" fill=\"#CBD5E1\"/><rect x=\"2.6\" y=\"12.6\" width=\"18.8\" height=\"9.6\" rx=\"4.4\" fill=\"#D4A33C\"/><rect x=\"2.6\" y=\"12.6\" width=\"18.8\" height=\"8.4\" rx=\"4.4\" fill=\"#FFC933\"/><rect x=\"5.04\" y=\"13.37\" width=\"13.91\" height=\"1.92\" rx=\"0.96\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><circle cx=\"12\" cy=\"15.8\" r=\"1\" fill=\"#22C55E\"/><rect x=\"9.4\" y=\"18.4\" width=\"5.2\" height=\"1.2\" rx=\"0.6\" fill=\"#FFFFFF\" fill-opacity=\"0.75\"/></svg>',
+    name: 'টি ডব্লিউ এস',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7 14C7 9.58 10.58 6 15 6H17C21.42 6 25 9.58 25 14" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="6" y="14" width="20" height="12" rx="6" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="10.5" y="10" width="3.5" height="7" rx="1.75" fill="#44A7FC" stroke="#1E293B" stroke-width="1.4"/>
+      <rect x="18" y="10" width="3.5" height="7" rx="1.75" fill="#44A7FC" stroke="#1E293B" stroke-width="1.4"/>
+      <circle cx="16" cy="20" r="1.2" fill="#44A7FC"/>
+    </svg>`,
   },
-  {
-    id: 'powerbank',
-    name: 'Power Bank',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.45 0.95 21.1 21.1\"><rect x=\"9.4\" y=\"1.2\" width=\"5.2\" height=\"3\" rx=\"1\" fill=\"#94A3B8\"/><rect x=\"9.4\" y=\"1.2\" width=\"5.2\" height=\"2.7\" rx=\"1\" fill=\"#CBD5E1\"/><rect x=\"6\" y=\"3\" width=\"12\" height=\"18.8\" rx=\"3.6\" fill=\"#D47244\"/><rect x=\"6\" y=\"3\" width=\"12\" height=\"17.8\" rx=\"3.6\" fill=\"#FF8A3D\"/><rect x=\"7.92\" y=\"4.88\" width=\"1.6\" height=\"10.34\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><path d=\"M13.4 6.6 L8.9 13 H11.6 L10.7 17.4 L15.2 11 H12.4 Z\" fill=\"#FFFFFF\"/><rect x=\"8.2\" y=\"19\" width=\"2.2\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.85\"/><rect x=\"10.9\" y=\"19\" width=\"2.2\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.85\"/><rect x=\"13.6\" y=\"19\" width=\"2.2\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.5\"/></svg>',
-  },
+
+  // ৩. আরজিবি লাইট (RGB Light) — অ্যারোমা গ্লো স্লিক লাইটবার ও এম্বিয়েন্ট প্রিজম
   {
     id: 'rgb',
-    name: 'RGB Light',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.5 0.05 23 23\"><path d=\"M12 3.6 A7.2 7.2 0 0 1 18.85 8.58\" fill=\"none\" stroke=\"#F04444\" stroke-width=\"6.6\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\" stroke-opacity=\"0.14\"/><path d=\"M18.85 8.58 A7.2 7.2 0 0 1 16.23 16.62\" fill=\"none\" stroke=\"#FFC933\" stroke-width=\"6.6\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\" stroke-opacity=\"0.14\"/><path d=\"M16.23 16.62 A7.2 7.2 0 0 1 7.77 16.62\" fill=\"none\" stroke=\"#34C759\" stroke-width=\"6.6\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\" stroke-opacity=\"0.14\"/><path d=\"M7.77 16.62 A7.2 7.2 0 0 1 5.15 8.58\" fill=\"none\" stroke=\"#38BDF8\" stroke-width=\"6.6\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\" stroke-opacity=\"0.14\"/><path d=\"M5.15 8.58 A7.2 7.2 0 0 1 12 3.6\" fill=\"none\" stroke=\"#8B5CF6\" stroke-width=\"6.6\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\" stroke-opacity=\"0.14\"/><path d=\"M12 3.6 A7.2 7.2 0 0 1 18.85 8.58\" fill=\"none\" stroke=\"#F04444\" stroke-width=\"4.4\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\"/><path d=\"M18.85 8.58 A7.2 7.2 0 0 1 16.23 16.62\" fill=\"none\" stroke=\"#FFC933\" stroke-width=\"4.4\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\"/><path d=\"M16.23 16.62 A7.2 7.2 0 0 1 7.77 16.62\" fill=\"none\" stroke=\"#34C759\" stroke-width=\"4.4\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\"/><path d=\"M7.77 16.62 A7.2 7.2 0 0 1 5.15 8.58\" fill=\"none\" stroke=\"#38BDF8\" stroke-width=\"4.4\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\"/><path d=\"M5.15 8.58 A7.2 7.2 0 0 1 12 3.6\" fill=\"none\" stroke=\"#8B5CF6\" stroke-width=\"4.4\" stroke-linecap=\"butt\" stroke-linejoin=\"butt\"/><path d=\"M13.06 4.79 A6.1 6.1 0 0 1 15.05 16.08\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"0.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-opacity=\"0.6\"/><rect x=\"10.2\" y=\"19.2\" width=\"3.6\" height=\"3.6\" rx=\"1.2\" fill=\"#94A3B8\"/><rect x=\"10.2\" y=\"19.2\" width=\"3.6\" height=\"3.24\" rx=\"1.2\" fill=\"#CBD5E1\"/><path d=\"M21 1.5 Q21.42 2.58 22.5 3 Q21.42 3.42 21 4.5 Q20.58 3.42 19.5 3 Q20.58 2.58 21 1.5 Z\" fill=\"#FFC933\"/><path d=\"M3 16.7 Q3.36 17.64 4.3 18 Q3.36 18.36 3 19.3 Q2.64 18.36 1.7 18 Q2.64 17.64 3 16.7 Z\" fill=\"#38BDF8\"/></svg>',
+    name: 'আরজিবি লাইট',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="12" y="4" width="8" height="21" rx="4" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="14" y="7" width="4" height="14" rx="2" fill="#44A7FC"/>
+      <path d="M8 27H24" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M6 10L4 9M6 15L3 15M6 20L4 21" stroke="#44A7FC" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M26 10L28 9M26 15L29 15M26 20L28 21" stroke="#44A7FC" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
   },
-  {
-    id: 'smartwatch',
-    name: 'Smart Watch',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.75 0.95 22.1 22.1\"><rect x=\"8.2\" y=\"1.2\" width=\"7.6\" height=\"7.4\" rx=\"2.3\" fill=\"#4A81DB\"/><rect x=\"8.2\" y=\"1.2\" width=\"7.6\" height=\"6.66\" rx=\"2.3\" fill=\"#4F9DFF\"/><rect x=\"8.2\" y=\"15.4\" width=\"7.6\" height=\"7.4\" rx=\"2.3\" fill=\"#4A81DB\"/><rect x=\"8.2\" y=\"15.4\" width=\"7.6\" height=\"6.66\" rx=\"2.3\" fill=\"#4F9DFF\"/><rect x=\"19\" y=\"9.4\" width=\"2.2\" height=\"4\" rx=\"1\" fill=\"#8086A4\"/><rect x=\"19\" y=\"9.4\" width=\"2.2\" height=\"3.6\" rx=\"1\" fill=\"#94A3B8\"/><rect x=\"4.4\" y=\"5\" width=\"15\" height=\"14\" rx=\"4.8\" fill=\"#94A3B8\"/><rect x=\"4.4\" y=\"5\" width=\"15\" height=\"12.9\" rx=\"4.8\" fill=\"#CBD5E1\"/><rect x=\"6.35\" y=\"6.12\" width=\"11.1\" height=\"2.2\" rx=\"1\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"6.4\" y=\"7\" width=\"11\" height=\"10\" rx=\"3.4\" fill=\"#222838\"/><path d=\"M12 8.3 A3.7 3.7 0 1 1 8.3 12\" fill=\"none\" stroke=\"#F04444\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M12 9.9 A2.1 2.1 0 1 1 9.9 12\" fill=\"none\" stroke=\"#34C759\" stroke-width=\"1.3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"12\" r=\"0.8\" fill=\"#38BDF8\"/><rect x=\"7.4\" y=\"7.6\" width=\"3\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.35\"/></svg>',
-  },
-  {
-    id: 'acrylic',
-    name: 'Acrylic Lamp',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.15 0.75 21.7 21.7\"><circle cx=\"12\" cy=\"9.4\" r=\"8.4\" fill=\"#FFE9A8\" fill-opacity=\"0.4\"/><rect x=\"7\" y=\"1.8\" width=\"10\" height=\"16.6\" rx=\"3\" fill=\"#5FB9E6\"/><rect x=\"7\" y=\"1.8\" width=\"10\" height=\"15.4\" rx=\"3\" fill=\"#8EDCFF\"/><rect x=\"8.2\" y=\"3\" width=\"7.6\" height=\"14.2\" rx=\"2.2\" fill=\"#D6F5FF\"/><circle cx=\"12.6\" cy=\"9.6\" r=\"3.9\" fill=\"#FFC933\"/><circle cx=\"14.2\" cy=\"8.2\" r=\"3.5\" fill=\"#D6F5FF\"/><path d=\"M9.8 4.8 Q10.14 5.66 11 6 Q10.14 6.34 9.8 7.2 Q9.46 6.34 8.6 6 Q9.46 5.66 9.8 4.8 Z\" fill=\"#FF8A3D\"/><path d=\"M14.8 13.1 Q15.11 13.89 15.9 14.2 Q15.11 14.51 14.8 15.3 Q14.49 14.51 13.7 14.2 Q14.49 13.89 14.8 13.1 Z\" fill=\"#FF8A3D\"/><rect x=\"8.4\" y=\"3.4\" width=\"1.2\" height=\"9\" rx=\"0.6\" fill=\"#FFFFFF\" fill-opacity=\"0.8\"/><rect x=\"4.6\" y=\"18\" width=\"14.8\" height=\"4.2\" rx=\"2.1\" fill=\"#8A5A2B\"/><rect x=\"4.6\" y=\"18\" width=\"14.8\" height=\"3.78\" rx=\"2.1\" fill=\"#C98A4B\"/><rect x=\"8\" y=\"19.5\" width=\"8\" height=\"1\" rx=\"0.5\" fill=\"#FFE08A\"/></svg>',
-  },
-  {
-    id: 'headphone',
-    name: 'Headphone',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.75 2.5 20.5 20.5\"><path d=\"M5.4 13.5 V12 A6.6 6.6 0 0 1 18.6 12 V13.5\" fill=\"none\" stroke=\"#794ED4\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"translate(0 .7)\"/><path d=\"M5.4 13.5 V12 A6.6 6.6 0 0 1 18.6 12 V13.5\" fill=\"none\" stroke=\"#8B5CF6\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"2\" y=\"10\" width=\"6.6\" height=\"11.8\" rx=\"3.2\" fill=\"#D4902D\"/><rect x=\"2\" y=\"10\" width=\"6.6\" height=\"10.8\" rx=\"3.2\" fill=\"#FFB020\"/><rect x=\"3.06\" y=\"11.18\" width=\"1.19\" height=\"6.49\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"7.2\" y=\"11.2\" width=\"2.4\" height=\"9.2\" rx=\"1.2\" fill=\"#FFF1D0\"/><circle cx=\"5.3\" cy=\"15.8\" r=\"1.4\" fill=\"#FFFFFF\" fill-opacity=\"0.6\"/><rect x=\"15.4\" y=\"10\" width=\"6.6\" height=\"11.8\" rx=\"3.2\" fill=\"#D4902D\"/><rect x=\"15.4\" y=\"10\" width=\"6.6\" height=\"10.8\" rx=\"3.2\" fill=\"#FFB020\"/><rect x=\"16.46\" y=\"11.18\" width=\"1.19\" height=\"6.49\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"14.4\" y=\"11.2\" width=\"2.4\" height=\"9.2\" rx=\"1.2\" fill=\"#FFF1D0\"/><circle cx=\"18.7\" cy=\"15.8\" r=\"1.4\" fill=\"#FFFFFF\" fill-opacity=\"0.6\"/></svg>',
-  },
+
+  // ৪. রিচার্জেবল ফ্যান (Rechargeable Fan) — কিউট অ্যারোডায়নামিক ৩-ব্লেড ফ্যান ও বেস
   {
     id: 'fan',
-    name: 'Rechargeable Fan',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.85 0.75 22.3 22.3\"><rect x=\"10.7\" y=\"17\" width=\"2.6\" height=\"3.8\" rx=\"0.6\" fill=\"#7C86A9\"/><rect x=\"10.7\" y=\"17\" width=\"2.6\" height=\"3.42\" rx=\"0.6\" fill=\"#8FA3BF\"/><rect x=\"6.2\" y=\"20\" width=\"11.6\" height=\"2.8\" rx=\"1.4\" fill=\"#D47244\"/><rect x=\"6.2\" y=\"20\" width=\"11.6\" height=\"2.52\" rx=\"1.4\" fill=\"#FF8A3D\"/><circle cx=\"12\" cy=\"9.6\" r=\"8.6\" fill=\"#BEBBCF\"/><circle cx=\"12\" cy=\"9\" r=\"8\" fill=\"#E3E8F0\"/><ellipse cx=\"9.25\" cy=\"5.99\" rx=\"2.58\" ry=\"1.46\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 9.25 5.99)\"/><circle cx=\"12\" cy=\"9.6\" r=\"7.1\" fill=\"#F6FAFF\"/><ellipse cx=\"12\" cy=\"5.4\" rx=\"3\" ry=\"4.2\" fill=\"#34C759\"/><g transform=\"rotate(120 12 9.6)\"><ellipse cx=\"12\" cy=\"5.4\" rx=\"3\" ry=\"4.2\" fill=\"#34C759\"/></g><g transform=\"rotate(240 12 9.6)\"><ellipse cx=\"12\" cy=\"5.4\" rx=\"3\" ry=\"4.2\" fill=\"#34C759\"/></g><circle cx=\"12\" cy=\"9.6\" r=\"5.6\" fill=\"none\" stroke=\"#C3CCDA\" stroke-width=\".5\"/><circle cx=\"12\" cy=\"9.6\" r=\"2\" fill=\"#D4A33C\"/><circle cx=\"12\" cy=\"9.46\" r=\"1.86\" fill=\"#FFC933\"/><ellipse cx=\"11.36\" cy=\"8.76\" rx=\"0.6\" ry=\"0.34\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 11.36 8.76)\"/><circle cx=\"19.4\" cy=\"17.2\" r=\"3.2\" fill=\"#D4A33C\"/><circle cx=\"19.4\" cy=\"16.98\" r=\"2.98\" fill=\"#FFC933\"/><ellipse cx=\"18.38\" cy=\"15.86\" rx=\"0.96\" ry=\"0.54\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 18.38 15.86)\"/><path d=\"M20 14.8 L17.8 17.8 H19.2 L18.8 19.8 L21 16.8 H19.6 Z\" fill=\"#FFFFFF\"/></svg>',
+    name: 'রিচার্জেবল ফ্যান',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="13" r="9.5" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <circle cx="16" cy="13" r="2.5" fill="#44A7FC" stroke="#1E293B" stroke-width="1.4"/>
+      <path d="M16 10.5C16 7.5 18 6.5 18.5 7.5C19 8.5 17.5 11 16 10.5Z" fill="#44A7FC" stroke="#1E293B" stroke-width="1.2"/>
+      <path d="M14 14.5C11.5 16 10 14.5 10.5 13.5C11 12.5 14 13 14 14.5Z" fill="#44A7FC" stroke="#1E293B" stroke-width="1.2"/>
+      <path d="M17.5 15C19 17.5 18 19 17 18.5C16 18 16.5 15 17.5 15Z" fill="#44A7FC" stroke="#1E293B" stroke-width="1.2"/>
+      <path d="M16 22.5V27M11 27H21" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
   },
+
+  // ৫. একরেলিক ল্যাম্প (Acrylic Lamp) — উডেন বেস ও ক্রিস্টাল এচিং আর্চ
+  {
+    id: 'acrylic',
+    name: 'একরেলিক ল্যাম্প',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 22V11C9 7.13 12.13 4 16 4C19.87 4 23 7.13 23 11V22" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="6" y="22" width="20" height="6" rx="2.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.8"/>
+      <path d="M16 9V17M12.5 13H19.5" stroke="#44A7FC" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="16" cy="13" r="1.2" fill="#44A7FC"/>
+      <path d="M11 25H21" stroke="#44A7FC" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+  },
+
+  // ৬. হেডফোন (Headphone) — প্রিমিয়াম ওভার-ইয়ার কুশনড হেডসেট
+  {
+    id: 'headphone',
+    name: 'হেডফোন',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 16C6 10.48 10.48 6 16 6C21.52 6 26 10.48 26 16" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="4" y="15" width="5" height="10" rx="2.5" fill="#44A7FC" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="23" y="15" width="5" height="10" rx="2.5" fill="#44A7FC" stroke="#1E293B" stroke-width="1.8"/>
+      <path d="M9 17.5V22.5M23 17.5V22.5" stroke="#E0F2FE" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+  },
+
+  // ৭. ইউনিক কালেকশন (Unique Collection) — এক্সক্লুসিভ জেম ও স্পার্ক প্রিজম
   {
     id: 'unique',
-    name: 'Unique Collection',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.65 0.95 21.5 21.5\"><rect x=\"3.6\" y=\"11\" width=\"16.8\" height=\"11.2\" rx=\"2.6\" fill=\"#794ED4\"/><rect x=\"3.6\" y=\"11\" width=\"16.8\" height=\"10.2\" rx=\"2.6\" fill=\"#8B5CF6\"/><rect x=\"5.78\" y=\"11.9\" width=\"12.43\" height=\"2.2\" rx=\"1\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"2.6\" y=\"7.6\" width=\"18.8\" height=\"4.6\" rx=\"2\" fill=\"#8557EA\"/><rect x=\"2.6\" y=\"7.6\" width=\"18.8\" height=\"4.14\" rx=\"2\" fill=\"#AB8AF9\"/><rect x=\"10.5\" y=\"7.6\" width=\"3\" height=\"14.6\" rx=\"0.8\" fill=\"#D4A33C\"/><rect x=\"10.5\" y=\"7.6\" width=\"3\" height=\"13.6\" rx=\"0.8\" fill=\"#FFC933\"/><ellipse cx=\"8.8\" cy=\"5.4\" rx=\"3.2\" ry=\"2\" fill=\"#FFC933\" transform=\"rotate(-26 8.8 5.4)\"/><ellipse cx=\"15.2\" cy=\"5.4\" rx=\"3.2\" ry=\"2\" fill=\"#FFC933\" transform=\"rotate(26 15.2 5.4)\"/><ellipse cx=\"8.9\" cy=\"5.5\" rx=\"1.6\" ry=\"0.9\" fill=\"#E0A800\" transform=\"rotate(-26 8.8 5.4)\"/><ellipse cx=\"15.1\" cy=\"5.5\" rx=\"1.6\" ry=\"0.9\" fill=\"#E0A800\" transform=\"rotate(26 15.2 5.4)\"/><circle cx=\"12\" cy=\"6.6\" r=\"1.7\" fill=\"#D4A33C\"/><circle cx=\"12\" cy=\"6.48\" r=\"1.58\" fill=\"#FFC933\"/><ellipse cx=\"11.46\" cy=\"5.89\" rx=\"0.51\" ry=\"0.29\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 11.46 5.89)\"/><path d=\"M20.4 1.2 Q20.96 2.64 22.4 3.2 Q20.96 3.76 20.4 5.2 Q19.84 3.76 18.4 3.2 Q19.84 2.64 20.4 1.2 Z\" fill=\"#38BDF8\"/><path d=\"M3.8 3.2 Q4.19 4.21 5.2 4.6 Q4.19 4.99 3.8 6 Q3.41 4.99 2.4 4.6 Q3.41 4.21 3.8 3.2 Z\" fill=\"#FF8A3D\"/></svg>',
+    name: 'ইউনিক কালেকশন',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 3L19.2 11.8L28 15L19.2 18.2L16 27L12.8 18.2L4 15L12.8 11.8L16 3Z" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="16" cy="15" r="3" fill="#44A7FC"/>
+      <circle cx="26" cy="6" r="1.5" fill="#44A7FC"/>
+      <circle cx="6" cy="24" r="1.5" fill="#44A7FC"/>
+    </svg>`,
   },
-  {
-    id: 'crystalball',
-    name: 'Crystal Ball',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.65 1.55 20.7 20.7\"><rect x=\"5.4\" y=\"17.8\" width=\"13.2\" height=\"4.2\" rx=\"2\" fill=\"#B8761C\"/><rect x=\"5.4\" y=\"17.8\" width=\"13.2\" height=\"3.78\" rx=\"2\" fill=\"#E9A23B\"/><rect x=\"7\" y=\"17.6\" width=\"10\" height=\"1\" rx=\"0.5\" fill=\"#FFD27A\"/><circle cx=\"12\" cy=\"10\" r=\"8.2\" fill=\"#6B4FD6\"/><circle cx=\"12\" cy=\"9.43\" r=\"7.63\" fill=\"#9B7BFA\"/><ellipse cx=\"9.38\" cy=\"6.56\" rx=\"2.46\" ry=\"1.39\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 9.38 6.56)\"/><circle cx=\"12\" cy=\"11\" r=\"5.8\" fill=\"#C4B5FD\" fill-opacity=\"0.55\"/><path d=\"M13.6 7 Q14.5 9.3 16.8 10.2 Q14.5 11.1 13.6 13.4 Q12.7 11.1 10.4 10.2 Q12.7 9.3 13.6 7 Z\" fill=\"#FFE066\"/><path d=\"M8.6 11.4 Q8.99 12.41 10 12.8 Q8.99 13.19 8.6 14.2 Q8.21 13.19 7.2 12.8 Q8.21 12.41 8.6 11.4 Z\" fill=\"#FFFFFF\"/><path d=\"M9.6 6.4 Q9.88 7.12 10.6 7.4 Q9.88 7.68 9.6 8.4 Q9.32 7.68 8.6 7.4 Q9.32 7.12 9.6 6.4 Z\" fill=\"#FFFFFF\"/></svg>',
-  },
-  {
-    id: 'waterbottle',
-    name: 'Water Bottle',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.25 0.95 21.5 21.5\"><rect x=\"8.8\" y=\"1.2\" width=\"6.4\" height=\"3.2\" rx=\"1.2\" fill=\"#D47244\"/><rect x=\"8.8\" y=\"1.2\" width=\"6.4\" height=\"2.88\" rx=\"1.2\" fill=\"#FF8A3D\"/><rect x=\"9.8\" y=\"3.8\" width=\"4.4\" height=\"2\" rx=\"0.6\" fill=\"#CBD5E1\"/><rect x=\"6.4\" y=\"5.4\" width=\"11.2\" height=\"16.8\" rx=\"3.6\" fill=\"#7CCBF0\"/><rect x=\"6.4\" y=\"5.4\" width=\"11.2\" height=\"15.7\" rx=\"3.6\" fill=\"#BDEBFF\"/><path d=\"M6.4 11.8 Q9.2 10.6 12 11.8 T17.6 11.8 V18.6 A3.6 3.6 0 0 1 14 22.2 H10 A3.6 3.6 0 0 1 6.4 18.6 Z\" fill=\"#38BDF8\"/><path d=\"M12 14 C13.5 15.6 14.2 16.6 14.2 17.4 A2.2 2.2 0 0 1 9.8 17.4 C9.8 16.6 10.5 15.6 12 14 Z\" fill=\"#FFFFFF\" fill-opacity=\"0.9\"/><rect x=\"8\" y=\"7\" width=\"1.4\" height=\"3.6\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.65\"/></svg>',
-  },
-  {
-    id: 'wifiups',
-    name: 'Wifi UPS',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"2.15 2.7 19.7 19.7\"><path d=\"M5.6 7.2 A9 9 0 0 1 18.4 7.2\" fill=\"none\" stroke=\"#3B82F6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M8 9.6 A5.6 5.6 0 0 1 16 9.6\" fill=\"none\" stroke=\"#3B82F6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"11.4\" r=\"1.4\" fill=\"#3B82F6\"/><rect x=\"2.4\" y=\"13\" width=\"19.2\" height=\"8.6\" rx=\"3.2\" fill=\"#C3CCDA\"/><rect x=\"2.4\" y=\"13\" width=\"19.2\" height=\"7.5\" rx=\"3.2\" fill=\"#F8FAFC\"/><rect x=\"4.9\" y=\"13.69\" width=\"14.21\" height=\"1.72\" rx=\"0.86\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><circle cx=\"6\" cy=\"17.2\" r=\"1\" fill=\"#22C55E\"/><circle cx=\"8.8\" cy=\"17.2\" r=\"1\" fill=\"#22C55E\"/><circle cx=\"11.6\" cy=\"17.2\" r=\"1\" fill=\"#F59E0B\"/><circle cx=\"17.4\" cy=\"17.2\" r=\"3\" fill=\"#D4A33C\"/><circle cx=\"17.4\" cy=\"16.99\" r=\"2.79\" fill=\"#FFC933\"/><ellipse cx=\"16.44\" cy=\"15.94\" rx=\"0.9\" ry=\"0.51\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 16.44 15.94)\"/><path d=\"M18 14.9 L15.9 17.6 H17.2 L16.8 19.5 L18.9 16.8 H17.6 Z\" fill=\"#FFFFFF\"/></svg>',
-  },
-  {
-    id: 'humidifier',
-    name: 'Humidifier',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.55 -0.45 22.9 22.9\"><circle cx=\"9.2\" cy=\"3.8\" r=\"2.4\" fill=\"#BDEBFF\"/><circle cx=\"12.2\" cy=\"2.6\" r=\"2.8\" fill=\"#CFF1FF\"/><circle cx=\"15.2\" cy=\"3.8\" r=\"2.3\" fill=\"#BDEBFF\"/><ellipse cx=\"11.4\" cy=\"1.8\" rx=\"1.2\" ry=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.7\"/><rect x=\"10.2\" y=\"5.8\" width=\"3.6\" height=\"3\" rx=\"1\" fill=\"#94A3B8\"/><rect x=\"10.2\" y=\"5.8\" width=\"3.6\" height=\"2.7\" rx=\"1\" fill=\"#CBD5E1\"/><rect x=\"6.6\" y=\"8.4\" width=\"10.8\" height=\"10\" rx=\"3.2\" fill=\"#C3CCDA\"/><rect x=\"6.6\" y=\"8.4\" width=\"10.8\" height=\"9\" rx=\"3.2\" fill=\"#F1F5F9\"/><rect x=\"8\" y=\"9.2\" width=\"7.99\" height=\"2\" rx=\"1\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"8.6\" y=\"10.4\" width=\"6.8\" height=\"6\" rx=\"3\" fill=\"#38BDF8\"/><path d=\"M12 11.4 C13.4 13 14 13.8 14 14.4 A2 2 0 0 1 10 14.4 C10 13.8 10.6 13 12 11.4 Z\" fill=\"#FFFFFF\"/><rect x=\"9.4\" y=\"11.6\" width=\"1\" height=\"3\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.55\"/><rect x=\"5.2\" y=\"17.2\" width=\"13.6\" height=\"5\" rx=\"2.5\" fill=\"#30ACA9\"/><rect x=\"5.2\" y=\"17.2\" width=\"13.6\" height=\"4.5\" rx=\"2.5\" fill=\"#2DD4BF\"/></svg>',
-  },
-  {
-    id: 'keyboard',
-    name: 'Keyboard',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.35 1.75 21.3 21.3\"><rect x=\"1.6\" y=\"6\" width=\"20.8\" height=\"12.8\" rx=\"3.4\" fill=\"#A9B4C6\"/><rect x=\"1.6\" y=\"6\" width=\"20.8\" height=\"11.5\" rx=\"3.4\" fill=\"#E3E8F0\"/><rect x=\"4.2\" y=\"8.2\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#D47244\"/><rect x=\"4.2\" y=\"8.2\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FF8A3D\"/><rect x=\"7.7\" y=\"8.2\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"7.7\" y=\"8.2\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"11.2\" y=\"8.2\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"11.2\" y=\"8.2\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"14.7\" y=\"8.2\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"14.7\" y=\"8.2\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"18.2\" y=\"8.2\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"18.2\" y=\"8.2\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"5.9\" y=\"11.6\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"5.9\" y=\"11.6\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"9.4\" y=\"11.6\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"9.4\" y=\"11.6\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"12.9\" y=\"11.6\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#C3CCDA\"/><rect x=\"12.9\" y=\"11.6\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#FFFFFF\"/><rect x=\"16.4\" y=\"11.6\" width=\"2.7\" height=\"2.5\" rx=\"0.8\" fill=\"#35A25A\"/><rect x=\"16.4\" y=\"11.6\" width=\"2.7\" height=\"2\" rx=\"0.8\" fill=\"#34C759\"/><rect x=\"7.2\" y=\"15\" width=\"9.6\" height=\"2.2\" rx=\"1.1\" fill=\"#3B6CD4\"/><rect x=\"7.2\" y=\"15\" width=\"9.6\" height=\"1.7\" rx=\"1.1\" fill=\"#3B82F6\"/></svg>',
-  },
+
+  // ৮. গিম্বল (Gimbal) — ৩-অ্যাক্সিস মোটর আর্ম ও স্মার্টফোন স্ট্যাবিলাইজার
   {
     id: 'gimbal',
-    name: 'Gimbal',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-0.1 1.35 21.5 21.5\"><path d=\"M6.2 10.2 C6.2 14 8.6 14.8 10.6 15.8\" fill=\"none\" stroke=\"#3B3A54\" stroke-width=\"2.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"translate(0 .6)\"/><path d=\"M6.2 10.2 C6.2 14 8.6 14.8 10.6 15.8\" fill=\"none\" stroke=\"#3B4252\" stroke-width=\"2.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"9\" y=\"1.6\" width=\"8.8\" height=\"12.8\" rx=\"2.6\" fill=\"#C3CCDA\"/><rect x=\"9\" y=\"1.6\" width=\"8.8\" height=\"11.8\" rx=\"2.6\" fill=\"#F8FAFC\"/><rect x=\"10.41\" y=\"2.88\" width=\"1.58\" height=\"7.04\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"10.2\" y=\"3.1\" width=\"6.4\" height=\"9.6\" rx=\"1.6\" fill=\"#38BDF8\"/><circle cx=\"13.4\" cy=\"6.2\" r=\"1.3\" fill=\"#FFC933\"/><path d=\"M10.2 12.7 V11 L12.8 8.2 L14.6 10.4 L15.6 9.4 L16.6 10.6 V12.7 Z\" fill=\"#34C759\"/><circle cx=\"6.2\" cy=\"8\" r=\"2.7\" fill=\"#3B3A54\"/><circle cx=\"6.2\" cy=\"7.81\" r=\"2.51\" fill=\"#3B4252\"/><ellipse cx=\"5.34\" cy=\"6.87\" rx=\"0.81\" ry=\"0.46\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 5.34 6.87)\"/><circle cx=\"6.2\" cy=\"8\" r=\"1\" fill=\"#FF8A3D\"/><rect x=\"8\" y=\"7.2\" width=\"1.4\" height=\"1.8\" rx=\"0.6\" fill=\"#8086A4\"/><rect x=\"8\" y=\"7.2\" width=\"1.4\" height=\"1.62\" rx=\"0.6\" fill=\"#94A3B8\"/><rect x=\"9\" y=\"14.6\" width=\"6.2\" height=\"8\" rx=\"3.1\" fill=\"#3B3A54\"/><rect x=\"9\" y=\"14.6\" width=\"6.2\" height=\"7.2\" rx=\"3.1\" fill=\"#3B4252\"/><rect x=\"9.99\" y=\"15.4\" width=\"1.12\" height=\"4.4\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"9\" y=\"17.6\" width=\"6.2\" height=\"1.4\" rx=\"0.7\" fill=\"#FF8A3D\"/><circle cx=\"12\" cy=\"15.9\" r=\"1.3\" fill=\"#D4A33C\"/><circle cx=\"12\" cy=\"15.81\" r=\"1.21\" fill=\"#FFC933\"/><ellipse cx=\"11.58\" cy=\"15.35\" rx=\"0.39\" ry=\"0.22\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 11.58 15.35)\"/></svg>',
+    name: 'গিম্বল',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="9" y="4" width="14" height="8" rx="2" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <path d="M16 12V16M16 16H21V19M16 16H11V19" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="16" cy="16" r="2" fill="#44A7FC"/>
+      <rect x="13.5" y="19" width="5" height="9" rx="2" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.8"/>
+      <circle cx="16" cy="22.5" r="1" fill="#44A7FC"/>
+    </svg>`,
   },
+
+  // ৯. ইউনিক টুল (Unique Tool) — স্লিক প্রেসিশন ইলেকট্রিক স্ক্রু-ড্রাইভার
   {
-    id: 'light',
-    name: 'Light',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.05 -0.75 23.9 23.9\"><circle cx=\"12\" cy=\"9.2\" r=\"9\" fill=\"#FFE680\" fill-opacity=\"0.3\"/><path d=\"M12 .6 V2\" fill=\"none\" stroke=\"#FF8A3D\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M3.4 4 L4.6 5.2\" fill=\"none\" stroke=\"#FF8A3D\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M20.6 4 L19.4 5.2\" fill=\"none\" stroke=\"#FF8A3D\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M1.2 10 H2.6\" fill=\"none\" stroke=\"#FF8A3D\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M21.4 10 H22.8\" fill=\"none\" stroke=\"#FF8A3D\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"9.2\" r=\"6.8\" fill=\"#F5A623\"/><circle cx=\"12\" cy=\"8.72\" r=\"6.32\" fill=\"#FFD84D\"/><ellipse cx=\"9.82\" cy=\"6.34\" rx=\"2.04\" ry=\"1.16\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 9.82 6.34)\"/><circle cx=\"12\" cy=\"9.8\" r=\"4.6\" fill=\"#FFF3B0\" fill-opacity=\"0.7\"/><path d=\"M10 14.8 V12.2 Q12 8.8 14 12.2 V14.8\" fill=\"none\" stroke=\"#FF8A3D\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"8.6\" y=\"14.8\" width=\"6.8\" height=\"2.4\" rx=\"1.1\" fill=\"#94A3B8\"/><rect x=\"8.6\" y=\"14.8\" width=\"6.8\" height=\"2.16\" rx=\"1.1\" fill=\"#CBD5E1\"/><rect x=\"9\" y=\"16.9\" width=\"6\" height=\"2.2\" rx=\"1.1\" fill=\"#64748B\"/><rect x=\"9\" y=\"16.9\" width=\"6\" height=\"1.98\" rx=\"1.1\" fill=\"#94A3B8\"/><rect x=\"9.4\" y=\"18.9\" width=\"5.2\" height=\"2.2\" rx=\"1.1\" fill=\"#94A3B8\"/><rect x=\"9.4\" y=\"18.9\" width=\"5.2\" height=\"1.98\" rx=\"1.1\" fill=\"#CBD5E1\"/><rect x=\"10.6\" y=\"20.9\" width=\"2.8\" height=\"1.8\" rx=\"0.9\" fill=\"#475569\"/><rect x=\"10.6\" y=\"20.9\" width=\"2.8\" height=\"1.62\" rx=\"0.9\" fill=\"#64748B\"/></svg>',
+    id: 'tools',
+    name: 'ইউনিক টুল',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="12" y="7" width="8" height="17" rx="3" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <path d="M14 24L15 28H17L18 24" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.6" stroke-linejoin="round"/>
+      <line x1="16" y1="28" x2="16" y2="30" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="14" y="11" width="4" height="4" rx="1" fill="#44A7FC"/>
+      <path d="M12 4H20" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
   },
+
+  // ১০. ক্যাবল অ্যান্ড চার্জার (Cable & Charger) — ফাস্ট-চার্জিং অ্যাডাপ্টার ও টাইপ-সি লুপ
   {
-    id: 'mouse',
-    name: 'Mouse',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.32 1.65 21.6 21.6\"><g transform=\"rotate(-14 12 12)\"><g transform=\"translate(0 1.1)\"><path d=\"M12 2 C16.6 2 18.6 5.6 18.6 9.6 V14.6 C18.6 19 15.8 22 12 22 C8.2 22 5.4 19 5.4 14.6 V9.6 C5.4 5.6 7.4 2 12 2 Z\" fill=\"#1FA676\"/></g><path d=\"M12 2 C16.6 2 18.6 5.6 18.6 9.6 V14.6 C18.6 19 15.8 22 12 22 C8.2 22 5.4 19 5.4 14.6 V9.6 C5.4 5.6 7.4 2 12 2 Z\" fill=\"#34D399\"/><path d=\"M5.4 9.8 V9.6 C5.4 5.6 7.4 2 11.2 2 V9.8 Z\" fill=\"#6EE7B7\"/><path d=\"M12.8 2 C16.6 2 18.6 5.6 18.6 9.6 V9.8 H12.8 Z\" fill=\"#6EE7B7\"/><rect x=\"11.2\" y=\"2\" width=\"1.6\" height=\"7.8\" rx=\"0.8\" fill=\"#1FA676\"/><rect x=\"10.8\" y=\"4\" width=\"2.4\" height=\"4.4\" rx=\"1.2\" fill=\"#D4A33C\"/><rect x=\"10.8\" y=\"4\" width=\"2.4\" height=\"3.96\" rx=\"1.2\" fill=\"#FFC933\"/><circle cx=\"8.6\" cy=\"18\" r=\"0.8\" fill=\"#F04444\"/><circle cx=\"10.8\" cy=\"18.6\" r=\"0.8\" fill=\"#FFC933\"/><circle cx=\"13.2\" cy=\"18.6\" r=\"0.8\" fill=\"#38BDF8\"/><circle cx=\"15.4\" cy=\"18\" r=\"0.8\" fill=\"#8B5CF6\"/><ellipse cx=\"8.2\" cy=\"7\" rx=\"0.9\" ry=\"2.4\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/></g></svg>',
+    id: 'cable-charger',
+    name: 'ক্যাবল অ্যান্ড চার্জার',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="10" width="12" height="14" rx="3" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <path d="M8 6V10M14 6V10" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="9" y="16" width="4" height="3" rx="1" fill="#44A7FC"/>
+      <path d="M17 19C21 19 23 16 23 13V10" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="21" y="5" width="4" height="5" rx="1.5" fill="#44A7FC" stroke="#1E293B" stroke-width="1.5"/>
+      <line x1="23" y1="3" x2="23" y2="5" stroke="#1E293B" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
   },
-  {
-    id: 'cable',
-    name: 'Cable And Charges',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.65 1.95 20.5 20.5\"><rect x=\"5.4\" y=\"2.2\" width=\"1.9\" height=\"3.6\" rx=\"0.7\" fill=\"#8086A4\"/><rect x=\"5.4\" y=\"2.2\" width=\"1.9\" height=\"3.24\" rx=\"0.7\" fill=\"#94A3B8\"/><rect x=\"9.4\" y=\"2.2\" width=\"1.9\" height=\"3.6\" rx=\"0.7\" fill=\"#8086A4\"/><rect x=\"9.4\" y=\"2.2\" width=\"1.9\" height=\"3.24\" rx=\"0.7\" fill=\"#94A3B8\"/><rect x=\"3.4\" y=\"5.4\" width=\"10\" height=\"9.4\" rx=\"2.8\" fill=\"#C3CCDA\"/><rect x=\"3.4\" y=\"5.4\" width=\"10\" height=\"8.46\" rx=\"2.8\" fill=\"#F8FAFC\"/><rect x=\"4.7\" y=\"6.15\" width=\"7.4\" height=\"1.88\" rx=\"0.94\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><path d=\"M9 7 L6.4 10.8 H8.4 L7.8 13.2 L10.4 9.4 H8.4 Z\" fill=\"#FF8A3D\"/><path d=\"M13.4 11.4 H15.2 A2.6 2.6 0 0 1 17.8 14 V16\" fill=\"none\" stroke=\"#5B6B83\" stroke-width=\"2.1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"15.2\" y=\"15.8\" width=\"5.2\" height=\"6.4\" rx=\"1.5\" fill=\"#94A3B8\"/><rect x=\"15.2\" y=\"15.8\" width=\"5.2\" height=\"5.76\" rx=\"1.5\" fill=\"#CBD5E1\"/><rect x=\"16.4\" y=\"20\" width=\"2.8\" height=\"1.2\" rx=\"0.6\" fill=\"#475569\"/><rect x=\"16.4\" y=\"17\" width=\"2.8\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.8\"/></svg>',
-  },
-  {
-    id: 'unique-tools',
-    name: 'Unique Tools',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.8 0.05 22.4 22.4\"><g transform=\"rotate(-20 12 11.4)\"><rect x=\"9.6\" y=\"0.4\" width=\"4.8\" height=\"6.2\" rx=\"2.4\" fill=\"#D4A33C\"/><rect x=\"9.6\" y=\"0.4\" width=\"4.8\" height=\"5.58\" rx=\"2.4\" fill=\"#FFC933\"/><rect x=\"11\" y=\"6\" width=\"2\" height=\"6\" rx=\"1\" fill=\"#94A3B8\"/><rect x=\"11\" y=\"6\" width=\"2\" height=\"5.4\" rx=\"1\" fill=\"#CBD5E1\"/></g><g transform=\"rotate(20 12 11.4)\"><rect x=\"10.9\" y=\"4.6\" width=\"2.2\" height=\"9\" rx=\"1.1\" fill=\"#B9783F\"/><rect x=\"10.9\" y=\"4.6\" width=\"2.2\" height=\"8.1\" rx=\"1.1\" fill=\"#E2A85F\"/><rect x=\"7.6\" y=\"0.8\" width=\"8.8\" height=\"4.6\" rx=\"1.4\" fill=\"#5B6B83\"/><rect x=\"7.6\" y=\"0.8\" width=\"8.8\" height=\"4.14\" rx=\"1.4\" fill=\"#7F8CA0\"/><rect x=\"8.6\" y=\"1.4\" width=\"3\" height=\"0.9\" rx=\"0.45\" fill=\"#FFFFFF\" fill-opacity=\"0.5\"/></g><path d=\"M8.4 11 V9 H15.6 V11\" fill=\"none\" stroke=\"#94A3B8\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"2.2\" y=\"10.6\" width=\"19.6\" height=\"11.6\" rx=\"2.6\" fill=\"#C83B49\"/><rect x=\"2.2\" y=\"10.6\" width=\"19.6\" height=\"10.6\" rx=\"2.6\" fill=\"#F04444\"/><rect x=\"4.75\" y=\"11.53\" width=\"14.5\" height=\"2.2\" rx=\"1\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"2.2\" y=\"14.4\" width=\"19.6\" height=\"1\" rx=\"0\" fill=\"#C83B49\" fill-opacity=\"0.55\"/><rect x=\"10.2\" y=\"13.2\" width=\"3.6\" height=\"3.2\" rx=\"0.9\" fill=\"#D4A33C\"/><rect x=\"10.2\" y=\"13.2\" width=\"3.6\" height=\"2.88\" rx=\"0.9\" fill=\"#FFC933\"/><rect x=\"3.6\" y=\"19.4\" width=\"2.6\" height=\"2.2\" rx=\"0.6\" fill=\"#8086A4\"/><rect x=\"3.6\" y=\"19.4\" width=\"2.6\" height=\"1.98\" rx=\"0.6\" fill=\"#94A3B8\"/><rect x=\"17.8\" y=\"19.4\" width=\"2.6\" height=\"2.2\" rx=\"0.6\" fill=\"#8086A4\"/><rect x=\"17.8\" y=\"19.4\" width=\"2.6\" height=\"1.98\" rx=\"0.6\" fill=\"#94A3B8\"/></svg>',
-  },
-  {
-    id: 'hairdryer',
-    name: 'Hair Dryer',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.75 2.53 19.9 19.9\"><g transform=\"rotate(14 10.6 11)\"><rect x=\"8.2\" y=\"10.4\" width=\"4.8\" height=\"11.4\" rx=\"2.4\" fill=\"#BB3C74\"/><rect x=\"8.2\" y=\"10.4\" width=\"4.8\" height=\"10.4\" rx=\"2.4\" fill=\"#E0457B\"/></g><rect x=\"15.6\" y=\"4.6\" width=\"5.8\" height=\"7.6\" rx=\"1.8\" fill=\"#D97BA0\"/><rect x=\"15.6\" y=\"4.6\" width=\"5.8\" height=\"6.84\" rx=\"1.8\" fill=\"#FFB3CF\"/><rect x=\"17\" y=\"5.8\" width=\"0.9\" height=\"5\" rx=\"0.45\" fill=\"#D97BA0\"/><rect x=\"18.8\" y=\"5.8\" width=\"0.9\" height=\"5\" rx=\"0.45\" fill=\"#D97BA0\"/><rect x=\"2\" y=\"3.4\" width=\"15\" height=\"10\" rx=\"5\" fill=\"#D44E87\"/><rect x=\"2\" y=\"3.4\" width=\"15\" height=\"9\" rx=\"5\" fill=\"#FF5C93\"/><rect x=\"3.95\" y=\"4.2\" width=\"11.1\" height=\"2\" rx=\"1\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"5.2\" y=\"6.4\" width=\"1.2\" height=\"3.8\" rx=\"0.6\" fill=\"#FFFFFF\" fill-opacity=\"0.8\"/><rect x=\"7.6\" y=\"6.4\" width=\"1.2\" height=\"3.8\" rx=\"0.6\" fill=\"#FFFFFF\" fill-opacity=\"0.8\"/><rect x=\"10\" y=\"6.4\" width=\"1.2\" height=\"3.8\" rx=\"0.6\" fill=\"#FFFFFF\" fill-opacity=\"0.8\"/><g transform=\"rotate(14 10.6 11)\"><circle cx=\"10.6\" cy=\"17\" r=\"1\" fill=\"#FFC933\"/></g></svg>',
-  },
+
+  // ১১. টয়েস (Toys / Gadget Toys) — রেট্রো হ্যান্ডহেল্ড পোর্টেবল গেম বয়
   {
     id: 'toys',
-    name: 'Toys',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.15 1.05 21.2 21.2\"><path d=\"M1.8 13.4 L4 11.2 H12 L9.8 13.4 Z\" fill=\"#F68F8F\"/><path d=\"M9.8 13.4 L12 11.2 V19.2 L9.8 21.4 Z\" fill=\"#BD394B\"/><rect x=\"1.8\" y=\"13.4\" width=\"8\" height=\"8\" rx=\"1.2\" fill=\"#F04444\"/><rect x=\"2.8\" y=\"14.3\" width=\"4\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><circle cx=\"5.8\" cy=\"17.4\" r=\"2.1\" fill=\"#FFFFFF\"/><path d=\"M11.4 13.4 L13.6 11.2 H21.6 L19.4 13.4 Z\" fill=\"#89B4FA\"/><path d=\"M19.4 13.4 L21.6 11.2 V19.2 L19.4 21.4 Z\" fill=\"#3B66CB\"/><rect x=\"11.4\" y=\"13.4\" width=\"8\" height=\"8\" rx=\"1.2\" fill=\"#3B82F6\"/><rect x=\"12.4\" y=\"14.3\" width=\"4\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><path d=\"M15.4 15.2 L13.6 19.2 L17.2 19.2 Z\" fill=\"#FFFFFF\" stroke=\"#FFFFFF\" stroke-width=\".6\" stroke-linejoin=\"round\"/><g transform=\"rotate(-8 10.4 9)\"><path d=\"M6.4 5 L8.6 2.8 H16.6 L14.4 5 Z\" fill=\"#FFDF85\"/><path d=\"M14.4 5 L16.6 2.8 V10.8 L14.4 13 Z\" fill=\"#C8993E\"/><rect x=\"6.4\" y=\"5\" width=\"8\" height=\"8\" rx=\"1.2\" fill=\"#FFC933\"/><rect x=\"7.4\" y=\"5.9\" width=\"4\" height=\"1\" rx=\"0.5\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><path d=\"M10.4 6.6 Q11.07 8.33 12.8 9 Q11.07 9.67 10.4 11.4 Q9.73 9.67 8 9 Q9.73 8.33 10.4 6.6 Z\" fill=\"#FFFFFF\"/></g><path d=\"M20.6 1.9 Q21.02 2.98 22.1 3.4 Q21.02 3.82 20.6 4.9 Q20.18 3.82 19.1 3.4 Q20.18 2.98 20.6 1.9 Z\" fill=\"#FF8A3D\"/><path d=\"M2.6 3.8 Q2.94 4.66 3.8 5 Q2.94 5.34 2.6 6.2 Q2.26 5.34 1.4 5 Q2.26 4.66 2.6 3.8 Z\" fill=\"#38BDF8\"/></svg>',
+    name: 'টয়েস',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="7" y="5" width="18" height="22" rx="4" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="10" y="8" width="12" height="8" rx="2" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.6"/>
+      <path d="M10 20H14M12 18V22" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="19" cy="21" r="1.5" fill="#44A7FC" stroke="#1E293B" stroke-width="1.2"/>
+      <circle cx="22" cy="19" r="1.5" fill="#44A7FC" stroke="#1E293B" stroke-width="1.2"/>
+    </svg>`,
   },
-  {
-    id: 'alarmclock',
-    name: 'Alarm Clock',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.7 0.95 22.6 22.6\"><circle cx=\"4.8\" cy=\"5.4\" r=\"3.4\" fill=\"#D4A33C\"/><circle cx=\"4.8\" cy=\"5.16\" r=\"3.16\" fill=\"#FFC933\"/><ellipse cx=\"3.71\" cy=\"3.97\" rx=\"1.02\" ry=\"0.58\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 3.71 3.97)\"/><circle cx=\"19.2\" cy=\"5.4\" r=\"3.4\" fill=\"#D4A33C\"/><circle cx=\"19.2\" cy=\"5.16\" r=\"3.16\" fill=\"#FFC933\"/><ellipse cx=\"18.11\" cy=\"3.97\" rx=\"1.02\" ry=\"0.58\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 18.11 3.97)\"/><path d=\"M6.4 19.8 L4.6 22.2\" fill=\"none\" stroke=\"#B91C1C\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M17.6 19.8 L19.4 22.2\" fill=\"none\" stroke=\"#B91C1C\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"10.8\" y=\"1.2\" width=\"2.4\" height=\"2.2\" rx=\"1\" fill=\"#D4A33C\"/><rect x=\"10.8\" y=\"1.2\" width=\"2.4\" height=\"1.98\" rx=\"1\" fill=\"#FFC933\"/><circle cx=\"12\" cy=\"13\" r=\"8.4\" fill=\"#C83B49\"/><circle cx=\"12\" cy=\"12.41\" r=\"7.81\" fill=\"#F04444\"/><ellipse cx=\"9.31\" cy=\"9.47\" rx=\"2.52\" ry=\"1.43\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 9.31 9.47)\"/><circle cx=\"12\" cy=\"13.3\" r=\"6\" fill=\"#FFFFFF\"/><circle cx=\"12\" cy=\"13.3\" r=\"6\" fill=\"#E5E9F0\" fill-opacity=\"0.0\"/><path d=\"M12 9.4 V13.2 L14.8 14.8\" fill=\"none\" stroke=\"#374151\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"13.2\" r=\"0.9\" fill=\"#F04444\"/></svg>',
-  },
-  {
-    id: 'lamp',
-    name: 'Lamp',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"2.45 3.15 19.1 19.1\"><rect x=\"6.6\" y=\"18.4\" width=\"10.8\" height=\"3.6\" rx=\"1.8\" fill=\"#8A5A2B\"/><rect x=\"6.6\" y=\"18.4\" width=\"10.8\" height=\"3.24\" rx=\"1.8\" fill=\"#C98A4B\"/><rect x=\"10.9\" y=\"11\" width=\"2.2\" height=\"8\" rx=\"1.1\" fill=\"#B9783F\"/><rect x=\"10.9\" y=\"11\" width=\"2.2\" height=\"7.2\" rx=\"1.1\" fill=\"#E2A85F\"/><g transform=\"translate(0 1)\"><path d=\"M8.4 3.4 H15.6 L19.6 11 H4.4 Z\" fill=\"#F5A623\"/></g><path d=\"M8.4 3.4 H15.6 L19.6 11 H4.4 Z\" fill=\"#FFD35C\"/><ellipse cx=\"12\" cy=\"11\" rx=\"7.4\" ry=\"1.2\" fill=\"#FFF3B0\"/><path d=\"M9.4 5 H11.2 L8.6 10 H7 Z\" fill=\"#FFFFFF\" fill-opacity=\"0.5\"/></svg>',
-  },
-  {
-    id: 'usbhub',
-    name: 'USB HUB',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.55 -0.05 20.9 20.9\"><path d=\"M6.6 8.4 V5.6 A2 2 0 0 1 8.6 3.6 H13.6\" fill=\"none\" stroke=\"#5B6B83\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"13.4\" y=\"1.6\" width=\"6\" height=\"4\" rx=\"1.2\" fill=\"#94A3B8\"/><rect x=\"13.4\" y=\"1.6\" width=\"6\" height=\"3.6\" rx=\"1.2\" fill=\"#CBD5E1\"/><rect x=\"14.6\" y=\"2.8\" width=\"1.1\" height=\"1.6\" rx=\"0.4\" fill=\"#475569\"/><rect x=\"17\" y=\"2.8\" width=\"1.1\" height=\"1.6\" rx=\"0.4\" fill=\"#475569\"/><rect x=\"1.8\" y=\"8\" width=\"20.4\" height=\"11.2\" rx=\"3.6\" fill=\"#A9B4C6\"/><rect x=\"1.8\" y=\"8\" width=\"20.4\" height=\"10\" rx=\"3.6\" fill=\"#DDE3EC\"/><rect x=\"3.2\" y=\"10.6\" width=\"3.5\" height=\"5.4\" rx=\"0.9\" fill=\"#334155\"/><rect x=\"3.7\" y=\"12.8\" width=\"2.5\" height=\"1.2\" rx=\"0.4\" fill=\"#3B82F6\"/><rect x=\"3.7\" y=\"11.2\" width=\"2.5\" height=\"0.5\" rx=\"0.25\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><rect x=\"7.7\" y=\"10.6\" width=\"3.5\" height=\"5.4\" rx=\"0.9\" fill=\"#334155\"/><rect x=\"8.2\" y=\"12.8\" width=\"2.5\" height=\"1.2\" rx=\"0.4\" fill=\"#3B82F6\"/><rect x=\"8.2\" y=\"11.2\" width=\"2.5\" height=\"0.5\" rx=\"0.25\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><rect x=\"12.2\" y=\"10.6\" width=\"3.5\" height=\"5.4\" rx=\"0.9\" fill=\"#334155\"/><rect x=\"12.7\" y=\"12.8\" width=\"2.5\" height=\"1.2\" rx=\"0.4\" fill=\"#3B82F6\"/><rect x=\"12.7\" y=\"11.2\" width=\"2.5\" height=\"0.5\" rx=\"0.25\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><rect x=\"16.7\" y=\"10.6\" width=\"3.5\" height=\"5.4\" rx=\"0.9\" fill=\"#334155\"/><rect x=\"17.2\" y=\"12.8\" width=\"2.5\" height=\"1.2\" rx=\"0.4\" fill=\"#3B82F6\"/><rect x=\"17.2\" y=\"11.2\" width=\"2.5\" height=\"0.5\" rx=\"0.25\" fill=\"#FFFFFF\" fill-opacity=\"0.4\"/><circle cx=\"12\" cy=\"17.7\" r=\"0.5\" fill=\"#22C55E\"/></svg>',
-  },
+
+  // ১২. এক্সেসরিজ (Accessories) — প্রিমিয়াম স্মার্টওয়াচ ও সিলিকন স্ট্র্যাপ
   {
     id: 'accessories',
-    name: 'Accessories',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.3 0.95 21.9 21.9\"><g transform=\"rotate(8 12 12)\"><rect x=\"5.2\" y=\"1.6\" width=\"13.6\" height=\"20.6\" rx=\"3.8\" fill=\"#C79200\"/><rect x=\"5.2\" y=\"1.6\" width=\"13.6\" height=\"19.4\" rx=\"3.8\" fill=\"#FFC933\"/><rect x=\"7.38\" y=\"3.66\" width=\"1.6\" height=\"11.33\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"6.9\" y=\"3.4\" width=\"10.2\" height=\"17\" rx=\"2.4\" fill=\"#1F2937\"/><rect x=\"10.4\" y=\"4.2\" width=\"3.2\" height=\"0.9\" rx=\"0.45\" fill=\"#4B5563\"/><rect x=\"8.2\" y=\"7.6\" width=\"3.5\" height=\"3.5\" rx=\"1\" fill=\"#3B6CD4\"/><rect x=\"8.2\" y=\"7.6\" width=\"3.5\" height=\"3.15\" rx=\"1\" fill=\"#3B82F6\"/><rect x=\"12.3\" y=\"7.6\" width=\"3.5\" height=\"3.5\" rx=\"1\" fill=\"#35A25A\"/><rect x=\"12.3\" y=\"7.6\" width=\"3.5\" height=\"3.15\" rx=\"1\" fill=\"#34C759\"/><rect x=\"8.2\" y=\"11.9\" width=\"3.5\" height=\"3.5\" rx=\"1\" fill=\"#D47244\"/><rect x=\"8.2\" y=\"11.9\" width=\"3.5\" height=\"3.15\" rx=\"1\" fill=\"#FF8A3D\"/><rect x=\"12.3\" y=\"11.9\" width=\"3.5\" height=\"3.5\" rx=\"1\" fill=\"#794ED4\"/><rect x=\"12.3\" y=\"11.9\" width=\"3.5\" height=\"3.15\" rx=\"1\" fill=\"#8B5CF6\"/><rect x=\"10.2\" y=\"18.4\" width=\"3.6\" height=\"0.7\" rx=\"0.35\" fill=\"#FFFFFF\" fill-opacity=\"0.7\"/></g><path d=\"M21 2.2 Q21.5 3.5 22.8 4 Q21.5 4.5 21 5.8 Q20.5 4.5 19.2 4 Q20.5 3.5 21 2.2 Z\" fill=\"#38BDF8\"/><path d=\"M3 17.7 Q3.36 18.64 4.3 19 Q3.36 19.36 3 20.3 Q2.64 19.36 1.7 19 Q2.64 18.64 3 17.7 Z\" fill=\"#FF8A3D\"/></svg>',
+    name: 'এক্সেসরিজ',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 7V4H21V7M11 25V28H21V25" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="8" y="7" width="16" height="18" rx="5" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8"/>
+      <circle cx="16" cy="16" r="4.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.4"/>
+      <path d="M16 13.5V16L18 17" stroke="#44A7FC" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="24.5" cy="14" r="1" fill="#44A7FC"/>
+    </svg>`,
   },
-  {
-    id: 'powerstrip',
-    name: 'Power Strip',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.55 4.95 20.9 20.9\"><rect x=\"1.8\" y=\"7.6\" width=\"20.4\" height=\"10.4\" rx=\"3.4\" fill=\"#C3CCDA\"/><rect x=\"1.8\" y=\"7.6\" width=\"20.4\" height=\"9.2\" rx=\"3.4\" fill=\"#F8FAFC\"/><rect x=\"3.8\" y=\"9.6\" width=\"4.8\" height=\"6.2\" rx=\"1.6\" fill=\"#94A3B8\"/><rect x=\"3.8\" y=\"9.6\" width=\"4.8\" height=\"5.6\" rx=\"1.6\" fill=\"#E6ECF5\"/><rect x=\"5\" y=\"10.8\" width=\"0.9\" height=\"2.4\" rx=\"0.45\" fill=\"#475569\"/><rect x=\"7.5\" y=\"10.8\" width=\"0.9\" height=\"2.4\" rx=\"0.45\" fill=\"#475569\"/><rect x=\"10\" y=\"9.6\" width=\"4.8\" height=\"6.2\" rx=\"1.6\" fill=\"#94A3B8\"/><rect x=\"10\" y=\"9.6\" width=\"4.8\" height=\"5.6\" rx=\"1.6\" fill=\"#E6ECF5\"/><rect x=\"11.2\" y=\"10.8\" width=\"0.9\" height=\"2.4\" rx=\"0.45\" fill=\"#475569\"/><rect x=\"13.7\" y=\"10.8\" width=\"0.9\" height=\"2.4\" rx=\"0.45\" fill=\"#475569\"/><rect x=\"16.2\" y=\"9.6\" width=\"4.8\" height=\"6.2\" rx=\"1.6\" fill=\"#94A3B8\"/><rect x=\"16.2\" y=\"9.6\" width=\"4.8\" height=\"5.6\" rx=\"1.6\" fill=\"#E6ECF5\"/><rect x=\"17.4\" y=\"10.8\" width=\"0.9\" height=\"2.4\" rx=\"0.45\" fill=\"#475569\"/><rect x=\"19.9\" y=\"10.8\" width=\"0.9\" height=\"2.4\" rx=\"0.45\" fill=\"#475569\"/><path d=\"M12 18.2 V19.8 A2 2 0 0 0 14 21.8 H17.2\" fill=\"none\" stroke=\"#7B8AA0\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"16.6\" y=\"19.8\" width=\"4.8\" height=\"3.4\" rx=\"1.2\" fill=\"#94A3B8\"/><rect x=\"16.6\" y=\"19.8\" width=\"4.8\" height=\"3.06\" rx=\"1.2\" fill=\"#CBD5E1\"/><circle cx=\"20\" cy=\"8.9\" r=\"0\" fill=\"#F04444\"/></svg>',
-  },
-  {
-    id: 'projector',
-    name: 'Projector',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.55 3.05 20.9 20.9\"><rect x=\"1.8\" y=\"6.4\" width=\"20.4\" height=\"11.8\" rx=\"4.2\" fill=\"#C3CCDA\"/><rect x=\"1.8\" y=\"6.4\" width=\"20.4\" height=\"10.6\" rx=\"4.2\" fill=\"#F1F5F9\"/><rect x=\"4.45\" y=\"7.34\" width=\"15.1\" height=\"2.2\" rx=\"1\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><rect x=\"4.4\" y=\"9.6\" width=\"5.6\" height=\"1.2\" rx=\"0.6\" fill=\"#94A3B8\"/><rect x=\"4.4\" y=\"12\" width=\"5.6\" height=\"1.2\" rx=\"0.6\" fill=\"#94A3B8\"/><rect x=\"4.4\" y=\"14.4\" width=\"3.6\" height=\"1.2\" rx=\"0.6\" fill=\"#94A3B8\"/><circle cx=\"15.6\" cy=\"12.2\" r=\"4.6\" fill=\"#94A3B8\"/><circle cx=\"15.6\" cy=\"11.88\" r=\"4.28\" fill=\"#CBD5E1\"/><ellipse cx=\"14.13\" cy=\"10.27\" rx=\"1.38\" ry=\"0.78\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 14.13 10.27)\"/><circle cx=\"15.6\" cy=\"12.2\" r=\"3.2\" fill=\"#334155\"/><circle cx=\"15.6\" cy=\"12.2\" r=\"2.2\" fill=\"#38BDF8\"/><circle cx=\"14.9\" cy=\"11.5\" r=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.9\"/><rect x=\"4.4\" y=\"18\" width=\"3\" height=\"2.6\" rx=\"1\" fill=\"#8086A4\"/><rect x=\"4.4\" y=\"18\" width=\"3\" height=\"2.34\" rx=\"1\" fill=\"#94A3B8\"/><rect x=\"16.4\" y=\"18\" width=\"3\" height=\"2.6\" rx=\"1\" fill=\"#8086A4\"/><rect x=\"16.4\" y=\"18\" width=\"3\" height=\"2.34\" rx=\"1\" fill=\"#94A3B8\"/><circle cx=\"19.4\" cy=\"8.4\" r=\"0\" fill=\"#34C759\"/></svg>',
-  },
+
+  // ১৩. নেকব্যান্ড (Neckband) — আরগোনোমিক কলার ও ম্যাগনেটিক হেডসেট
   {
     id: 'neckband',
-    name: 'Neckband',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"2.4 1.95 19.2 19.2\"><path d=\"M6.4 6.2 V12.6 A5.6 5.6 0 0 0 17.6 12.6 V6.2\" fill=\"none\" stroke=\"#74A625\" stroke-width=\"3.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"translate(0 .8)\"/><path d=\"M6.4 6.2 V12.6 A5.6 5.6 0 0 0 17.6 12.6 V6.2\" fill=\"none\" stroke=\"#84CC16\" stroke-width=\"3.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"4.2\" y=\"2.2\" width=\"4.4\" height=\"5.8\" rx=\"2\" fill=\"#65A30D\"/><rect x=\"4.2\" y=\"2.2\" width=\"4.4\" height=\"5.22\" rx=\"2\" fill=\"#A3E635\"/><rect x=\"15.4\" y=\"2.2\" width=\"4.4\" height=\"5.8\" rx=\"2\" fill=\"#65A30D\"/><rect x=\"15.4\" y=\"2.2\" width=\"4.4\" height=\"5.22\" rx=\"2\" fill=\"#A3E635\"/><circle cx=\"6.4\" cy=\"5\" r=\"0.9\" fill=\"#3F6212\"/><circle cx=\"17.6\" cy=\"5\" r=\"0.9\" fill=\"#3F6212\"/><path d=\"M7.4 8 Q8.6 11.4 9.2 13.6\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"1.1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M16.6 8 Q15.4 11.4 14.8 13.6\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"1.1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"9.2\" cy=\"15.2\" r=\"2.1\" fill=\"#B7C2D3\"/><circle cx=\"9.2\" cy=\"15.05\" r=\"1.95\" fill=\"#FFFFFF\"/><ellipse cx=\"8.53\" cy=\"14.32\" rx=\"0.63\" ry=\"0.36\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 8.53 14.32)\"/><ellipse cx=\"9.2\" cy=\"17.1\" rx=\"1.1\" ry=\"0.8\" fill=\"#FF8A3D\"/><circle cx=\"14.8\" cy=\"15.2\" r=\"2.1\" fill=\"#B7C2D3\"/><circle cx=\"14.8\" cy=\"15.05\" r=\"1.95\" fill=\"#FFFFFF\"/><ellipse cx=\"14.13\" cy=\"14.32\" rx=\"0.63\" ry=\"0.36\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 14.13 14.32)\"/><ellipse cx=\"14.8\" cy=\"17.1\" rx=\"1.1\" ry=\"0.8\" fill=\"#FF8A3D\"/></svg>',
+    name: 'নেকব্যান্ড',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7 16C7 10 11 6 16 6C21 6 25 10 25 16V20M7 16V20" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="5.5" y="19" width="3.5" height="7" rx="1.75" fill="#44A7FC" stroke="#1E293B" stroke-width="1.5"/>
+      <rect x="23" y="19" width="3.5" height="7" rx="1.75" fill="#44A7FC" stroke="#1E293B" stroke-width="1.5"/>
+      <path d="M9 24C12 24 13 22 13 18M23 24C20 24 19 22 19 18" stroke="#1E293B" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="13" cy="18" r="1.5" fill="#44A7FC"/>
+      <circle cx="19" cy="18" r="1.5" fill="#44A7FC"/>
+    </svg>`,
   },
+
+  // ১৪. কিচেন এক্সেসরিজ (Kitchen Accessories) — পোর্টেবল রিচার্জেবল ব্লেন্ডার
   {
-    id: 'kitchenaccessories',
-    name: 'Kitchen Accessories',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0.67 0.25 22.6 22.6\"><g transform=\"rotate(-26 12 15)\"><rect x=\"10.9\" y=\"5.4\" width=\"2.2\" height=\"9.6\" rx=\"1.1\" fill=\"#E2A85F\"/><rect x=\"9.2\" y=\"0.6\" width=\"5.6\" height=\"6.6\" rx=\"1.6\" fill=\"#D47244\"/><rect x=\"9.2\" y=\"0.6\" width=\"5.6\" height=\"5.94\" rx=\"1.6\" fill=\"#FF8A3D\"/><rect x=\"11.4\" y=\"2\" width=\"0.6\" height=\"3.4\" rx=\"0.3\" fill=\"#D47244\"/><rect x=\"12.8\" y=\"2\" width=\"0.6\" height=\"3.4\" rx=\"0.3\" fill=\"#D47244\"/></g><g transform=\"rotate(26 12 15)\"><rect x=\"10.9\" y=\"6\" width=\"2.2\" height=\"9\" rx=\"1.1\" fill=\"#E2A85F\"/><ellipse cx=\"12\" cy=\"4\" rx=\"2.7\" ry=\"3.7\" fill=\"none\" stroke=\"#B6C0CE\" stroke-width=\"1\"/><ellipse cx=\"12\" cy=\"4\" rx=\"1.2\" ry=\"3.7\" fill=\"none\" stroke=\"#B6C0CE\" stroke-width=\".8\"/><rect x=\"11.4\" y=\"7.2\" width=\"1.2\" height=\"1.1\" rx=\"0.4\" fill=\"#94A3B8\"/></g><rect x=\"11\" y=\"4.4\" width=\"2\" height=\"10.6\" rx=\"1\" fill=\"#CBD5E1\"/><circle cx=\"12\" cy=\"3.4\" r=\"2.9\" fill=\"#94A3B8\"/><circle cx=\"12\" cy=\"3.2\" r=\"2.7\" fill=\"#CBD5E1\"/><ellipse cx=\"11.07\" cy=\"2.18\" rx=\"0.87\" ry=\"0.49\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 11.07 2.18)\"/><circle cx=\"12\" cy=\"3.4\" r=\"1.6\" fill=\"#94A3B8\"/><rect x=\"4.4\" y=\"14.2\" width=\"15.2\" height=\"2.8\" rx=\"1.4\" fill=\"#2EC2B5\"/><rect x=\"4.4\" y=\"14.2\" width=\"15.2\" height=\"2.52\" rx=\"1.4\" fill=\"#81E5D9\"/><rect x=\"5.2\" y=\"16\" width=\"13.6\" height=\"6.6\" rx=\"3\" fill=\"#30ACA9\"/><rect x=\"5.2\" y=\"16\" width=\"13.6\" height=\"5.94\" rx=\"3\" fill=\"#2DD4BF\"/><rect x=\"6.97\" y=\"16.53\" width=\"10.06\" height=\"1.32\" rx=\"0.66\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><circle cx=\"9.2\" cy=\"19.4\" r=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.75\"/><circle cx=\"12\" cy=\"20\" r=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.75\"/><circle cx=\"14.8\" cy=\"19.4\" r=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.75\"/></svg>',
+    id: 'kitchen',
+    name: 'কিচেন এক্সেসরিজ',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 9L11 21H21L22 9" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8" stroke-linejoin="round"/>
+      <rect x="9" y="5" width="14" height="4" rx="2" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.8"/>
+      <rect x="10" y="21" width="12" height="6" rx="2.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.8"/>
+      <circle cx="16" cy="24" r="1.5" fill="#44A7FC"/>
+      <path d="M14 13L16 15L18 13" stroke="#44A7FC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
   },
+
+  // ১৫. অফার (Offers / Deals) — ক্রিস্প ডিসকাউন্ট ভাউচার ট্যাগ
   {
-    id: 'offer',
-    name: 'Offers',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-0.75 -0.35 25.5 25.5\"><g transform=\"translate(0 .8)\"><path d=\"M12 0.6 L14.41 3.02 L17.7 2.13 L18.58 5.42 L21.87 6.3 L20.98 9.59 L23.4 12 L20.98 14.41 L21.87 17.7 L18.58 18.58 L17.7 21.87 L14.41 20.98 L12 23.4 L9.59 20.98 L6.3 21.87 L5.42 18.58 L2.13 17.7 L3.02 14.41 L0.6 12 L3.02 9.59 L2.13 6.3 L5.42 5.42 L6.3 2.13 L9.59 3.02 Z\" fill=\"#C83B49\" stroke=\"#C83B49\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/></g><path d=\"M12 0.6 L14.41 3.02 L17.7 2.13 L18.58 5.42 L21.87 6.3 L20.98 9.59 L23.4 12 L20.98 14.41 L21.87 17.7 L18.58 18.58 L17.7 21.87 L14.41 20.98 L12 23.4 L9.59 20.98 L6.3 21.87 L5.42 18.58 L2.13 17.7 L3.02 14.41 L0.6 12 L3.02 9.59 L2.13 6.3 L5.42 5.42 L6.3 2.13 L9.59 3.02 Z\" fill=\"#F04444\" stroke=\"#F04444\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"12\" r=\"7.4\" fill=\"none\" stroke=\"#FFFFFF\" stroke-opacity=\".6\" stroke-width=\".9\"/><circle cx=\"9.4\" cy=\"9.6\" r=\"1.8\" fill=\"#FFFFFF\"/><circle cx=\"14.6\" cy=\"14.4\" r=\"1.8\" fill=\"#FFFFFF\"/><path d=\"M15.2 8.6 L8.8 15.4\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><ellipse cx=\"7.4\" cy=\"5.4\" rx=\"2.2\" ry=\"1.1\" fill=\"#FFFFFF\" fill-opacity=\"0.4\" transform=\"rotate(-35 7.4 5.4)\"/></svg>',
-  },
-  {
-    id: 'btspeaker',
-    name: 'BT Speaker',
-    icon: '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"1.15 1.15 21.7 21.7\"><path d=\"M3 9 Q1.6 12 3 15\" fill=\"none\" stroke=\"#FFB020\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M21 9 Q22.4 12 21 15\" fill=\"none\" stroke=\"#FFB020\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"5\" y=\"2.4\" width=\"14\" height=\"19.2\" rx=\"5\" fill=\"#14A394\"/><rect x=\"5\" y=\"2.4\" width=\"14\" height=\"18\" rx=\"5\" fill=\"#2DD4BF\"/><rect x=\"7.24\" y=\"4.32\" width=\"1.6\" height=\"10.56\" rx=\"0.7\" fill=\"#FFFFFF\" fill-opacity=\"0.38\"/><circle cx=\"12\" cy=\"7.4\" r=\"2.4\" fill=\"#C3CCDA\"/><circle cx=\"12\" cy=\"7.23\" r=\"2.23\" fill=\"#F8FAFC\"/><ellipse cx=\"11.23\" cy=\"6.39\" rx=\"0.72\" ry=\"0.41\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 11.23 6.39)\"/><circle cx=\"12\" cy=\"15.2\" r=\"4.6\" fill=\"#C3CCDA\"/><circle cx=\"12\" cy=\"14.88\" r=\"4.28\" fill=\"#F8FAFC\"/><ellipse cx=\"10.53\" cy=\"13.27\" rx=\"1.38\" ry=\"0.78\" fill=\"#FFFFFF\" fill-opacity=\"0.55\" transform=\"rotate(-30 10.53 13.27)\"/><circle cx=\"12\" cy=\"15.2\" r=\"2.4\" fill=\"#14A394\"/><circle cx=\"12\" cy=\"15.2\" r=\"0.9\" fill=\"#FFFFFF\"/></svg>',
+    id: 'offers',
+    name: 'অফার',
+    icon: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 16.5V9C5 7.9 5.9 7 7 7H14.5L26.5 19L19 26.5L5 16.5Z" fill="#E0F2FE" stroke="#1E293B" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="10" cy="12" r="2" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.5"/>
+      <path d="M15 20.5L20.5 15M16 15.5H16.01M19.5 20H19.51" stroke="#44A7FC" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>`,
   },
 ];
-
-export function makeCatSlug(catId: string): string {
-  return String(catId || '').toLowerCase().replace(/[^\w-]/g, '');
-}
-
-export function parseSupabaseVal<T = unknown>(val: unknown): T {
-  if (val === null || val === undefined) return val as T;
-  if (typeof val !== 'string') return val as T;
-  const t = val.trim();
-  if (t.startsWith('[') || t.startsWith('{') || t.startsWith('"')) {
-    try {
-      return JSON.parse(t) as T;
-    } catch {
-      return val as unknown as T;
-    }
-  }
-  return val as unknown as T;
-}
-
-const QUERY_TIMEOUT_MS = 3500;
-
-export async function fetchCategories(supabase: SupabaseClient): Promise<Category[]> {
-  try {
-    const { data, error } = await supabase
-      .from('store_settings')
-      .select('setting_value')
-      .eq('setting_key', 'vc_categories')
-      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
-      .maybeSingle();
-    if (error || !data) return DEFAULT_CATEGORIES;
-    const parsed = parseSupabaseVal<Category[]>(data.setting_value);
-    if (Array.isArray(parsed) && parsed.length) return parsed;
-    return DEFAULT_CATEGORIES;
-  } catch (e) {
-    logWarn('Category fetch failed:', e);
-    return DEFAULT_CATEGORIES;
-  }
-}
-
-export function subscribeCategories(
-  supabase: SupabaseClient,
-  onChange: (cats: Category[]) => void,
-): RealtimeChannel {
-  const uniqueName = `categories-watch-${Math.random().toString(36).slice(2, 9)}`;
-  return supabase
-    .channel(uniqueName)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_categories' },
-      (payload) => {
-        const row = payload.new as { setting_value?: unknown } | null;
-        if (!row) return;
-        const parsed = parseSupabaseVal<Category[]>(row.setting_value);
-        if (Array.isArray(parsed) && parsed.length) onChange(parsed);
-      },
-    )
-    .subscribe();
-}
-
-export const CATEGORY_FILTER_EVENT = 'vc:categoryFilter';
-export const FOCUS_PRODUCT_EVENT = 'vc:focusProduct';
