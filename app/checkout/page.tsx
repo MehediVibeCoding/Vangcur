@@ -1687,10 +1687,11 @@ export default function CheckoutPage() {
                   <span className="mt-0.5 text-brand-light"><IconInfo /></span>
                   <span>{t('ভুল তথ্য দিলে পেমেন্ট যাচাই সম্ভব হবে না এবং অর্ডার বাতিল হবে।')}</span>
                 </div>
+              </div>
 
-                <div className="my-4 flex items-center gap-3 font-body text-[11px] font-bold tracking-wide text-muted before:h-[1.5px] before:flex-1 before:bg-border-base after:h-[1.5px] after:flex-1 after:bg-border-base">
-                  {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
-                </div>
+              <div className="mb-3 text-center font-body text-[12.5px] font-bold text-ink">
+                {t('নিচের যেকোনো একটি দেওয়া বাধ্যতামূলক')}
+              </div>
 
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('ট্রানজেকশন আইডি')} <span className={optionalTagClass}>(10 ক্যারেক্টার, যেমন: 8N5O2A3BDE)</span></label>
@@ -1736,7 +1737,6 @@ export default function CheckoutPage() {
                   <span>{t('পরবর্তী ধাপ: নিশ্চিত করুন')}</span>
                   <IconArrowRight />
                 </motion.button>
-              </div>
               </div>
                 </>
               )}

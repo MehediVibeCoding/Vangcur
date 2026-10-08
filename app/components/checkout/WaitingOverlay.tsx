@@ -153,9 +153,9 @@ function IconCopy() {
   );
 }
 
-function IconWarningShield() {
+function IconWarningShield({ className = 'shrink-0 text-amber-600' }: { className?: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-amber-600">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -163,9 +163,9 @@ function IconWarningShield() {
   );
 }
 
-function IconBulb() {
+function IconBulb({ className = 'shrink-0 text-brand-light' }: { className?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-light">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M9 18h6" />
       <path d="M10 22h4" />
       <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
@@ -389,7 +389,7 @@ export default function WaitingOverlay() {
         whileTap={{ scale: 0.94 }}
         transition={{ type: 'spring', stiffness: 500, damping: 25 }}
         onClick={() => setMinimized(false)}
-        className="fixed bottom-24 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
+        className="fixed bottom-44 right-4 z-[65] flex items-center gap-2 rounded-full border border-brand-light/35 bg-white/90 px-4 py-2.5 font-body text-[12.5px] font-bold text-ink shadow-sh2 backdrop-blur-md transition-all duration-brand hover:bg-white hover:border-brand-light animate-section-reveal"
       >
         <span className="relative flex h-2.5 w-2.5 items-center justify-center">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
@@ -452,15 +452,13 @@ export default function WaitingOverlay() {
 
               {/* আন-লগইন গেস্ট কার্ড — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[12px]) */}
               {isGuest && (
-                <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[12px] border border-amber-200/80 bg-amber-50/90 p-3 text-left shadow-xs">
-                  <IconWarningShield />
-                  <div className="font-body text-[12.5px] leading-[1.65] text-amber-900">
-                    {lang === 'en' ? (
-                      <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
-                    ) : (
-                      <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন। ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
-                    )}
-                  </div>
+                <div className="relative z-10 mb-4 rounded-[12px] border border-amber-200/80 bg-amber-50/90 p-3 text-center font-body text-[12.5px] leading-[1.65] text-amber-900 shadow-xs">
+                  <IconWarningShield className="relative -top-[1px] mr-1 inline-block align-middle text-amber-600" />
+                  {lang === 'en' ? (
+                    <>You are currently <strong>not logged in</strong>. To track your order in the future, click the website&apos;s <strong>Login button</strong> to log in.</>
+                  ) : (
+                    <>আপনি এই মুহূর্তে <strong>আনলগইন</strong> অবস্থায় আছেন। ভবিষ্যতে অর্ডার ট্র্যাক করতে ওয়েবসাইটের <strong>লগইন বাটন</strong>-এ ক্লিক করে লগইন করুন।</>
+                  )}
                 </div>
               )}
 
@@ -501,12 +499,10 @@ export default function WaitingOverlay() {
               </div>
 
               {/* ফ্রেশ স্কাই-ব্লু টিপ বক্স — কনসেন্ট্রিক রেডিয়াস ফিক্স (rounded-[10px]) */}
-              <div className="relative z-10 mb-4 flex items-start gap-2.5 rounded-[10px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-left font-body text-[12px] leading-[1.75] text-ink/85">
-                <IconBulb />
-                <div>
-                  <span>{t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন অথবা গেম খেলতে পারেন।')}</span>
-                  <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
-                </div>
+              <div className="relative z-10 mb-4 rounded-[10px] border border-brand-light/30 bg-brand-bg/30 p-3.5 text-center font-body text-[12px] leading-[1.75] text-ink/85">
+                <IconBulb className="relative -top-[1px] mr-1 inline-block align-middle text-brand-light" />
+                {t('আপনি চাইলে এখন ওয়েবসাইট ব্রাউজ করতে পারেন অথবা গেম খেলতে পারেন।')}
+                <div>{t('অর্ডার কনফার্ম হলে স্বয়ংক্রিয় নোটিফিকেশন দেখাবে।')}</div>
               </div>
 
               {/* 🎮 মিনি গেম — শুধু "গেম খেলুন" বাটন; সাবমিটের ৫ মিনিট পর আর দেখায় না */}

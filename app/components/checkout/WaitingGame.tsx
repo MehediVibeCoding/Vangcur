@@ -171,7 +171,7 @@ export default function WaitingGame({ variant, active }: Props) {
         className="relative z-10 mb-4 flex w-full items-center justify-center gap-1.5 font-body text-[12.5px] font-bold text-brand-light transition-opacity duration-brand hover:opacity-80 active:scale-[0.98]"
       >
         <IconGamepad />
-        <span>{en ? 'Bored? Play a quick game' : 'বিরক্ত লাগছে? একটু গেম খেলুন'}</span>
+        <span className="underline decoration-brand-light/50 underline-offset-[3px]">{en ? 'Bored? Play a quick game' : 'বিরক্ত লাগছে? একটু গেম খেলুন'}</span>
       </button>
 
       {/* পপআপ ও গেম — পোর্টালে, যাতে ওভারলের স্ক্রল/ট্রান্সফর্ম কন্টেইনারের ভেতরে আটকে না যায় */}

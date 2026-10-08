@@ -267,9 +267,12 @@ export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps)
   // তাই উপরে আলাদা স্ট্যাটাস ব্যাজ লাগবে না — সেখানে তারিখ-নাম বসছে।
   // বাতিল/rejected অর্ডারে কোনো টাইমলাইন নেই, তাই সেখানে ব্যাজটাই একমাত্র স্ট্যাটাস নির্দেশক — সেটা রাখা হচ্ছে।
   const hasTimeline = TIMELINE_STEPS.includes(o.status);
+  // 🧾 অর্ডার কনফার্ম হওয়ার আগে ইনভয়েস থাকার কথা না — পেমেন্ট ভেরিফাই/কনফার্ম
+  // না হওয়া পর্যন্ত (pending) ইনভয়েস বাটন দেখানো একটা লজিকাল ভুল ছিল, তাই বাদ।
+  const canShowInvoice = o.status === 'confirmed' || o.status === 'shipped' || o.status === 'delivered';
 
   return (
-    <div className="rounded-2xl border border-border-base p-4">
+    <div className="rounded-2xl border border-sky-200 p-4">
       {/* Top Header Row: অর্ডার নং + (টাইমলাইন থাকলে) তারিখ ও নাম, নয়তো স্ট্যাটাস ব্যাজ */}
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pb-2.5">
         <span className="font-body text-[15px] font-extrabold text-ink tracking-tight">
@@ -352,13 +355,15 @@ export default function OrderCard({ order: o, onInvoice, from }: OrderCardProps)
           <span className="ml-1 text-[10.5px] font-normal text-muted">({t('শিপিং সহ')})</span>
         </div>
 
-        <button
-          onClick={handleInvoiceNavigation}
-          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
-        >
-          <DocumentSvgIcon />
-          <span>{lang === 'en' ? 'Invoice' : 'ইনভয়েস'}</span>
-        </button>
+        {canShowInvoice && (
+          <button
+            onClick={handleInvoiceNavigation}
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-light to-brand-light-hover px-4 py-1.5 font-body text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-95"
+          >
+            <DocumentSvgIcon />
+            <span>{lang === 'en' ? 'Invoice' : 'ইনভয়েস'}</span>
+          </button>
+        )}
       </div>
     </div>
   );

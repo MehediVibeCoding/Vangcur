@@ -39,9 +39,10 @@ function HeaderDecor() {
 
 function SecurityShieldIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="text-white">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
+      <line x1="12" y1="8.25" x2="12" y2="12.75" />
+      <circle cx="12" cy="15.5" r="0.75" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -84,7 +85,7 @@ export default function PreConfirmLoginModal({
           >
             <HeaderDecor />
 
-            <div className="relative z-10 mx-auto mb-3.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#5AB2F7] to-brand-light text-white shadow-[0_8px_20px_rgba(0,88,199,.28)] ring-4 ring-white/70 [@media(max-height:760px)]:mb-2.5">
+            <div className="relative z-10 mx-auto mb-3.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white ring-4 ring-white/80 [@media(max-height:760px)]:mb-2.5">
               <SecurityShieldIcon />
             </div>
 
