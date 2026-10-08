@@ -1,5 +1,7 @@
 // ফাইলের পাথ: lib/categoryData.ts
+import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import type { Category } from '@/types';
+import { logWarn } from './logger';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   // ১. অল প্রোডাক্টস (All Products) — স্মার্ট ডুও-টোন ৪-গ্রিড উইজেট
@@ -196,3 +198,68 @@ export const DEFAULT_CATEGORIES: Category[] = [
     </svg>`,
   },
 ];
+
+// 🔧 নিচের হেল্পার/কনস্ট্যান্টগুলো অনেক কম্পোনেন্ট (Navbar, Categories, ProductGrid,
+// HeroSlider, category পেজ, sitemap ইত্যাদি) ব্যবহার করে — আইকন সেট আপডেট করার সময়
+// ভুলবশত এগুলো মুছে গিয়ে বিল্ড ভেঙে গিয়েছিল, তাই পুরনো লজিক অপরিবর্তিত রেখে ফিরিয়ে আনা হলো।
+
+export function makeCatSlug(catId: string): string {
+  return String(catId || '').toLowerCase().replace(/[^\w-]/g, '');
+}
+
+export function parseSupabaseVal<T = unknown>(val: unknown): T {
+  if (val === null || val === undefined) return val as T;
+  if (typeof val !== 'string') return val as T;
+  const t = val.trim();
+  if (t.startsWith('[') || t.startsWith('{') || t.startsWith('"')) {
+    try {
+      return JSON.parse(t) as T;
+    } catch {
+      return val as unknown as T;
+    }
+  }
+  return val as unknown as T;
+}
+
+const QUERY_TIMEOUT_MS = 3500;
+
+export async function fetchCategories(supabase: SupabaseClient): Promise<Category[]> {
+  try {
+    const { data, error } = await supabase
+      .from('store_settings')
+      .select('setting_value')
+      .eq('setting_key', 'vc_categories')
+      .abortSignal(AbortSignal.timeout(QUERY_TIMEOUT_MS))
+      .maybeSingle();
+    if (error || !data) return DEFAULT_CATEGORIES;
+    const parsed = parseSupabaseVal<Category[]>(data.setting_value);
+    if (Array.isArray(parsed) && parsed.length) return parsed;
+    return DEFAULT_CATEGORIES;
+  } catch (e) {
+    logWarn('Category fetch failed:', e);
+    return DEFAULT_CATEGORIES;
+  }
+}
+
+export function subscribeCategories(
+  supabase: SupabaseClient,
+  onChange: (cats: Category[]) => void,
+): RealtimeChannel {
+  const uniqueName = `categories-watch-${Math.random().toString(36).slice(2, 9)}`;
+  return supabase
+    .channel(uniqueName)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_categories' },
+      (payload) => {
+        const row = payload.new as { setting_value?: unknown } | null;
+        if (!row) return;
+        const parsed = parseSupabaseVal<Category[]>(row.setting_value);
+        if (Array.isArray(parsed) && parsed.length) onChange(parsed);
+      },
+    )
+    .subscribe();
+}
+
+export const CATEGORY_FILTER_EVENT = 'vc:categoryFilter';
+export const FOCUS_PRODUCT_EVENT = 'vc:focusProduct';
