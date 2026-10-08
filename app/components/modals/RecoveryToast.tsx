@@ -42,7 +42,7 @@ function ItemThumbnail({ imgVal }: { imgVal?: string }) {
       <img
         src={optimizeCloudinaryUrl(imgVal, 140)}
         alt="Product"
-        className="h-12 w-12 shrink-0 rounded-xl border border-white/90 bg-white object-cover shadow-xs"
+        className="h-12 w-12 shrink-0 rounded-xl border border-white/90 bg-white object-cover object-top shadow-xs"
         loading="lazy"
         decoding="async"
         onError={(e) => { e.currentTarget.style.display = 'none'; }}

@@ -82,7 +82,7 @@ function ProdImg({ imgVal, name, lazy }: { imgVal?: string; name: string; lazy?:
         decoding="async"
         draggable={false}
         onContextMenu={(e) => e.preventDefault()}
-        className="block h-full w-full select-none object-cover [-webkit-touch-callout:none]"
+        className="block h-full w-full select-none object-cover object-top [-webkit-touch-callout:none]"
         onError={() => setBroken(true)}
       />
     );
