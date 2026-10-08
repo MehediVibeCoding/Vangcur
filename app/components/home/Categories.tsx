@@ -13,7 +13,7 @@ function CatIcon({ icon }: { icon?: string }) {
   if (isSvg) {
     return (
       <span
-        className="flex h-[26px] w-[26px] shrink-0 items-center justify-center [&_svg]:!h-[26px] [&_svg]:!w-[26px]"
+        className="flex h-[28px] w-[28px] shrink-0 items-center justify-center [&_svg]:!h-[28px] [&_svg]:!w-[28px] md:h-[30px] md:w-[30px] md:[&_svg]:!h-[30px] md:[&_svg]:!w-[30px] drop-shadow-[0_1px_1.5px_rgba(10,26,63,.18)]"
         dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
       />
     );
@@ -149,13 +149,13 @@ export default function Categories({ initialCategories }: CategoriesProps) {
             {currentCategories.map((cat) => (
               <div
                 key={cat.id}
-                className="group flex min-h-[58px] cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-border-base bg-white p-2 shadow-xs transition-brand hover:-translate-y-0.5 hover:border-brand-light hover:shadow-sh2 md:min-h-[66px] md:gap-3 md:p-3 active:scale-98"
+                className="group flex min-h-[58px] cursor-pointer items-center gap-2 rounded-2xl border-[1.5px] border-brand-primary/15 bg-white p-2 shadow-sh1 transition-brand hover:-translate-y-0.5 hover:border-brand-primary/60 hover:shadow-[0_8px_22px_rgba(0,88,199,.18)] md:min-h-[66px] md:gap-3 md:p-3 active:scale-98"
                 onClick={() => handleSelect(cat.id)}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-base bg-brand-bg text-[20px] text-brand-light transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 md:h-12 md:w-12 md:text-2xl">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-primary/25 bg-gradient-to-br from-white via-[#D3E6FC] to-[#9EC8F7] text-[20px] text-brand-light shadow-[inset_0_1px_0_rgba(255,255,255,.95),0_2px_6px_rgba(0,88,199,.22)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 md:h-12 md:w-12 md:text-2xl">
                   <CatIcon icon={cat.icon} />
                 </div>
-                <div className="line-clamp-2 min-w-0 flex-1 font-body text-xs font-bold leading-[1.3] text-ink md:text-[13px]">
+                <div className="line-clamp-2 min-w-0 flex-1 font-body text-xs font-bold leading-[1.3] text-[#0A1A3F] md:text-[13px]">
                   {cat.name}
                 </div>
               </div>
