@@ -51,7 +51,7 @@ function CartItemThumb({ emoji }: { emoji?: string }) {
       <img
         src={optimizeCloudinaryUrl(emoji, 120)}
         alt=""
-        className="h-12 w-12 shrink-0 rounded-xl border border-white/80 bg-white object-cover shadow-xs"
+        className="h-12 w-12 shrink-0 rounded-xl border border-white/80 bg-white object-cover object-top shadow-xs"
         loading="lazy"
         decoding="async"
       />

@@ -316,7 +316,7 @@ function GalleryImg({ val, name, isThumb }: { val?: string; name: string; isThum
         src={optimizeCloudinaryUrl(val, isThumb ? 200 : 900)}
         alt={name || ''}
         loading="lazy"
-        className={isThumb ? 'h-full w-full rounded-[8px] object-cover' : 'block h-full w-full object-contain select-none'}
+        className={isThumb ? 'h-full w-full rounded-[8px] object-cover object-top' : 'block h-full w-full object-cover object-top select-none'}
         onError={() => setBroken(true)}
       />
     );

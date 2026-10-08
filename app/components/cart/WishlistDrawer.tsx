@@ -25,7 +25,7 @@ function WishImg({ emoji }: { emoji?: string }) {
       <img
         src={optimizeCloudinaryUrl(emoji, 140)}
         alt=""
-        className="h-14 w-14 shrink-0 rounded-2xl border border-white/90 bg-white object-cover shadow-xs"
+        className="h-14 w-14 shrink-0 rounded-2xl border border-white/90 bg-white object-cover object-top shadow-xs"
         loading="lazy"
         decoding="async"
       />

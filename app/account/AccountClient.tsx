@@ -120,7 +120,7 @@ function ItemThumb({ imgVal }: { imgVal?: string }) {
       <img
         src={optimizeCloudinaryUrl(imgVal, 120)}
         alt=""
-        className="h-10 w-10 shrink-0 rounded-xl border border-white/90 bg-white object-cover shadow-xs"
+        className="h-10 w-10 shrink-0 rounded-xl border border-white/90 bg-white object-cover object-top shadow-xs"
         loading="lazy"
         decoding="async"
         onError={(e) => { e.currentTarget.style.display = 'none'; }}

@@ -348,7 +348,7 @@ export default function OffersClient() {
                       <img
                         src={optimizeCloudinaryUrl((model3Product.imgs || [])[0], 600)}
                         alt={model3Product.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                       />
                     </Link>
 
