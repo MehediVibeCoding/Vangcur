@@ -340,6 +340,8 @@ export default function CheckoutPage() {
   }, [step, router]);
 
   const [name, setName] = useState('');
+  // 🛡️ হানিপট — মানুষের চোখে অদৃশ্য ফিল্ড, শুধু বট পূরণ করে (নিচে JSX-এ দেখুন)
+  const [hp, setHp] = useState('');
   const [phone, setPhone] = useState('');
   const [dist, setDist] = useState('');
   const [addr, setAddr] = useState('');
@@ -605,6 +607,9 @@ export default function CheckoutPage() {
 
         if (validateName(dName) && validatePhone(dPhone) && dDist && validateAddress(dAddr)) {
           setStep(savedStep);
+          // পেজ রিলোড/রিজিউমের পর ধাপ ২/৩ এ ফিরলে reachedStep2Ref-ও আবার true করা —
+          // নাহলে রিলোডের পরের প্রথম তথ্যের পরিবর্তনেও লিড-সিঙ্ক ভুলভাবে আটকে যাবে
+          reachedStep2Ref.current = true;
         } else {
           setStep(1);
           sessionStorage.setItem('vc_checkout_step', '1');
@@ -676,9 +681,15 @@ export default function CheckoutPage() {
   const leadIdRef = useRef<string | null>(null);
   const orderDoneRef = useRef(false);
   const lastLeadFiredTime = useRef<number>(0);
+  // 🛡️ ফিক্স: ধাপ ১ সম্পূর্ণ/যাচাই হয়ে ধাপ ২-এ পৌঁছানোর আগে এই ফ্ল্যাগ false-ই থাকে।
+  // তাই ট্যাব মিনিমাইজ/বন্ধ করার সময়কার ব্যাকআপ-ট্রিগার (নিচের pagehide/visibilitychange)
+  // শুধু ফোন নম্বরের দৈর্ঘ্য দেখে অসম্পূর্ণ (ধাপ ১-এই আটকে থাকা) তথ্য গুগল শিটে পাঠাবে না —
+  // local draft (lib/draftRecovery.ts) ঠিকই প্রতিটা ফিল্ডে সেভ হতে থাকে, শুধু শিট-সিঙ্ক
+  // আটকানো হলো। goToStep2()-এ ধাপ ১ পুরোপুরি যাচাই হওয়ার পরই এটা true হয়।
+  const reachedStep2Ref = useRef(false);
 
   const fireLeadSafe = useCallback(() => {
-    if (orderDoneRef.current || !phone || phone.length < 10) return;
+    if (orderDoneRef.current || !reachedStep2Ref.current || !phone || phone.length < 10) return;
     const now = Date.now();
     if (now - lastLeadFiredTime.current < 2000) return;
     lastLeadFiredTime.current = now;
@@ -881,6 +892,7 @@ export default function CheckoutPage() {
     setErrors(nextErrors);
     
     if (Object.keys(nextErrors).length === 0) {
+      reachedStep2Ref.current = true;
       fireLeadSafe();
       updateStep(2);
     }
@@ -1003,6 +1015,7 @@ export default function CheckoutPage() {
 
     try {
       const result = await createOrder({
+        hp,
         name: name.trim(),
         phone: phone.trim(),
         district: dist,
@@ -1362,6 +1375,26 @@ export default function CheckoutPage() {
               transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
               className="px-6 py-4"
             >
+              {/* 🛡️ হানিপট ফিল্ড — মানুষের চোখে/স্ক্রিন-রিডারে একদমই দেখা যায় না, ট্যাব
+                  করেও ফোকাস পাওয়া যায় না; শুধু অটো-ফিল করা বট/স্ক্রিপ্ট এটা ধরতে পারে।
+                  সার্ভারে (app/actions/checkout.ts) এই ফিল্ডে কিছু এলেই বট ধরে বাতিল হয়। */}
+              <input
+                type="text"
+                name="company_website"
+                value={hp}
+                onChange={(e) => setHp(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: '-9999px',
+                  width: '1px',
+                  height: '1px',
+                  opacity: 0,
+                  pointerEvents: 'none',
+                }}
+              />
               <div className="mb-3.5">
                 <label className={fieldLabelClass}>{t('পূর্ণ নাম')}</label>
                 <div className="relative">

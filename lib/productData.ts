@@ -3,10 +3,11 @@ import type { Product, CartItem } from '@/types';
 import { logWarn, logError } from './logger';
 import { useCartStore, cartTotal } from './store/cartStore';
 import { OPEN_ORDER_LIMIT_EVENT, OPEN_BULK_ORDER_EVENT, OPEN_QUICK_CART_MODAL_EVENT } from './uiEvents';
-import { MAX_ONLINE_ORDER_TOTAL } from './checkoutData';
+import { MAX_ONLINE_ORDER_TOTAL, checkIsPrivilegedClient } from './checkoutData';
 import { MAX_QTY_PER_PRODUCT } from './cartLimits';
 import { suppressHistoryCleanup } from './useHistoryModal';
 import { guardPendingLock } from './pendingLock';
+import { createClient } from './supabase/client';
 
 function getTimeoutSignal(ms: number): AbortSignal | undefined {
   if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
@@ -472,12 +473,38 @@ function proceedQuickOrder(
   if (!prod || prod.stock <= 0) return;
 
   if (hasExceededLocalOrderLimit()) {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
-    }
+    // 🛡️ এডমিন/মডারেটরদের জন্য এই ব্রাউজার-লোকাল (localStorage) ৩-বার/২৪-ঘণ্টা
+    // লিমিট প্রযোজ্য না — বাকি সব জায়গার (checkout/page.tsx-এর isMod,
+    // lib/pendingLock.ts) মতোই একই DB-ভিত্তিক is_admin/role চেক।
+    // লক্ষ্য রাখা হয়েছে: এই async চেকটা শুধু "লিমিট ছুঁয়েছে" অবস্থাতেই চলে —
+    // সাধারণ (ব্লক না হওয়া) ৯৯%+ কুইক-অর্ডার ক্লিকে কোনো বাড়তি নেটওয়ার্ক কল বা
+    // টাইমিং-পরিবর্তন হয় না, কোডের বাকি অংশ পুরোপুরি অপরিবর্তিত।
+    void (async () => {
+      try {
+        const supabase = createClient();
+        const { data: userData } = await supabase.auth.getUser();
+        if (await checkIsPrivilegedClient(supabase, userData?.user?.id)) {
+          runQuickOrder(router, prod, qty);
+          return;
+        }
+      } catch {
+        // চেক ব্যর্থ হলে fail-safe — সাধারণ কাস্টমারের মতোই লিমিট-মডাল দেখানো হবে
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(OPEN_ORDER_LIMIT_EVENT));
+      }
+    })();
     return;
   }
 
+  runQuickOrder(router, prod, qty);
+}
+
+function runQuickOrder(
+  router: { push: (href: string) => void },
+  prod: Product,
+  qty = 1,
+): void {
   const safeQty = Math.max(1, Math.min(qty, prod.stock, MAX_QTY_PER_PRODUCT));
   const currentCart = useCartStore.getState().cart;
 

@@ -246,6 +246,9 @@ export interface OrderPayload {
   idempotencyKey?: string;
   lang?: 'bn' | 'en';
   couponCode?: string;
+  /** 🛡️ হানিপট — মানুষের চোখে অদৃশ্য একটা ফিল্ড, শুধু বট এটা পূরণ করে।
+   *  খালি থাকলে মানুষ, কিছু লেখা থাকলে বট — সার্ভার সাথে সাথে বাতিল করে দেয়। */
+  hp?: string;
 }
 
 export interface CreateOrderResult {

@@ -113,6 +113,15 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
 
   if (!payload || typeof payload !== 'object') return fail(t('অবৈধ অনুরোধ'));
 
+  // 🛡️ হানিপট — ফর্মে একটা ফিল্ড মানুষ কখনো দেখে না/ভরে না (CSS দিয়ে স্ক্রিনের বাইরে,
+  // tabIndex -1, aria-hidden), কিন্তু অটো-ফিল করা বট/স্ক্রিপ্ট সাধারণত সব ইনপুট
+  // পূরণ করার চেষ্টা করে। এখানে কিছু থাকলে মানেই বট — কোনো DB কল/রেট-লিমিট গোনা
+  // ছাড়াই সাথে সাথে বাতিল। ভুলক্রমে কোনো সত্যিকারের কাস্টমারের ক্ষতি হয় না, কারণ এই
+  // ফিল্ডে কোনো UI কখনো লেখা বসায় না।
+  if (String(payload.hp || '').trim()) {
+    return fail(t('অবৈধ অনুরোধ'));
+  }
+
   const name = sanitizePlainName(String(payload.name || '')).trim();
   // (audit P2-B6) +88 / 0088 ইত্যাদি হলে সার্ভারও একই নিয়মে ১১ ডিজিটে আনে; তারপর কড়া যাচাই
   const phone = normalizeBdPhone(String(payload.phone || '').trim());
@@ -539,43 +548,6 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   const advancePaidAmount = legendaryVoucherReserved ? 0 : advanceBreakdown.totalAdvance;
 
   const stockItems = cleanItems.map((i) => ({ id: i.id, qty: i.qty }));
-  let stockDecremented = false;
-  try {
-    const { error: stockErr } = await service.rpc('decrement_product_stock', { p_items: stockItems });
-    if (stockErr && stockErr.message?.includes('INSUFFICIENT_STOCK')) {
-      await revertCouponIfNeeded();
-      await revertLegendaryVoucherIfNeeded();
-      return fail(t('দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই'));
-    }
-    if (stockErr) {
-      // 🛡️ ফিক্স (audit P1-09): আগে এখানে অজানা error (নেটওয়ার্ক/টাইমআউট/RPC
-      // অনুপস্থিত) হলে চুপচাপ এগিয়ে যেত এবং স্টক না কমিয়েই অর্ডার বসে যেত
-      // (overselling)। এখন fail-closed — বাকি রেট-লিমিট চেকগুলোর মতোই।
-      logError('[checkout] stock decrement RPC error — fail-closed:', stockErr.message);
-      await revertCouponIfNeeded();
-      await revertLegendaryVoucherIfNeeded();
-      return fail(GENERIC_RETRY_MSG);
-    }
-    stockDecremented = true;
-  } catch (e) {
-    logError('[checkout] stock decrement exception — fail-closed:', e);
-    await revertCouponIfNeeded();
-    await revertLegendaryVoucherIfNeeded();
-    return fail(GENERIC_RETRY_MSG);
-  }
-
-  // 🛡️ স্টক কমার পর অর্ডার ইনসার্ট ফেইল করলে stock আটকে না থেকে ফেরত
-  // দেওয়ার জন্য — নিচে ব্যর্থ হলে এই ফাংশনটাকে কল করা হবে (ইতিমধ্যে DB-তে
-  // থাকা restore_product_stock RPC, একই p_items ফরম্যাট নেয়)
-  async function revertStockIfNeeded() {
-    if (!stockDecremented) return;
-    try {
-      await service.rpc('restore_product_stock', { p_items: stockItems });
-    } catch (e) {
-      logError('[checkout] stock restore after failed order insert also failed:', e);
-    }
-  }
-
 
   // (audit P2-B2) কাউন্টার ফাংশন ব্যর্থ হলে ব্যাকআপ নম্বর: সময় + র‍্যান্ডম সাফিক্স, যাতে একই মিলিসেকেন্ডে
   // দুটো অর্ডারের নম্বর এক হওয়ার সম্ভাবনা কার্যত শূন্য হয়। (আসল নম্বর DB sequence থেকে আসে — সেটা কখনো ডুপ্লিকেট হয় না;
@@ -627,16 +599,38 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     ...(currentUserId ? { user_id: currentUserId } : {}),
   };
 
-  const insResult = await service.from('orders').insert(primaryPayload).select('id').single();
+  // 🛡️ ফিক্স (audit ২.১ — non-atomic checkout transaction / "split-brain race condition"):
+  // আগে স্টক কমানো (decrement_product_stock) আর অর্ডার-ইনসার্ট দুইটা আলাদা নেটওয়ার্ক
+  // রিকোয়েস্টে হতো — ঠিক এই দুইয়ের মাঝখানে সার্ভারলেস প্রসেস কিল/টাইমআউট হলে স্টক
+  // কাটা থেকে যেত অথচ অর্ডার তৈরি হতো না (overselling, silent data loss)। এখন দুটোই
+  // একটা একক PostgreSQL ফাংশনে (create_order_atomic, migration: checkout_atomic_order_creation) —
+  // ভেতরে decrement_product_stock কল করে স্টক কমে, তারপর একই ফাংশন-কলের ভেতরেই orders
+  // ইনসার্ট হয়। যেকোনো একটা ধাপ ব্যর্থ হলে (ইনসাফিশিয়েন্ট স্টক, ডুপ্লিকেট কী, যেকোনো
+  // constraint ভায়োলেশন) Postgres নিজে থেকেই পুরো ফাংশনের সব পরিবর্তন রোলব্যাক করে দেয় —
+  // তাই "স্টক কাটা গেছে, অর্ডার হয়নি" অবস্থা আর কখনো হতে পারবে না।
+  const { data: atomicOrderId, error: atomicErr } = await service.rpc('create_order_atomic', {
+    p_items: stockItems,
+    p_order: primaryPayload,
+  });
+
+  const insResult: { data: { id: string } | null; error: typeof atomicErr } =
+    atomicErr || !atomicOrderId
+      ? { data: null, error: atomicErr }
+      : { data: { id: atomicOrderId as string }, error: null };
 
   if (insResult.error || !insResult.data) {
-    logError('[checkout] order insert failed:', insResult.error?.message, '| Code:', insResult.error?.code);
-    await revertStockIfNeeded();
+    const atomicErrMsg = String(insResult.error?.message || '');
+    logError('[checkout] atomic order creation failed:', atomicErrMsg, '| Code:', insResult.error?.code);
     await revertCouponIfNeeded();
     await revertLegendaryVoucherIfNeeded();
 
+    // স্টক-সংক্রান্ত ব্যর্থতা (decrement_product_stock-এর ভেতর থেকে আসা এক্সেপশন)
+    if (atomicErrMsg.includes('INSUFFICIENT_STOCK')) {
+      return fail(t('দুঃখিত, একটি পণ্য স্টকে নেই বা পরিমাণ যথেষ্ট নেই'));
+    }
+
     if (insResult.error?.code === '23505') {
-      const dupMsg = String(insResult.error?.message || '');
+      const dupMsg = atomicErrMsg;
       // (audit P2-B1) একই মুহূর্তে আসা "জমজ" রিকোয়েস্ট: অন্যটা আগেই অর্ডার বানিয়ে ফেলেছে →
       // এই রিকোয়েস্টের স্টক/কুপন/ভাউচার ওপরে রিভার্ট হয়ে গেছে; কাস্টমারকে আগের অর্ডারটাই দেখাই।
       if (idemKeyForInsert && dupMsg.includes('idempotency_key')) {

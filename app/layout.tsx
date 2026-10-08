@@ -4,6 +4,7 @@ import './globals.css';
 import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
 import StaleTabReload from './components/StaleTabReload';
+import StaleSessionReload from './components/StaleSessionReload';
 import Analytics from './components/Analytics';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 
@@ -117,6 +118,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         {children}
         <Analytics />
         <StaleTabReload />
+        <StaleSessionReload />
         <GlobalOverlays />
       </body>
     </html>
