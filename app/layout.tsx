@@ -81,10 +81,27 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        {/* বাংলা সংখ্যা ও ডিজিটের জন্য নির্ভরযোগ্য গুগল ফন্ট স্টাইলশীট (জিরো 404 এরর) */}
+        {/* বাংলা সংখ্যা ও ডিজিটের জন্য নির্ভরযোগ্য গুগল ফন্ট স্টাইলশীট (জিরো 404 এরর)।
+            এটা রেন্ডার-ব্লকিং না হওয়ার জন্য প্রথমে preload করে, তারপর JS দিয়ে স্টাইলশীট
+            হিসেবে সক্রিয় করা হয় (ক্লাসিক async-CSS প্যাটার্ন) — এতে প্রাথমিক পেইন্ট/LCP
+            আটকায় না, শুধু সংখ্যাগুলো ফন্ট লোড হওয়ার সাথে সাথে সামান্য পরে রিফ্লো হয়। */}
         <link
-          rel="stylesheet"
+          rel="preload"
+          as="style"
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&text=%E0%A7%A6%E0%A7%A7%E0%A7%A8%E0%A7%A9%E0%A7%AA%E0%A7%AB%E0%A7%AC%E0%A7%AD%E0%A7%AE%E0%A7%AF&display=swap"
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&text=%E0%A7%A6%E0%A7%A7%E0%A7%A8%E0%A7%A9%E0%A7%AA%E0%A7%AB%E0%A7%AC%E0%A7%AD%E0%A7%AE%E0%A7%AF&display=swap"
+          />
+        </noscript>
+        <Script
+          id="digit-font-loader"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&text=%E0%A7%A6%E0%A7%A7%E0%A7%A8%E0%A7%A9%E0%A7%AA%E0%A7%AB%E0%A7%AC%E0%A7%AD%E0%A7%AE%E0%A7%AF&display=swap';document.head.appendChild(l);})();`,
+          }}
         />
         {gtmId && (
           <Script

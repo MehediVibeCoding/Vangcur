@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import VangcurLogoMark from '@/app/components/ui/VangcurLogoMark';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/lib/store/authStore';
@@ -329,13 +330,9 @@ export default function Footer() {
           {/* কলাম ১: লোগো, ট্যাগলাইন ও সোশ্যাল আইকনসমূহ */}
           <div className="col-span-2 sm:col-span-1 flex flex-col items-center sm:items-start text-center sm:text-left">
             <Link href="/" prefetch={true} className="mb-2 inline-block">
-              <Image
-                src="/vangcur-logo.png"
-                alt="Vangcur Gadgets"
-                width={140}
-                height={49}
-                className="h-8 sm:h-9 w-auto select-none"
-                priority={false}
+              <VangcurLogoMark
+                aria-label="Vangcur Gadgets"
+                className="h-8 sm:h-9 w-auto select-none text-brand-light"
               />
             </Link>
 

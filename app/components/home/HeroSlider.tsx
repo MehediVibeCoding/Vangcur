@@ -49,7 +49,7 @@ function HeroCardImage({
       alt={alt}
       loading={isPriority ? 'eager' : 'lazy'}
       fetchPriority={isPriority ? 'high' : undefined}
-      decoding={isPriority ? 'sync' : 'async'}
+      decoding="async"
       draggable={false}
     />
   );
@@ -87,6 +87,17 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
       preloadImg.src = href;
     }
 
+    // 🐢 স্লো কানেকশন / ডেটা সেভার মোডে বাকি কার্ডগুলো আগে থেকে না টেনে, স্ক্রল করে
+    // কাছে এলে native lazy loading-এর উপর ছেড়ে দেওয়া হয় — যাতে প্রথম LCP ছবির
+    // সাথে ব্যান্ডউইথ ভাগ না হয়।
+    const nav = navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    };
+    const conn = nav.connection;
+    const isSlowConnection =
+      !!conn && (conn.saveData === true || /^(slow-2g|2g|3g)$/.test(conn.effectiveType || ''));
+    if (isSlowConnection) return;
+
     const idlePreload = () => {
       for (let idx = perPage; idx < cards.length; idx++) {
         const src = cards[idx]?.img;
@@ -99,14 +110,28 @@ export default function HeroSlider({ initialCards, onCategoryClick }: HeroSlider
 
     let idleId: number | null = null;
     let timerId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
 
-    if ('requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(idlePreload, { timeout: 1500 });
+    // পেজ পুরোপুরি লোড (সব ক্রিটিক্যাল রিসোর্স সহ) হওয়ার পরেই বাকি কার্ডগুলোর
+    // ব্যাকগ্রাউন্ড প্রিলোড শিডিউল করা হয়, যাতে LCP/ফন্টের সাথে প্রতিযোগিতা না করে।
+    const schedule = () => {
+      if (cancelled) return;
+      if ('requestIdleCallback' in window) {
+        idleId = window.requestIdleCallback(idlePreload, { timeout: 4000 });
+      } else {
+        timerId = setTimeout(idlePreload, 3000);
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      schedule();
     } else {
-      timerId = setTimeout(idlePreload, 1200);
+      window.addEventListener('load', schedule, { once: true });
     }
 
     return () => {
+      cancelled = true;
+      window.removeEventListener('load', schedule);
       if (idleId !== null && 'cancelIdleCallback' in window) {
         window.cancelIdleCallback(idleId);
       }

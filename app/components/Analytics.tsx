@@ -22,8 +22,14 @@ const safeGa = GA_ID && /^[A-Za-z0-9-]{4,30}$/.test(GA_ID) ? GA_ID : null;
 const safeClarity = CLARITY_ID && /^[a-z0-9]{4,20}$/i.test(CLARITY_ID) ? CLARITY_ID : null;
 const safePixel = PIXEL_ID && /^\d{6,20}$/.test(PIXEL_ID) ? PIXEL_ID : null;
 
+// 🐢 প্রথম লোডে ট্র্যাকাররা হিরো ইমেজ/ফন্টের সাথে ব্যান্ডউইথ ও মেইন-থ্রেড ভাগ করে নেয় বলে
+// LCP দেরি করে। তাই এগুলো তখনই লোড হয় যখন ইউজার প্রথম ইন্টারঅ্যাক্ট করে (স্ক্রল/ট্যাপ/মুভ),
+// অথবা পেজ আইডল হয়ে যায়, অথবা একটা ছোট টাইমআউট পার হয় — যেটা আগে ঘটে।
+const TRACKER_IDLE_DELAY_MS = 3500;
+
 export default function Analytics() {
   const [enabled, setEnabled] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -37,7 +43,44 @@ export default function Analytics() {
     }
   }, []);
 
-  if (!enabled) return null;
+  useEffect(() => {
+    if (!enabled || ready) return;
+
+    let settled = false;
+    const markReady = () => {
+      if (settled) return;
+      settled = true;
+      setReady(true);
+    };
+
+    const interactionEvents: Array<keyof WindowEventMap> = [
+      'pointerdown',
+      'touchstart',
+      'keydown',
+      'scroll',
+      'mousemove',
+    ];
+    interactionEvents.forEach((evt) =>
+      window.addEventListener(evt, markReady, { once: true, passive: true })
+    );
+
+    const win = window as typeof window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const idleId = win.requestIdleCallback
+      ? win.requestIdleCallback(markReady, { timeout: TRACKER_IDLE_DELAY_MS })
+      : null;
+    const timeoutId = window.setTimeout(markReady, TRACKER_IDLE_DELAY_MS);
+
+    return () => {
+      interactionEvents.forEach((evt) => window.removeEventListener(evt, markReady));
+      window.clearTimeout(timeoutId);
+      if (idleId !== null && win.cancelIdleCallback) win.cancelIdleCallback(idleId);
+    };
+  }, [enabled, ready]);
+
+  if (!enabled || !ready) return null;
 
   return (
     <>

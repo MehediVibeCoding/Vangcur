@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, type RefObject } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import VangcurLogoMark from '@/app/components/ui/VangcurLogoMark';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { createClient } from '@/lib/supabase/client';
@@ -828,15 +828,9 @@ export default function Navbar({
               // eslint-disable-next-line @next/next/no-html-link-for-pages
               <a className="flex shrink-0 items-center no-underline" href="/">
                 <span className="flex shrink-0 items-center">
-                  <Image
-                    src="/vangcur-logo.png"
-                    alt="Vangcur Gadgets"
-                    width={140}
-                    height={49}
-                    sizes="133px"
-                    priority
-                    className="h-7 w-auto select-none max-[400px]:h-6 md:h-8"
-                    draggable={false}
+                  <VangcurLogoMark
+                    aria-label="Vangcur Gadgets"
+                    className="h-7 w-auto select-none text-brand-light max-[400px]:h-6 md:h-8"
                   />
                 </span>
               </a>

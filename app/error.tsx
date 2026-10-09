@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import VangcurLogoMark from '@/app/components/ui/VangcurLogoMark';
 import { useT } from '@/lib/i18n/useT';
 import { logError } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/client';
@@ -104,13 +104,9 @@ export default function GlobalError({
 
         <div className="relative z-10 mx-auto mb-4 flex justify-center">
           <Link href="/" className="inline-block">
-            <Image
-              src="/vangcur-logo.png"
-              alt="Vangcur Gadgets"
-              width={140}
-              height={49}
-              priority
-              className="h-8 w-auto select-none"
+            <VangcurLogoMark
+              aria-label="Vangcur Gadgets"
+              className="h-8 w-auto select-none text-brand-light"
             />
           </Link>
         </div>
