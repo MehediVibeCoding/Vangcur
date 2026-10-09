@@ -176,13 +176,16 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
   return (
     <div
       data-pid={p.id}
-      onMouseEnter={() => router.prefetch('/checkout')}
+      onMouseEnter={() => {
+        router.prefetch('/checkout');
+        router.prefetch(href);
+      }}
+      onTouchStart={() => router.prefetch(href)}
       className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [contain:content] [transform:translateZ(0)]"
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted [contain:paint_layout]">
         <Link
           href={href}
-          prefetch={true}
           className="absolute inset-0 block cursor-pointer transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.06]"
         >
           <ProdImg imgVal={(p.imgs || ['📦'])[0]} name={p.name} lazy={!isFirst && index >= 2} />
@@ -240,7 +243,6 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
         <div className="absolute inset-x-0 bottom-0 z-[2] p-2 sm:p-3">
           <Link
             href={href}
-            prefetch={true}
             title={p.name}
             className="block w-full cursor-pointer truncate overflow-hidden text-ellipsis whitespace-nowrap font-body text-[11px] font-extrabold leading-tight text-white no-underline hover:underline sm:text-sm xl:text-xs"
           >

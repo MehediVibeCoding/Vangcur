@@ -64,7 +64,6 @@ function SearchHeader({ query, onQueryChange }: { query: string; onQueryChange: 
         <div className="mx-auto flex h-[62px] max-w-[1300px] items-center gap-2.5 px-3 sm:gap-3 sm:px-5">
           <Link
             href="/"
-            prefetch={true}
             onClick={handleBackToHome}
             aria-label={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
             title={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}

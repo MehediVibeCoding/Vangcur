@@ -1,11 +1,9 @@
-import { Playfair_Display, DM_Sans, Hind_Siliguri } from 'next/font/google';
+import { DM_Sans, Hind_Siliguri } from 'next/font/google';
 
-export const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['600', '700'],
-  variable: '--font-display',
-  display: 'swap',
-});
+// 🐢 পারফরম্যান্স ফিক্স (audit): Playfair Display এখানে লোড হতো কিন্তু
+// `font-display` ক্লাসটা পুরো রিপোতে (grep করে যাচাই) কোথাও ব্যবহারই হতো না —
+// প্রতি পেজে ২টা অপ্রয়োজনীয় high-priority woff2 প্রিলোড হচ্ছিল। সম্পূর্ণ বাদ
+// দেওয়া হলো; ভিজ্যুয়ালি কোনো পরিবর্তন নেই যেহেতু আগেও এটা কোথাও রেন্ডার হতো না।
 
 export const dmSans = DM_Sans({
   subsets: ['latin'],

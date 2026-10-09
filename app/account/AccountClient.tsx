@@ -427,7 +427,6 @@ export default function AccountClient() {
             {/* ব্যাক টু হোম বাটন */}
             <Link
               href="/"
-              prefetch={true}
               aria-label={t('হোম')}
               onClick={(e) => {
                 e.preventDefault();

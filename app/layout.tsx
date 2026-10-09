@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
-import { playfairDisplay, dmSans, hindSiliguri } from './fonts';
+import { dmSans, hindSiliguri } from './fonts';
 import GlobalOverlays from './components/GlobalOverlays';
 import StaleTabReload from './components/StaleTabReload';
 import StaleSessionReload from './components/StaleSessionReload';
@@ -61,12 +61,20 @@ export default async function RootLayout({
 }) {
   const lang = await getServerLang();
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+  let supabaseOrigin: string | null = null;
+  try {
+    supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
+      : null;
+  } catch {
+    supabaseOrigin = null;
+  }
 
   return (
     <html
       lang={lang}
       suppressHydrationWarning
-      className={`${playfairDisplay.variable} ${dmSans.variable} ${hindSiliguri.variable}`}
+      className={`${dmSans.variable} ${hindSiliguri.variable}`}
     >
       <head>
         <Script
@@ -78,6 +86,16 @@ export default async function RootLayout({
         />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        {/* 🐢 পারফরম্যান্স ফিক্স (audit): PageSpeed নিজেই এই preconnect suggest করেছিল
+            (~310ms LCP savings) — About/Footer সেকশনের Realtime সাবস্ক্রিপশন ও
+            বিভিন্ন ক্লায়েন্ট কম্পোনেন্ট সরাসরি ব্রাউজার থেকে Supabase-এ কানেক্ট করে,
+            এতদিন তার জন্য আলাদা preconnect ছিল না। */}
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />

@@ -329,7 +329,7 @@ export default function Footer() {
         <div className="mx-auto grid max-w-[1300px] grid-cols-2 gap-x-6 gap-y-9 sm:gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr] lg:gap-12 pb-6">
           {/* কলাম ১: লোগো, ট্যাগলাইন ও সোশ্যাল আইকনসমূহ */}
           <div className="col-span-2 sm:col-span-1 flex flex-col items-center sm:items-start text-center sm:text-left">
-            <Link href="/" prefetch={true} className="mb-2 inline-block">
+            <Link href="/" className="mb-2 inline-block">
               <VangcurLogoMark
                 aria-label="Vangcur Gadgets"
                 className="h-8 sm:h-9 w-auto select-none text-brand-light"
@@ -400,32 +400,32 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3 font-body text-[13.5px]">
               <li>
-                <Link href="/guide" prefetch={true} className={colLinkClass}>
+                <Link href="/guide" className={colLinkClass}>
                   {lang === 'en' ? 'User Guide & Help' : 'ইউজার গাইড ও সহায়িকা'}
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" prefetch={true} className={colLinkClass}>
+                <Link href="/shipping" className={colLinkClass}>
                   {lang === 'en' ? 'Order & Shipping Info' : 'অর্ডার ও শিপিং তথ্য'}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" prefetch={true} className={colLinkClass}>
+                <Link href="/terms" className={colLinkClass}>
                   {lang === 'en' ? 'Warranty Terms' : 'ওয়ারেন্টি নীতিমালা'}
                 </Link>
               </li>
               <li>
-                <Link href="/refund-policy" prefetch={true} className={colLinkClass}>
+                <Link href="/refund-policy" className={colLinkClass}>
                   {lang === 'en' ? 'Returns & Refunds' : 'রিটার্ন ও রিফান্ড পলিসি'}
                 </Link>
               </li>
               <li>
-                <Link href="/privacy-policy" prefetch={true} className={colLinkClass}>
+                <Link href="/privacy-policy" className={colLinkClass}>
                   {lang === 'en' ? 'Privacy Policy' : 'প্রাইভেসি পলিসি'}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" prefetch={true} className={colLinkClass}>
+                <Link href="/terms" className={colLinkClass}>
                   {lang === 'en' ? 'Terms & Conditions' : 'শর্তাবলী'}
                 </Link>
               </li>
@@ -451,32 +451,31 @@ export default function Footer() {
               {currentUser ? (
                 <>
                   <li>
-                    <Link href="/account" prefetch={true} className={colLinkClass}>
+                    <Link href="/account" className={colLinkClass}>
                       {t('মাই প্রোফাইল')}
                     </Link>
                   </li>
                   <li>
-                    <Link href="/account?open=membership" prefetch={true} className={colLinkClass}>
+                    <Link href="/account?open=membership" className={colLinkClass}>
                       {t('মেম্বারশিপ')}
                     </Link>
                   </li>
                 </>
               ) : (
                 <li>
-                  <Link href="/account" prefetch={true} className={colLinkClass}>
+                  <Link href="/account" className={colLinkClass}>
                     {t('লগইন')}
                   </Link>
                 </li>
               )}
               <li>
-                <Link href="/track-order" prefetch={true} className={colLinkClass}>
+                <Link href="/track-order" className={colLinkClass}>
                   {t('ট্র্যাক অর্ডার')}
                 </Link>
               </li>
               <li>
                 <Link
                   href="/offers"
-                  prefetch={true}
                   className={`${colLinkClass} font-bold text-amber-700 hover:text-amber-800`}
                 >
                   {lang === 'en' ? 'Current Offers' : 'চলতি অফারসমূহ'}

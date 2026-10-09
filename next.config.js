@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
+    // 🐢 পারফরম্যান্স ফিক্স (audit): critical CSS ইনলাইন করে বাকিটা async করে —
+    // PageSpeed-এ ২টা render-blocking CSS চাঙ্ক (~1050ms) ফ্ল্যাগ হয়েছিল এর কারণে।
+    optimizeCss: true,
     staleTimes: {
       // 🛡️ ফিক্স (audit P2-B9): আগে ৩০০ সেকেন্ড (৫ মিনিট) ছিল — অ্যাকাউন্ট/
       // অর্ডার পেজে ঘুরে আসার পর পুরনো অর্ডার-স্ট্যাটাস ৫ মিনিট পর্যন্ত দেখাতে

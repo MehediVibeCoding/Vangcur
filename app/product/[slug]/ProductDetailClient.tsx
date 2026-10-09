@@ -1019,7 +1019,6 @@ export default function ProductDetailClient({
                     <Link
                       key={v.id}
                       href={productHref(v)}
-                      prefetch
                       className="flex items-center gap-1.5 rounded-full border border-brand-light/25 bg-white/60 px-3 py-1.5 text-[12.5px] font-semibold text-ink shadow-2xs backdrop-blur-[6px] transition-brand duration-brand hover:border-brand-light/60 hover:bg-brand-bg/40 hover:shadow-xs"
                     >
                       {dot}

@@ -322,7 +322,6 @@ function SearchDropdown({
               <Link
                 key={p.id}
                 href={productHref(p)}
-                prefetch={true}
                 className="flex items-center gap-3 px-3.5 py-2.5 text-inherit no-underline transition-colors hover:bg-surface-muted"
                 onClick={onPick}
               >
@@ -803,7 +802,6 @@ export default function Navbar({
             {showHomeButton ? (
               <Link
                 href="/"
-                prefetch={true}
                 onClick={handleBackToHome}
                 aria-label={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
                 title={lang === 'en' ? 'Back to Home' : 'ফিরে যান'}
