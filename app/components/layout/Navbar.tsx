@@ -417,14 +417,21 @@ export default function Navbar({
   );
   const popularSearches = DEFAULT_POPULAR_SEARCHES;
 
-  // প্রি-ফেচ শুধু ব্রাউজার idle হলে — প্রথম লোডে LCP ও হাইড্রেশনের সাথে নেটওয়ার্ক-প্রতিযোগিতা এড়াতে
+  // প্রি-ফেচ শুধু ব্রাউজার idle হলে — প্রথম লোডে LCP ও হাইড্রেশনের সাথে নেটওয়ার্ক-প্রতিযোগিতা এড়াতে।
+  // আগে প্রতিটা ভিজিটরের (গেস্টসহ) জন্য ৫টা রুট আনকন্ডিশনালি প্রিফেচ হতো। এখন শর্তসাপেক্ষ:
+  // - /checkout: কার্টে আইটেম থাকলেই, নইলে দরকার নেই
+  // - /account, /account/orders: লগইন করা থাকলেই, গেস্টের জন্য অপ্রয়োজনীয়
+  // - /search: সরানো হলো — এটা একমাত্র ডায়নামিক (ƒ) রুট, মানে প্রিফেচ হলে আসল ফাংশন-ইনভোকেশন
+  //   লাগে; ব্যবহারকারী সার্চ বক্সে হাত দিলে অন্য জায়গায় এমনিতেই প্রিফেচ হয় (দেখুন নিচের হ্যান্ডলারগুলো)
+  // - /track-order: রাখা হলো, স্ট্যাটিক রুট বলে ফাংশন খরচ নেই, বাংলাদেশে অর্ডার-ট্র্যাকিং সাধারণ ব্যবহার
   useEffect(() => {
     const run = () => {
-      router.prefetch('/checkout');
-      router.prefetch('/search');
+      if (cartCount > 0) router.prefetch('/checkout');
       router.prefetch('/track-order');
-      router.prefetch('/account');
-      router.prefetch('/account/orders');
+      if (currentUser) {
+        router.prefetch('/account');
+        router.prefetch('/account/orders');
+      }
     };
     if ('requestIdleCallback' in window) {
       const id = window.requestIdleCallback(run, { timeout: 5000 });
@@ -432,7 +439,7 @@ export default function Navbar({
     }
     const t = setTimeout(run, 3000);
     return () => clearTimeout(t);
-  }, [router]);
+  }, [router, cartCount, currentUser]);
 
   const initSearchData = useCallback(async () => {
     if (prodsRef.current.length > 0 || searchDataLoadingRef.current) return;

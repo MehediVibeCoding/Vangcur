@@ -21,6 +21,7 @@ import { recordLimitHit, classifyPhoneLimit } from '@/lib/limitEvents';
 import { scoreAndSaveOrderRisk, waitForRisk } from '@/lib/riskScoring';
 import { topRiskReasons } from '@/lib/riskEngine';
 import { sendTelegramOrderNotification, sendTelegramPaymentAutoConfirm } from '@/lib/telegram';
+import { getClientIp } from '@/lib/limiter';
 import type { ActionResponse, CreateOrderResult, OrderPayload } from '@/types';
 
 const MAX_ITEMS = 30;
@@ -31,19 +32,13 @@ function fail(error: string): ActionResponse<CreateOrderResult> {
   return { ok: false, error };
 }
 
-// ক্লায়েন্টের আসল আইপি — Vercel-এর নিজস্ব এজ-সেট হেডার আগে (ক্লায়েন্ট বদলাতে পারে না),
-// `x-forwarded-for` শুধু শেষ ব্যাকআপ। পেন্ডিং-লক ও অর্ডারে আইপি সংরক্ষণে ব্যবহৃত হয়।
+// ক্লায়েন্টের আসল আইপি — শেয়ার্ড getClientIp() (lib/limiter.ts, C5 ফিক্স) ব্যবহার করে।
+// পেন্ডিং-লক ও অর্ডারে আইপি সংরক্ষণে ব্যবহৃত হয়।
 async function readClientIp(): Promise<string> {
   try {
     const hdrs = await headers();
-    const vercelForwardedFor = hdrs.get('x-vercel-forwarded-for');
-    const realIp = hdrs.get('x-real-ip');
-    const forwardedFor = hdrs.get('x-forwarded-for');
-    const ip =
-      (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
-      (realIp ? realIp.trim() : '') ||
-      (forwardedFor ? forwardedFor.split(',')[0].trim() : '');
-    return ip.slice(0, 64);
+    const ip = getClientIp(hdrs);
+    return ip === '127.0.0.1' ? '' : ip.slice(0, 64);
   } catch {
     return '';
   }
@@ -183,27 +178,47 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   let currentUserEmail: string | null = null;
   let isPrivilegedUser = false;
 
-  try {
-    const cookieClient = await createClient();
-    const { data: userData } = await cookieClient.auth.getUser();
-    if (userData?.user) {
-      currentUserId = userData.user.id;
-      currentUserEmail = userData.user.email ?? null;
+  // 🔒 ফিক্স (M1, নিরাপদ অংশ): auth+প্রোফাইল লুকআপ আর idempotency-key লুকআপ একে অপরের
+  // ফলাফলের ওপর নির্ভর করে না — একটা ইউজার-আইডি থেকে প্রোফাইল আনে, আরেকটা ফোন+আইটেম
+  // থেকে আগের অর্ডার খোঁজে, আলাদা ডেটা, কোনো শেয়ার্ড স্টেট নেই। আগে এই দুটো ধাপে ধাপে
+  // (sequential) হতো, এখন Promise.all দিয়ে একসাথে — প্রতিটা ফলাফল প্রসেস হয় ঠিক আগের
+  // মতোই ক্রমে, শুধু নেটওয়ার্ক-অপেক্ষাটা একসাথে হচ্ছে। যুক্তি/আচরণ অপরিবর্তিত।
+  const [authResult, idemResult] = await Promise.all([
+    (async (): Promise<{ userId: string; email: string | null; privileged: boolean } | null> => {
+      try {
+        const cookieClient = await createClient();
+        const { data: userData } = await cookieClient.auth.getUser();
+        if (!userData?.user) return null;
 
-      // প্রোফাইল টেবিল থেকে অ্যাডমিন/মডারেটর রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
-      // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে)
-      const { data: profile } = await service
-        .from('profiles')
-        .select('is_admin, role')
-        .eq('id', userData.user.id)
-        .maybeSingle();
+        // প্রোফাইল টেবিল থেকে অ্যাডমিন/মডারেটর রোল যাচাই — শুধুমাত্র DB-ভিত্তিক
+        // (আগে এখানে একটা হার্ডকোডেড মডারেটর-ইমেইল শর্টকাট ছিল, সরিয়ে ফেলা হয়েছে)
+        const { data: profile } = await service
+          .from('profiles')
+          .select('is_admin, role')
+          .eq('id', userData.user.id)
+          .maybeSingle();
 
-      if (profile?.is_admin === true || ['admin', 'super_admin', 'moderator'].includes(profile?.role)) {
-        isPrivilegedUser = true;
+        return {
+          userId: userData.user.id,
+          email: userData.user.email ?? null,
+          privileged: profile?.is_admin === true || ['admin', 'super_admin', 'moderator'].includes(profile?.role),
+        };
+      } catch {
+        return null;
       }
-    }
-  } catch {
-    // ignore
+    })(),
+    idempotencyKey
+      ? findOrderByIdempotencyKey(service, idempotencyKey, phone, cleanItems).catch((e) => {
+          logWarn('[checkout] idempotency lookup failed (continuing normally):', e);
+          return null;
+        })
+      : Promise.resolve(null),
+  ]);
+
+  if (authResult) {
+    currentUserId = authResult.userId;
+    currentUserEmail = authResult.email;
+    isPrivilegedUser = authResult.privileged;
   }
 
   // 🎖️ ফিচার: Legendary (১০+ ডেলিভার্ড অর্ডার) সদস্যের একবার-ব্যবহারযোগ্য
@@ -218,15 +233,10 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
   // নিরাপত্তা: একই ফোন ও একই আইটেম-তালিকা না মিললে এটা "একই অর্ডার" ধরা হয় না (নতুন অর্ডার হিসেবে চলবে)।
   let idemKeyForInsert: string | null = idempotencyKey || null;
   if (idempotencyKey) {
-    try {
-      const existing = await findOrderByIdempotencyKey(service, idempotencyKey, phone, cleanItems);
-      if (existing === 'mismatch') {
-        idemKeyForInsert = null;
-      } else if (existing) {
-        return { ok: true, data: { id: existing.id, orderNum: existing.orderNum } };
-      }
-    } catch (e) {
-      logWarn('[checkout] idempotency lookup failed (continuing normally):', e);
+    if (idemResult === 'mismatch') {
+      idemKeyForInsert = null;
+    } else if (idemResult) {
+      return { ok: true, data: { id: idemResult.id, orderNum: idemResult.orderNum } };
     }
   }
 
@@ -309,90 +319,43 @@ export async function createOrder(payload: OrderPayload): Promise<ActionResponse
     if (hasLast4 && !/^\d{4}$/.test(last4)) return fail(t('সঠিক শেষ ৪ ডিজিট দিন'));
   }
 
+  // 🔒 ফিক্স (M1): আগে এখানে ৩টা আলাদা RPC (ফোন → fingerprint → IP, ক্রমানুসারে) — তিনটা
+  // DB রাউন্ড-ট্রিপ। এখন একটাই `check_order_limits()` (নতুন migration), যেটার ভেতরে
+  // হুবহু আগের তিনটা ফাংশনের লজিক আছে: ফোন ফেল করলে fingerprint/IP কাউন্টার স্পর্শই হয়
+  // না (short-circuit অক্ষত, DB-তে টেস্ট করে নিশ্চিত হয়েছি), ৩০সে কুলডাউন ও advisory
+  // lock (audit P1-13) অক্ষত, যেকোনো RPC এরর/এক্সেপশনে আগের মতোই fail-closed।
   if (!isPrivilegedUser) {
     try {
-      const { data: phoneOk, error: phoneRlErr } = await service.rpc('check_and_set_rate_limit', { p_phone: phone });
-      if (phoneRlErr) {
-        // 🛡️ fail-closed: RPC এরর হলে চুপচাপ চালিয়ে না দিয়ে অর্ডার আটকানো হবে
-        logError('[checkout] phone rate limit RPC error — fail-closed:', phoneRlErr.message);
+      const { data: limitsRaw, error: limitsErr } = await service.rpc('check_order_limits', {
+        p_phone: phone,
+        p_fingerprint_id: fingerprintId || null,
+        p_ip: clientIp || null,
+      });
+      if (limitsErr) {
+        logError('[checkout] order limits RPC error — fail-closed:', limitsErr.message);
         await revertLegendaryVoucherIfNeeded();
         return fail(GENERIC_RETRY_MSG);
       }
-      if (phoneOk === false) {
-        await recordLimitHit(service, {
-          type: await classifyPhoneLimit(service, phone),
-          phone,
-          fingerprintId,
-          userId: currentUserId,
-          ip: clientIp,
-        });
+      const limits = limitsRaw as { ok?: boolean; failed?: 'phone' | 'fingerprint' | 'ip' } | null;
+      if (!limits?.ok) {
+        if (limits?.failed === 'phone') {
+          await recordLimitHit(service, {
+            type: await classifyPhoneLimit(service, phone),
+            phone, fingerprintId, userId: currentUserId, ip: clientIp,
+          });
+        } else if (limits?.failed === 'fingerprint') {
+          await recordLimitHit(service, { type: 'fingerprint_daily', phone, fingerprintId, userId: currentUserId, ip: clientIp });
+        } else if (limits?.failed === 'ip') {
+          await recordLimitHit(service, { type: 'ip_daily', phone, fingerprintId, userId: currentUserId, ip: clientIp });
+        } else {
+          // অপ্রত্যাশিত রেসপন্স শেপ — fail-closed, কোনো limit-hit লগ না (classify করা যাচ্ছে না)
+          logError('[checkout] order limits RPC unexpected response — fail-closed:', JSON.stringify(limitsRaw));
+        }
         await revertLegendaryVoucherIfNeeded();
         return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
       }
-
-      if (fingerprintId) {
-        const { data: fpOk, error: fpErr } = await service.rpc('check_and_set_fingerprint_limit', { p_fingerprint_id: fingerprintId });
-        if (fpErr) {
-          logError('[checkout] fingerprint rate limit RPC error — fail-closed:', fpErr.message);
-          await revertLegendaryVoucherIfNeeded();
-          return fail(GENERIC_RETRY_MSG);
-        }
-        if (fpOk === false) {
-          await recordLimitHit(service, {
-            type: 'fingerprint_daily',
-            phone,
-            fingerprintId,
-            userId: currentUserId,
-            ip: clientIp,
-          });
-          await revertLegendaryVoucherIfNeeded();
-          return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
-        }
-      }
-
-      // 🛡️ IP-ভিত্তিক ব্যাকস্টপ — fingerprintId খালি/অ্যাডব্লকার দিয়ে ব্লকড হলেও
-      // (বা সরাসরি server action কল করে বাইপাস করার চেষ্টা হলেও), ভিজিটরের real IP
-      // ইউজার নিজে বদলাতে পারে না, তাই এটা একটা স্বাধীন নিরাপত্তা স্তর
-      //
-      // 🔒 ফিক্স (audit P1-13): আগে `x-forwarded-for`-এর প্রথম উপাদান নেওয়া হতো —
-      // এই হেডারটা ক্লায়েন্ট নিজেই পাঠাতে পারে (Vercel সবসময় ওভাররাইট করে না,
-      // শুরুতে নিজের ভুয়া IP জুড়ে দিতে পারে), তাই এটা ছিল স্পুফযোগ্য। এখন Vercel-এর
-      // নিজস্ব এজ-সেট হেডার (`x-vercel-forwarded-for` → `x-real-ip`) আগে ট্রাই করা
-      // হয়, যেগুলো ক্লায়েন্ট বদলাতে পারে না — `x-forwarded-for` শুধু শেষ ব্যাকআপ।
-      try {
-        const hdrs = await headers();
-        const vercelForwardedFor = hdrs.get('x-vercel-forwarded-for');
-        const realIp = hdrs.get('x-real-ip');
-        const forwardedFor = hdrs.get('x-forwarded-for');
-        const clientIp =
-          (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
-          (realIp ? realIp.trim() : '') ||
-          (forwardedFor ? forwardedFor.split(',')[0].trim() : '');
-
-        const { data: ipOk, error: ipErr } = await service.rpc('check_and_set_ip_limit', { p_ip: clientIp });
-        if (ipErr) {
-          logError('[checkout] ip rate limit RPC error — fail-closed:', ipErr.message);
-          await revertLegendaryVoucherIfNeeded();
-          return fail(GENERIC_RETRY_MSG);
-        }
-        if (ipOk === false) {
-          await recordLimitHit(service, {
-            type: 'ip_daily',
-            phone,
-            fingerprintId,
-            userId: currentUserId,
-            ip: clientIp,
-          });
-          await revertLegendaryVoucherIfNeeded();
-          return fail(t('একটু অপেক্ষা করুন, তারপর আবার চেষ্টা করুন'));
-        }
-      } catch (e) {
-        logError('[checkout] ip rate limit exception — fail-closed:', e);
-        await revertLegendaryVoucherIfNeeded();
-        return fail(GENERIC_RETRY_MSG);
-      }
     } catch (e) {
-      logError('[checkout] rate limit exception — fail-closed:', e);
+      logError('[checkout] order limits exception — fail-closed:', e);
       await revertLegendaryVoucherIfNeeded();
       return fail(GENERIC_RETRY_MSG);
     }

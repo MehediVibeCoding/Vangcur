@@ -57,11 +57,16 @@ export async function fetchProductQuestions(
   productId: number | string,
 ): Promise<ProductQuestion[]> {
   try {
+    // 🔒 ফিক্স (C6): আগে প্রশ্ন ও উত্তর কোনোটাতেই .limit() ছিল না — S1-এর মতো বেনামি
+    // স্প্যাম-ইনসার্টের সাথে মিলে প্রতি ভিজিটে পুরো তালিকা (হাজার হাজার সারি) ব্রাউজারে
+    // যেতে পারত। সর্বশেষ ১৫০টা প্রশ্ন (নতুন-আগে) — উত্তর শুধু ওই প্রশ্নগুলোর জন্যই আনা
+    // হয় (questionIds নিচে সীমিত তালিকা থেকেই আসে), সাথে একটা আলাদা হার্ড-ক্যাপ ১০০০।
     const { data: questions, error: qErr } = await supabase
       .from('product_questions')
       .select('id, product_id, user_id, user_name, question, created_at')
       .eq('product_id', productId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(150);
 
     if (qErr || !questions || !questions.length) return [];
 
@@ -71,7 +76,8 @@ export async function fetchProductQuestions(
       .from('product_question_answers')
       .select('id, question_id, user_id, author_name, is_admin, answer, created_at')
       .in('question_id', questionIds)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .limit(1000);
 
     if (aErr) {
       logWarn('[QnA] fetch answers error:', aErr);

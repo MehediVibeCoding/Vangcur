@@ -8,7 +8,7 @@
 //   • প্রিমিয়াম টাচ: গোল্ড গ্রেডিয়েন্ট (#FFE08A → #CC9A35), ডার্ক স্ক্রিন #0F2557
 //   • প্রতিটি আইকনের গ্রেডিয়েন্ট id ইউনিক (vc-<id>-b/a/g) — পেজে একাধিক আইকন থাকলেও সংঘর্ষ হয় না
 // ─────────────────────────────────────────────────────────────────────────────
-import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Category } from '@/types';
 import { logWarn } from './logger';
 
@@ -529,25 +529,8 @@ export async function fetchCategories(supabase: SupabaseClient): Promise<Categor
   }
 }
 
-export function subscribeCategories(
-  supabase: SupabaseClient,
-  onChange: (cats: Category[]) => void,
-): RealtimeChannel {
-  const uniqueName = `categories-watch-${Math.random().toString(36).slice(2, 9)}`;
-  return supabase
-    .channel(uniqueName)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'store_settings', filter: 'setting_key=eq.vc_categories' },
-      (payload) => {
-        const row = payload.new as { setting_value?: unknown } | null;
-        if (!row) return;
-        const parsed = parseSupabaseVal<Category[]>(row.setting_value);
-        if (Array.isArray(parsed) && parsed.length) onChange(parsed);
-      },
-    )
-    .subscribe();
-}
+// (আগে এখানে subscribeCategories() ছিল — কোনো কলার ছিল না, Realtime চ্যানেল খুলতো কেউ ব্যবহার
+// না করেও। ব্যবহার হলে ভবিষ্যতে প্রতি ভিজিটরে একটা সকেট খুলতো। মৃত কোড হিসেবে সরানো হলো।)
 
 export const CATEGORY_FILTER_EVENT = 'vc:categoryFilter';
 export const FOCUS_PRODUCT_EVENT = 'vc:focusProduct';

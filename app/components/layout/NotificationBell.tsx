@@ -278,9 +278,27 @@ export default function NotificationBell({ className = '' }: { className?: strin
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 60000);
-    return () => clearInterval(interval);
-  }, [loadNotifications]);
+
+    // আগে সবার জন্য (গেস্টসহ) প্রতি ৬০ সেকেন্ডে পোলিং হতো, ট্যাব ব্যাকগ্রাউন্ডে থাকলেও।
+    // এখন: ট্যাব দৃশ্যমান না থাকলে পোলিং স্কিপ, আর ইন্টারভাল বাড়ানো (৬০সে → ৩ মিনিট লগইন
+    // ইউজারের জন্য, ৬০সে → ১০ মিনিট গেস্টের জন্য — গেস্টের নোটিফিকেশন কম সময়-সংবেদনশীল)।
+    // ট্যাব আবার visible হলে সাথে সাথে একবার রিফ্রেশ হয়, তাই দীর্ঘ ইন্টারভাল থাকলেও তথ্য বাসি থাকে না।
+    const pollMs = currentUser ? 180000 : 600000;
+
+    const poll = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      loadNotifications();
+    };
+
+    const interval = setInterval(poll, pollMs);
+    const onVisible = () => { if (!document.hidden) loadNotifications(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [loadNotifications, currentUser]);
 
   useEffect(() => {
     if (!open) return undefined;

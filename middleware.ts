@@ -1,4 +1,4 @@
-import { slidingWindowLimit } from '@/lib/limiter';
+import { slidingWindowLimit, getClientIp } from '@/lib/limiter';
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
@@ -9,6 +9,21 @@ const MALICIOUS_PROBE_REGEX = /\/(?:\.env|\.git|wp-admin|wp-login|xmlrpc|phpmyad
 const KNOWN_SEARCH_BOT_UA_REGEX = /googlebot|bingbot|applebot|duckduckbot|yandexbot|baiduspider|slurp/i;
 
 const AUTH_REFRESH_PATH_PREFIXES = ['/checkout', '/account', '/api/'];
+
+// 🔒 ফিক্স (H4): আগে প্রতিটা /api/* রিকোয়েস্টেই Upstash Redis-এ একটা sliding-window চেক
+// (রিড+রাইট) হতো — এমনকি এই নিচের রুটগুলোতেও, যেগুলো পাবলিক না, নিজস্ব সিক্রেট-কি/ওয়েবহুক-
+// সিগনেচার দিয়ে আগে থেকেই সুরক্ষিত (শুধু bKash, Vercel cron, Supabase DB webhook কল করে)।
+// এগুলোতে Redis-কল এখন স্কিপ — বাকি এজ-মেমোরি রেট-লিমিট (checkEdgeRateLimit) তবুও চলে,
+// তাই পুরোপুরি খোলা থাকছে না, শুধু প্রতি কলে Redis-খরচ বাদ যাচ্ছে।
+const INTERNAL_SECRET_PROTECTED_API_PATHS = [
+  '/api/bkash-webhook',
+  '/api/bkash-unmatched-alert',
+  '/api/revalidate-catalog',
+  '/api/revalidate-guide',
+  '/api/sla-alert',
+  '/api/indexnow',
+  '/api/order-email',
+];
 
 function needsAuthRefresh(pathname: string): boolean {
   return AUTH_REFRESH_PATH_PREFIXES.some(
@@ -58,30 +73,35 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  // ২. ক্লায়েন্ট আইপি এক্সট্র্যাক্ট ও এজ রেট লিমিট যাচাই
-  const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  const clientIp =
-    (vercelForwardedFor ? vercelForwardedFor.split(',')[0].trim() : '') ||
-    (realIp ? realIp.trim() : '') ||
-    (forwardedFor ? forwardedFor.split(',')[0].trim() : '') ||
-    '127.0.0.1';
+  // ২. ক্লায়েন্ট আইপি এক্সট্র্যাক্ট (শেয়ার্ড ফাংশন, C5 ফিক্স) ও এজ রেট লিমিট যাচাই
+  const clientIp = getClientIp(request.headers);
   const isApiRoute = pathname.startsWith('/api/');
 
   const userAgent = request.headers.get('user-agent') || '';
   const isKnownSearchBot = KNOWN_SEARCH_BOT_UA_REGEX.test(userAgent);
   const shouldSkipRateLimit = isKnownSearchBot && !isApiRoute;
 
+  const isInternalSecretProtectedApi =
+    isApiRoute && INTERNAL_SECRET_PROTECTED_API_PATHS.some((p) => pathname.startsWith(p));
+
   if (!shouldSkipRateLimit) {
     let blocked = false;
     let retryAfter = 10;
-    if (isApiRoute) {
+    if (isApiRoute && !isInternalSecretProtectedApi) {
       const rl = await slidingWindowLimit(`mw:api:${clientIp}`, MAX_API_REQUESTS, RATE_LIMIT_WINDOW_MS / 1000);
       blocked = !rl.allowed;
       retryAfter = rl.retryAfterSec || 10;
+    } else if (isInternalSecretProtectedApi) {
+      // সিক্রেট-সুরক্ষিত internal রুট — মেমোরি-ফলব্যাকই যথেষ্ট, Redis খরচ লাগবে না (H4)
+      blocked = !checkEdgeRateLimit(clientIp, true);
     } else {
-      blocked = !checkEdgeRateLimit(clientIp, false);
+      // 🔒 ফিক্স (C3): আগে পেজ-রিকোয়েস্টের লিমিট শুধু `new Map()`-এ (প্রতি Vercel
+      // ইনস্ট্যান্সে আলাদা, cold start হলে মুছে যায়) — তাই বহু ইনস্ট্যান্স মিলিয়ে আসল
+      // সীমা ১২০-এর বহুগুণ হয়ে যেত, কার্যত অকার্যকর। এখন API রুটের মতোই Redis-ব্যাকড
+      // sliding-window (Upstash না থাকলে/ব্যর্থ হলে একই মেমোরি-ফলব্যাকে নামে, সাইট কখনো আটকায় না)।
+      const rl = await slidingWindowLimit(`mw:page:${clientIp}`, MAX_PAGE_REQUESTS, RATE_LIMIT_WINDOW_MS / 1000);
+      blocked = !rl.allowed;
+      retryAfter = rl.retryAfterSec || 10;
     }
     if (blocked) {
       return new NextResponse('Too many requests. Please slow down.', {

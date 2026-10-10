@@ -74,18 +74,24 @@ function clarityEvent(name: string): void {
   }
 }
 
-// Meta Pixel (ব্রাউজার) + CAPI (সার্ভার, same-origin রুট)। Purchase-এর CAPI সার্ভারে অর্ডার DB থেকে যাচাই হয়।
+// Meta Pixel (ব্রাউজার) + CAPI (সার্ভার, same-origin রুট, /api/meta-capi -> Vercel ফাংশন ইনভোকেশন)।
+// Purchase-এর CAPI সার্ভারে অর্ডার DB থেকে যাচাই হয়, তাই ওটা সবসময় সার্ভারে পাঠানো জরুরি।
+// ViewContent-এর জন্য আগে প্রতিটা প্রোডাক্ট-ভিউতেও CAPI কল হতো — কিন্তু ব্রাউজার Pixel (fbq)
+// আগে থেকেই ViewContent পাঠায়, তাই সার্ভার-সাইড ডুপ্লিকেট অপ্রয়োজনীয় ফাংশন-ইনভোকেশন
+// (১ লাখ ভিজিটরে আনুমানিক ৩ লাখ ইনভোকেশন)। এখন withCapi=false দিলে শুধু Pixel পাঠায়, CAPI বাদ।
 function metaEvent(
   name: 'ViewContent' | 'AddToCart' | 'InitiateCheckout' | 'Purchase',
   customData: Record<string, unknown>,
   eventId: string,
   extra?: Record<string, unknown>,
+  withCapi: boolean = true,
 ): void {
   try {
     window.fbq?.('track', name, customData, { eventID: eventId });
   } catch {
     /* ignore */
   }
+  if (!withCapi) return;
   try {
     void fetch('/api/meta-capi', {
       method: 'POST',
@@ -134,7 +140,8 @@ export function trackViewItem(item: AnalyticsItem): void {
   pushToDataLayer('view_item', { ecommerce: { currency: CURRENCY, value: item.price, items: ga } });
   if (typeof window === 'undefined' || trackingDisabled()) return;
   ga4Event('view_item', { currency: CURRENCY, value: item.price, items: ga });
-  metaEvent('ViewContent', toMetaData([{ ...item, quantity: 1 }], item.price), newEventId('vc'));
+  // withCapi=false: শুধু ব্রাউজার Pixel, সার্ভার-সাইড CAPI কল নেই (উপরের মন্তব্য দেখুন)
+  metaEvent('ViewContent', toMetaData([{ ...item, quantity: 1 }], item.price), newEventId('vc'), undefined, false);
 }
 
 // ── ২. কার্টে যোগ ──

@@ -88,12 +88,18 @@ export async function fetchProductReviews(
   try {
     // 🛡️ withTimeout: ঝুলে থাকা নেটওয়ার্ক কল আটকাতে — না হলে caller-এর
     // loading state চিরকাল true-ই থেকে যেত (infinite loading skeleton)
+    // 🔒 ফিক্স (C6): আগে এখানে .limit() ছিল না — রিভিউ অনেক বেড়ে গেলে (বা স্প্যামে)
+    // প্রতি ভিজিটে পুরো তালিকা ব্রাউজারে যেত (Supabase egress ঝুঁকি)। সর্বশেষ ৩০০টা
+    // (created_at desc) যথেষ্ট — এটা পূর্ণাঙ্গ পেজিনেশনের বদলে একটা নিরাপত্তা-সীমা,
+    // UI-তে এখনো "আরও দেখুন" নেই তাই ভিজিটর যা দেখত তার চেয়ে কম দেখবে না (৩০০-র কম
+    // রিভিউ থাকলে কোনো পরিবর্তনই নেই)।
     const { data, error } = await withTimeout(
       supabase
         .from('product_reviews')
         .select('id, product_id, user_id, user_name, rating, review_text, image_url, like_count, is_verified_buyer, is_approved, is_rejected, rejection_reason, created_at')
         .eq('product_id', productId)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(300),
     );
 
     if (error || !data) return [];

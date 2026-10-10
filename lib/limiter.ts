@@ -37,12 +37,21 @@ function safeKey(key: string): string {
   return String(key).replace(/[\s\r\n]+/g, '_').slice(0, 160);
 }
 
-/** রিকোয়েস্ট হেডার থেকে ক্লায়েন্ট IP — Vercel-এর নিজস্ব (স্পুফ-প্রুফ) হেডার আগে। */
+// 🔒 ফিক্স (C5): এই একটাই IP-এক্সট্র্যাক্ট ফাংশন — আগে middleware.ts, checkout.ts,
+// app/api/meta-capi/route.ts-এ হুবহু এই লজিকের আলাদা কপি ছিল (৪+ জায়গা), সবগুলোই
+// cf-connecting-ip উপেক্ষা করত। এখন cf-connecting-ip সবার আগে ট্রাই হয় (Cloudflare প্রক্সি
+// অন থাকলে Vercel-এ Cloudflare-এরই এজ IP পৌঁছাতে পারে — x-vercel-forwarded-for তখন ভুল
+// হতে পারে)। সতর্কতা: cf-connecting-ip তখনই নিরাপদ যখন অরিজিন (Vercel) শুধু Cloudflare-এর
+// IP-রেঞ্জ থেকে রিকোয়েস্ট নেয়, নইলে যেকেউ সরাসরি Vercel-কে কল করে এই হেডার জাল করতে
+// পারবে — সেই ফায়ারওয়াল-নিয়ম কোডের বাইরে, Vercel/Cloudflare ড্যাশবোর্ডে বসাতে হয় (V2/V13)।
+// Cloudflare প্রক্সি অফ থাকলে (এখনকার মতো) এই হেডার কখনো আসবে না, তাই বর্তমান আচরণ অপরিবর্তিত।
 export function getClientIp(headers: { get(name: string): string | null }): string {
+  const cf = headers.get('cf-connecting-ip');
   const vercel = headers.get('x-vercel-forwarded-for');
   const real = headers.get('x-real-ip');
   const fwd = headers.get('x-forwarded-for');
   return (
+    (cf ? cf.trim() : '') ||
     (vercel ? vercel.split(',')[0].trim() : '') ||
     (real ? real.trim() : '') ||
     (fwd ? fwd.split(',')[0].trim() : '') ||

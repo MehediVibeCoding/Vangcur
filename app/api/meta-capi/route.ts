@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/serviceClient';
 import { buildUserData, sendCapiEvent, type CapiEvent } from '@/lib/metaCapi';
+import { getClientIp } from '@/lib/limiter';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,11 +77,9 @@ export async function POST(req: NextRequest) {
   const eventId = str(b.event_id, 120);
   if (!ALLOWED.has(eventName) || !eventId) return NextResponse.json({ ok: false }, { status: 400 });
 
-  const ip =
-    req.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip')?.trim() ||
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    undefined;
+  // শেয়ার্ড getClientIp() (C5 ফিক্স) — cf-connecting-ip সহ
+  const rawIp = getClientIp(req.headers);
+  const ip = rawIp === '127.0.0.1' ? undefined : rawIp;
 
   const sourceUrl = str(b.event_source_url, 500);
   let customData = cleanCustomData(b.custom_data);
@@ -101,9 +100,15 @@ export async function POST(req: NextRequest) {
         .select('order_num, total, items, customer_email, customer_phone, user_id, created_at')
         .eq('order_num', orderNum)
         .maybeSingle();
-      if (!order) return NextResponse.json({ ok: false }, { status: 404 });
+      // 🔒 ফিক্স (S6): আগে এখানে 404 (অর্ডার নেই) ও 410 (বেশি পুরনো) আলাদা স্ট্যাটাস কোড
+      // ফেরত যেত, "সাধারণ" সফল কেস 200 থেকে আলাদা — কেউ এলোমেলো order_num দিয়ে অনেকবার
+      // কল করে স্ট্যাটাস কোড দেখে বুঝে ফেলতে পারত কোন নম্বরে আসলে অর্ডার আছে (existence
+      // oracle), ফলে দৈনিক অর্ডার সংখ্যা আন্দাজ করা সম্ভব হতো। এখন দুটো ক্ষেত্রেই বাকি
+      // সার্ভিসের মতোই সাধারণ 200 { ok: true } রিটার্ন হয়, শুধু আসল CAPI ইভেন্ট পাঠানো
+      // স্কিপ হয় (নিচের return সরিয়ে স্বাভাবিক ফাংশন-প্রবাহে ফিরিয়ে দেওয়া হচ্ছে)।
+      if (!order) return NextResponse.json({ ok: true });
       const ageMs = Date.now() - new Date(order.created_at as string).getTime();
-      if (!Number.isFinite(ageMs) || ageMs > 24 * 60 * 60 * 1000) return NextResponse.json({ ok: false }, { status: 410 });
+      if (!Number.isFinite(ageMs) || ageMs > 24 * 60 * 60 * 1000) return NextResponse.json({ ok: true });
 
       const items = (Array.isArray(order.items) ? order.items : []) as Array<Record<string, unknown>>;
       customData = {
