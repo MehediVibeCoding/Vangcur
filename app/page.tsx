@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchProductsPage, PRODUCTS_PAGE_SIZE } from '@/lib/productData';
 import { fetchCategories, DEFAULT_CATEGORIES } from '@/lib/categoryData';
 import { fetchHeroCards, DEFAULT_HERO_CARDS } from '@/lib/heroSliderData';
+import { fetchShowcase, DEFAULT_SHOWCASE } from '@/lib/showcaseData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logError } from '@/lib/logger';
 import ClientHome from './ClientHome';
@@ -43,13 +44,14 @@ export default async function HomePage() {
   // করলে ProductGrid.tsx ক্লায়েন্ট থেকে চেয়ে নেয়। প্রোডাক্ট সংখ্যা কম থাকা
   // অবস্থায় (যেমন এখন) আচরণ প্রায় একই থাকবে, কিন্তু ক্যাটালগ বড় হলে হোমপেজ
   // হালকা থেকে যাবে।
-  const [productsPage, initialCategories, initialHeroCards] = supabase
+  const [productsPage, initialCategories, initialHeroCards, initialShowcase] = supabase
     ? await Promise.all([
       fetchProductsPage(supabase, 'all', 0, PRODUCTS_PAGE_SIZE),
       fetchCategories(supabase),
       fetchHeroCards(supabase),
+      fetchShowcase(supabase),
     ])
-    : [{ products: [], hasMore: false }, DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
+    : [{ products: [], hasMore: false }, DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS, DEFAULT_SHOWCASE];
   const initialProducts = productsPage.products;
   const initialHasMore = productsPage.hasMore;
 
@@ -78,6 +80,7 @@ export default async function HomePage() {
         initialCategories={initialCategories}
         initialHeroCards={initialHeroCards}
         initialHasMore={initialHasMore}
+        initialShowcase={initialShowcase}
       />
     </>
   );
