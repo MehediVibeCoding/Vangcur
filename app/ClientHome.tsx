@@ -10,6 +10,8 @@ import ProductGrid from './components/home/ProductGrid';
 import CustomerGallery from './components/home/CustomerGallery';
 import FAQ from './components/home/FAQ';
 import ProductNotice from './components/home/ProductNotice';
+import CategoryShowcase from './components/home/CategoryShowcase';
+import SpotlightSection from './components/home/SpotlightSection';
 import BrandMarquee from './components/home/BrandMarquee';
 import About from './components/home/About';
 import Footer from './components/layout/Footer';
@@ -19,6 +21,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { OPEN_CART_EVENT, OPEN_WISHLIST_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
 import type { Product, Category } from '@/types';
 import type { HeroCard } from '@/lib/heroSliderData';
+import type { ShowcaseConfig } from '@/lib/showcaseData';
 
 const LoginModal = dynamic(() => import('./components/auth/LoginModal'));
 
@@ -28,6 +31,8 @@ interface ClientHomeProps {
   initialHeroCards?: HeroCard[];
   initialCategory?: string;
   initialHasMore?: boolean;
+  /** শুধু হোম পেজ (app/page.tsx) পাঠায় — না এলে (যেমন /category/[slug]) শোকেস সেকশন দেখায় না */
+  initialShowcase?: ShowcaseConfig;
 }
 
 export default function ClientHome({
@@ -36,6 +41,7 @@ export default function ClientHome({
   initialHeroCards,
   initialCategory,
   initialHasMore,
+  initialShowcase,
 }: ClientHomeProps) {
   const cartQty = useCartStore((s) => cartCount(s.cart));
   const wishQty = useWishlistStore((s) => s.wishlist.length);
@@ -67,6 +73,12 @@ export default function ClientHome({
       <Categories initialCategories={initialCategories} />
       <ProductGrid initialProducts={initialProducts} initialCategory={initialCategory} initialHasMore={initialHasMore} />
       <ProductNotice />
+      {initialShowcase?.enabled && (
+        <>
+          <CategoryShowcase heading={initialShowcase.heading} cards={initialShowcase.cards} />
+          <SpotlightSection items={initialShowcase.spotlights} />
+        </>
+      )}
       <BrandMarquee />
       <CustomerGallery />
       <FAQ />
