@@ -1,10 +1,14 @@
 // ফাইলের পাথ: lib/showcaseData.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// হোম পেজের "ক্যাটাগরি কার্ড (৪টি)" ও "স্পটলাইট প্রোডাক্ট (২টি)" সেকশনের ডেটা।
+// হোম পেজের "কালেকশন কার্ড (৪টি)" ও "স্পটলাইট প্রোডাক্ট (২টি)" সেকশনের ডেটা।
 //
 // ডেটা আসে store_settings টেবিলের একটাই key থেকে: 'vc_home_showcase' (JSON)।
 // অ্যাডমিন প্যানেলের "হোম শোকেস" পেজ (/design/home-showcase) এই key-তেই সেভ করে।
 // কিছু না পেলে (বা ফেচ ব্যর্থ হলে) নিচের DEFAULT_SHOWCASE ব্যবহার হয় — পেজ কখনো ক্র্যাশ করে না।
+//
+// কালেকশন: ৪টা কার্ডের প্রতিটার স্থায়ী collectionId (gift/premium/unique/cute) আছে। কার্ডে ক্লিক করলে
+// /collection/<collectionId> পেজে যায়, আর সেখানে custom_products.collections কলামে ওই id থাকা
+// প্রোডাক্টগুলো দেখায় (lib/collectionData.ts)।
 //
 // ⚠️ এই ফাইলের টাইপ ও ডিফল্ট Mehediadmin-এর lib/constants/homeShowcase.ts-এর সাথে হুবহু মিল রাখতে
 // হবে। একটা বদলালে অন্যটাও বদলান।
@@ -17,17 +21,21 @@ export const SHOWCASE_SETTING_KEY = 'vc_home_showcase';
 export const SHOWCASE_CARD_COUNT = 4;
 export const SHOWCASE_SPOTLIGHT_COUNT = 2;
 
-// অক্ষর সীমা — মোবাইলে ডান-বাম লেআউটে লেখা যাতে উপচে না পড়ে
+// প্রতিটা কার্ড-স্লটের স্থায়ী কালেকশন id (ক্রম গুরুত্বপূর্ণ — কার্ড #১ = gift ...)
+export const COLLECTION_IDS = ['gift', 'premium', 'unique', 'cute'] as const;
+export type CollectionId = (typeof COLLECTION_IDS)[number];
+
+// অক্ষর সীমা
 export const SHOWCASE_LIMITS = {
   headingLead: 60,
   headingHl: 24,
-  cardLead: 16,
   cardTitle: 22,
-  cardBtn: 16,
-  badge: 20,
-  title: 40,
-  desc: 90,
+  badge: 24,
+  title: 80,
+  desc: 500,
+  descRecommended: 250, // এর বেশি হলে মোবাইলে ছবি বেশি ক্রপ হতে পারে — অ্যাডমিনে সতর্কবার্তা দেখায়
   spotBtn: 22,
+  link: 300,
 } as const;
 
 export interface ShowcaseHeading {
@@ -41,17 +49,11 @@ export interface ShowcaseHeading {
 
 export interface ShowcaseCard {
   img: string;
-  /** ছোট প্রথম লাইন, যেমন "দেখুন" / "Explore" */
-  lead: string;
-  leadEn: string;
-  /** বড় ইটালিক শিরোনাম */
+  /** কার্ডের নিচের বাটনে বসা কালেকশনের নাম */
   title: string;
   titleEn: string;
-  /** বাটনের লেখা */
-  btn: string;
-  btnEn: string;
-  /** কোন ক্যাটাগরিতে যাবে ('' = সব পণ্য) */
-  catId: string;
+  /** স্থায়ী — অ্যাডমিন থেকে বদলানো যায় না */
+  collectionId: CollectionId;
 }
 
 export type SpotlightLinkType = 'product' | 'category';
@@ -69,6 +71,8 @@ export interface ShowcaseSpotlight {
   price: number;
   btn: string;
   btnEn: string;
+  /** অ্যাডমিন যা লেখে: প্রোডাক্টের লিংক বা আইডি (সেভের সময় সার্ভার এটা থেকে productId বের করে) */
+  link: string;
   linkType: SpotlightLinkType;
   productId?: number;
   productName?: string;
@@ -91,15 +95,15 @@ export const DEFAULT_SHOWCASE: ShowcaseConfig = {
   enabled: true,
   heading: {
     lead: 'আপনার পছন্দের গ্যাজেট খুঁজে নিন',
-    leadEn: 'Find your favourite gadgets by',
-    hl: 'ক্যাটাগরি',
-    hlEn: 'Category',
+    leadEn: 'Find your favourite gadgets',
+    hl: 'কিউরেটেড কালেকশন',
+    hlEn: 'Curated Collection',
   },
   cards: [
-    { img: IMG_TALL, lead: 'দেখুন', leadEn: 'Explore', title: 'টি ডব্লিউ এস', titleEn: 'TWS Earbuds', btn: 'এখনই কিনুন', btnEn: 'Shop', catId: 'tws' },
-    { img: IMG_WIDE, lead: 'দেখুন', leadEn: 'Explore', title: 'পাওয়ার ব্যাংক', titleEn: 'Power Bank', btn: 'এখনই কিনুন', btnEn: 'Shop', catId: 'powerbank' },
-    { img: IMG_SQUARE, lead: 'দেখুন', leadEn: 'Explore', title: 'স্মার্ট ওয়াচ', titleEn: 'Smart Watch', btn: 'এখনই কিনুন', btnEn: 'Shop', catId: 'smartwatch' },
-    { img: IMG_TALL, lead: 'দেখুন', leadEn: 'Explore', title: 'আরজিবি লাইট', titleEn: 'RGB Light', btn: 'এখনই কিনুন', btnEn: 'Shop', catId: 'rgb' },
+    { img: IMG_TALL, title: 'গিফট আইডিয়া', titleEn: 'Gift Ideas', collectionId: 'gift' },
+    { img: IMG_WIDE, title: 'প্রিমিয়াম গ্যাজেট', titleEn: 'Premium Gadgets', collectionId: 'premium' },
+    { img: IMG_SQUARE, title: 'ইউনিক গ্যাজেট', titleEn: 'Unique Gadgets', collectionId: 'unique' },
+    { img: IMG_TALL, title: 'কিউট গ্যাজেট', titleEn: 'Cute Gadgets', collectionId: 'cute' },
   ],
   spotlights: [
     {
@@ -112,8 +116,9 @@ export const DEFAULT_SHOWCASE: ShowcaseConfig = {
       desc: 'গ্রাহকদের সবচেয়ে বেশি অর্ডার পাওয়া প্রোডাক্ট — সেরা মানে, দ্রুত হোম ডেলিভারিতে।',
       descEn: 'The product our customers order the most — great quality, fast home delivery.',
       price: 0,
-      btn: 'এখনই অর্ডার করুন',
-      btnEn: 'Order now',
+      btn: 'বিস্তারিত দেখুন',
+      btnEn: 'View details',
+      link: '',
       linkType: 'category',
       catId: '',
     },
@@ -127,8 +132,9 @@ export const DEFAULT_SHOWCASE: ShowcaseConfig = {
       desc: 'স্টাইলিশ আর কাজের গ্যাজেট এক জায়গায় — দেখলেই পছন্দ হয়ে যাবে।',
       descEn: 'Stylish and useful gadgets in one place — you will love it at first sight.',
       price: 0,
-      btn: 'এখনই অর্ডার করুন',
-      btnEn: 'Order now',
+      btn: 'বিস্তারিত দেখুন',
+      btnEn: 'View details',
+      link: '',
       linkType: 'category',
       catId: '',
     },
@@ -158,13 +164,10 @@ function normalizeCard(raw: unknown, fb: ShowcaseCard): ShowcaseCard {
   const L = SHOWCASE_LIMITS;
   return {
     img: imgUrl(r.img, fb.img) || fb.img,
-    lead: str(r.lead, fb.lead, L.cardLead),
-    leadEn: str(r.leadEn, fb.leadEn, L.cardLead),
-    title: str(r.title, fb.title, L.cardTitle),
+    title: str(r.title, fb.title, L.cardTitle) || fb.title,
     titleEn: str(r.titleEn, fb.titleEn, L.cardTitle),
-    btn: str(r.btn, fb.btn, L.cardBtn),
-    btnEn: str(r.btnEn, fb.btnEn, L.cardBtn),
-    catId: typeof r.catId === 'string' ? r.catId.trim().slice(0, 60) : fb.catId,
+    // 🔒 সবসময় ডিফল্টের স্থায়ী id — সেভ করা ডেটা থেকে কখনো পড়া হয় না
+    collectionId: fb.collectionId,
   };
 }
 
@@ -187,6 +190,7 @@ function normalizeSpotlight(raw: unknown, fb: ShowcaseSpotlight): ShowcaseSpotli
     price: Number.isFinite(priceNum) && priceNum > 0 ? Math.round(priceNum) : 0,
     btn: str(r.btn, fb.btn, L.spotBtn),
     btnEn: str(r.btnEn, fb.btnEn, L.spotBtn),
+    link: str(r.link, '', L.link),
     // প্রোডাক্ট বেছে না থাকলে প্রোডাক্ট-লিংক অচল — ক্যাটাগরি লিংকে ফিরিয়ে দেওয়া হয়
     linkType: linkType === 'product' && productId ? 'product' : 'category',
     productId: linkType === 'product' ? productId : undefined,
@@ -213,6 +217,10 @@ export function normalizeShowcase(raw: unknown): ShowcaseConfig {
     cards: d.cards.map((fb, i) => normalizeCard(cards[i], fb)).slice(0, SHOWCASE_CARD_COUNT),
     spotlights: d.spotlights.map((fb, i) => normalizeSpotlight(spots[i], fb)).slice(0, SHOWCASE_SPOTLIGHT_COUNT),
   };
+}
+
+export function collectionHref(collectionId: string): string {
+  return `/collection/${collectionId}`;
 }
 
 const QUERY_TIMEOUT_MS = 3500;

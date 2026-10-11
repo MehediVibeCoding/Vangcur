@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchCustomProducts, productHref } from '@/lib/productData';
 import { fetchCategories, makeCatSlug } from '@/lib/categoryData';
 import { fetchAllPublishedGuideUrls } from '@/lib/guidePageData';
+import { COLLECTION_IDS } from '@/lib/showcaseData';
 
 const SITE_URL = 'https://vangcur.com';
 
@@ -96,6 +97,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  const collectionRoutes: MetadataRoute.Sitemap = COLLECTION_IDS.map((id) => ({
+    url: `${SITE_URL}/collection/${id}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
+
   const productRoutes: MetadataRoute.Sitemap = products.map((prod) => ({
     url: `${SITE_URL}${productHref(prod)}`,
     lastModified: new Date(),
@@ -110,5 +118,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...guideRoutes];
+  return [...staticRoutes, ...categoryRoutes, ...collectionRoutes, ...productRoutes, ...guideRoutes];
 }

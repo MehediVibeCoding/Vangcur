@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
   revalidatePath('/');
   revalidatePath('/offers');
   revalidatePath('/category/[slug]', 'page');
+  revalidatePath('/collection/[slug]', 'page');
   revalidatePath('/product/[slug]', 'page');
   revalidatePath('/sitemap.xml');
   revalidatePath('/api/search-index');
