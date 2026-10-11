@@ -800,8 +800,16 @@ export default function Navbar({
         />
       )}
 
+      {/* 🔒 ফিক্স (পারফরম্যান্স অপটিমাইজেশন, ২০২৬-১০): এই নাভবারটা sticky (স্ক্রলের
+          সাথে স্ক্রিনে আটকে থাকে), আর backdrop-blur প্রতি স্ক্রল ফ্রেমেই রিক্যালকুলেট
+          হয় — এটা মোবাইল GPU-তে স্ক্রলের সবচেয়ে ভারী রিপেইন্ট খরচগুলোর একটা। ব্লারের
+          পরিমাণ মোবাইলে হালকা করা হলো (৬px), ডেস্কটপে (sm:) আগের মতোই ১০px — ভিজুয়ালি
+          ফারাক প্রায় অদৃশ্য (পেছনে প্রায়-অস্বচ্ছ bg-white/80 থাকার কারণে), কিন্তু
+          স্ক্রলের সময় রিপেইন্ট খরচ উল্লেখযোগ্যভাবে কমে। iOS Safari-এর জন্য আলাদা
+          `@supports (-webkit-hyphens: none)` override আছে globals.css-এ — ওখানেও
+          একই মোবাইল-ভ্যারিয়েন্ট যোগ করা হয়েছে। */}
       <nav
-        className={`navbar-glass relative z-[900] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[10px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
+        className={`navbar-glass relative z-[900] border border-white/70 bg-white/80 shadow-sh1 backdrop-blur-[6px] sm:backdrop-blur-[10px] ${mobileSearchOpen ? 'rounded-t-[35px] rounded-b-none border-b-0 md:rounded-[35px] md:border-b' : 'rounded-[35px]'}`}
       >
         <div ref={desktopNavRowRef} className="relative mx-auto flex h-[62px] max-w-[1300px] items-center gap-[14px] px-3 max-[400px]:gap-2 sm:px-5 2xl:max-w-[1560px]">
           <div className="flex w-full items-center justify-between gap-2 max-[400px]:gap-1.5 sm:gap-3">

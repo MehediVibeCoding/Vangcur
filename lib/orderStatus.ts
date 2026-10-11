@@ -169,8 +169,15 @@ export function watchOrderStatus(
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let channel: RealtimeChannel | null = null;
+  let realtimeCloseTimer: ReturnType<typeof setTimeout> | null = null;
   const startTime = Date.now();
   const MAX_POLL_DURATION_MS = PENDING_ORDER_MAX_AGE_MS;
+  // রিয়েলটাইম কানেকশন শুধু প্রথম ২ মিনিট খোলা থাকবে (যখন কাস্টমার সাধারণত পেজে বসে
+  // স্ট্যাটাস দেখে), তারপর বন্ধ হয়ে যাবে — এর পরে শুধু নিচের adaptive পোলিং চলবে।
+  // আগে দুটোই (রিয়েলটাইম + পোলিং) পুরো ট্র্যাকিং সময়জুড়ে (৪৮ ঘণ্টা পর্যন্ত) একসাথে
+  // চলত, যা Supabase ফ্রি প্ল্যানের ২০০ কনকারেন্ট রিয়েলটাইম কানেকশন সীমার ওপর
+  // অপ্রয়োজনীয় চাপ ফেলত।
+  const REALTIME_WINDOW_MS = 2 * 60 * 1000;
 
   function getNextInterval(): number {
     const elapsed = Date.now() - startTime;
@@ -232,6 +239,13 @@ export function watchOrderStatus(
         }
       )
       .subscribe();
+
+    realtimeCloseTimer = setTimeout(() => {
+      if (channel) {
+        supabase.removeChannel(channel);
+        channel = null;
+      }
+    }, REALTIME_WINDOW_MS);
   } catch {
     // fallback to polling
   }
@@ -254,6 +268,10 @@ export function watchOrderStatus(
     if (timer) {
       clearTimeout(timer);
       timer = null;
+    }
+    if (realtimeCloseTimer) {
+      clearTimeout(realtimeCloseTimer);
+      realtimeCloseTimer = null;
     }
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', onVisibilityChange);

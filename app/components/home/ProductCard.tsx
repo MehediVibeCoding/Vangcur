@@ -173,6 +173,15 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
     startQuickOrder(router, p, 1);
   };
 
+  // 🔒 ফিক্স (পারফরম্যান্স অপটিমাইজেশন, ২০২৬-১০): আগে প্রতিটা কার্ডে সবসময়
+  // `[transform:translateZ(0)]` বসানো থাকত — মানে পেজে যতগুলো কার্ড মাউন্টেড
+  // (কয়েকশো হলে কয়েকশো), ঠিক ততগুলো আলাদা GPU compositor layer তৈরি হতো, যা
+  // মোবাইলে GPU মেমরি/স্ক্রল FPS-এর উপর বড় চাপ ফেলত। `[contain:content]` এমনিতেই
+  // লেআউট/পেইন্ট আইসোলেশন দেয় বলে এই ফোর্সড লেয়ারের দরকার নেই — শুধু হার্ট-বার্স্ট/
+  // কার্ট-পপ অ্যানিমেশন চলাকালীন (কয়েকশো মিলিসেকেন্ডের জন্য) `transform-gpu` যোগ হয়,
+  // বাকি সময় কার্ডটা হালকা থাকে।
+  const isAnimatingTransform = !!burst || cartPop !== null;
+
   return (
     <div
       data-pid={p.id}
@@ -181,7 +190,7 @@ export default function ProductCard({ prod: p, isFirst, index = 0 }: ProductCard
         router.prefetch(href);
       }}
       onTouchStart={() => router.prefetch(href)}
-      className="card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [contain:content] [transform:translateZ(0)]"
+      className={`card-hover-glow group rounded-[18px] bg-white p-1 shadow-[0_4px_14px_rgba(0,88,199,.12)] [contain:content] ${isAnimatingTransform ? 'transform-gpu' : ''}`}
     >
       <div className="relative aspect-[0.57] overflow-hidden rounded-[14px] bg-surface-muted [contain:paint_layout]">
         <Link

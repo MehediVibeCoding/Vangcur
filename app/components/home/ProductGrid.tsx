@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { scrollToProductsSection } from '@/lib/scrollToProducts';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -57,7 +58,6 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
   const [activeCat, setActiveCat] = useState(startCat);
   const [cats] = useState<Category[]>(DEFAULT_CATEGORIES);
 
-  const sentinelRef = useRef<HTMLDivElement>(null);
   const prevCatRef = useRef(startCat);
   const reqIdRef = useRef(0);
   const activeCatRef = useRef(startCat);
@@ -136,33 +136,13 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
       });
   }, []);
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const obs = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        if (timer) return;
-        timer = setTimeout(() => {
-          timer = null;
-          if (typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale !== 1) {
-            return;
-          }
-          appendNextBatch();
-        }, 120);
-      } else if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-    }, { rootMargin: '600px' });
-
-    obs.observe(sentinel);
-    return () => {
-      if (timer) clearTimeout(timer);
-      obs.disconnect();
-    };
-  }, [appendNextBatch]);
+  // 🔒 ফিক্স (পারফরম্যান্স অপটিমাইজেশন, ২০২৬-১০): আগে এখানে IntersectionObserver
+  // দিয়ে sentinel-এ পৌঁছালেই পরের ব্যাচ অটো-লোড হতো (ইনফিনিটি স্ক্রল) — প্রোডাক্ট
+  // কয়েকশো হয়ে গেলে `items` অসীম বড় হয়ে যেত আর মোবাইলে স্ক্রল করার সময় FPS কমে
+  // যেত। হোমপেজ এখন সবসময় প্রথম PRODUCTS_PAGE_SIZE-টুকুই দেখায় — বাকিটা দেখতে হলে
+  // নিচের "সব প্রোডাক্ট দেখুন" বাটন দিয়ে আলাদা, হালকা /products পেজে যেতে হয়
+  // (সেখানে নাম্বার পেজিনেশন + virtualization আছে)। appendNextBatch() ফাংশনটা এখনো
+  // আছে শুধু "নির্দিষ্ট প্রোডাক্টে ফোকাস" ডিপ-লিংক ফিচারের জন্য (নিচের effect দেখুন)।
 
   useEffect(() => {
     const onFilter = (e: Event) => {
@@ -231,8 +211,14 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const isDone = !hasMore;
-  const showCategoryEndBtn = isDone && !switching && activeCat !== 'all' && items.length > 0;
+  // 🆕 (পারফরম্যান্স অপটিমাইজেশন, ২০২৬-১০): ইনফিনিটি স্ক্রলের বদলে — হোমপেজে সবসময়
+  // প্রথম PRODUCTS_PAGE_SIZE-টুকু দেখানো হয়, আরও থাকলে (hasMore) /products পেজের
+  // লিংক দেখানো হয় (সব প্রোডাক্ট হলে /products, নির্দিষ্ট ক্যাটাগরি হলে /products?cat=..)।
+  const showViewAllCta = !switching && items.length > 0 && hasMore;
+  const viewAllHref = activeCat === 'all' ? '/products' : `/products?cat=${encodeURIComponent(activeCat)}`;
+  // ক্যাটাগরিতে এখানেই (২৪-এর মধ্যে) সব প্রোডাক্ট দেখানো শেষ — সাইটের বাকি ক্যাটাগরিতে
+  // ফিরে যাওয়ার সাজেশন
+  const showCategoryEndBtn = !switching && !hasMore && activeCat !== 'all' && items.length > 0;
   const activeCategoryName = categoryName || cats.find((c) => c.id === activeCat)?.name;
 
   return (
@@ -280,16 +266,22 @@ export default function ProductGrid({ initialProducts, initialCategory, initialH
         </div>
       )}
 
-      <div className="mt-2.5 flex h-[60px] items-center justify-center" ref={sentinelRef}>
-        {(loadingMore || switching) && !isDone && (
-          <div className="flex items-center gap-2 text-[13px] text-muted">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin text-brand-light">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-            </svg>
-            {t('লোড হচ্ছে...')}
-          </div>
-        )}
-      </div>
+      {showViewAllCta && (
+        <div className="mt-7 flex flex-col items-center gap-2 text-center">
+          <Link href={viewAllHref} className={`${brandCtaBtnClass} no-underline`}>
+            {activeCat === 'all' ? t('সব প্রোডাক্ট দেখুন') : t('এই ক্যাটাগরির সব প্রোডাক্ট দেখুন')} <ArrowRightIcon />
+          </Link>
+        </div>
+      )}
+
+      {loadingMore && (
+        <div className="mt-2.5 flex items-center justify-center gap-2 text-[13px] text-muted">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin text-brand-light">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+          {t('লোড হচ্ছে...')}
+        </div>
+      )}
     </div>
   );
 }

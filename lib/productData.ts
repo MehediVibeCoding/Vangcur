@@ -223,6 +223,35 @@ export interface ProductsPageResult {
 export const PRODUCTS_PAGE_SIZE = 24;
 export const PRODUCTS_LOAD_MORE_BATCHES = [24, 36, 60, 84, 120, 180];
 
+// 🆕 (পারফরম্যান্স অপটিমাইজেশন, ২০২৬-১০): হোমপেজের ইনফিনিটি স্ক্রল বাদ দিয়ে /products
+// পেজে নাম্বার পেজিনেশন। হোমপেজে প্রথম PRODUCTS_PAGE_SIZE (২৪টা) প্রোডাক্ট দেখানো হয় বলে
+// /products-এর পেজ-১ সেই ২৪টা বাদ দিয়ে ফ্রেশ শুরু হয় — একই প্রোডাক্ট দুই জায়গায় দেখানো
+// হয় না। পেজ-প্রতি সাইজ (PRODUCTS_LIST_PAGE_SIZE) স্থায়ী থাকে — প্রোডাক্ট ৫০০ হোক বা
+// ১৫০০, পেজ-প্রতি সংখ্যা একই, শুধু মোট পেজ সংখ্যা বাড়ে/কমে।
+export const PRODUCTS_LIST_PAGE_SIZE = 119;
+export const PRODUCTS_LIST_RESERVED_HOME = PRODUCTS_PAGE_SIZE;
+
+export interface ProductsListPaging {
+  page: number;
+  offset: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * `total` (ক্যাটাগরিতে মোট প্রোডাক্ট সংখ্যা) আর অনুরোধ করা `requestedPage` থেকে
+ * /products পেজের জন্য offset/limit/totalPages হিসাব করে। totalPages অন্তত ১ —
+ * খালি ক্যাটালগেও পেজ-১ বৈধ থাকে (খালি-স্টেট UI দেখানোর জন্য)। requestedPage সীমার
+ * বাইরে গেলে সবচেয়ে কাছের বৈধ পেজে ক্ল্যাম্প করা হয়।
+ */
+export function computeProductsListPaging(total: number, requestedPage: number): ProductsListPaging {
+  const listable = Math.max(0, total - PRODUCTS_LIST_RESERVED_HOME);
+  const totalPages = Math.max(1, Math.ceil(listable / PRODUCTS_LIST_PAGE_SIZE));
+  const page = Math.min(Math.max(1, Math.floor(requestedPage) || 1), totalPages);
+  const offset = PRODUCTS_LIST_RESERVED_HOME + (page - 1) * PRODUCTS_LIST_PAGE_SIZE;
+  return { page, offset, limit: PRODUCTS_LIST_PAGE_SIZE, totalPages };
+}
+
 // 🔒 ফিক্স (audit P1-16): হোমপেজে আগে fetchCustomProducts() দিয়ে পুরো ক্যাটালগ
 // একসাথে আনা হতো (SSR পেলোডে) — কয়েকশো প্রোডাক্টে এটা ভারী হয়ে যাবে। এই ফাংশন
 // প্রথমে শুধু id+cat+cats আনে (হালকা — সব প্রোডাক্ট মিলিয়েও ছোট), তা দিয়ে

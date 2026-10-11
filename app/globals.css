@@ -446,6 +446,21 @@ input[type='search']::-webkit-search-results-decoration {
   }
 }
 
+/* 🔒 ফিক্স (পারফরম্যান্স অপটিমাইজেশন, ২০২৬-১০): উপরের @supports ব্লকটা iOS Safari-তে
+   .navbar-glass-এ সবসময় blur(20px) !important ফোর্স করে — Tailwind-এর
+   backdrop-blur-[6px] ক্লাস (মোবাইলে হালকা করার জন্য) ওভাররাইড হয়ে যেত। এই মোবাইল-অনলি
+   মিডিয়া-কোয়েরিটা পরে আসায় (CSS cascade-এ একই specificity হলে পরেরটা জেতে) শুধু ছোট
+   স্ক্রিনে (sticky নাভবার যেখানে সবচেয়ে বেশি স্ক্রল হয়) ব্লার হালকা হয় — ট্যাবলেট/ডেস্কটপে
+   আগের ২০px-ই থাকে। */
+@media (max-width: 767px) {
+  @supports (-webkit-hyphens: none) {
+    .navbar-glass {
+      -webkit-backdrop-filter: blur(8px) !important;
+      backdrop-filter: blur(8px) !important;
+    }
+  }
+}
+
 @keyframes searchDropdownReveal {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
