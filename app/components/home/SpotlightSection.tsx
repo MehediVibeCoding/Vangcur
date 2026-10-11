@@ -9,20 +9,35 @@ import type { ShowcaseSpotlight } from '@/lib/showcaseData';
 import ScrollReveal from '@/app/components/ui/ScrollReveal';
 
 /**
- * স্পটলাইট প্রোডাক্ট — মোট ২টা সারি:
- *  • ছবি লম্বা ৯:১৬ ফ্রেমে। প্রথমটায় বামে ছবি-ডানে লেখা; দ্বিতীয়টায় বামে লেখা-ডানে ছবি।
- *  • মোবাইলেও পাশাপাশি থাকে (ছবি ~৪২% চওড়া)। লেখা বেশি হলে সারিটা লম্বা হয়, ছবি নিজে থেকে
- *    ক্রপ হয়ে ভরে যায় — তাই ১৫০–২৫০ অক্ষরের বিবরণ সবচেয়ে সুন্দর দেখায় (সর্বোচ্চ ৫০০)।
- *  • লেখার অংশ: ছোট লেবেল, শিরোনাম, বিবরণ, ঐচ্ছিক দাম, আর একটা বাটন।
- *  • বাটনে ক্লিক করলে সরাসরি প্রোডাক্টের ডিটেলস পেজে যায় (অ্যাডমিনে লিংক/আইডি দিলে)।
- *  • কোণা সোজা, কালেকশন কার্ডের সাথে একই প্রিমিয়াম ভাষা।
+ * স্পটলাইট প্রোডাক্ট — ২টা সারি, কিন্তু দেখতে একটাই জোড়া-লাগানো প্রিমিয়াম কার্ড:
+ *  • হেডিং সাইটের বাকি সেকশনের মতো: গোল পিল → মেইন হেডিং → সাবটাইটেল।
+ *  • দুই সারির মাঝে কোনো ফাঁক নেই — একটা গোল-কোণা কনটেইনারে ঠাসাঠাসি জোড়া, মাঝে শুধু হালকা সূক্ষ্ম রেখা।
+ *  • মোবাইল: ছবি উপরে (৫:৪), লেখা নিচে। ডেস্কটপ/ট্যাবলেট (md+): পাশাপাশি; প্রথমটায় বামে ছবি, দ্বিতীয়টায় ডানে।
+ *  • ছবির নিচে-বামে প্রোডাক্টের নাম গ্লাস চিপে; ছবির উপরে-ডানে তীর-বাটন (ছবিতে ট্যাপেও প্রোডাক্টে যায়)।
+ *  • লেখার অংশ: ব্যাজ, শিরোনাম, বিবরণ, টিক-ফিচার তালিকা, শেষ লাইন, আর বাটন।
  *  • ডেটা আসে অ্যাডমিন প্যানেলের "হোম শোকেস" পেজ থেকে (lib/showcaseData.ts দেখুন)।
  */
 
-function ArrowIcon() {
+function ArrowIcon({ size = 14 }: { size?: number }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform duration-brand ease-brand group-hover:translate-x-1">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform duration-brand ease-brand group-hover:translate-x-1">
       <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9L12 2.5z" />
     </svg>
   );
 }
@@ -34,59 +49,97 @@ function spotlightHref(s: ShowcaseSpotlight): string {
   return s.catId && s.catId !== 'all' ? `/category/${makeCatSlug(s.catId)}` : '/products';
 }
 
-function SpotlightRow({ s, reverse }: { s: ShowcaseSpotlight; reverse: boolean }) {
+function SpotlightRow({ s, reverse, first }: { s: ShowcaseSpotlight; reverse: boolean; first: boolean }) {
   const { lang } = useT();
   const en = lang === 'en';
   const pick = (bn: string, enText: string) => (en && enText ? enText : bn);
   const href = spotlightHref(s);
   const title = pick(s.title, s.titleEn);
+  const product = pick(s.product, s.productEn);
+  const features = en && s.featuresEn.length ? s.featuresEn : s.features;
+  const note = pick(s.note, s.noteEn);
+  const desc = pick(s.desc, s.descEn);
 
   const image = (
-    <div className={`group relative overflow-hidden bg-slate-900 ${reverse ? 'order-2' : 'order-1'}`}>
-      {/* ৯:১৬ স্পেসার — সারির ন্যূনতম উচ্চতা ঠিক করে; লেখা বেশি হলে সারি বাড়ে, ছবি cover হয়ে ভরে যায় */}
-      <div className="aspect-[9/16] w-full" aria-hidden="true" />
+    <div className={`group relative min-h-[260px] overflow-hidden bg-slate-200 ${reverse ? 'md:order-2' : 'md:order-1'}`}>
+      {/* মোবাইলে ৫:৪ ফ্রেম; md+ এ সারির পুরো উচ্চতা জুড়ে ছবি cover হয়ে ভরে যায় */}
+      <div className="aspect-[5/4] w-full md:aspect-auto md:h-full md:min-h-[440px]" aria-hidden="true" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={optimizeCloudinaryUrl(s.img, 900)}
+        src={optimizeCloudinaryUrl(s.img, 1000)}
         alt={title}
         loading="lazy"
         decoding="async"
         draggable={false}
-        className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1100ms] ease-brand group-hover:scale-[1.05]"
+        className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1200ms] ease-brand group-hover:scale-[1.05]"
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" aria-hidden="true" />
       <Link href={href} aria-label={title} tabIndex={-1} className="absolute inset-0" />
+
+      {/* উপরে-ডানে তীর বাটন */}
+      <span className="pointer-events-none absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white shadow-[0_4px_14px_rgba(0,0,0,0.25)] backdrop-blur-md transition-colors duration-500 ease-brand group-hover:bg-white group-hover:text-brand-light sm:right-4 sm:top-4 sm:h-10 sm:w-10" aria-hidden="true">
+        <ArrowIcon />
+      </span>
+
+      {/* নিচে-বামে প্রোডাক্টের নাম */}
+      {product && (
+        <span className="pointer-events-none absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-[85%]">
+          <span className="inline-block max-w-full truncate rounded-full border border-white/70 bg-white/85 px-3.5 py-1.5 font-body text-[11.5px] font-bold text-ink shadow-sh1 backdrop-blur-md sm:text-[13px]">
+            {product}
+          </span>
+        </span>
+      )}
     </div>
   );
 
   const text = (
-    <div className={`flex min-w-0 flex-col justify-center gap-2.5 p-3.5 sm:gap-3.5 sm:p-6 md:gap-5 md:p-12 lg:p-16 ${reverse ? 'order-1' : 'order-2'}`}>
+    <div className={`flex min-w-0 flex-col justify-center gap-3 p-5 sm:gap-4 sm:p-7 md:p-10 lg:gap-5 lg:p-14 ${reverse ? 'md:order-1' : 'md:order-2'}`}>
       {s.badge && (
-        <span className="inline-flex w-fit items-center gap-2 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-brand-light sm:text-[12px]">
-          <span className="h-px w-5 bg-brand-light sm:w-8" aria-hidden="true" />
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-light/10 px-3 py-1 font-body text-[11px] font-bold text-brand-light sm:text-[12px]">
+          <span className="h-1.5 w-1.5 rounded-full bg-brand-light" aria-hidden="true" />
           {pick(s.badge, s.badgeEn)}
         </span>
       )}
 
-      <h3 className="break-words font-body text-[17px] font-bold leading-snug text-ink sm:text-[24px] md:text-[34px] md:leading-tight">
-        {title}
-      </h3>
+      <div className="space-y-2">
+        <h3 className="break-words font-body text-[21px] font-extrabold leading-snug text-ink sm:text-[26px] md:text-[30px] md:leading-tight lg:text-[34px]">
+          {title}
+        </h3>
+        {desc && (
+          <p className="whitespace-pre-line break-words font-body text-[13.5px] leading-[1.7] text-muted sm:text-[15px]">
+            {desc}
+          </p>
+        )}
+      </div>
 
-      {(s.desc || s.descEn) && (
-        <p className="whitespace-pre-line break-words font-body text-[12px] leading-[1.7] text-muted sm:text-[14px] md:text-[16px] md:leading-relaxed">
-          {pick(s.desc, s.descEn)}
+      {features.length > 0 && (
+        <ul className="grid grid-cols-1 gap-x-5 gap-y-2.5 sm:grid-cols-2">
+          {features.map((f, i) => (
+            <li key={`${f}-${i}`} className="flex items-start gap-2.5 font-body text-[13px] font-medium leading-snug text-ink sm:text-[14px]">
+              <span className="mt-[1px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-brand-light text-white" aria-hidden="true">
+                <CheckIcon />
+              </span>
+              <span className="min-w-0 break-words">{f}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {note && (
+        <p className="break-words border-l-[3px] border-brand-light/50 pl-3 font-body text-[12.5px] italic leading-relaxed text-muted sm:text-[14px]">
+          {note}
         </p>
       )}
 
       {s.price > 0 && (
-        <div className="font-body text-[17px] font-bold text-ink sm:text-[21px] md:text-[28px]">
+        <div className="font-body text-[22px] font-extrabold text-ink sm:text-[26px]">
           ৳{s.price.toLocaleString('en-US')}
         </div>
       )}
 
       <Link
         href={href}
-        className="group mt-1 inline-flex w-fit items-center gap-2 bg-brand-light px-4 py-2.5 font-body text-[12px] font-bold tracking-wide text-white shadow-sh2 transition-colors duration-brand hover:bg-[#3C93DE] active:scale-95 sm:gap-2.5 sm:px-6 sm:py-3 sm:text-[14px] md:px-8 md:py-[14px] md:text-[15px]"
+        className="group mt-1 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-brand-light px-7 py-3 font-body text-[14px] font-bold text-white shadow-sh2 transition-[background-color,transform,box-shadow] duration-brand hover:bg-[#3C93DE] hover:shadow-sh3 active:scale-95 sm:w-fit sm:py-3.5 sm:text-[15px]"
       >
         {pick(s.btn, s.btnEn)}
         <ArrowIcon />
@@ -96,11 +149,11 @@ function SpotlightRow({ s, reverse }: { s: ShowcaseSpotlight; reverse: boolean }
 
   return (
     <div
-      className={`grid items-stretch overflow-hidden bg-[#F0F8FF] dark:bg-brand-dark-surface ${
-        reverse
-          ? 'grid-cols-[1fr_42%] md:grid-cols-[1fr_300px] lg:grid-cols-[1fr_340px]'
-          : 'grid-cols-[42%_1fr] md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr]'
-      }`}
+      className={`grid items-stretch bg-gradient-to-br ${
+        first
+          ? 'from-[#F0F8FF] to-white dark:from-brand-dark-surface dark:to-brand-dark-surface'
+          : 'from-white to-[#E8F3FE] dark:from-brand-dark-card dark:to-brand-dark-surface border-t border-brand-light/15'
+      } grid-cols-1 ${reverse ? 'md:grid-cols-[1fr_42%] lg:grid-cols-[1fr_40%]' : 'md:grid-cols-[42%_1fr] lg:grid-cols-[40%_1fr]'}`}
     >
       {image}
       {text}
@@ -113,16 +166,45 @@ interface Props {
 }
 
 export default function SpotlightSection({ items }: Props) {
+  const { lang } = useT();
+  const en = lang === 'en';
   const visible = items.filter((s) => s.enabled);
   if (!visible.length) return null;
 
   return (
-    <section className="mx-auto mb-14 flex max-w-[1300px] flex-col gap-2.5 px-4 sm:gap-4 sm:px-5" id="spotlightSec">
-      {visible.map((s, i) => (
-        <ScrollReveal key={`${s.title}-${i}`}>
-          <SpotlightRow s={s} reverse={i % 2 === 1} />
-        </ScrollReveal>
-      ))}
+    <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5" id="spotlightSec" aria-label={en ? 'Featured gadgets' : 'ফিচার্ড গ্যাজেট'}>
+      {/* ── হেডিং: পিল → মেইন হেডিং → সাবটাইটেল ── */}
+      <ScrollReveal>
+        <div className="mb-7 text-center sm:mb-9">
+          <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full border border-brand-light/40 bg-white/80 px-3.5 py-1 font-body text-[11px] font-bold uppercase tracking-wider text-brand-light shadow-xs backdrop-blur-md">
+            <StarIcon />
+            <span>{en ? 'Featured Gadgets' : 'ফিচার্ড গ্যাজেট'}</span>
+          </div>
+
+          <h2 className="font-body text-2xl font-extrabold text-ink sm:text-[28px]">
+            {en ? (
+              <>Gadgets That <span className="text-brand-light">Catch Every Eye</span></>
+            ) : (
+              <>যে গ্যাজেট <span className="text-brand-light">সবার নজর কাড়ে</span></>
+            )}
+          </h2>
+
+          <p className="mt-1.5 font-body text-[13px] text-muted sm:text-[14px]">
+            {en
+              ? 'Our most loved and most distinctive picks, at a glance'
+              : 'আমাদের সবচেয়ে জনপ্রিয় ও আলাদা স্টাইলের গ্যাজেট এক নজরে'}
+          </p>
+        </div>
+      </ScrollReveal>
+
+      {/* ── জোড়া-লাগানো একটাই কার্ড: মাঝে কোনো ফাঁক নেই ── */}
+      <ScrollReveal>
+        <div className="overflow-hidden rounded-[24px] border border-white/70 bg-white shadow-sh2 dark:border-brand-dark-border dark:bg-brand-dark-surface sm:rounded-[28px]">
+          {visible.map((s, i) => (
+            <SpotlightRow key={`${s.title}-${i}`} s={s} reverse={i % 2 === 1} first={i === 0} />
+          ))}
+        </div>
+      </ScrollReveal>
     </section>
   );
 }

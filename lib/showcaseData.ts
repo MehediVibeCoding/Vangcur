@@ -36,6 +36,10 @@ export const SHOWCASE_LIMITS = {
   descRecommended: 250, // এর বেশি হলে মোবাইলে ছবি বেশি ক্রপ হতে পারে — অ্যাডমিনে সতর্কবার্তা দেখায়
   spotBtn: 22,
   link: 300,
+  product: 60,
+  feature: 60,
+  featureCount: 8,
+  note: 160,
 } as const;
 
 export interface ShowcaseHeading {
@@ -67,6 +71,15 @@ export interface ShowcaseSpotlight {
   titleEn: string;
   desc: string;
   descEn: string;
+  /** ঐচ্ছিক — ছবির নিচে-বামে গ্লাস চিপে বসা প্রোডাক্টের নাম */
+  product: string;
+  productEn: string;
+  /** ঐচ্ছিক — টিক-চিহ্নসহ ফিচার তালিকা (সর্বোচ্চ featureCount টা) */
+  features: string[];
+  featuresEn: string[];
+  /** ঐচ্ছিক — তালিকার নিচের শেষ লাইন */
+  note: string;
+  noteEn: string;
   /** ঐচ্ছিক — ০ বা ফাঁকা হলে দাম দেখাবে না */
   price: number;
   btn: string;
@@ -111,10 +124,32 @@ export const DEFAULT_SHOWCASE: ShowcaseConfig = {
       img: IMG_SQUARE,
       badge: 'হট সেলিং',
       badgeEn: 'Hot Selling',
-      title: 'সবার পছন্দের হট সেলিং গ্যাজেট',
-      titleEn: 'Our most loved hot-selling gadget',
-      desc: 'গ্রাহকদের সবচেয়ে বেশি অর্ডার পাওয়া প্রোডাক্ট — সেরা মানে, দ্রুত হোম ডেলিভারিতে।',
-      descEn: 'The product our customers order the most — great quality, fast home delivery.',
+      title: 'আপনার রুমকেও এরকম Pinterest স্টাইলে বানাতে চান?',
+      titleEn: 'Want your room to look this Pinterest-worthy too?',
+      desc: 'এই লাইটটা একবার ঘরে জ্বললে, কেউ চোখ ফিরাতে পারবেন না—সত্যি!',
+      descEn: 'Once this light glows in your room, nobody will be able to look away — really!',
+      product: 'RGB Neon Light – 16 Fit / 5 Meter',
+      productEn: 'RGB Neon Light – 16 Fit / 5 Meter',
+      features: [
+        'রিমোট + অ্যাপে কন্ট্রোল',
+        '৯৬টা LED প্রতি মিটার!',
+        'Waterproof, Easy Setup',
+        'অসংখ্য কালার মোড',
+        'Bluetooth Connectivity',
+        'Safe + Durable + Premium Quality',
+        '৬ মাসের Replacement Warranty!',
+      ],
+      featuresEn: [
+        'Remote + app control',
+        '96 LEDs per metre!',
+        'Waterproof, easy setup',
+        'Countless colour modes',
+        'Bluetooth connectivity',
+        'Safe + durable + premium quality',
+        '6-month replacement warranty!',
+      ],
+      note: 'ঘর, গেমিং সেটআপ, ব্যাকগ্রাউন্ড ডেকোর—সবকিছুর জন্য পারফেক্ট।',
+      noteEn: 'Perfect for your room, gaming setup and background decor — everything.',
       price: 0,
       btn: 'বিস্তারিত দেখুন',
       btnEn: 'View details',
@@ -123,14 +158,31 @@ export const DEFAULT_SHOWCASE: ShowcaseConfig = {
       catId: '',
     },
     {
+      // ⚠️ ডেমো লেখা — আসল প্রোডাক্ট যোগ হলে অ্যাডমিন/এখান থেকে বদলাবেন
       enabled: true,
       img: IMG_WIDE,
       badge: 'ইউনিক কালেকশন',
       badgeEn: 'Unique Pick',
-      title: 'ইউনিক গ্যাজেট, যা সবার চোখে পড়বে',
-      titleEn: 'A unique gadget that stands out',
-      desc: 'স্টাইলিশ আর কাজের গ্যাজেট এক জায়গায় — দেখলেই পছন্দ হয়ে যাবে।',
-      descEn: 'Stylish and useful gadgets in one place — you will love it at first sight.',
+      title: 'হাতের মুঠোয় ঠান্ডা হাওয়া, স্টাইলের সাথে',
+      titleEn: 'Cool breeze in your palm, with style',
+      desc: 'গরমে ক্লাস, অফিস বা ঘুরতে যাওয়া—যেখানেই যান, এই স্টাইলিশ পোর্টেবল ফ্যান থাকবে আপনার সঙ্গী।',
+      descEn: 'Class, office or a day out in the heat — this stylish portable fan goes wherever you go.',
+      product: 'QISOLOVE Portable Fan',
+      productEn: 'QISOLOVE Portable Fan',
+      features: [
+        '৩ স্পিড উইন্ড কন্ট্রোল',
+        'রিচার্জেবল, লং ব্যাটারি লাইফ',
+        'হালকা ও হ্যান্ডহেল্ড ডিজাইন',
+        'ব্যাগে নেওয়া সহজ',
+      ],
+      featuresEn: [
+        '3-speed wind control',
+        'Rechargeable, long battery life',
+        'Light handheld design',
+        'Easy to carry in a bag',
+      ],
+      note: 'গরমের দিনে প্রতিদিনের সঙ্গী।',
+      noteEn: 'An everyday companion for hot days.',
       price: 0,
       btn: 'বিস্তারিত দেখুন',
       btnEn: 'View details',
@@ -145,6 +197,14 @@ export const DEFAULT_SHOWCASE: ShowcaseConfig = {
 function str(v: unknown, fallback: string, max: number): string {
   if (typeof v !== 'string') return fallback;
   return v.trim().slice(0, max);
+}
+
+function strList(v: unknown, fallback: string[], maxItems: number, maxLen: number): string[] {
+  if (!Array.isArray(v)) return fallback;
+  return v
+    .map((x) => (typeof x === 'string' ? x.trim().slice(0, maxLen) : ''))
+    .filter(Boolean)
+    .slice(0, maxItems);
 }
 
 function imgUrl(v: unknown, fallback: string): string {
@@ -187,6 +247,12 @@ function normalizeSpotlight(raw: unknown, fb: ShowcaseSpotlight): ShowcaseSpotli
     titleEn: str(r.titleEn, fb.titleEn, L.title),
     desc: str(r.desc, fb.desc, L.desc),
     descEn: str(r.descEn, fb.descEn, L.desc),
+    product: str(r.product, fb.product, L.product),
+    productEn: str(r.productEn, fb.productEn, L.product),
+    features: strList(r.features, fb.features, L.featureCount, L.feature),
+    featuresEn: strList(r.featuresEn, fb.featuresEn, L.featureCount, L.feature),
+    note: str(r.note, fb.note, L.note),
+    noteEn: str(r.noteEn, fb.noteEn, L.note),
     price: Number.isFinite(priceNum) && priceNum > 0 ? Math.round(priceNum) : 0,
     btn: str(r.btn, fb.btn, L.spotBtn),
     btnEn: str(r.btnEn, fb.btnEn, L.spotBtn),
