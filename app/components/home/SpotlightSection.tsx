@@ -10,10 +10,10 @@ import ScrollReveal from '@/app/components/ui/ScrollReveal';
 
 /**
  * স্পটলাইট প্রোডাক্ট — ২টা সারি, কিন্তু দেখতে একটাই জোড়া-লাগানো প্রিমিয়াম কার্ড:
- *  • হেডিং সাইটের বাকি সেকশনের মতো: গোল পিল → মেইন হেডিং → সাবটাইটেল।
+ *  • হেডিং: গোল পিল → মেইন হেডিং (সাবটাইটেল নেই)।
  *  • দুই সারির মাঝে কোনো ফাঁক নেই — একটা গোল-কোণা কনটেইনারে ঠাসাঠাসি জোড়া, মাঝে শুধু হালকা সূক্ষ্ম রেখা।
- *  • মোবাইল: ছবি উপরে (৫:৪), লেখা নিচে। ডেস্কটপ/ট্যাবলেট (md+): পাশাপাশি; প্রথমটায় বামে ছবি, দ্বিতীয়টায় ডানে।
- *  • ছবির নিচে-বামে প্রোডাক্টের নাম গ্লাস চিপে; ছবির উপরে-ডানে তীর-বাটন (ছবিতে ট্যাপেও প্রোডাক্টে যায়)।
+ *  • মোবাইলে এই সেকশন পুরোপুরি লুকানো (hidden md:block)। ডেস্কটপ/ট্যাবলেটে পাশাপাশি; প্রথমটায় বামে ছবি, দ্বিতীয়টায় ডানে। দুই সারির উচ্চতা সমান।
+ *  • ছবির উপরে কোনো লেখা/আইকন নেই; প্রোডাক্টের নাম লেখার অংশের উপরের ব্যাজে। ছবিতে ক্লিক করলেও প্রোডাক্টে যায়।
  *  • লেখার অংশ: ব্যাজ, শিরোনাম, বিবরণ, টিক-ফিচার তালিকা, শেষ লাইন, আর বাটন।
  *  • ডেটা আসে অ্যাডমিন প্যানেলের "হোম শোকেস" পেজ থেকে (lib/showcaseData.ts দেখুন)।
  */
@@ -63,7 +63,7 @@ function SpotlightRow({ s, reverse, first }: { s: ShowcaseSpotlight; reverse: bo
   const image = (
     <div className={`group relative min-h-[260px] overflow-hidden bg-slate-200 ${reverse ? 'md:order-2' : 'md:order-1'}`}>
       {/* মোবাইলে ৫:৪ ফ্রেম; md+ এ সারির পুরো উচ্চতা জুড়ে ছবি cover হয়ে ভরে যায় */}
-      <div className="aspect-[5/4] w-full md:aspect-auto md:h-full md:min-h-[440px]" aria-hidden="true" />
+      <div className="aspect-[5/4] w-full md:aspect-auto md:h-full" aria-hidden="true" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={optimizeCloudinaryUrl(s.img, 1000)}
@@ -76,28 +76,15 @@ function SpotlightRow({ s, reverse, first }: { s: ShowcaseSpotlight; reverse: bo
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" aria-hidden="true" />
       <Link href={href} aria-label={title} tabIndex={-1} className="absolute inset-0" />
 
-      {/* উপরে-ডানে তীর বাটন */}
-      <span className="pointer-events-none absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/50 bg-white/25 text-white shadow-[0_4px_14px_rgba(0,0,0,0.25)] backdrop-blur-md transition-colors duration-500 ease-brand group-hover:bg-white group-hover:text-brand-light sm:right-4 sm:top-4 sm:h-10 sm:w-10" aria-hidden="true">
-        <ArrowIcon />
-      </span>
-
-      {/* নিচে-বামে প্রোডাক্টের নাম */}
-      {product && (
-        <span className="pointer-events-none absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-auto sm:max-w-[85%]">
-          <span className="inline-block max-w-full truncate rounded-full border border-white/70 bg-white/85 px-3.5 py-1.5 font-body text-[11.5px] font-bold text-ink shadow-sh1 backdrop-blur-md sm:text-[13px]">
-            {product}
-          </span>
-        </span>
-      )}
     </div>
   );
 
   const text = (
     <div className={`flex min-w-0 flex-col justify-center gap-3 p-5 sm:gap-4 sm:p-7 md:p-10 lg:gap-5 lg:p-14 ${reverse ? 'md:order-1' : 'md:order-2'}`}>
-      {s.badge && (
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-light/10 px-3 py-1 font-body text-[11px] font-bold text-brand-light sm:text-[12px]">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-light" aria-hidden="true" />
-          {pick(s.badge, s.badgeEn)}
+      {(product || s.badge) && (
+        <span className="inline-flex w-fit max-w-full items-center gap-2 rounded-full bg-brand-light/10 px-3.5 py-1.5 font-body text-[12px] font-bold text-brand-light sm:text-[13px]">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-light" aria-hidden="true" />
+          <span className="min-w-0 break-words">{product || pick(s.badge, s.badgeEn)}</span>
         </span>
       )}
 
@@ -153,7 +140,7 @@ function SpotlightRow({ s, reverse, first }: { s: ShowcaseSpotlight; reverse: bo
         first
           ? 'from-[#F0F8FF] to-white dark:from-brand-dark-surface dark:to-brand-dark-surface'
           : 'from-white to-[#E8F3FE] dark:from-brand-dark-card dark:to-brand-dark-surface border-t border-brand-light/15'
-      } grid-cols-1 ${reverse ? 'md:grid-cols-[1fr_42%] lg:grid-cols-[1fr_40%]' : 'md:grid-cols-[42%_1fr] lg:grid-cols-[40%_1fr]'}`}
+      } grid-cols-1 md:min-h-[520px] lg:min-h-[560px] ${reverse ? 'md:grid-cols-[1fr_42%] lg:grid-cols-[1fr_40%]' : 'md:grid-cols-[42%_1fr] lg:grid-cols-[40%_1fr]'}`}
     >
       {image}
       {text}
@@ -172,7 +159,7 @@ export default function SpotlightSection({ items }: Props) {
   if (!visible.length) return null;
 
   return (
-    <section className="mx-auto mb-14 max-w-[1300px] px-4 sm:px-5" id="spotlightSec" aria-label={en ? 'Featured gadgets' : 'ফিচার্ড গ্যাজেট'}>
+    <section className="mx-auto mb-14 hidden max-w-[1300px] px-4 sm:px-5 md:block" id="spotlightSec" aria-label={en ? 'Featured gadgets' : 'ফিচার্ড গ্যাজেট'}>
       {/* ── হেডিং: পিল → মেইন হেডিং → সাবটাইটেল ── */}
       <ScrollReveal>
         <div className="mb-7 text-center sm:mb-9">
@@ -183,17 +170,11 @@ export default function SpotlightSection({ items }: Props) {
 
           <h2 className="font-body text-2xl font-extrabold text-ink sm:text-[28px]">
             {en ? (
-              <>Gadgets That <span className="text-brand-light">Catch Every Eye</span></>
+              <>Picked <span className="text-brand-light">Just for You</span></>
             ) : (
-              <>যে গ্যাজেট <span className="text-brand-light">সবার নজর কাড়ে</span></>
+              <>শুধু আপনার জন্য <span className="text-brand-light">বাছাই করা</span></>
             )}
           </h2>
-
-          <p className="mt-1.5 font-body text-[13px] text-muted sm:text-[14px]">
-            {en
-              ? 'Our most loved and most distinctive picks, at a glance'
-              : 'আমাদের সবচেয়ে জনপ্রিয় ও আলাদা স্টাইলের গ্যাজেট এক নজরে'}
-          </p>
         </div>
       </ScrollReveal>
 
