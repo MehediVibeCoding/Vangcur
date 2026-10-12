@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchProductsPage, PRODUCTS_PAGE_SIZE } from '@/lib/productData';
 import { fetchCategories, makeCatSlug, DEFAULT_CATEGORIES } from '@/lib/categoryData';
 import { fetchHeroCards, DEFAULT_HERO_CARDS } from '@/lib/heroSliderData';
+import { fetchShowcase, DEFAULT_SHOWCASE } from '@/lib/showcaseData';
 import { getServerLang } from '@/lib/i18n/getServerLang';
 import ClientHome from '@/app/ClientHome';
 
@@ -82,13 +83,17 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
   // 🔒 ফিক্স (audit P1-16): হোমপেজের মতোই এখানেও পুরো ক্যাটালগ না এনে শুধু
   // এই ক্যাটাগরির প্রথম পেজ আনা হচ্ছে
-  const [productsPage, initialCategories, initialHeroCards] = supabase
+  // 🔧 ফিক্স: হোম পেজের মতোই এখানেও শোকেস (কালেকশন কার্ড + স্পটলাইট) আনা হচ্ছে —
+  // আগে এটা এই পেজে না থাকায়, ক্যাটাগরিতে ঢুকে আবার "অল প্রোডাক্টস"-এ ফিরলে
+  // (এই পেজেই থেকে, ফিল্টার রিসেট করে) নিচের দুটো সেকশন উধাও হয়ে যেত।
+  const [productsPage, initialCategories, initialHeroCards, initialShowcase] = supabase
     ? await Promise.all([
       fetchProductsPage(supabase, cat.id, 0, PRODUCTS_PAGE_SIZE),
       fetchCategories(supabase),
       fetchHeroCards(supabase),
+      fetchShowcase(supabase),
     ])
-    : [{ products: [], hasMore: false }, DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS];
+    : [{ products: [], hasMore: false }, DEFAULT_CATEGORIES, DEFAULT_HERO_CARDS, DEFAULT_SHOWCASE];
   const initialProducts = productsPage.products;
   const initialHasMore = productsPage.hasMore;
 
@@ -99,6 +104,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       initialHeroCards={initialHeroCards}
       initialCategory={cat.id}
       initialHasMore={initialHasMore}
+      initialShowcase={initialShowcase}
     />
   );
 }

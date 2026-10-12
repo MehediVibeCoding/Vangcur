@@ -11,6 +11,7 @@ import { searchProducts, matchCategories } from '@/lib/searchData';
 import { fetchProductsByIds } from '@/lib/productData';
 import { DEFAULT_CATEGORIES } from '@/lib/categoryData';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
+import { brandifyCategoryIcon } from '@/lib/categoryData';
 import { showToast } from '@/lib/toast';
 import { useT } from '@/lib/i18n/useT';
 import { RippleLayer, rippleThen } from '@/lib/ripple';
@@ -154,7 +155,7 @@ function CategoryIcon({ icon }: { icon?: string }) {
     return (
       <span
         className="flex h-5 w-5 shrink-0 items-center justify-center text-brand-light [&_svg]:!h-5 [&_svg]:!w-5"
-        dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(brandifyCategoryIcon(icon)) }}
       />
     );
   }

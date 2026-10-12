@@ -12,7 +12,7 @@ import { scrollToProductsSection } from '@/lib/scrollToProducts';
 import { fetchCatalogIndex, productHref } from '@/lib/productData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { searchProducts, matchCategories as matchCategoriesData } from '@/lib/searchData';
-import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT } from '@/lib/categoryData';
+import { DEFAULT_CATEGORIES, fetchCategories, makeCatSlug, CATEGORY_FILTER_EVENT, brandifyCategoryIcon } from '@/lib/categoryData';
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from '@/lib/recentSearches';
 import { sanitizeSvgHtml } from '@/lib/sanitize';
 import { WISHLIST_NAV_HIT_EVENT, OPEN_TRACK_ORDER_EVENT } from '@/lib/uiEvents';
@@ -136,7 +136,7 @@ function CategoryIcon({ icon }: { icon?: string }) {
     return (
       <div
         className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[9px] bg-brand-bg text-brand-light [&_svg]:!h-[22px] [&_svg]:!w-[22px]"
-        dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(icon) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeSvgHtml(brandifyCategoryIcon(icon)) }}
       />
     );
   }
