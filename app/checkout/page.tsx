@@ -776,7 +776,7 @@ export default function CheckoutPage() {
     // (app/actions/checkout.ts) নিজে আবার স্বাধীনভাবে ভাউচার যাচাই করে,
     // এটা শুধু UI-এর জন্য।
     if (hasZeroAdvanceVoucher) {
-      return { ...base, baseAdvance: 0, bkashFee: 0, totalAdvance: 0 };
+      return { ...base, baseAdvance: 0, totalAdvance: 0 };
     }
     return base;
   }, [total, hasZeroAdvanceVoucher]);
@@ -1606,7 +1606,7 @@ export default function CheckoutPage() {
                     lang === 'en' ? (
                       <>
                         To confirm your order, please Send Money{' '}
-                        <strong className="text-ink">৳{advanceInfo.totalAdvance.toLocaleString('en-US')}</strong> (5% advance on total bill + 1.5% bKash transaction fee) to the bKash number below.{' '}
+                        <strong className="text-ink">৳{advanceInfo.totalAdvance.toLocaleString('en-US')}</strong> (5% advance on total bill) to the bKash number below.{' '}
                         <button
                           type="button"
                           onClick={() => setShowBreakdown((v) => !v)}
@@ -1617,7 +1617,7 @@ export default function CheckoutPage() {
                       </>
                     ) : (
                       <>
-                        আপনার অর্ডারটি নিশ্চিত করতে সর্বমোট বিলের ৫% অগ্রিম ও 1.5% বিকাশ ট্রানজেকশন ফি সহ মোট{' '}
+                        আপনার অর্ডারটি নিশ্চিত করতে সর্বমোট বিলের ৫% অগ্রিম সহ মোট{' '}
                         <strong className="text-ink">{advanceInfo.totalAdvance.toLocaleString('en-US')} টাকা</strong> নিচের bKash নম্বরে Send Money করুন।{' '}
                         <button
                           type="button"
@@ -1648,10 +1648,6 @@ export default function CheckoutPage() {
                     <div className="flex justify-between py-0.5 text-muted font-normal">
                       <span>{lang === 'en' ? '• 5% Base Advance:' : '• ৫% মূল অগ্রিম:'}</span>
                       <span className="text-muted font-normal">৳{advanceInfo.baseAdvance.toLocaleString('en-US')}</span>
-                    </div>
-                    <div className="flex justify-between py-0.5 text-muted font-normal">
-                      <span>{lang === 'en' ? '• 1.5% bKash Transaction Fee:' : '• 1.5% বিকাশ ট্রানজেকশন ফি:'}</span>
-                      <span className="text-muted font-normal">৳{advanceInfo.bkashFee.toLocaleString('en-US')}</span>
                     </div>
                     <div className="my-1.5 h-px border-t border-dashed border-border-base" />
                     <div className="flex justify-between py-0.5 text-brand-light font-bold">
@@ -1843,7 +1839,7 @@ export default function CheckoutPage() {
                   <div className="flex items-center justify-between font-body text-[13px] font-medium text-ink/75">
                     <span>
                       {advanceInfo.isHighValue
-                        ? (lang === 'en' ? 'Advance Payment (5% + bKash Fee)' : 'এডভান্স পেমেন্ট (৫% + বিকাশ ফি)')
+                        ? (lang === 'en' ? 'Advance Payment (5%)' : 'এডভান্স পেমেন্ট (৫%)')
                         : (lang === 'en' ? 'Advance Payment' : 'এডভান্স পেমেন্ট')}
                     </span>
                     <span className="font-semibold text-brand-light">- ৳{advanceInfo.totalAdvance.toLocaleString('en-US')}</span>

@@ -266,8 +266,8 @@ export default function GuideClient() {
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
-              ? 'Orders ৳4,000 – ৳20,000: Send Money a 5% advance + 1.5% bKash transaction fee on the total bill (live breakdown viewable in the dropdown).'
-              : '৪,০০০ থেকে ২০,০০০ টাকার অর্ডার: মোট বিলের ৫% মূল অগ্রিম ও ১.৫% বিকাশ ফি অগ্রিম পরিশোধ করুন (ড্রপডাউনে বিস্তারিত হিসাব দেখা যাবে)।'}
+              ? 'Orders ৳4,000 – ৳20,000: Send Money a 5% advance on the total bill, including delivery charge (live breakdown viewable in the dropdown).'
+              : '৪,০০০ থেকে ২০,০০০ টাকার অর্ডার: ডেলিভারি চার্জসহ মোট বিলের ৫% অগ্রিম পরিশোধ করুন (ড্রপডাউনে বিস্তারিত হিসাব দেখা যাবে)।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'

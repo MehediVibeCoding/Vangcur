@@ -180,7 +180,6 @@ export const MAX_ONLINE_ORDER_TOTAL = 20000; // ২০,০০০ টাকার
 export interface AdvancePaymentBreakdown {
   tier: 1 | 2 | 3;
   baseAdvance: number;       // ৫% মূল অগ্রিম বা ফিক্সড ২০০
-  bkashFee: number;          // ১.৫% বিকাশ ট্রানজেকশন ফি (টায়ার ২ ও ৩ এর জন্য)
   totalAdvance: number;      // কাস্টমারকে মোট যত টাকা অগ্রিম সেন্ড মানি করতে হবে
   isHighValue: boolean;      // ৪,০০০ - ২০,০০০ টাকার মধ্যে কি না
   isBulkOrder: boolean;      // ২০,০০০ টাকার বেশি কি না
@@ -188,7 +187,10 @@ export interface AdvancePaymentBreakdown {
 }
 
 /**
- * ডেলিভারি চার্জ সহ সর্বমোট বিলের (Total Bill) ওপর ভিত্তি করে অগ্রিম ও বিকাশ ট্রানজেকশন ফি হিসাব
+ * ডেলিভারি চার্জ সহ সর্বমোট বিলের (Total Bill) ওপর ভিত্তি করে অগ্রিম হিসাব।
+ * থ্রেশহোল্ড (৪,০০০) সবসময় ডেলিভারি চার্জ-সহ সর্বমোট বিলের ওপর যাচাই হয়,
+ * শুধু প্রোডাক্ট সাবটোটালের ওপর নয় — তাই total ৪,০০০ টাকায় হিট করা মাত্রই
+ * (ডেলিভারি চার্জ যোগ হওয়ার পরেও) ৫% টায়ার চালু হয়ে যায়, ২০০ টাকা ফিক্সড আর থাকে না।
  */
 export function calculateAdvancePayment(effectiveTotal: number): AdvancePaymentBreakdown {
   const safeTotal = Math.max(0, Number(effectiveTotal) || 0);
@@ -196,27 +198,23 @@ export function calculateAdvancePayment(effectiveTotal: number): AdvancePaymentB
   // টায়ার ৩: ২০,০০০ টাকার বেশি (বাল্ক অর্ডার)
   if (safeTotal > MAX_ONLINE_ORDER_TOTAL) {
     const baseAdvance = Math.round(safeTotal * 0.05);
-    const bkashFee = Math.round(baseAdvance * 0.015);
     return {
       tier: 3,
       baseAdvance,
-      bkashFee,
-      totalAdvance: baseAdvance + bkashFee,
+      totalAdvance: baseAdvance,
       isHighValue: true,
       isBulkOrder: true,
       percentage: 5,
     };
   }
 
-  // টায়ার ২: ৪,০০০ থেকে ২০,০০০ টাকা (হাই-ভ্যালু অর্ডার: ৫% অগ্রিম + ১.৫% বিকাশ ট্রানজেকশন ফি)
+  // টায়ার ২: ৪,০০০ থেকে ২০,০০০ টাকা (হাই-ভ্যালু অর্ডার: ৫% অগ্রিম)
   if (safeTotal >= HIGH_VALUE_THRESHOLD) {
     const baseAdvance = Math.round(safeTotal * 0.05);
-    const bkashFee = Math.round(baseAdvance * 0.015);
     return {
       tier: 2,
       baseAdvance,
-      bkashFee,
-      totalAdvance: baseAdvance + bkashFee,
+      totalAdvance: baseAdvance,
       isHighValue: true,
       isBulkOrder: false,
       percentage: 5,
@@ -227,7 +225,6 @@ export function calculateAdvancePayment(effectiveTotal: number): AdvancePaymentB
   return {
     tier: 1,
     baseAdvance: 200,
-    bkashFee: 0,
     totalAdvance: 200,
     isHighValue: false,
     isBulkOrder: false,
