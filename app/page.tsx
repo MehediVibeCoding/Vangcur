@@ -6,6 +6,9 @@ import { fetchShowcase, DEFAULT_SHOWCASE } from '@/lib/showcaseData';
 import { optimizeCloudinaryUrl } from '@/lib/cloudinaryUrl';
 import { logError } from '@/lib/logger';
 import ClientHome from './ClientHome';
+// ➕ নতুন ইম্পোর্ট — শুধু এই একটা লাইন যোগ হয়েছে (Google/crawler-এর জন্য
+// sr-only purpose-description, দেখুন app/components/home/SeoIntro.tsx)
+import SeoIntro from './components/home/SeoIntro';
 
 export const revalidate = 120;
 
@@ -66,6 +69,9 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* ➕ sr-only — কোনো ভিজুয়াল পরিবর্তন নেই, শুধু crawler/স্ক্রিন-রিডারের
+          জন্য। দেখুন app/components/home/SeoIntro.tsx */}
+      <SeoIntro />
       {lcpHeroImg && (
         <link
           rel="preload"

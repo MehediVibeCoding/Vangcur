@@ -78,6 +78,17 @@ function UserCheckmarkIcon() {
   );
 }
 
+// ➕ নতুন আইকন — "Sign in with Google" সংক্রান্ত নতুন সেকশনের জন্য
+function GoogleKeyIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="5" />
+      <path d="M9.5 8h5M12 5.5v5" />
+      <path d="M12 13v7M9 17h6" />
+    </svg>
+  );
+}
+
 export default function PrivacyPolicyClient() {
   const { lang } = useT();
 
@@ -86,18 +97,18 @@ export default function PrivacyPolicyClient() {
       <PolicyHeader
         icon={<ShieldLockIcon />}
         title="প্রাইভেসি পলিসি (Privacy Policy)"
-        subtitle="ব্যক্তিগত তথ্যের নিরাপত্তা ও গোপনীয়তা প্রতিশ্রুতি"
+        subtitle="ব্যক্তিগত তথ্যের নিরাপত্তা ও গোপনীয়তা প্রতিশ্রুতি"
         updated="আগস্ট ২০২৬"
       />
 
       <PolicySection
         icon={<ShieldLockIcon />}
-        title={lang === 'en' ? '1. Privacy Commitment & Scope' : '১. গোপনীয়তা অঙ্গীকার ও মূলনীতি'}
+        title={lang === 'en' ? '1. Privacy Commitment & Scope' : '১. গোপনীয়তা অঙ্গীকার ও মূলনীতি'}
       >
         <p className={policyPClass}>
           {lang === 'en'
             ? 'At Vangcur (ভাঙচুর), we place paramount importance on safeguarding the privacy and personal data of our customers. This policy outlines transparently how we collect, process, store, and protect your information when you interact with our website (vangcur.com). By using our services, you consent to the data practices described herein.'
-            : 'Vangcur (ভাঙচুর) আপনার ব্যক্তিগত তথ্যের গোপনীয়তা ও নিরাপত্তাকে সর্বোচ্চ অগ্রাধিকার প্রদান করে। আপনি যখন আমাদের ওয়েবসাইট (vangcur.com) ব্যবহার করেন, তখন আপনার কোন কোন তথ্য আমরা সংগ্রহ করি এবং কীভাবে তা সুরক্ষিত রাখি—তা এই নীতিমালায় সম্পূর্ণ স্বচ্ছতার সাথে ব্যাখ্যা করা হয়েছে।'}
+            : 'Vangcur (ভাঙচুর) আপনার ব্যক্তিগত তথ্যের গোপনীয়তা ও নিরাপত্তাকে সর্বোচ্চ অগ্রাধিকার প্রদান করে। আপনি যখন আমাদের ওয়েবসাইট (vangcur.com) ব্যবহার করেন, তখন আপনার কোন কোন তথ্য আমরা সংগ্রহ করি এবং কীভাবে তা সুরক্ষিত রাখি—তা এই নীতিমালায় সম্পূর্ণ স্বচ্ছতার সাথে ব্যাখ্যা করা হয়েছে।'}
         </p>
       </PolicySection>
 
@@ -109,19 +120,63 @@ export default function PrivacyPolicyClient() {
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Order Fulfillment Details: Customer full name, mobile number, district, detailed home delivery address, optional email address, and bKash transaction references for payment verification.'
-              : 'অর্ডার সংক্রান্ত তথ্য: গ্রাহকের পূর্ণ নাম, মোবাইল নম্বর, জেলা, বিস্তারিত ঠিকানা, ঐচ্ছিক ইমেইল এবং পেমেন্ট যাচাইয়ের জন্য বিকাশ ট্রানজেকশন রেফারেন্স বা শেষ ৪ ডিজিট।'}
+              : 'অর্ডার সংক্রান্ত তথ্য: গ্রাহকের পূর্ণ নাম, মোবাইল নম্বর, জেলা, বিস্তারিত ঠিকানা, ঐচ্ছিক ইমেইল এবং পেমেন্ট যাচাইয়ের জন্য বিকাশ ট্রানজেকশন রেফারেন্স বা শেষ ৪ ডিজিট।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'User Account Data: If you register or authenticate via Google OAuth, we store your profile name and verified email in encrypted form on our secure servers.'
-              : 'অ্যাকাউন্ট তথ্য: আপনি রেজিস্ট্রেশন করলে বা Google দিয়ে লগইন করলে আপনার নাম ও ইমেইল সুরক্ষিত সার্ভারে এনক্রিপ্টেড আকারে সংরক্ষিত থাকে।'}
+              : 'অ্যাকাউন্ট তথ্য: আপনি রেজিস্ট্রেশন করলে বা Google দিয়ে লগইন করলে আপনার নাম ও ইমেইল সুরক্ষিত সার্ভারে এনক্রিপ্টেড আকারে সংরক্ষিত থাকে।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Local Device Storage: Cart items, wishlist selections, language preference, and checkout drafts are stored directly on your browser via localStorage for offline resiliency and seamless page reloads.'
-              : 'ডিভাইস লোকাল স্টোরেজ: কার্ট, উইশলিস্ট এবং ড্রাফট তথ্য আপনার নিজস্ব ব্রাউজারে সংরক্ষিত থাকে, যা অর্ডার কনফার্ম না করা পর্যন্ত কোনো সার্ভারে পাঠানো হয় না।'}
+              : 'ডিভাইস লোকাল স্টোরেজ: কার্ট, উইশলিস্ট এবং ড্রাফট তথ্য আপনার নিজস্ব ব্রাউজারে সংরক্ষিত থাকে, যা অর্ডার কনফার্ম না করা পর্যন্ত কোনো সার্ভারে পাঠানো হয় না।'}
           </PolicyBulletPoint>
         </ul>
+      </PolicySection>
+
+      {/* ➕ নতুন সেকশন (২.১) — "Sign in with Google" ব্যবহার করে ঠিক কী ডেটা নেওয়া
+          হয় তা স্পষ্টভাবে বাংলা ও ইংরেজি দুই ভাষাতেই, ভাষা-টগলের ওপর নির্ভর না করে
+          সবসময় একসাথে দেখানো হচ্ছে — যাতে Google-এর ভেরিফিকেশন রিভিউ (যেটা সবসময়
+          ডিফল্ট বাংলা ভার্সন দেখে) স্পষ্ট ইংরেজি বর্ণনাও খুঁজে পায়। এছাড়া Google-এর
+          নিজস্ব আবশ্যক "Limited Use" কমপ্লায়েন্স বাক্যটিও যোগ করা হলো। */}
+      <PolicySection
+        icon={<GoogleKeyIcon />}
+        title="২.১ Google সাইন-ইন ডেটা ব্যবহার (About Google Sign-In)"
+      >
+        <p className={policyPClass}>
+          যখন আপনি &quot;Google দিয়ে সাইন-ইন করুন&quot; অপশন ব্যবহার করেন, Vangcur
+          শুধুমাত্র আপনার Google অ্যাকাউন্টের <strong>নাম ও যাচাইকৃত ইমেইল
+          ঠিকানা</strong> গ্রহণ করে — এর বাইরে Gmail, Google Drive, Contacts,
+          Calendar বা অন্য কোনো Google ডেটা বা পারমিশন (scope) Vangcur চায় না
+          এবং অ্যাক্সেস করে না। এই তথ্য শুধুমাত্র আপনার অ্যাকাউন্ট তৈরি ও
+          লগইন যাচাই করার জন্য ব্যবহৃত হয়, এবং এনক্রিপ্টেড আকারে আমাদের
+          নিরাপদ সার্ভারে সংরক্ষিত থাকে। আপনি যেকোনো সময় সাপোর্টে যোগাযোগ করে
+          এই তথ্য মুছে ফেলার অনুরোধ করতে পারেন।
+        </p>
+        <p className={policyPClass}>
+          When you use &quot;Sign in with Google&quot;, Vangcur only requests
+          your Google account&apos;s <strong>name and verified email
+          address</strong> — we do not request or access Gmail, Google
+          Drive, Contacts, Calendar, or any other Google data or permission
+          scope. This information is used solely to create and authenticate
+          your account on vangcur.com, and is stored in encrypted form on
+          our secure servers. You may request deletion of this data at any
+          time by contacting our customer support.
+        </p>
+        <PolicyNote type="info">
+          Vangcur&apos;s use and transfer of information received from
+          Google APIs to any other app will adhere to the{' '}
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Google API Services User Data Policy
+          </a>
+          , including the Limited Use requirements.
+        </PolicyNote>
       </PolicySection>
 
       <PolicySection
@@ -131,41 +186,41 @@ export default function PrivacyPolicyClient() {
         <p className={policyPClass}>
           {lang === 'en'
             ? 'We collect and utilize your personal information strictly for legitimate commercial and operational purposes:'
-            : 'আমরা সংগৃহীত তথ্য শুধুমাত্র অর্ডার প্রক্রিয়া ও গ্রাহক সেবা নিশ্চিত করার উদ্দেশ্যে ব্যবহার করি:'}
+            : 'আমরা সংগৃহীত তথ্য শুধুমাত্র অর্ডার প্রক্রিয়া ও গ্রাহক সেবা নিশ্চিত করার উদ্দেশ্যে ব্যবহার করি:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Processing customer orders, verifying bKash advance payments, and generating official sales invoices.'
-              : 'অর্ডার প্রসেস করা, বিকাশ অগ্রিম পেমেন্ট যাচাই করা এবং মেমো/ইনভয়েস তৈরি করার জন্য।'}
+              : 'অর্ডার প্রসেস করা, বিকাশ অগ্রিম পেমেন্ট যাচাই করা এবং মেমো/ইনভয়েস তৈরি করার জন্য।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Handing over parcels to logistics partners and dispatching live tracking updates to the customer’s phone.'
-              : 'কুরিয়ারে পার্সেল হ্যান্ডওভার ও গ্রাহককে লাইভ ট্র্যাকিং তথ্য পৌঁছে দেওয়ার জন্য।'}
+              : 'কুরিয়ারে পার্সেল হ্যান্ডওভার ও গ্রাহককে লাইভ ট্র্যাকিং তথ্য পৌঁছে দেওয়ার জন্য।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'Facilitating warranty verification, technical replacement claims, and customer support on WhatsApp.'
-              : 'ওয়ারেন্টি যাচাই, রিপ্লেসমেন্ট ক্লেইম পরিচালনা এবং কাস্টমার সাপোর্ট প্রদান করার জন্য।'}
+              : 'ওয়ারেন্টি যাচাই, রিপ্লেসমেন্ট ক্লেইম পরিচালনা এবং কাস্টমার সাপোর্ট প্রদান করার জন্য।'}
           </PolicyBulletPoint>
         </ul>
 
         <PolicyNote type="info">
           {lang === 'en'
             ? 'Zero Data Selling Guarantee: Vangcur does not sell, trade, rent, or lease customer personal data to third-party advertisers, data brokers, or marketing networks under any circumstances.'
-            : 'জিরো ডেটা সেলিং নিশ্চয়তা: Vangcur গ্রাহকের কোনো ব্যক্তিগত তথ্য কোনো তৃতীয় পক্ষ, বিজ্ঞাপনদাতা বা এজেন্সির কাছে বিক্রি, ভাড়া বা অপব্যবহার করে না।'}
+            : 'জিরো ডেটা সেলিং নিশ্চয়তা: Vangcur গ্রাহকের কোনো ব্যক্তিগত তথ্য কোনো তৃতীয় পক্ষ, বিজ্ঞাপনদাতা বা এজেন্সির কাছে বিক্রি, ভাড়া বা অপব্যবহার করে না।'}
         </PolicyNote>
       </PolicySection>
 
       <PolicySection
         icon={<HandshakeIcon />}
-        title={lang === 'en' ? '4. Trusted Third-Party Service Providers' : '৪. অনুমোদিত তৃতীয় পক্ষের পরিষেবা'}
+        title={lang === 'en' ? '4. Trusted Third-Party Service Providers' : '৪. অনুমোদিত তৃতীয় পক্ষের পরিষেবা'}
       >
         <p className={policyPClass}>
           {lang === 'en'
             ? 'To deliver a reliable e-commerce experience, we integrate with industry-leading infrastructure partners:'
-            : 'ওয়েবসাইট পরিচালনা ও পার্সেল সরবরাহের জন্য আমরা নির্দিষ্ট কিছু বিশ্বস্ত পরিষেবা ব্যবহার করি:'}
+            : 'ওয়েবসাইট পরিচালনা ও পার্সেল সরবরাহের জন্য আমরা নির্দিষ্ট কিছু বিশ্বস্ত পরিষেবা ব্যবহার করি:'}
         </p>
         <ul className={policyUlClass}>
           <PolicyBulletPoint>
@@ -188,7 +243,7 @@ export default function PrivacyPolicyClient() {
         <p className={policyPClass}>
           {lang === 'en'
             ? 'We utilize functional browser localStorage and cookies solely to maintain your active login session, cart persistence, and language toggle. We do not deploy invasive cross-site tracking cookies.'
-            : 'আমরা ব্রাউজারের লোকাল স্টোরেজ ব্যবহার করি কেবল কার্ট, উইশলিস্ট ও ভাষা নির্বাচন মনে রাখার জন্য, যাতে সাইট ব্রাউজ করার সময় আপনার ডেটা হারিয়ে না যায়। আমরা কোনো আগ্রাসী বিজ্ঞাপন ট্র্যাকিং কুকি ব্যবহার করি না।'}
+            : 'আমরা ব্রাউজারের লোকাল স্টোরেজ ব্যবহার করি কেবল কার্ট, উইশলিস্ট ও ভাষা নির্বাচন মনে রাখার জন্য, যাতে সাইট ব্রাউজ করার সময় আপনার ডেটা হারিয়ে না যায়। আমরা কোনো আগ্রাসী বিজ্ঞাপন ট্র্যাকিং কুকি ব্যবহার করি না।'}
         </p>
       </PolicySection>
 
@@ -200,12 +255,12 @@ export default function PrivacyPolicyClient() {
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'All web traffic is encrypted via 256-bit SSL/TLS HTTPS protocols.'
-              : 'ওয়েবসাইটের সকল ডেটা আদান-প্রদান ২৫৬-বিট SSL/TLS HTTPS এনক্রিপশনের মাধ্যমে পরিচালিত হয়।'}
+              : 'ওয়েবসাইটের সকল ডেটা আদান-প্রদান ২৫৬-বিট SSL/TLS HTTPS এনক্রিপশনের মাধ্যমে পরিচালিত হয়।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
               ? 'User passwords are irreversibly salted and hashed; plain-text passwords cannot be read by administrators or staff.'
-              : 'গ্রাহকের পাসওয়ার্ড ডাটাবেজে অত্যন্ত সুরক্ষিত হ্যাশড ফরম্যাটে থাকে; কোনো অ্যাডমিন বা কর্মীর পাসওয়ার্ড দেখার সুযোগ নেই।'}
+              : 'গ্রাহকের পাসওয়ার্ড ডাটাবেজে অত্যন্ত সুরক্ষিত হ্যাশড ফরম্যাটে থাকে; কোনো অ্যাডমিন বা কর্মীর পাসওয়ার্ড দেখার সুযোগ নেই।'}
           </PolicyBulletPoint>
           <PolicyBulletPoint>
             {lang === 'en'
@@ -217,19 +272,19 @@ export default function PrivacyPolicyClient() {
 
       <PolicySection
         icon={<UserCheckmarkIcon />}
-        title={lang === 'en' ? '7. Your Rights & Data Control' : '৭. গ্রাহকের অধিকার ও তথ্য নিয়ন্ত্রণ'}
+        title={lang === 'en' ? '7. Your Rights & Data Control' : '৭. গ্রাহকের অধিকার ও তথ্য নিয়ন্ত্রণ'}
       >
         <p className={policyPClass}>
           {lang === 'en'
             ? 'Under consumer protection standards, you maintain full control over your personal data. You may edit your profile name from your account dashboard or request complete deletion of your account and historical records by contacting our customer support.'
-            : 'ভোক্তা অধিকার সুরক্ষায় আপনার সংরক্ষিত তথ্যের ওপর আপনার পূর্ণ নিয়ন্ত্রণ রয়েছে। আপনি যেকোনো সময় অ্যাকাউন্ট ড্যাশবোর্ড থেকে নিজের তথ্য হালনাগাদ করতে পারেন কিংবা সাপোর্টে যোগাযোগ করে অ্যাকাউন্ট ও ডেটা সম্পূর্ণ অপসারণের অনুরোধ করতে পারেন।'}
+            : 'ভোক্তা অধিকার সুরক্ষায় আপনার সংরক্ষিত তথ্যের ওপর আপনার পূর্ণ নিয়ন্ত্রণ রয়েছে। আপনি যেকোনো সময় অ্যাকাউন্ট ড্যাশবোর্ড থেকে নিজের তথ্য হালনাগাদ করতে পারেন কিংবা সাপোর্টে যোগাযোগ করে অ্যাকাউন্ট ও ডেটা সম্পূর্ণ অপসারণের অনুরোধ করতে পারেন।'}
         </p>
       </PolicySection>
 
       <div className="mb-6 rounded-[14px] border border-border-base bg-white/60 p-4 text-center font-body text-[12px] text-muted">
         {lang === 'en'
           ? 'This Privacy Policy is updated periodically in alignment with digital commerce regulations and security guidelines.'
-          : 'ডিজিটাল কমার্স ও সাইবার নিরাপত্তা বিধিমালার আলোকে এই প্রাইভেসি পলিসি সময়ে সময়ে হালনাগাদ করা হয়।'}
+          : 'ডিজিটাল কমার্স ও সাইবার নিরাপত্তা বিধিমালার আলোকে এই প্রাইভেসি পলিসি সময়ে সময়ে হালনাগাদ করা হয়।'}
       </div>
     </>
   );
