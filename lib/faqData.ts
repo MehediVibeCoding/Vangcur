@@ -11,44 +11,44 @@ export interface Faq {
   aEn?: string;
 }
 
-// নিচের তথ্য সরাসরি শিপিং, রিফান্ড, শর্তাবলী ও প্রাইভেসি পলিসি পেজ থেকে নেওয়া —
-// কোনো নীতিমালা বদলালে এখানেও মিলিয়ে নিন।
+// উত্তরের ভেতরে `[লেখা](/url)` ফরম্যাটে ইন্টার্নাল লিংক দেওয়া যায় (দেখুন lib/linkedText.tsx)।
+// ডেলিভারি চার্জ, অগ্রিম ও সময়সীমা বদলালে শিপিং/রিফান্ড/টার্মস পেজের সাথে মিলিয়ে নিন।
 export const DEFAULT_FAQS: Faq[] = [
   {
-    q: 'পেমেন্ট কীভাবে করব এবং অগ্রিম কত দিতে হবে?',
-    a: 'অর্ডার নিশ্চিত করতে বিকাশ সেন্ড মানির মাধ্যমে সামান্য অগ্রিম দিতে হয়, বাকি টাকা পার্সেল হাতে পেয়ে ক্যাশ অন ডেলিভারিতে (COD) পরিশোধ করবেন। ৪,০০০ টাকার নিচের অর্ডারে অগ্রিম ফিক্সড ২০০ টাকা। ডেলিভারি চার্জসহ মোট বিল ৪,০০০ থেকে ২০,০০০ টাকার মধ্যে হলে, মোট বিলের ৫% অগ্রিম দিতে হবে।',
-    qEn: 'How do I pay, and how much is the advance?',
-    aEn: 'To confirm your order, you pay a small advance via bKash Send Money and settle the rest in cash when the parcel arrives (Cash on Delivery). For orders below ৳4,000 the advance is a fixed ৳200. For orders between ৳4,000 and ৳20,000 (total bill including delivery charge) it is 5% of the total bill.',
+    q: 'আপনারা কি ক্যাশ অন ডেলিভারিতে প্রোডাক্ট দেন?',
+    a: 'হ্যাঁ, ক্যাশ অন ডেলিভারিতে (COD) পণ্য দিই। তবে অর্ডার নিশ্চিত করতে আগে বিকাশ সেন্ড মানিতে সামান্য অগ্রিম দিতে হয়। ডেলিভারি চার্জসহ মোট বিল ৪,০০০ টাকার নিচে হলে অগ্রিম ফিক্সড ২০০ টাকা, আর ৪,০০০ থেকে ২০,০০০ টাকার মধ্যে হলে মোট বিলের ৫%। বাকি টাকা পার্সেল হাতে পেয়ে ডেলিভারিম্যানকে দেবেন। বিস্তারিত [শিপিং নীতিমালা](/shipping) পেজে আছে।',
+    qEn: 'Do you offer Cash on Delivery?',
+    aEn: 'Yes, we offer Cash on Delivery (COD). To confirm your order you first pay a small advance via bKash Send Money: a fixed ৳200 if your total bill (including delivery charge) is below ৳4,000, or 5% of the total bill if it is between ৳4,000 and ৳20,000. You pay the remaining amount to the delivery man when you receive the parcel. See our [Shipping Policy](/shipping) for details.',
   },
   {
-    q: 'ডেলিভারি পেতে কতদিন লাগে এবং চার্জ কত?',
-    a: 'পাঠাও কুরিয়ারের মাধ্যমে সারা বাংলাদেশের ৬৪ জেলাতেই হোম ডেলিভারি দেওয়া হয়। ঢাকা সিটির ভেতরে ১–২ কার্যদিবসে (চার্জ ৭০ টাকা) এবং ঢাকার বাইরে ২–৪ কার্যদিবসে (চার্জ ১২০ টাকা) পার্সেল পৌঁছায়। পেমেন্ট যাচাইয়ের ২৪ কার্যঘণ্টার মধ্যে আমরা পার্সেল কুরিয়ারের হাতে তুলে দিই। কুপন বা মেম্বারশিপ রিওয়ার্ড থাকলে ডেলিভারি চার্জ ফ্রিও হতে পারে।',
-    qEn: 'How long does delivery take, and what are the charges?',
-    aEn: 'We deliver to all 64 districts of Bangladesh through Pathao Courier. Parcels reach you in 1–2 working days inside Dhaka City (৳70 charge) and 2–4 working days outside Dhaka (৳120 charge). We hand your parcel over to the courier within 24 working hours of payment verification. A coupon or membership reward can make delivery free.',
+    q: 'আপনারা কি ঢাকার বাইরে ডেলিভারি করেন? ডেলিভারি চার্জ কত?',
+    a: 'হ্যাঁ, পাঠাও কুরিয়ারের মাধ্যমে সারা বাংলাদেশের ৬৪টি জেলাতেই হোম ডেলিভারি দিই। ঢাকা সিটিতে চার্জ ৭০ টাকা, সময় ১–২ কার্যদিবস। ঢাকার বাইরে চার্জ ১২০ টাকা, সময় ২–৪ কার্যদিবস। কুপন কোড বা মেম্বারশিপ রিওয়ার্ড থাকলে ডেলিভারি চার্জ ফ্রিও হতে পারে।',
+    qEn: 'Do you deliver outside Dhaka? What is the delivery charge?',
+    aEn: 'Yes, we deliver to all 64 districts of Bangladesh through Pathao Courier. Inside Dhaka City the delivery charge is ৳70 and takes 1–2 business days. Outside Dhaka it is ৳120 and takes 2–4 business days. A coupon code or a membership reward can make delivery free.',
   },
   {
-    q: 'প্রোডাক্টগুলো কি অথেনটিক? ওয়ারেন্টি কেমন পাব?',
-    a: 'হ্যাঁ, প্রতিটি পণ্য আমাদের কোয়ালিটি চেকের পর গ্রাহকের কাছে পাঠানো হয়। সব পণ্যে ন্যূনতম ৭ দিনের ফ্রি রিপ্লেসমেন্ট ওয়ারেন্টি আছে, আর নির্বাচিত প্রিমিয়াম পণ্যে ৬ মাস, ১ বছর বা ২ বছর পর্যন্ত অফিসিয়াল ওয়ারেন্টি পাবেন। ওয়ারেন্টির মেয়াদ অর্ডারের দিন থেকে শুরু হয়।',
-    qEn: 'Are your products authentic, and what warranty do I get?',
-    aEn: 'Yes. Every product goes through our own quality check before it is shipped. All products carry at least a 7-day free replacement warranty, and selected premium products come with an official warranty of 6 months, 1 year or 2 years. The warranty period starts from the day of your order.',
+    q: 'অর্ডার করার কতক্ষণ পর কনফার্ম হয় এবং কবে পার্সেল পাঠানো হয়?',
+    a: 'অগ্রিম পাঠিয়ে ট্রানজেকশন আইডি (অথবা শেষ ৪ ডিজিট) দিন। পেমেন্ট যাচাইয়ের পর কনফার্মেশন পাবেন, সাধারণত ৫–১০ মিনিটে, সর্বোচ্চ ৩০ মিনিটে। এরপর ২৪ কার্যঘণ্টার মধ্যে পার্সেল কুরিয়ারে হস্তান্তর করা হয়।',
+    qEn: 'How long does order confirmation take, and when is my parcel shipped?',
+    aEn: 'Send the advance and enter the transaction ID (or the last 4 digits of the sending number). After payment verification you will receive confirmation, usually within 5–10 minutes and at most 30 minutes. The parcel is then handed over to the courier within 24 working hours.',
   },
   {
-    q: 'পণ্যে সমস্যা থাকলে রিপ্লেসমেন্ট কীভাবে পাব?',
-    a: 'পার্সেল খোলার শুরু থেকে শেষ পর্যন্ত একটানা আন-কাট আনবক্সিং ভিডিও করে রাখুন। কারখানাগত ত্রুটি, ট্রানজিটে ভাঙা বা ভুল পণ্য পেলে পার্সেল পাওয়ার ২৪ থেকে ৪৮ ঘণ্টার মধ্যে অর্ডার নম্বর ও ভিডিওসহ আমাদের WhatsApp-এ (01897-804055) জানান। ভিডিও যাচাই করে ২৪ ঘণ্টার মধ্যে সম্পূর্ণ নিজ খরচে নতুন পণ্য পাঠিয়ে দেওয়া হবে। এ জন্য পণ্যের আসল বক্স ও অফিসিয়াল ইনভয়েস পেপার সংরক্ষণ করে রাখুন।',
-    qEn: 'What if there is a problem with my product? How do I get a replacement?',
-    aEn: 'Record one continuous, uncut unboxing video from the moment you start opening the parcel. If you receive a manufacturing defect, transit damage or the wrong product, message us on WhatsApp (01897-804055) with your order number and the video within 24–48 hours of receiving the parcel. After verifying the video, we ship a new product within 24 hours at no cost to you. Please keep the original box and the official invoice paper safe.',
-  },
-  {
-    q: 'পছন্দ না হলে কি পণ্য ফেরত দেওয়া যাবে?',
-    a: 'পণ্যে কোনো ত্রুটি না থাকলে শুধু পছন্দ না হওয়া বা মন পরিবর্তনের কারণে রিটার্ন বা রিফান্ড করা যায় না। তাই অর্ডারের আগে ছবি ও স্পেসিফিকেশন ভালো করে দেখে নিন। তবে পণ্যে প্রকৃত ত্রুটি থাকলে ১০০% ফ্রি রিপ্লেসমেন্ট পাবেন।',
-    qEn: 'Can I return a product if I do not like it?',
-    aEn: 'If the product has no defect, we cannot accept returns or refunds for personal preference or a change of mind, so please check the photos and specifications carefully before ordering. If the product has a genuine defect, you get a 100% free replacement.',
-  },
-  {
-    q: 'আমার অর্ডার কীভাবে ট্র্যাক করব?',
-    a: 'পার্সেল কুরিয়ারে বুকিং হওয়ার পর পাঠাও থেকে আপনার ফোনে ট্র্যাকিং এসএমএস যায়। এছাড়া ওয়েবসাইটের "অর্ডার ট্র্যাক" অপশনে গিয়ে যেকোনো সময় লাইভ স্ট্যাটাস দেখতে পারবেন, আর লগইন করা থাকলে যেকোনো ডিভাইস থেকেই দেখা যাবে।',
+    q: 'অর্ডার কীভাবে ট্র্যাক করব?',
+    a: 'কুরিয়ারে বুকিং হলে পাঠাও আপনার ফোনে ট্র্যাকিং SMS পাঠায়। এছাড়া ওয়েবসাইটের [অর্ডার ট্র্যাক](/track-order) পেজে ব্রাউজারের সাম্প্রতিক অর্ডারগুলোর লাইভ অবস্থা দেখা যায়। অ্যাকাউন্টে লগইন করলে যেকোনো ডিভাইস থেকে দেখতে পারবেন।',
     qEn: 'How do I track my order?',
-    aEn: 'Once your parcel is booked with the courier, Pathao sends a tracking SMS to your phone. You can also open "Track Order" on our website to see the live status at any time, and from any device if you are logged in.',
+    aEn: 'Once your parcel is booked, Pathao Courier sends a tracking SMS to your phone. You can also see the live status of recent orders from your browser on the [Track Order](/track-order) page, or log in to track from any device.',
+  },
+  {
+    q: 'পণ্য ভাঙা, নষ্ট বা ভুল এলে কী করব?',
+    a: 'কারখানাগত ত্রুটি, ভাঙা বা ভুল পণ্য এলে বাড়তি ডেলিভারি চার্জ ছাড়াই নতুন পণ্য পাঠিয়ে দিই। এর জন্য পার্সেল খোলার শুরু থেকে একটানা আন-কাট আনবক্সিং ভিডিও বাধ্যতামূলক। পার্সেল পাওয়ার ২৪–৪৮ ঘণ্টার মধ্যে অর্ডার নম্বর ও ভিডিওসহ WhatsApp-এ (01897-804055) জানান, যাচাইয়ের পর ২৪ ঘণ্টার মধ্যে রিপ্লেসমেন্ট বুক হবে। পূর্ণ শর্ত [রিফান্ড ও রিপ্লেসমেন্ট নীতিমালা](/refund-policy) পেজে।',
+    qEn: 'What should I do if my product arrives broken, defective or wrong?',
+    aEn: 'If you receive a manufacturing defect, a damaged item or the wrong product, we send a replacement at no extra delivery charge. A continuous, uncut unboxing video from the moment you start opening the parcel is mandatory. Message us on WhatsApp (01897-804055) with your order number and the video within 24–48 hours of receiving the parcel, and after verification the replacement is booked within 24 hours. Full conditions are in our [Refund & Replacement Policy](/refund-policy).',
+  },
+  {
+    q: 'পছন্দ না হলে কি পণ্য ফেরত দেওয়া যায়?',
+    a: 'না, পণ্যে কোনো ত্রুটি না থাকলে শুধু পছন্দ না হওয়া বা মন পরিবর্তনের কারণে ফেরত বা রিফান্ড হয় না। কুরিয়ার কর্মীরাও স্পটে রিটার্ন নেন না, তাই অর্ডারের আগে ছবি ও স্পেসিফিকেশন ভালো করে দেখে নিন। পণ্যে প্রকৃত ত্রুটি থাকলে ১০০% ফ্রি রিপ্লেসমেন্ট পাবেন, বিস্তারিত [শর্তাবলী](/terms)-তে।',
+    qEn: 'Can I return a product if I do not like it?',
+    aEn: 'No. If the product has no defect, returns and refunds are not available for personal preference or a change of mind, and courier staff do not accept returns on the spot, so please check the photos and specifications before ordering. If the product has a genuine defect you get a 100% free replacement. See our [Terms & Conditions](/terms) for details.',
   },
 ];
 

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/useT';
 import useCloseWhenOffscreen from '@/lib/useCloseWhenOffscreen';
 import { DEFAULT_FAQS } from '@/lib/faqData';
+import { renderLinkedText } from '@/lib/linkedText';
 
 function ChevronIcon({ className = '' }: { className?: string }) {
   return (
@@ -56,8 +57,8 @@ export default function FAQ() {
         
         <p className="mt-1.5 font-body text-[13px] text-muted sm:text-[14px]">
           {lang === 'en'
-            ? 'Everything you need to know about shopping, delivery & warranty'
-            : 'কেনাকাটা, ডেলিভারি ও ওয়ারেন্টি সম্পর্কিত আপনার সকল প্রশ্নের উত্তর'}
+            ? 'Everything you need to know about orders, payment, delivery & replacement'
+            : 'অর্ডার, পেমেন্ট, ডেলিভারি ও রিপ্লেসমেন্ট সম্পর্কিত আপনার প্রশ্নের উত্তর'}
         </p>
       </div>
 
@@ -95,7 +96,7 @@ export default function FAQ() {
                 <div className="min-h-0 overflow-hidden">
                   <div className="border-t border-brand-light/15 px-4 pb-4 pt-3 sm:px-[18px] sm:pb-[18px] font-body text-[13.5px] leading-[1.8] text-ink/80">
                     <div className="border-l-2 border-brand-light/60 pl-3.5">
-                      {lang === 'en' ? (f.aEn ?? t(f.a)) : f.a}
+                      {renderLinkedText(lang === 'en' ? (f.aEn ?? t(f.a)) : f.a)}
                     </div>
                   </div>
                 </div>

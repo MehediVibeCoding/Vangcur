@@ -26,3 +26,11 @@
 - [Terms & Conditions](https://vangcur.com/terms): Digital commerce operating agreement, bKash advance verification, and sales terms.
 - [Privacy Policy](https://vangcur.com/privacy-policy): Personal data protection, SSL encryption, and consumer privacy commitments.
 - [Order Tracking](https://vangcur.com/track-order): Live parcel delivery and order status tracking across Bangladesh.
+
+## Frequently Asked Questions
+- Do you offer Cash on Delivery? Yes. Customers first pay a small advance via bKash Send Money to confirm the order: a fixed 200 BDT if the total bill (including delivery charge) is below 4,000 BDT, or 5% of the total bill if it is between 4,000 and 20,000 BDT. The remaining amount is paid to the delivery man on receipt. Details: https://vangcur.com/shipping
+- Do you deliver outside Dhaka? Yes, to all 64 districts of Bangladesh via Pathao Courier. Delivery charge is 70 BDT inside Dhaka City (1-2 business days) and 120 BDT outside Dhaka (2-4 business days). A coupon code or membership reward can make delivery free.
+- How long does order confirmation take? After payment verification, confirmation usually arrives within 5-10 minutes (at most 30 minutes). The parcel is handed to the courier within 24 working hours.
+- How do I track my order? Pathao Courier sends a tracking SMS once the parcel is booked. Live status is also available at https://vangcur.com/track-order
+- What if the product is broken, defective or wrong? A free replacement is sent with no extra delivery charge. A continuous uncut unboxing video is mandatory, and the claim must be sent on WhatsApp (01897-804055) within 24-48 hours of receiving the parcel. Details: https://vangcur.com/refund-policy
+- Can I return a product I do not like? No. Without a defect, returns and refunds are not available for a change of mind. Genuinely defective products get a 100% free replacement. Details: https://vangcur.com/terms
