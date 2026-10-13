@@ -52,7 +52,7 @@ import {
 } from '@/lib/checkoutData';
 import {
   sanitizePlainName, validateName, MAX_NAME_LEN,
-  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN, sanitizePhoneInput, PHONE_INPUT_MAX_CHARS,
+  sanitizeEmailInput, sanitizeAddressInput, MAX_ADDR_LEN, sanitizePhoneInput, bnDigitsToEn, PHONE_INPUT_MAX_CHARS,
 } from '@/lib/security';
 import { saveDraft, clearDraft, getDraft } from '@/lib/draftRecovery';
 import { sendLead } from '@/lib/leadCapture';
@@ -1749,7 +1749,7 @@ export default function CheckoutPage() {
                     maxLength={4}
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    onChange={(e) => { setLast4(e.target.value.replace(/\D/g, '')); if (errors.eL4) setErrors((err) => ({ ...err, eL4: undefined })); }}
+                    onChange={(e) => { setLast4(bnDigitsToEn(e.target.value).replace(/\D/g, '')); if (errors.eL4) setErrors((err) => ({ ...err, eL4: undefined })); }}
                     placeholder={t('যেমন: 5504')}
                   />
                 </div>
