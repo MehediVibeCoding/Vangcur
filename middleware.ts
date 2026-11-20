@@ -23,6 +23,7 @@ const INTERNAL_SECRET_PROTECTED_API_PATHS = [
   '/api/sla-alert',
   '/api/indexnow',
   '/api/order-email',
+  '/api/invoice/render', // মূল সাইট (Cloudflare Worker) থেকে আসে, x-invoice-secret দিয়ে সুরক্ষিত
 ];
 
 function needsAuthRefresh(pathname: string): boolean {
