@@ -5,7 +5,7 @@ import { updateSession } from '@/lib/supabase/middleware';
 // 🛡️ ক্ষতিকর বট ও ভালনারেবিলিটি স্ক্যানার পাথ (সার্ভার ছোঁয়ার আগেই Edge-এ ব্লক)
 const MALICIOUS_PROBE_REGEX = /\/(?:\.env|\.git|wp-admin|wp-login|xmlrpc|phpmyadmin|\.aws|eval-stdin|composer\.(?:json|lock)|package-lock\.json)/i;
 
-// 🌐 পরিচিত সার্চ-ইঞ্জিন/ক্রলার — এদের শুধু "পেজ" রেট-লিমিট থেকে ছাড় দেওয়া হয়
+// 🌐 পরিচিত সার্চ-ইঞ্জিন/ক্রলালার — এদের শুধু "পেজ" রেট-লিমিট থেকে ছাড় দেওয়া হয়
 const KNOWN_SEARCH_BOT_UA_REGEX = /googlebot|bingbot|applebot|duckduckbot|yandexbot|baiduspider|slurp/i;
 
 const AUTH_REFRESH_PATH_PREFIXES = ['/checkout', '/account', '/api/'];
@@ -23,6 +23,7 @@ const INTERNAL_SECRET_PROTECTED_API_PATHS = [
   '/api/sla-alert',
   '/api/indexnow',
   '/api/order-email',
+  '/api/invoice/render', // মূল সাইট (Cloudflare Worker) থেকে আসে, x-invoice-secret দিয়ে সুরক্ষিত
 ];
 
 function needsAuthRefresh(pathname: string): boolean {
