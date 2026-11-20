@@ -7,7 +7,7 @@ import type { InvoiceContact } from '@/lib/invoice/InvoiceCardBody';
 import { logError, logWarn } from '@/lib/logger';
 
 // 🖨️ ইনভয়েস PNG রেন্ডার এন্ডপয়েন্ট — শুধু মূল সাইট (Cloudflare Worker, cloud-vangcur) ডাকে।
-// কেন: Cloudflare ফ্রি প্ল্যানে CPU সীমা ১০ms, অথচ ইনভয়েস রেন্ডারে ~২ সেকেন্ড CPU লাগে। Vercel-এ headless Chromium
+// কেন: Cloudflare Free plan-এ CPU সীমা ১০ms, অথচ ইনভয়েস রেন্ডারে ~২ সেকেন্ড CPU লাগে। Vercel-এ headless Chromium
 // (Puppeteer) দিয়ে বানালে সীমার সমস্যা নেই এবং আউটপুট আসল ব্রাউজারের মতোই নিখুঁত (লোগো, ছবি, বাংলা যুক্তাক্ষর)।
 //
 // 🔐 অনুরোধ আসে POST-এ, JSON বডিতে মূল সাইটের আগে-যাচাই-করা অর্ডার ডেটা। অর্ডার যাচাই, রেট-লিমিট ও
@@ -16,7 +16,7 @@ import { logError, logWarn } from '@/lib/logger';
 // 📎 লোগো/ফন্ট ইত্যাদি অ্যাসেট এই ডিপ্লয়মেন্টের নিজের origin থেকেই আনা হয় (বডির কোনো URL বিশ্বাস করা হয় না)।
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Hobby প্লানে সর্বোচ্চ ৬০ সেকেন্ড; ঠান্ডা শুরুতে Chromium চালু হতে ৫–১০ সেকেন্ড লাগে।
+export const maxDuration = 60; // Hobby plan-এ সর্বোচ্চ ৬০ সেকেন্ড; ঠান্ডা শুরুতে Chromium চালু হতে ৫–১০ সেকেন্ড লাগে।
 
 function secretsMatch(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
